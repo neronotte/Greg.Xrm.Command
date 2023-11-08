@@ -39,11 +39,16 @@ namespace Greg.Xrm.Command.Services.Connection
 			return folderPath;
 		}
 
+
+
+
 		public async Task<ConnectionSetting> GetAllConnectionDefinitionsAsync()
 		{
 			var connectionStrings = await this.settings.GetAsync<ConnectionSetting>("connections");
 			return connectionStrings ?? new ConnectionSetting();
 		}
+
+
 
 		public async Task<IOrganizationServiceAsync2> GetCurrentConnectionAsync()
 		{
@@ -76,6 +81,50 @@ namespace Greg.Xrm.Command.Services.Connection
 			{
 				throw new CommandException(CommandException.ConnectionInvalid, "Dataverse connection has not been set yet.", ex);
 			}
+		}
+
+		public async Task SetDefaultAsync(string name)
+		{
+			var connectionStrings = await this.settings.GetAsync<ConnectionSetting>("connections");
+			if (connectionStrings == null)
+				throw new CommandException(CommandException.ConnectionInvalid, "No connection has been set yet.");
+
+			if (!connectionStrings.Exists(name))
+				throw new CommandException(CommandException.ConnectionInvalid, "Invalid connection name: " + name);
+
+			if (connectionStrings.CurrentConnectionStringKey == name)
+				return; // already set as default
+
+			connectionStrings.CurrentConnectionStringKey = name;
+			await this.settings.SetAsync("connections", connectionStrings);
+		}
+
+		public async Task SetDefaultSolutionAsync(string uniqueName)
+		{
+			var connectionStrings = await this.settings.GetAsync<ConnectionSetting>("connections");
+			if (connectionStrings == null)
+				throw new CommandException(CommandException.ConnectionInvalid, "No connection has been set yet.");
+
+			if (connectionStrings.CurrentConnectionStringKey == null)
+				throw new CommandException(CommandException.ConnectionInvalid, "No connection has been set yet.");
+
+			connectionStrings.DefaultSolutions[connectionStrings.CurrentConnectionStringKey] = uniqueName;
+			await this.settings.SetAsync("connections", connectionStrings);
+		}
+
+		public async Task<string?> GetCurrentDefaultSolutionAsync()
+		{
+			var connectionStrings = await this.settings.GetAsync<ConnectionSetting>("connections");
+			if (connectionStrings == null)
+				throw new CommandException(CommandException.ConnectionInvalid, "No connection has been set yet.");
+
+			if (connectionStrings.CurrentConnectionStringKey == null)
+				throw new CommandException(CommandException.ConnectionInvalid, "No connection has been set yet.");
+
+			if (!connectionStrings.DefaultSolutions.TryGetValue(connectionStrings.CurrentConnectionStringKey, out var uniqueName))
+				return null;
+
+			return uniqueName;
 		}
 	}
 }

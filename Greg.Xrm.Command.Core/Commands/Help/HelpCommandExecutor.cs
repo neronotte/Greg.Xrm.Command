@@ -87,13 +87,30 @@ namespace Greg.Xrm.Command.Commands.Help
 			output.WriteLine();
 
 			var padding = commandList.Max(_ => _.ExpandedVerbs.Length) + 4;
-
+			
 
 			foreach (var command in commandList.Order())
 			{
 				output.Write("  ")
-					.Write(command.ExpandedVerbs.PadRight(padding), ConsoleColor.DarkCyan)
-					.WriteLine(command.HelpText);
+					.Write(command.ExpandedVerbs.PadRight(padding), ConsoleColor.DarkCyan);
+
+				var helpText = (command.HelpText ?? string.Empty).Split(Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
+
+				if (helpText.Length == 1)
+				{
+					output.WriteLine(helpText[0]);
+				}
+				else
+				{
+					for (var i = 0; i < helpText.Length; i++)
+					{
+						if (i > 0)
+						{
+							output.Write("  ").Write(string.Empty.PadRight(padding));
+						}
+						output.WriteLine(helpText[i]);
+					}
+				}
 			}
 		}
 	}
