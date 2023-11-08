@@ -58,7 +58,10 @@ namespace Greg.Xrm.Command.Services.Settings
 			var fileName = Path.Combine(this.settingsFolder, $"{key}.json");
 			using(var writer = new StreamWriter(fileName, false, System.Text.Encoding.UTF8))
 			{
-				var serializer = new JsonSerializer();
+				var serializer = new JsonSerializer
+				{
+					Formatting = Formatting.Indented
+				};
 				serializer.Serialize(writer, value);
 			}
 

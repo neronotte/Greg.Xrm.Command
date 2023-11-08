@@ -6,6 +6,17 @@
 
 		public Dictionary<string, string> ConnectionStrings { get; set; } = new Dictionary<string, string>();
 
+		public Dictionary<string, string> DefaultSolutions { get; set; } = new Dictionary<string, string>();
+
+
+
+
+
+		public bool Exists(string connectionName)
+		{
+			return this.ConnectionStrings.ContainsKey(connectionName);
+		}
+
 
 		public bool TryGetCurrentConnectionString(out string? connectionString)
 		{

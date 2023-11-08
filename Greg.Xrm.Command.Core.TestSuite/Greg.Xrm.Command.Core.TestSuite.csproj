@@ -22,4 +22,8 @@
     <ProjectReference Include="..\Greg.Xrm.Command.Core\Greg.Xrm.Command.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Commands\Delete\" />
+  </ItemGroup>
+
 </Project>

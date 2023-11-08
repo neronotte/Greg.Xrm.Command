@@ -28,11 +28,13 @@ namespace Greg.Xrm.Command
 		{
 			if (!args.Contains("--noprompt"))
 			{
-				this.output.WriteLine("Greg.Xrm.Command - Dataverse command tool");
+				this.output.Write(">>> Greg.Xrm.Command <<<", ConsoleColor.Green).WriteLine(" - Dataverse command tool", ConsoleColor.DarkGray);
 				this.output.Write("Version ")
 					.Write(GetType().Assembly.GetName()?.Version?.ToString() ?? "[unable to get version from assembly]")
-					.WriteLine()
 					.WriteLine();
+				this.output.Write("Online documentation: ").WriteLine("https://github.com/neronotte/Greg.Xrm.Command/wiki");
+				this.output.Write("Feedback, Suggestions, Issues: ").WriteLine("https://github.com/neronotte/Greg.Xrm.Command/discussions");
+				this.output.WriteLine();
 			}
 			else
 			{

@@ -9,40 +9,40 @@ using Microsoft.Xrm.Sdk.Metadata;
 using Microsoft.Xrm.Sdk.Query;
 using System.ServiceModel;
 
-namespace Greg.Xrm.Command.Commands.Create
+namespace Greg.Xrm.Command.Commands.Table
 {
-    public class CreateTableCommandExecutor : ICommandExecutor<CreateTableCommand>
+    public class CreateCommandExecutor : ICommandExecutor<CreateCommand>
     {
-		private readonly IOutput output;
-		private readonly IOrganizationServiceRepository organizationServiceRepository;
+        private readonly IOutput output;
+        private readonly IOrganizationServiceRepository organizationServiceRepository;
         private readonly IPluralizationFactory pluralizationFactory;
-        private readonly ISettingsRepository settingsRepository;
 
-        public CreateTableCommandExecutor(
+        public CreateCommandExecutor(
             IOutput output,
             IOrganizationServiceRepository organizationServiceFactory,
-            IPluralizationFactory pluralizationFactory,
-            ISettingsRepository settingsRepository)
+            IPluralizationFactory pluralizationFactory)
         {
-			this.output = output;
-			organizationServiceRepository = organizationServiceFactory;
+            this.output = output;
+            organizationServiceRepository = organizationServiceFactory;
             this.pluralizationFactory = pluralizationFactory;
-            this.settingsRepository = settingsRepository;
         }
 
-        public async Task ExecuteAsync(CreateTableCommand command, CancellationToken cancellationToken)
+        public async Task ExecuteAsync(CreateCommand command, CancellationToken cancellationToken)
         {
             int defaultLanguageCode = 1033;
 
 
-            var crm = await organizationServiceRepository.GetCurrentConnectionAsync();
+			this.output.Write($"Connecting to the current dataverse environment...");
+			var crm = await this.organizationServiceRepository.GetCurrentConnectionAsync();
+			this.output.WriteLine("Done", ConsoleColor.Green);
 
-            try
-            {
+
+			try
+			{
                 var currentSolutionName = command.SolutionName;
                 if (string.IsNullOrWhiteSpace(currentSolutionName))
                 {
-                    currentSolutionName = await this.settingsRepository.GetAsync<string>("currentSolutionName");
+                    currentSolutionName = await organizationServiceRepository.GetCurrentDefaultSolutionAsync();
                     if (currentSolutionName == null)
                     {
                         output.WriteLine("No solution name provided and no current solution name found in the settings. Please provide a solution name or set a current solution name in the settings.", ConsoleColor.Red);
@@ -51,11 +51,11 @@ namespace Greg.Xrm.Command.Commands.Create
                 }
 
 
-                this.output.WriteLine("Checking solution existence and retrieving publisher prefix");
+                output.WriteLine("Checking solution existence and retrieving publisher prefix");
 
                 var query = new QueryExpression("solution");
-				query.ColumnSet.AddColumns("ismanaged");
-				query.Criteria.AddCondition("uniquename", ConditionOperator.Equal, currentSolutionName);
+                query.ColumnSet.AddColumns("ismanaged");
+                query.Criteria.AddCondition("uniquename", ConditionOperator.Equal, currentSolutionName);
                 var link = query.AddLink("publisher", "publisherid", "publisherid");
                 link.Columns.AddColumns("customizationprefix");
                 link.EntityAlias = "publisher";
@@ -68,90 +68,95 @@ namespace Greg.Xrm.Command.Commands.Create
                 {
                     output.WriteLine("Invalid solution name: ", ConsoleColor.Red).WriteLine(currentSolutionName, ConsoleColor.Red);
                     return;
-				}
+                }
 
-				var managed = solutionList[0].GetAttributeValue<bool>("ismanaged");
-				if (managed)
-				{
-					output.WriteLine("The provided solution is managed. You must specify an unmanaged solution.", ConsoleColor.Red);
-					return;
-				}
+                var managed = solutionList[0].GetAttributeValue<bool>("ismanaged");
+                if (managed)
+                {
+                    output.WriteLine("The provided solution is managed. You must specify an unmanaged solution.", ConsoleColor.Red);
+                    return;
+                }
 
-				var publisherPrefix = solutionList[0].GetAttributeValue<AliasedValue>("publisher.customizationprefix").Value as string;
+                var publisherPrefix = solutionList[0].GetAttributeValue<AliasedValue>("publisher.customizationprefix").Value as string;
                 if (string.IsNullOrWhiteSpace(publisherPrefix))
-				{
-					output.WriteLine("Unable to retrieve the publisher prefix. Please report a bug to the project GitHub page.", ConsoleColor.Red);
-					return;
-				}
+                {
+                    output.WriteLine("Unable to retrieve the publisher prefix. Please report a bug to the project GitHub page.", ConsoleColor.Red);
+                    return;
+                }
 
 
 
-                this.output.Write("Setting up CreateEntityRequest...");
+                output.Write("Setting up CreateEntityRequest...");
 
-				var entityMetadata = new EntityMetadata();
-				entityMetadata.DisplayName = SetTableDisplayName(command, defaultLanguageCode);
-				entityMetadata.DisplayCollectionName = await SetTableDisplayCollectionNameAsync(command, defaultLanguageCode);
-				entityMetadata.Description = SetTableDescription(command, defaultLanguageCode);
-				entityMetadata.SchemaName = SetTableSchemaName(command, publisherPrefix);
-				entityMetadata.OwnershipType = command.Ownership;
-				entityMetadata.IsActivity = command.IsActivity;
+                var entityMetadata = new EntityMetadata();
+                entityMetadata.DisplayName = SetTableDisplayName(command, defaultLanguageCode);
+                entityMetadata.DisplayCollectionName = await SetTableDisplayCollectionNameAsync(command, defaultLanguageCode);
+                entityMetadata.Description = SetTableDescription(command, defaultLanguageCode);
+                entityMetadata.SchemaName = SetTableSchemaName(command, publisherPrefix);
+                entityMetadata.OwnershipType = command.Ownership;
+                entityMetadata.IsActivity = command.IsActivity;
                 entityMetadata.IsAuditEnabled = SetTableIsAuditEnabled(command);
 
 
-				var primaryAttribute = new StringAttributeMetadata();
-				primaryAttribute.DisplayName = SetPrimaryAttributeDisplayName(command, defaultLanguageCode);
-				primaryAttribute.SchemaName = SetPrimaryAttributeSchemaName(command, primaryAttribute.DisplayName, publisherPrefix);
-				primaryAttribute.Description = SetPrimaryAttributeDescription(command, defaultLanguageCode);
+                var primaryAttribute = new StringAttributeMetadata();
+                primaryAttribute.DisplayName = SetPrimaryAttributeDisplayName(command, defaultLanguageCode);
+                primaryAttribute.SchemaName = SetPrimaryAttributeSchemaName(command, primaryAttribute.DisplayName, publisherPrefix);
+                primaryAttribute.Description = SetPrimaryAttributeDescription(command, defaultLanguageCode);
                 primaryAttribute.RequiredLevel = SetPrimaryAttributeRequiredLevel(command);
-				primaryAttribute.MaxLength = SetPrimaryAttributeMaxLength(command);
-				primaryAttribute.AutoNumberFormat = SetPrimaryAttributeAutoNumberFormat(command);
-				primaryAttribute.FormatName = StringFormatName.Text;
+                primaryAttribute.MaxLength = SetPrimaryAttributeMaxLength(command);
+                primaryAttribute.AutoNumberFormat = SetPrimaryAttributeAutoNumberFormat(command);
+                primaryAttribute.FormatName = StringFormatName.Text;
 
-				this.output.WriteLine(" Done", ConsoleColor.Green);
-
-
-				this.output.Write("Creating table...");
-				var request = new CreateEntityRequest
-				{
-					Entity = entityMetadata,
-					PrimaryAttribute = primaryAttribute
-				};
-				var response = (CreateEntityResponse)await crm.ExecuteAsync(request);
-				this.output.WriteLine(" Done", ConsoleColor.Green);
+                output.WriteLine(" Done", ConsoleColor.Green);
 
 
-				this.output.Write("Adding table to solution...");
+                output.Write("Creating table...");
+                var request = new CreateEntityRequest
+                {
+                    Entity = entityMetadata,
+                    PrimaryAttribute = primaryAttribute
+                };
+                var response = (CreateEntityResponse)await crm.ExecuteAsync(request);
+                output.WriteLine(" Done", ConsoleColor.Green);
+
+
+                output.Write("Adding table to solution...");
                 var request1 = new AddSolutionComponentRequest
                 {
                     AddRequiredComponents = true,
                     ComponentId = response.EntityId,
                     ComponentType = 1, // Entity
-					SolutionUniqueName = currentSolutionName,
-					DoNotIncludeSubcomponents = false
-				};
+                    SolutionUniqueName = currentSolutionName,
+                    DoNotIncludeSubcomponents = false
+                };
 
-				await crm.ExecuteAsync(request1);
-				this.output.WriteLine(" Done", ConsoleColor.Green);
-			}
-            catch(FaultException<OrganizationServiceFault> ex)
-			{
+                await crm.ExecuteAsync(request1);
+
+				this.output.WriteLine("Done", ConsoleColor.Green)
+					.Write("  Table ID         : ")
+					.WriteLine(response.EntityId, ConsoleColor.Yellow)
+					.Write("  Primary Column ID: ")
+					.WriteLine(response.AttributeId, ConsoleColor.Yellow);
+            }
+            catch (FaultException<OrganizationServiceFault> ex)
+            {
                 output.WriteLine()
-					.Write("Error: ", ConsoleColor.Red)
-					.WriteLine(ex.Message, ConsoleColor.Red);
+                    .Write("Error: ", ConsoleColor.Red)
+                    .WriteLine(ex.Message, ConsoleColor.Red);
 
-				if (ex.InnerException != null)
-				{
-					output.Write("  ").WriteLine(ex.InnerException.Message, ConsoleColor.Red);
-				}
-			}
+                if (ex.InnerException != null)
+                {
+                    output.Write("  ").WriteLine(ex.InnerException.Message, ConsoleColor.Red);
+                }
+            }
         }
 
-		private static BooleanManagedProperty SetTableIsAuditEnabled(CreateTableCommand command)
-		{
-			return new BooleanManagedProperty(command.IsAuditEnabled);
-		}
+        private static BooleanManagedProperty SetTableIsAuditEnabled(CreateCommand command)
+        {
+            return new BooleanManagedProperty(command.IsAuditEnabled);
+        }
 
-		private static string SetTableSchemaName(CreateTableCommand command, string publisherPrefix)
+        private static string SetTableSchemaName(CreateCommand command, string publisherPrefix)
         {
             if (!string.IsNullOrWhiteSpace(command.SchemaName))
             {
@@ -182,7 +187,7 @@ namespace Greg.Xrm.Command.Commands.Create
 
 
 
-        private static Label SetTableDisplayName(CreateTableCommand command, int defaultLanguageCode)
+        private static Label SetTableDisplayName(CreateCommand command, int defaultLanguageCode)
         {
             if (string.IsNullOrWhiteSpace(command.DisplayName))
                 throw new ArgumentException($"The display name is required");
@@ -192,7 +197,7 @@ namespace Greg.Xrm.Command.Commands.Create
 
 
 
-        private async Task<Label> SetTableDisplayCollectionNameAsync(CreateTableCommand command, int defaultLanguageCode)
+        private async Task<Label> SetTableDisplayCollectionNameAsync(CreateCommand command, int defaultLanguageCode)
         {
             if (!string.IsNullOrWhiteSpace(command.DisplayCollectionName))
                 return new Label(command.DisplayCollectionName, defaultLanguageCode);
@@ -205,7 +210,7 @@ namespace Greg.Xrm.Command.Commands.Create
 
 
 
-        private static Label? SetTableDescription(CreateTableCommand command, int defaultLanguageCode)
+        private static Label? SetTableDescription(CreateCommand command, int defaultLanguageCode)
         {
             if (string.IsNullOrWhiteSpace(command.Description))
                 return null;
@@ -214,7 +219,7 @@ namespace Greg.Xrm.Command.Commands.Create
         }
 
 
-        private static string? SetPrimaryAttributeAutoNumberFormat(CreateTableCommand command)
+        private static string? SetPrimaryAttributeAutoNumberFormat(CreateCommand command)
         {
             if (string.IsNullOrWhiteSpace(command.PrimaryAttributeAutoNumber)) return null;
             return command.PrimaryAttributeAutoNumber ?? string.Empty;
@@ -225,7 +230,7 @@ namespace Greg.Xrm.Command.Commands.Create
 
 
 
-        private static int SetPrimaryAttributeMaxLength(CreateTableCommand command)
+        private static int SetPrimaryAttributeMaxLength(CreateCommand command)
         {
             if (command.PrimaryAttributeMaxLength != null)
             {
@@ -243,11 +248,16 @@ namespace Greg.Xrm.Command.Commands.Create
 
 
 
-        private static Label SetPrimaryAttributeDisplayName(CreateTableCommand command, int defaultLanguageCode)
+        private static Label SetPrimaryAttributeDisplayName(CreateCommand command, int defaultLanguageCode)
         {
             if (command.PrimaryAttributeDisplayName != null)
             {
                 return new Label(command.PrimaryAttributeDisplayName, defaultLanguageCode);
+            }
+
+            if (command.PrimaryAttributeAutoNumber != null)
+            {
+                return new Label("Code", defaultLanguageCode);
             }
 
             return new Label("Name", defaultLanguageCode);
@@ -257,7 +267,7 @@ namespace Greg.Xrm.Command.Commands.Create
 
 
 
-        private static string SetPrimaryAttributeSchemaName(CreateTableCommand command, Label displayNameLabel, string publisherPrefix)
+        private static string SetPrimaryAttributeSchemaName(CreateCommand command, Label displayNameLabel, string publisherPrefix)
         {
             if (!string.IsNullOrWhiteSpace(command.PrimaryAttributeSchemaName))
             {
@@ -280,20 +290,24 @@ namespace Greg.Xrm.Command.Commands.Create
             return $"{publisherPrefix}_name";
         }
 
-        private static Label? SetPrimaryAttributeDescription(CreateTableCommand command, int defaultLanguageCode)
+        private static Label? SetPrimaryAttributeDescription(CreateCommand command, int defaultLanguageCode)
         {
             if (string.IsNullOrWhiteSpace(command.PrimaryAttributeDescription))
                 return null;
 
             return new Label(command.PrimaryAttributeDescription, defaultLanguageCode);
-		}
+        }
 
-		private static AttributeRequiredLevelManagedProperty SetPrimaryAttributeRequiredLevel(CreateTableCommand command)
-		{
-			if (command.PrimaryAttributeRequiredLevel == null)
-				return new AttributeRequiredLevelManagedProperty(AttributeRequiredLevel.ApplicationRequired);
+        private static AttributeRequiredLevelManagedProperty SetPrimaryAttributeRequiredLevel(CreateCommand command)
+        {
+            if (command.PrimaryAttributeRequiredLevel != null)
+                return new AttributeRequiredLevelManagedProperty(command.PrimaryAttributeRequiredLevel.Value);
 
-            return new AttributeRequiredLevelManagedProperty(command.PrimaryAttributeRequiredLevel.Value);
-		}
-	}
+            if (command.PrimaryAttributeAutoNumber != null)
+                return new AttributeRequiredLevelManagedProperty(AttributeRequiredLevel.None);
+
+            return new AttributeRequiredLevelManagedProperty(AttributeRequiredLevel.ApplicationRequired);
+
+        }
+    }
 }
