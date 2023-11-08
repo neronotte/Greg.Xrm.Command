@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Greg.Xrm.Command": {
+      "commandName": "Project",
+      "commandLineArgs": "create table -n Pippo"
+    }
+  }
+}
