@@ -1,12 +1,13 @@
-﻿using Microsoft.Extensions.Options;
+﻿using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Metadata;
 
 namespace Greg.Xrm.Command.Commands.Column
 {
-    public abstract class AttributeMetadataBuilderBase : IAttributeMetadataBuilder
+	public abstract class AttributeMetadataBuilderBase : IAttributeMetadataBuilder
     {
-        public abstract AttributeMetadata CreateFrom(CreateCommand command, int languageCode, string publisherPrefix, int customizationOptionValuePrefix);
+        public abstract Task<AttributeMetadata> CreateFromAsync(
+			IOrganizationServiceAsync2 crm, CreateCommand command, int languageCode, string publisherPrefix, int customizationOptionValuePrefix);
 
 
 
@@ -58,7 +59,7 @@ namespace Greg.Xrm.Command.Commands.Column
             if (!string.IsNullOrWhiteSpace(schemaName))
             {
                 if (!schemaName.StartsWith(publisherPrefix + "_"))
-                    throw new CommandException(CommandException.CommandInvalidArgumentValue, $"The primary attribute schema name must start with the publisher prefix. Current publisher prefix is <{publisherPrefix}>, provided value is <{publisherPrefix.Split("_").FirstOrDefault()}>");
+                    throw new CommandException(CommandException.CommandInvalidArgumentValue, $"The primary attribute schema name must start with the publisher prefix. Current publisher prefix is <{publisherPrefix}>, provided value is <{schemaName.Split("_").FirstOrDefault()}>");
 
                 return schemaName;
             }

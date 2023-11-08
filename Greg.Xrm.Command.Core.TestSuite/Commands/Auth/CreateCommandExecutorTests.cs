@@ -1,5 +1,4 @@
 ﻿using Greg.Xrm.Command.Services.Connection;
-using Greg.Xrm.Command.Services.Output;
 using Greg.Xrm.Command.Services.Settings;
 
 namespace Greg.Xrm.Command.Commands.Auth
@@ -8,7 +7,8 @@ namespace Greg.Xrm.Command.Commands.Auth
 	public class CreateCommandExecutorTests
 	{
 		[TestMethod]
-		public void Execute01()
+		[TestCategory("Integration")]
+		public void Integration_Execute01()
 		{
 			var output = new OutputToMemory();
 			var settingsRepository = new SettingsRepository();

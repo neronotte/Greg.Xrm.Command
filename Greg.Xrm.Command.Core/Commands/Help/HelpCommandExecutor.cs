@@ -65,7 +65,24 @@ namespace Greg.Xrm.Command.Commands.Help
 				}
 				if (option.HelpText != null)
 				{
-					output.Write(option.HelpText).Write(" ");
+					var helpText = (option.HelpText ?? string.Empty).Split(Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
+
+					if (helpText.Length == 1)
+					{
+						output.Write(helpText[0]);
+					}
+					else
+					{
+						for (var i = 0; i < helpText.Length; i++)
+						{
+							if (i > 0)
+							{
+								output.WriteLine().Write("  ").Write(string.Empty.PadRight(padding));
+							}
+							output.Write(helpText[i]);
+						}
+					}
+					output.Write(" ");
 				}
 				if (option.ShortName != null)
 				{

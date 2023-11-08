@@ -1,11 +1,8 @@
 using Greg.Xrm.Command.Commands.Auth;
-using Greg.Xrm.Command.Commands.Create;
-using Greg.Xrm.Command.Services.Output;
-using Microsoft.Xrm.Sdk.Metadata;
 
 namespace Greg.Xrm.Command.Parsing
 {
-    [TestClass]
+	[TestClass]
     public class CommandLineParserTest
     {
         [TestMethod]

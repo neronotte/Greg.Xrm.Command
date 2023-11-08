@@ -43,7 +43,7 @@ namespace Greg.Xrm.Command.Commands.Column
 
 
                 var builder = attributeMetadataBuilderFactory.CreateFor(command.AttributeType);
-                var attribute = builder.CreateFrom(command, defaultLanguageCode, publisherPrefix, customizationOptionValuePrefix.Value);
+                var attribute = await builder.CreateFromAsync(crm, command, defaultLanguageCode, publisherPrefix, customizationOptionValuePrefix.Value);
 
 
                 output.Write($"Creating attribute {attribute.SchemaName}...");
@@ -125,7 +125,7 @@ namespace Greg.Xrm.Command.Commands.Column
             }
 
 
-            var customizationOptionValuePrefix = solutionList[0].GetAttributeValue<AliasedValue>("publisher.customizationprefix").Value as int?;
+            var customizationOptionValuePrefix = solutionList[0].GetAttributeValue<AliasedValue>("publisher.customizationoptionvalueprefix").Value as int?;
             if (customizationOptionValuePrefix == null)
             {
                 output.WriteLine("Unable to retrieve the optionset prefix. Please report a bug to the project GitHub page.", ConsoleColor.Red);
