@@ -1,11 +1,17 @@
-﻿using Microsoft.Xrm.Sdk.Metadata;
+﻿using Microsoft.PowerPlatform.Dataverse.Client;
+using Microsoft.Xrm.Sdk.Metadata;
 
 namespace Greg.Xrm.Command.Commands.Column
 {
 
     public class AttributeMetadataBuilderString : AttributeMetadataBuilderBase
     {
-        public override AttributeMetadata CreateFrom(CreateCommand command, int languageCode, string publisherPrefix, int customizationOptionValuePrefix)
+        public override Task<AttributeMetadata> CreateFromAsync(
+			IOrganizationServiceAsync2 crm, 
+            CreateCommand command, 
+            int languageCode, 
+            string publisherPrefix, 
+            int customizationOptionValuePrefix)
         {
             var attribute = new StringAttributeMetadata();
             SetCommonProperties(attribute, command, languageCode, publisherPrefix);
@@ -14,7 +20,7 @@ namespace Greg.Xrm.Command.Commands.Column
             attribute.Format = command.StringFormat;
             attribute.AutoNumberFormat = command.AutoNumber;
 
-            return attribute;
+            return Task.FromResult((AttributeMetadata)attribute);
         }
 
 
