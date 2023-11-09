@@ -15,10 +15,10 @@ namespace Greg.Xrm.Command.Commands.Column
 			string publisherPrefix, 
 			int customizationOptionValuePrefix)
 		{
-			var attribute = new PicklistAttributeMetadata();
+			EnumAttributeMetadata attribute = command.Multiselect ? new MultiSelectPicklistAttributeMetadata() : new PicklistAttributeMetadata();
 			SetCommonProperties(attribute, command, languageCode, publisherPrefix);
 
-			var optionSet = new OptionSetMetadata();
+			var optionSet =  new OptionSetMetadata();
 			optionSet.DisplayName = attribute.DisplayName;
 			optionSet.Description = attribute.Description;
 
