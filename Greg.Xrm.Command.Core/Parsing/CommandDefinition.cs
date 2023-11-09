@@ -131,6 +131,8 @@ namespace Greg.Xrm.Command.Parsing
 				return defaultValue;
 			}
 
+			if (propertyType == typeof(bool) && (optionValue == string.Empty)) optionValue = "true";
+
 			if (string.IsNullOrWhiteSpace(optionValue))
 			{
 				CheckIfMatchType(defaultValue, propertyType, argumentName);
@@ -147,6 +149,7 @@ namespace Greg.Xrm.Command.Parsing
 
 				return enumValue;
 			}
+
 
 
 			try
@@ -169,8 +172,8 @@ namespace Greg.Xrm.Command.Parsing
 		private static void CheckIfMatchType(object? obj, Type type, string argumentName)
 		{
 			if (obj is null) return;
-			if (obj is not Type)
-				throw new CommandException(CommandException.CommandInvalidArgumentType, $"Invalid type for the default value of argument '{argumentName}': expected '{type.FullName}', actual '{obj.GetType().FullName}");
+			if (obj.GetType() != type)
+				throw new CommandException(CommandException.CommandInvalidArgumentType, $"Invalid type for the default value of argument '{argumentName}': expected '{type.FullName}', actual '{obj.GetType().FullName}'");
         }
 
 

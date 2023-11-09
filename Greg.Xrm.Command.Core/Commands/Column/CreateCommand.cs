@@ -2,7 +2,7 @@
 
 namespace Greg.Xrm.Command.Commands.Column
 {
-    [Command("column", "create", HelpText ="Creates a new column on a given Dataverse table.")]
+    [Command("column", "create", HelpText ="Creates a new column on a given Dataverse table")]
     public class CreateCommand
     {
         [Option("table", "t", IsRequired = true, HelpText = "The name of the entity for which you want to create an attribute")]
