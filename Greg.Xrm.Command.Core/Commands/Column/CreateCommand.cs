@@ -44,6 +44,7 @@ namespace Greg.Xrm.Command.Commands.Column
         [Option("globalOptionSetName", "gon", HelpText = "For Picklist type columns that must be tied to a global option set,\nprovides the name of the global option set.")]
         public string? GlobalOptionSetName { get; set; }
 
-
+        [Option("multiselect", "m", HelpText = "Indicates whether the attribute is a multi-select picklist (default: false).", DefaultValue =false)]
+        public bool Multiselect { get; set; } = false;
     }
 }
