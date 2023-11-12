@@ -10,6 +10,7 @@
 			this.IsRequired = false;
 			this.HelpText = null;
 			this.DefaultValue = null;
+			this.SuppressValuesHelp = false;
 		}
 		public OptionAttribute(string longName, string shortName)
 		{
@@ -18,6 +19,7 @@
 			this.IsRequired = false;
 			this.HelpText = null;
 			this.DefaultValue = null;
+			this.SuppressValuesHelp = false;
 		}
 
 		public OptionAttribute(string longName, string shortName, bool isRequired, string helpText, object? defaultValue = null)
@@ -27,6 +29,7 @@
 			this.IsRequired = isRequired;
 			this.HelpText = helpText;
 			this.DefaultValue = defaultValue;
+			this.SuppressValuesHelp = false;
 		}
 
 		public string LongName { get; }
@@ -34,5 +37,7 @@
 		public bool IsRequired { get; set; }
 		public string? HelpText { get; set; }
 		public object? DefaultValue { get; set; }
+
+		public bool SuppressValuesHelp { get; set; }
 	}
 }

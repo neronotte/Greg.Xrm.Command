@@ -35,10 +35,14 @@ namespace Greg.Xrm.Command
 
         public const int ConnectionNotSet = 100001;
         public const int ConnectionInvalid = 100002;
+        
         public const int CommandRequiredArgumentNotProvided = 200001;
 		public const int CommandInvalidArgumentType = 200002;
 		public const int CommandInvalidArgumentValue = 200003;
+        
         public const int DuplicateOption = 300001;
+
+        public const int XrmError = 900001;
 
 	}
 }
