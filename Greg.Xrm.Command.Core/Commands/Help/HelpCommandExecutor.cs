@@ -48,9 +48,15 @@ namespace Greg.Xrm.Command.Commands.Help
 			output.WriteLine().WriteLine();
 
 
+
+
+
 			var padding = command.CommandDefinition.Options.Max(_ => _.Option.LongName.Length) + 6;
-			foreach (var option in command.CommandDefinition.Options.Select(x => x.Option))
+			foreach (var optionDef in command.CommandDefinition.Options)
 			{
+				var option = optionDef.Option;
+				var prop = optionDef.Property;
+
 				output
 					.Write("  ")
 					.Write($"--{option.LongName}".PadRight(padding, ' '), ConsoleColor.DarkCyan);
@@ -63,6 +69,11 @@ namespace Greg.Xrm.Command.Commands.Help
 				{
 					output.Write("[required] ", ConsoleColor.DarkRed);
 				}
+
+
+
+
+
 				if (option.HelpText != null)
 				{
 					var helpText = (option.HelpText ?? string.Empty).Split(Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
@@ -77,7 +88,7 @@ namespace Greg.Xrm.Command.Commands.Help
 						{
 							if (i > 0)
 							{
-								output.WriteLine().Write("  ").Write(string.Empty.PadRight(padding));
+								output.WriteLine().Write("  ").Write(string.Empty.PadRight(padding+11));
 							}
 							output.Write(helpText[i]);
 						}
@@ -86,7 +97,17 @@ namespace Greg.Xrm.Command.Commands.Help
 				}
 				if (option.ShortName != null)
 				{
-					output.Write($"(alias: -{option.ShortName})");
+					output.Write($"(alias: -{option.ShortName}) ");
+				}
+				if (option.DefaultValue != null)
+				{
+					output.WriteLine().Write("  ").Write(string.Empty.PadRight(padding + 11));
+					output.Write($"[default: {option.DefaultValue}] ", ConsoleColor.DarkGray);
+				}
+				if (prop.PropertyType.IsEnum && !option.SuppressValuesHelp)
+				{
+					output.WriteLine().Write("  ").Write(string.Empty.PadRight(padding+11));
+					output.Write($"[values: {string.Join(", ", Enum.GetNames(prop.PropertyType))}] ", ConsoleColor.DarkGray);
 				}
 				output.WriteLine();
 			}
