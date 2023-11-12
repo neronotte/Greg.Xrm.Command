@@ -1,4 +1,5 @@
-﻿using System.Data;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Data;
 using System.Reflection;
 
 namespace Greg.Xrm.Command.Parsing
@@ -10,13 +11,16 @@ namespace Greg.Xrm.Command.Parsing
 			this.Verbs = commandAttribute.Verbs;
 			this.ExpandedVerbs = string.Join(" ", this.Verbs);
 			this.HelpText = commandAttribute.HelpText ?? string.Empty;
+			this.Hidden = commandAttribute.Hidden;
 
 			this.CommandType = commandType;
 
 			this.Options = (from property in this.CommandType.GetProperties()
 							let optionAttribute = property.GetCustomAttribute<OptionAttribute>()
+							let requiredAttribute = property.GetCustomAttribute<RequiredAttribute>()
+							let isRequired = requiredAttribute != null
 							where optionAttribute != null
-							select new OptionDefinition(property, optionAttribute)).ToList();
+							select new OptionDefinition(property, optionAttribute, isRequired)).ToList();
 
 
 			CheckDuplicateOptions();
@@ -43,6 +47,8 @@ namespace Greg.Xrm.Command.Parsing
 		public Type CommandType { get; }
 
 		public string HelpText { get; }
+
+		public bool Hidden { get; }
 		public IReadOnlyList<string> Verbs { get; }
 		public IReadOnlyList<OptionDefinition> Options { get; }
 
@@ -52,7 +58,7 @@ namespace Greg.Xrm.Command.Parsing
 		}
 
 
-		public object? CreateCommand(Dictionary<string, string> options)
+		public object? CreateCommand(IReadOnlyDictionary<string, string> options)
 		{
 			var usedOptions = new List<string>();
 
@@ -70,7 +76,7 @@ namespace Greg.Xrm.Command.Parsing
 				{
 					usedOptions.Add(option.ShortName);
 				}
-				else if(option.IsRequired)
+				else if(optionDef.IsRequired)
 				{
 					throw new CommandException(CommandException.CommandRequiredArgumentNotProvided, $"Option --{option.LongName} is required.");
 				}
@@ -82,11 +88,11 @@ namespace Greg.Xrm.Command.Parsing
 				var propertyType = property.PropertyType;
 
 
-				if (string.IsNullOrWhiteSpace(optionValue) && option.IsRequired)
+				if (string.IsNullOrWhiteSpace(optionValue) && optionDef.IsRequired)
 					throw new CommandException(CommandException.CommandRequiredArgumentNotProvided, $"You must specify a value for the option --{option.LongName}.");
 
 
-				var propertyValue = Convert(optionValue, propertyType, option.LongName, option.IsRequired, option.DefaultValue);
+				var propertyValue = Convert(optionValue, propertyType, option.LongName, optionDef.IsRequired, option.DefaultValue);
 
 				property.SetValue(command, propertyValue);
 			}
@@ -103,7 +109,7 @@ namespace Greg.Xrm.Command.Parsing
 
 
 
-		internal bool IsMatch(List<string> verbs)
+		internal bool IsMatch(IReadOnlyList<string> verbs)
 		{
 			if (verbs.Count != this.Verbs.Count) return false;
 

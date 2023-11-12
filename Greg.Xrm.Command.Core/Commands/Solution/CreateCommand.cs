@@ -1,10 +1,13 @@
-﻿namespace Greg.Xrm.Command.Commands.Solution
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace Greg.Xrm.Command.Commands.Solution
 {
 	[Command("solution", "create", HelpText = "Creates a new unmanaged solution in the current Dataverse environment,\ncreating also the publisher [if needed].")]
 	public class CreateCommand
 	{
-		[Option("name", "n", IsRequired = true, HelpText = "The display name of the solution to create")]
-        public string? DisplayName { get; set; }
+		[Option("name", "n", HelpText = "The display name of the solution to create")]
+		[Required]
+		public string? DisplayName { get; set; }
 
 		[Option("uniqueName", "un", HelpText = "The unique name of the solution to create. If not specified, is deducted from the display name")]
 		public string? UniqueName { get; set; }
