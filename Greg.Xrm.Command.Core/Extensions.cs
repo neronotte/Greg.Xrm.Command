@@ -74,5 +74,11 @@ namespace Greg.Xrm.Command
 			var languageCode = result.Entities[0].GetAttributeValue<int>("languagecode");
 			return languageCode;
 		}
+
+		public static string ToMarkdownCode(this string? text, string? defaultValue = null)
+		{
+			if (string.IsNullOrWhiteSpace(text)) return defaultValue ?? string.Empty;
+			return $"`{text}`";
+		}
 	}
 }

@@ -1,17 +1,20 @@
 ﻿using Microsoft.Xrm.Sdk.Metadata;
+using System.ComponentModel.DataAnnotations;
 
 namespace Greg.Xrm.Command.Commands.Column
 {
     [Command("column", "create", HelpText ="Creates a new column on a given Dataverse table")]
     public class CreateCommand
     {
-        [Option("table", "t", IsRequired = true, HelpText = "The name of the entity for which you want to create an attribute")]
+        [Option("table", "t", HelpText = "The name of the entity for which you want to create an attribute")]
+        [Required]
         public string? EntityName { get; set; }
 
         [Option("solution", "s", HelpText = "The name of the unmanaged solution to which you want to add this attribute.")]
         public string? SolutionName { get; set; }
 
-        [Option("name", "n", IsRequired = true, HelpText = "The display name of the attribute.")]
+        [Option("name", "n", HelpText = "The display name of the attribute.")]
+        [Required]
         public string? DisplayName { get; set; }
 
         [Option("schemaName", "sn", HelpText = "The schema name of the attribute.\nIf not specified, is deducted from the display name")]

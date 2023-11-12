@@ -14,19 +14,26 @@ namespace Greg.Xrm.Command.Commands.Help
 		}
 
 
-		public Task ExecuteAsync(HelpCommand command, CancellationToken cancellationToken)
+		public async Task ExecuteAsync(HelpCommand command, CancellationToken cancellationToken)
 		{
+			if (command.ExportHelp)
+			{
+				this.output.WriteLine("Generating help files...");
+				GenerateMarkdownHelp(command.CommandList, command.ExportHelpPath);
+				return;
+			}
+
 			if (command.CommandDefinition is null)
 			{
 				ShowGenericHelp(command.CommandList);
-				return Task.CompletedTask;
+				return;
 			}
 
 
 
 			var commandAttribute = command.CommandDefinition.CommandType.GetCustomAttribute<CommandAttribute>();
 			if (commandAttribute == null)
-				return Task.CompletedTask;
+				return;
 
 			if (!string.IsNullOrWhiteSpace(commandAttribute.HelpText))
 			{
@@ -61,7 +68,7 @@ namespace Greg.Xrm.Command.Commands.Help
 					.Write("  ")
 					.Write($"--{option.LongName}".PadRight(padding, ' '), ConsoleColor.DarkCyan);
 
-				if (!option.IsRequired)
+				if (!optionDef.IsRequired)
 				{
 					output.Write("[optional] ", ConsoleColor.DarkGray);
 				}
@@ -113,7 +120,12 @@ namespace Greg.Xrm.Command.Commands.Help
 			}
 
 			output.WriteLine();
-			return Task.CompletedTask;
+		}
+
+		private void GenerateMarkdownHelp(List<CommandDefinition> commandList, string exportHelpPath)
+		{
+			var generator = new MarkdownHelpGenerator(this.output, commandList, exportHelpPath);
+			generator.GenerateMarkdownHelp() ;
 		}
 
 
@@ -127,7 +139,7 @@ namespace Greg.Xrm.Command.Commands.Help
 			var padding = commandList.Max(_ => _.ExpandedVerbs.Length) + 4;
 			
 
-			foreach (var command in commandList.Order())
+			foreach (var command in commandList.Where(x => !x.Hidden).Order())
 			{
 				output.Write("  ")
 					.Write(command.ExpandedVerbs.PadRight(padding), ConsoleColor.DarkCyan);
