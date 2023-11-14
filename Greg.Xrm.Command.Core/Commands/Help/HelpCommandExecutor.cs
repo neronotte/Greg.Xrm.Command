@@ -148,7 +148,7 @@ namespace Greg.Xrm.Command.Commands.Help
 
 				if (helpText.Length == 1)
 				{
-					output.WriteLine(helpText[0]);
+					output.Write(helpText[0]);
 				}
 				else
 				{
@@ -158,9 +158,22 @@ namespace Greg.Xrm.Command.Commands.Help
 						{
 							output.Write("  ").Write(string.Empty.PadRight(padding));
 						}
-						output.WriteLine(helpText[i]);
+						output.Write(helpText[i]);
+						if (i < helpText.Length - 1)
+						{
+							output.WriteLine();
+						}
 					}
 				}
+
+				if (command.Aliases.Count > 0 )
+				{
+					var label = command.Aliases.Count == 1 ? "alias" : "aliases";
+
+					output.Write(" ").Write($"({label}: {string.Join(", ", command.Aliases)})", ConsoleColor.DarkGray);
+
+				}
+				output.WriteLine();
 			}
 		}
 	}

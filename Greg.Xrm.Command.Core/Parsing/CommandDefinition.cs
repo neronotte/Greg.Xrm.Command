@@ -1,12 +1,13 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Reflection;
+using System.Linq;
 
 namespace Greg.Xrm.Command.Parsing
 {
 	public class CommandDefinition : IComparable<CommandDefinition>
 	{
-		public CommandDefinition(CommandAttribute commandAttribute, Type commandType)
+		public CommandDefinition(CommandAttribute commandAttribute, Type commandType, IReadOnlyList<AliasAttribute> aliases)
 		{
 			this.Verbs = commandAttribute.Verbs;
 			this.ExpandedVerbs = string.Join(" ", this.Verbs);
@@ -14,7 +15,7 @@ namespace Greg.Xrm.Command.Parsing
 			this.Hidden = commandAttribute.Hidden;
 
 			this.CommandType = commandType;
-
+			this.Aliases = aliases;
 			this.Options = (from property in this.CommandType.GetProperties()
 							let optionAttribute = property.GetCustomAttribute<OptionAttribute>()
 							let requiredAttribute = property.GetCustomAttribute<RequiredAttribute>()
@@ -45,7 +46,7 @@ namespace Greg.Xrm.Command.Parsing
 
 		public string ExpandedVerbs { get; }
 		public Type CommandType { get; }
-
+		public IReadOnlyList<AliasAttribute> Aliases { get; }
 		public string HelpText { get; }
 
 		public bool Hidden { get; }
@@ -108,20 +109,55 @@ namespace Greg.Xrm.Command.Parsing
 
 
 
-
-		internal bool IsMatch(IReadOnlyList<string> verbs)
+		public bool TryMatch(CommandDefinition other, out string matchedAlias)
 		{
-			if (verbs.Count != this.Verbs.Count) return false;
-
-			for (int i = 0; i < this.Verbs.Count; i++)
+			var thisVerbs = new List<string>
 			{
-				if (!string.Equals(verbs[i], this.Verbs[i], StringComparison.OrdinalIgnoreCase)) return false;
+				this.ExpandedVerbs
+			};
+			thisVerbs.AddRange(this.Aliases.Select(x => x.ExpandedVerbs));
+
+			var otherVerbs = new List<string>
+			{
+				other.ExpandedVerbs
+			};
+			otherVerbs.AddRange(other.Aliases.Select(x => x.ExpandedVerbs));
+
+			foreach (var v1 in thisVerbs)
+			{
+				foreach (var v2 in otherVerbs)
+				{
+					if (string.Equals(v1, v2, StringComparison.OrdinalIgnoreCase))
+					{
+						matchedAlias = $"<{v1}>: {this.CommandType.FullName} and {other.CommandType.FullName}";
+						return true;
+					}
+				}
+			}
+
+			matchedAlias = string.Empty;
+			return false;
+		}
+
+
+
+		public bool IsMatch(IReadOnlyList<string> verbs)
+		{
+			if (IsMatch(verbs, this.Verbs)) return true;
+			return this.Aliases.Any(x => IsMatch(verbs, x.Verbs));
+		}
+
+		private static bool IsMatch(IReadOnlyList<string> outerVerbs, IReadOnlyList<string> innerVerbs)
+		{
+			if (outerVerbs.Count != innerVerbs.Count) return false;
+
+			for (int i = 0; i < innerVerbs.Count; i++)
+			{
+				if (!string.Equals(outerVerbs[i], innerVerbs[i], StringComparison.OrdinalIgnoreCase)) return false;
 			}
 
 			return true;
 		}
-
-
 
 
 

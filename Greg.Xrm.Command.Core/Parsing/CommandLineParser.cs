@@ -1,5 +1,4 @@
-﻿using Greg.Xrm.Command.Commands;
-using Greg.Xrm.Command.Commands.Help;
+﻿using Greg.Xrm.Command.Commands.Help;
 using Greg.Xrm.Command.Services.Output;
 using System.Reflection;
 
@@ -24,11 +23,21 @@ namespace Greg.Xrm.Command.Parsing
 							   where commandAttribute != null
 							   where !commandType.IsAbstract && commandType.GetConstructors().Any(c => c.IsPublic && c.GetParameters().Length == 0)
 							   where !commandDefinitionList.Exists(c => c.CommandType == commandType)
-							   select new CommandDefinition(commandAttribute, commandType)).ToList();
+							   let aliasAttributes = (commandType.GetCustomAttributes<AliasAttribute>()?.ToArray() ?? Array.Empty<AliasAttribute>())
+							   select new CommandDefinition(commandAttribute, commandType, aliasAttributes)).ToList();
 #pragma warning restore S6605 // Collection-specific "Exists" method should be used instead of the "Any" extension
 
 
-			commandDefinitionList.AddRange(commandList);
+			foreach (var command in commandList)
+			{
+				foreach (var command2 in this.commandDefinitionList)
+				{
+					if (command.TryMatch(command2, out var matchedAlias))
+						throw new CommandException(CommandException.DuplicateCommand, $"Duplicate command {matchedAlias}.");
+				}
+
+				this.commandDefinitionList.Add(command);
+			}
 		}
 
 

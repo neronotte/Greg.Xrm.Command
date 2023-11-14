@@ -61,6 +61,19 @@ namespace Greg.Xrm.Command.Services.Connection
 			return new ServiceClient(connectionString + ";TokenCacheStorePath=" + GetTokenCachePath());
 		}
 
+
+		public async Task<IOrganizationServiceAsync2> GetConnectionByName(string connectionName)
+		{
+			var connectionStrings = await this.settings.GetAsync<ConnectionSetting>("connections")
+				?? throw new CommandException(CommandException.ConnectionNotSet, "Dataverse connection has not been set yet.");
+
+			if (!connectionStrings.ConnectionStrings.TryGetValue(connectionName, out var connectionString))
+				throw new CommandException(CommandException.ConnectionNotSet, "Dataverse connection has not been set yet.");
+
+			return new ServiceClient(connectionString + ";TokenCacheStorePath=" + GetTokenCachePath());
+		}
+
+
 		public async Task SetConnectionAsync(string name, string connectionString)
 		{
 			try
