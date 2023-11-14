@@ -6,6 +6,7 @@ using System.ComponentModel.DataAnnotations;
 namespace Greg.Xrm.Command.Commands.Table
 {
 	[Command("table", "create", HelpText = "Creates a new table in the dataverse environment that has previously been selected via `pacx auth select`")]
+    [Alias("create", "table")]
 	public class CreateCommand : ICanProvideUsageExample
     {
         // pacx create table --name "My Table"

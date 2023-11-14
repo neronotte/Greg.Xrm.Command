@@ -39,10 +39,11 @@ namespace Greg.Xrm.Command
         public const int CommandRequiredArgumentNotProvided = 200001;
 		public const int CommandInvalidArgumentType = 200002;
 		public const int CommandInvalidArgumentValue = 200003;
-        
-        public const int DuplicateOption = 300001;
 
-        public const int XrmError = 900001;
+		public const int DuplicateCommand = 300001;
+		public const int DuplicateOption = 300002;
+
+		public const int XrmError = 900001;
 
 	}
 }
