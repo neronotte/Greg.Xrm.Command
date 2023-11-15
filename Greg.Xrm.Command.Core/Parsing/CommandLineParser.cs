@@ -112,6 +112,7 @@ namespace Greg.Xrm.Command.Parsing
 
 		private static bool IsOption(string arg)
 		{
+			if (double.TryParse(arg, out double value)) return false;
 			return arg.StartsWith("-", StringComparison.Ordinal);
 		}
 

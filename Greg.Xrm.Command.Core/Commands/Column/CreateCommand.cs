@@ -44,6 +44,13 @@ namespace Greg.Xrm.Command.Commands.Column
         [Option("globalOptionSetName", "gon", HelpText = "For Picklist type columns that must be tied to a global option set,\nprovides the name of the global option set.")]
         public string? GlobalOptionSetName { get; set; }
 
+        [Option("intMinValue", "imin", HelpText = "For whole number type columns indicates the minimum value for the column. (default: int.MinValue)")]
+        public int? IntegerMinValue{ get; set; }
 
+        [Option("intMaxValue", "imax", HelpText = "For whole number type columns indicates the maximum value for the column.(default: int.MaxValue)")]
+        public int? IntegerMaxValue { get; set; }
+
+        [Option("intFormat", "if", HelpText = "For whole number type columns indicates the integer format for the column.(default: None)")]
+        public IntegerFormat IntegerFormat { get; set; } = IntegerFormat.None;
     }
 }
