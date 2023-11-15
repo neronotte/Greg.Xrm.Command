@@ -2,12 +2,12 @@
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Metadata;
 
-namespace Greg.Xrm.Command.Commands.Column
+namespace Greg.Xrm.Command.Commands.Column.Builders
 {
-	public abstract class AttributeMetadataBuilderBase : IAttributeMetadataBuilder
+    public abstract class AttributeMetadataBuilderBase : IAttributeMetadataBuilder
     {
         public abstract Task<AttributeMetadata> CreateFromAsync(
-			IOrganizationServiceAsync2 crm, CreateCommand command, int languageCode, string publisherPrefix, int customizationOptionValuePrefix);
+            IOrganizationServiceAsync2 crm, CreateCommand command, int languageCode, string publisherPrefix, int customizationOptionValuePrefix);
 
 
 

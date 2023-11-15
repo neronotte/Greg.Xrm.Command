@@ -111,10 +111,12 @@ namespace Greg.Xrm.Command.Commands.Help
 					output.WriteLine().Write("  ").Write(string.Empty.PadRight(padding + 11));
 					output.Write($"[default: {option.DefaultValue}] ", ConsoleColor.DarkGray);
 				}
-				if (prop.PropertyType.IsEnum && !option.SuppressValuesHelp)
+
+				var enumType = prop.PropertyType.GetEnumType();
+				if (enumType != null && !option.SuppressValuesHelp)
 				{
 					output.WriteLine().Write("  ").Write(string.Empty.PadRight(padding+11));
-					output.Write($"[values: {string.Join(", ", Enum.GetNames(prop.PropertyType))}] ", ConsoleColor.DarkGray);
+					output.Write($"[values: {string.Join(", ", Enum.GetNames(enumType))}] ", ConsoleColor.DarkGray);
 				}
 				output.WriteLine();
 			}
