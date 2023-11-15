@@ -1,6 +1,7 @@
 ﻿using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;
+using System.Globalization;
 using System.Text;
 
 namespace Greg.Xrm.Command
@@ -79,6 +80,106 @@ namespace Greg.Xrm.Command
 		{
 			if (string.IsNullOrWhiteSpace(text)) return defaultValue ?? string.Empty;
 			return $"`{text}`";
+		}
+
+
+
+
+		/// <summary>
+		/// Returns the formatted value of a given entity attribute.
+		/// </summary>
+		/// <param name="entity">The entity</param>
+		/// <param name="propertyName">The attribute to retrieve</param>
+		/// <returns>The formatted value of the specified property</returns>
+		public static string GetFormattedValue(this Entity entity, string propertyName)
+		{
+			return entity.FormattedValues.Contains(propertyName) ?
+				entity.FormattedValues[propertyName] :
+				entity.GetLiteralValue(propertyName);
+		}
+
+		/// <summary>
+		/// Converts the value of a property to its string representation
+		/// </summary>
+		/// <param name="entity">The entity</param>
+		/// <param name="propertyName">The attribute to retrieve</param>
+		/// <returns>The string representation of the specified property</returns>
+		public static string GetLiteralValue(this Entity entity, string propertyName)
+		{
+			if (string.IsNullOrEmpty(propertyName)) return string.Empty;
+
+			entity.Attributes.TryGetValue(propertyName, out object oValue);
+
+			return StringFromObject(oValue);
+		}
+
+		private static string StringFromObject(object oValue)
+		{
+			if (oValue == null) return string.Empty;
+
+			if (oValue is EntityReference entityReference)
+				return entityReference.Name;
+
+			if (oValue is OptionSetValue optionSetValue)
+				return optionSetValue.Value.ToString();
+
+			if (oValue is Money money)
+				return money.Value.ToString(CultureInfo.CurrentUICulture);
+
+			if (oValue is AliasedValue aliasedValue)
+				return StringFromObject(aliasedValue.Value);
+
+			return oValue.ToString();
+		}
+
+
+		/// <summary>
+		/// Returns a new entity created merging the two provided ones.
+		/// </summary>
+		/// <param name="main">The original entity</param>
+		/// <param name="delta">The entity to overlap</param>
+		/// <returns>A new entity merged from the previous two</returns>
+		public static Entity Merge(this Entity main, Entity delta)
+		{
+			var entityName = main != null ? main.LogicalName : delta != null ? delta.LogicalName : string.Empty;
+			var entityId = main != null ? main.Id : delta != null ? delta.Id : Guid.Empty;
+
+			var entity = new Entity(entityName) { Id = entityId };
+
+			if (main != null)
+			{
+				foreach (var attribute in main.Attributes)
+				{
+					entity[attribute.Key] = attribute.Value;
+				}
+			}
+
+			if (delta != null)
+			{
+				foreach (var attribute in delta.Attributes)
+				{
+					entity[attribute.Key] = attribute.Value;
+				}
+			}
+
+			return entity;
+		}
+
+
+
+		public static Type? GetEnumType(this Type type)
+		{
+			if (type.IsEnum)
+			{
+				return type;
+			}
+
+			var u = Nullable.GetUnderlyingType(type);
+			if (u != null)
+			{
+				return u;
+			}
+			return null;
 		}
 	}
 }

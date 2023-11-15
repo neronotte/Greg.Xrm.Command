@@ -1,5 +1,5 @@
 ﻿using Greg.Xrm.Command;
-using Greg.Xrm.Command.Commands.Column;
+using Greg.Xrm.Command.Commands.Column.Builders;
 using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
 using Greg.Xrm.Command.Services.Pluralization;
