@@ -10,6 +10,7 @@ namespace Greg.Xrm.Command.Commands.Column.Builders
         {
             cache.Add(AttributeTypeCode.String, () => new AttributeMetadataBuilderString());
             cache.Add(AttributeTypeCode.Picklist, () => new AttributeMetadataBuilderPicklist());
+            cache.Add(AttributeTypeCode.Integer, () => new AttributeMetadataBuilderInteger());
         }
 
         public IAttributeMetadataBuilder CreateFor(AttributeTypeCode attributeType)
