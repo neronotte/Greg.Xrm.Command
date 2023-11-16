@@ -77,14 +77,10 @@ jobs:
         .\Greg.Xrm.Command\bin\Release\net7.0\pacx.exe --export $GITHUB_WORKSPACE/wiki
 
     - name: Push documentation to wiki
-      uses: joeizzard/action-wiki-sync@master
+      uses: OrlovM/Wiki-Action@v1
       with:
-        username: ${{ github.event.pusher.name }}
-        access_token: ${{ secrets.GH_TOKEN }}
-        wiki_folder: $GITHUB_WORKSPACE/wiki
-        commit_username: ${{ github.event.pusher.name }}
-        commit_email: ${{ github.event.pusher.email }}
-        commit_message: 'action wiki sync: ${{ github.event.commits[0].message }}'
+        path: $GITHUB_WORKSPACE/wiki
+        token: ${{ secrets.GH_TOKEN }}
 
     # Publish artifacts
     - name: Publish Artifacts
