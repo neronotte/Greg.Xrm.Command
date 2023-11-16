@@ -42,16 +42,19 @@ namespace Greg.Xrm.Command.Services
 		public MarkdownWriter WriteTitle1(string title)
 		{
 			writer.WriteLine("# " + title);
+			writer.WriteLine();
 			return this;
 		}
 		public MarkdownWriter WriteTitle2(string title)
 		{
 			writer.WriteLine("## " + title);
+			writer.WriteLine();
 			return this;
 		}
 		public MarkdownWriter WriteTitle3(string title)
 		{
 			writer.WriteLine("### " + title);
+			writer.WriteLine();
 			return this;
 		}
 
@@ -94,6 +97,18 @@ namespace Greg.Xrm.Command.Services
 			writer.WriteLine(code);
 			writer.WriteLine("```");
 			writer.WriteLine();
+			return this;
+		}
+		public MarkdownWriter WriteCodeBlockStart(string language)
+		{
+			writer.Write("```");
+			writer.Write(language);
+			writer.WriteLine();
+			return this;
+		}
+		public MarkdownWriter WriteCodeBlockEnd()
+		{
+			writer.WriteLine("```");
 			return this;
 		}
 
