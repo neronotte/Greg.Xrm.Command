@@ -37,7 +37,7 @@ namespace Greg.Xrm.Command.Commands.Column
 		[Option("requiredLevel", "r", HelpText = "The required level of the attribute.")]
 		public AttributeRequiredLevel RequiredLevel { get; set; } = AttributeRequiredLevel.None;
 
-		[Option("len", "l", HelpText = "The maximum length for string attribute.")]
+		[Option("len", "l", HelpText = "The maximum length for string attribute.", SuppressValuesHelp = true)]
 		public int? MaxLength { get; set; }
 
 		[Option("autoNumber", "an", HelpText = "In case of autonumber field, the autonumber format to apply.")]
@@ -55,10 +55,22 @@ namespace Greg.Xrm.Command.Commands.Column
 		[Option("multiselect", "m", HelpText = "Indicates whether the attribute is a multi-select picklist (default: false).", DefaultValue = false)]
 		public bool Multiselect { get; set; } = false;
 
-		[Option("min", "min", HelpText = "For number type columns indicates the minimum value for the column.")]
+		[Option("min", "min", HelpText = "For number type columns indicates the minimum value for the column.", SuppressValuesHelp = true)]
 		public double? MinValue { get; set; }
 
-		[Option("max", "max", HelpText = "For number type columns indicates the maximum value for the column.")]
+		[Option("max", "max", HelpText = "For number type columns indicates the maximum value for the column.", SuppressValuesHelp = true)]
 		public double? MaxValue { get; set; }
-	}
+
+
+
+        [Option("precision", "p", HelpText = "For money type columns indicates the precision for the column (default: 2).", SuppressValuesHelp = true)]
+        public int? Precision { get; set; }
+
+        [Option("precisionSource", "ps", HelpText = "For money type columns indicates the precision source for the column  (default: 2).", SuppressValuesHelp = true)]
+        public int? PrecisionSource{ get; set; }
+
+		[Option("imeMode", "ime", HelpText = "For number type columns indicates the input method editor (IME) mode for the column. (default: Disabled)")]
+		public ImeMode ImeMode { get; set; } = ImeMode.Disabled;
+
+    }
 }
