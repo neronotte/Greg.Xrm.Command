@@ -1,5 +1,4 @@
-﻿using Greg.Xrm.Command.Commands;
-using Greg.Xrm.Command.Commands.Help;
+﻿using Greg.Xrm.Command.Commands.Help;
 using Greg.Xrm.Command.Services.Output;
 using System.Reflection;
 
@@ -24,11 +23,21 @@ namespace Greg.Xrm.Command.Parsing
 							   where commandAttribute != null
 							   where !commandType.IsAbstract && commandType.GetConstructors().Any(c => c.IsPublic && c.GetParameters().Length == 0)
 							   where !commandDefinitionList.Exists(c => c.CommandType == commandType)
-							   select new CommandDefinition(commandAttribute, commandType)).ToList();
+							   let aliasAttributes = (commandType.GetCustomAttributes<AliasAttribute>()?.ToArray() ?? Array.Empty<AliasAttribute>())
+							   select new CommandDefinition(commandAttribute, commandType, aliasAttributes)).ToList();
 #pragma warning restore S6605 // Collection-specific "Exists" method should be used instead of the "Any" extension
 
 
-			commandDefinitionList.AddRange(commandList);
+			foreach (var command in commandList)
+			{
+				foreach (var command2 in this.commandDefinitionList)
+				{
+					if (command.TryMatch(command2, out var matchedAlias))
+						throw new CommandException(CommandException.DuplicateCommand, $"Duplicate command {matchedAlias}.");
+				}
+
+				this.commandDefinitionList.Add(command);
+			}
 		}
 
 
@@ -40,60 +49,29 @@ namespace Greg.Xrm.Command.Parsing
 			return Parse(args.ToArray());
 		}
 
+
+
 		public object? Parse(params string[] args)
 		{
-			var verbs = new List<string>();
-			var options = new Dictionary<string, string>();
-
-			for (int i = 0; i < args.Length; i++)
-			{
-				var arg = args[i];
-
-				if (IsVerb(arg, options))
-				{
-					verbs.Add(arg);
-				}
-				else if (IsOption(arg))
-				{
-					var optionName = arg;
-					if (i + 1 >= args.Length)
-					{
-						options.Add(optionName, string.Empty);
-						continue;
-					}
-
-
-					var optionValue = args[i + 1];
-					if (IsOption(optionValue))
-					{
-						options.Add(optionName, string.Empty);
-						continue;
-					}
-					
-					options.Add(optionName, optionValue);
-					i++; // need to advance by two
-				}
-				else
-				{
-					output.WriteLine($"Invalid syntax on argument '{arg}'. Type --help to get help on a specific command syntax.");
-					return null;
-				}
-			}
+			if (!CommandRunArgs.TryParse(args, this.output, out var runArgs))
+				return null;
 
 
 			// shows the generic help
-			if (verbs.Count == 0 || (verbs.Count == 1 && string.Equals("help", verbs[0], StringComparison.OrdinalIgnoreCase)))
+			if (runArgs == null 
+				|| runArgs.Verbs.Count == 0 
+				|| (runArgs.Verbs.Count == 1 && string.Equals("help", runArgs.Verbs[0], StringComparison.OrdinalIgnoreCase)))
 			{
-				return new HelpCommand(this.commandDefinitionList);
+				return new HelpCommand(this.commandDefinitionList, runArgs.Options);
 			}
 
 
-			var showHelp = options.ContainsKey("--help")
-				|| options.ContainsKey("-h")
-				|| options.ContainsKey("/?");
+			var showHelp = runArgs.Options.ContainsKey("--help")
+				|| runArgs.Options.ContainsKey("-h")
+				|| runArgs.Options.ContainsKey("/?");
 			
 
-			var commandDefinition = commandDefinitionList.Find(c => c.IsMatch(verbs));
+			var commandDefinition = commandDefinitionList.Find(c => c.IsMatch(runArgs.Verbs));
 			if (commandDefinition is null) 
 				return null;
 
@@ -103,22 +81,11 @@ namespace Greg.Xrm.Command.Parsing
 			}
 
 
-			var command = commandDefinition.CreateCommand(options);
+			var command = commandDefinition.CreateCommand(runArgs.Options);
 			return command;
 		}
 
 
 
-
-		private static bool IsOption(string arg)
-		{
-			if (double.TryParse(arg, out double value)) return false;
-			return arg.StartsWith("-", StringComparison.Ordinal);
-		}
-
-		private static bool IsVerb(string arg, Dictionary<string, string> options)
-		{
-			return options.Count == 0 && !IsOption(arg);
-		}
 	}
 }

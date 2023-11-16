@@ -28,10 +28,7 @@ namespace Greg.Xrm.Command.Commands.Table
         }
 
         public async Task ExecuteAsync(CreateCommand command, CancellationToken cancellationToken)
-        {
-            int defaultLanguageCode = 1033;
-
-
+		{
 			this.output.Write($"Connecting to the current dataverse environment...");
 			var crm = await this.organizationServiceRepository.GetCurrentConnectionAsync();
 			this.output.WriteLine("Done", ConsoleColor.Green);
@@ -39,6 +36,8 @@ namespace Greg.Xrm.Command.Commands.Table
 
 			try
 			{
+			    var defaultLanguageCode = await crm.GetDefaultLanguageCodeAsync();
+
                 var currentSolutionName = command.SolutionName;
                 if (string.IsNullOrWhiteSpace(currentSolutionName))
                 {

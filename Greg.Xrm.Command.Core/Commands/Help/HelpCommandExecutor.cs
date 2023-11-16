@@ -14,19 +14,26 @@ namespace Greg.Xrm.Command.Commands.Help
 		}
 
 
-		public Task ExecuteAsync(HelpCommand command, CancellationToken cancellationToken)
+		public async Task ExecuteAsync(HelpCommand command, CancellationToken cancellationToken)
 		{
+			if (command.ExportHelp)
+			{
+				this.output.WriteLine("Generating help files...");
+				GenerateMarkdownHelp(command.CommandList, command.ExportHelpPath);
+				return;
+			}
+
 			if (command.CommandDefinition is null)
 			{
 				ShowGenericHelp(command.CommandList);
-				return Task.CompletedTask;
+				return;
 			}
 
 
 
 			var commandAttribute = command.CommandDefinition.CommandType.GetCustomAttribute<CommandAttribute>();
 			if (commandAttribute == null)
-				return Task.CompletedTask;
+				return;
 
 			if (!string.IsNullOrWhiteSpace(commandAttribute.HelpText))
 			{
@@ -48,14 +55,20 @@ namespace Greg.Xrm.Command.Commands.Help
 			output.WriteLine().WriteLine();
 
 
+
+
+
 			var padding = command.CommandDefinition.Options.Max(_ => _.Option.LongName.Length) + 6;
-			foreach (var option in command.CommandDefinition.Options.Select(x => x.Option))
+			foreach (var optionDef in command.CommandDefinition.Options)
 			{
+				var option = optionDef.Option;
+				var prop = optionDef.Property;
+
 				output
 					.Write("  ")
 					.Write($"--{option.LongName}".PadRight(padding, ' '), ConsoleColor.DarkCyan);
 
-				if (!option.IsRequired)
+				if (!optionDef.IsRequired)
 				{
 					output.Write("[optional] ", ConsoleColor.DarkGray);
 				}
@@ -63,6 +76,11 @@ namespace Greg.Xrm.Command.Commands.Help
 				{
 					output.Write("[required] ", ConsoleColor.DarkRed);
 				}
+
+
+
+
+
 				if (option.HelpText != null)
 				{
 					var helpText = (option.HelpText ?? string.Empty).Split(Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
@@ -77,7 +95,7 @@ namespace Greg.Xrm.Command.Commands.Help
 						{
 							if (i > 0)
 							{
-								output.WriteLine().Write("  ").Write(string.Empty.PadRight(padding));
+								output.WriteLine().Write("  ").Write(string.Empty.PadRight(padding+11));
 							}
 							output.Write(helpText[i]);
 						}
@@ -86,13 +104,30 @@ namespace Greg.Xrm.Command.Commands.Help
 				}
 				if (option.ShortName != null)
 				{
-					output.Write($"(alias: -{option.ShortName})");
+					output.Write($"(alias: -{option.ShortName}) ");
+				}
+				if (option.DefaultValue != null)
+				{
+					output.WriteLine().Write("  ").Write(string.Empty.PadRight(padding + 11));
+					output.Write($"[default: {option.DefaultValue}] ", ConsoleColor.DarkGray);
+				}
+
+				var enumType = prop.PropertyType.GetEnumType();
+				if (enumType != null && !option.SuppressValuesHelp)
+				{
+					output.WriteLine().Write("  ").Write(string.Empty.PadRight(padding+11));
+					output.Write($"[values: {string.Join(", ", Enum.GetNames(enumType))}] ", ConsoleColor.DarkGray);
 				}
 				output.WriteLine();
 			}
 
 			output.WriteLine();
-			return Task.CompletedTask;
+		}
+
+		private void GenerateMarkdownHelp(List<CommandDefinition> commandList, string exportHelpPath)
+		{
+			var generator = new MarkdownHelpGenerator(this.output, commandList, exportHelpPath);
+			generator.GenerateMarkdownHelp() ;
 		}
 
 
@@ -106,7 +141,7 @@ namespace Greg.Xrm.Command.Commands.Help
 			var padding = commandList.Max(_ => _.ExpandedVerbs.Length) + 4;
 			
 
-			foreach (var command in commandList.Order())
+			foreach (var command in commandList.Where(x => !x.Hidden).Order())
 			{
 				output.Write("  ")
 					.Write(command.ExpandedVerbs.PadRight(padding), ConsoleColor.DarkCyan);
@@ -115,7 +150,7 @@ namespace Greg.Xrm.Command.Commands.Help
 
 				if (helpText.Length == 1)
 				{
-					output.WriteLine(helpText[0]);
+					output.Write(helpText[0]);
 				}
 				else
 				{
@@ -125,9 +160,22 @@ namespace Greg.Xrm.Command.Commands.Help
 						{
 							output.Write("  ").Write(string.Empty.PadRight(padding));
 						}
-						output.WriteLine(helpText[i]);
+						output.Write(helpText[i]);
+						if (i < helpText.Length - 1)
+						{
+							output.WriteLine();
+						}
 					}
 				}
+
+				if (command.Aliases.Count > 0 )
+				{
+					var label = command.Aliases.Count == 1 ? "alias" : "aliases";
+
+					output.Write(" ").Write($"({label}: {string.Join(", ", command.Aliases)})", ConsoleColor.DarkGray);
+
+				}
+				output.WriteLine();
 			}
 		}
 	}

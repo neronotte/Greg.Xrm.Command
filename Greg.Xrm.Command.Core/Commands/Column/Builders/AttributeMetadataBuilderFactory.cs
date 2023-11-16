@@ -1,8 +1,8 @@
 ﻿using Microsoft.Xrm.Sdk.Metadata;
 
-namespace Greg.Xrm.Command.Commands.Column
+namespace Greg.Xrm.Command.Commands.Column.Builders
 {
-	public class AttributeMetadataBuilderFactory : IAttributeMetadataBuilderFactory
+    public class AttributeMetadataBuilderFactory : IAttributeMetadataBuilderFactory
     {
         private readonly Dictionary<AttributeTypeCode, Func<IAttributeMetadataBuilder>> cache = new();
 

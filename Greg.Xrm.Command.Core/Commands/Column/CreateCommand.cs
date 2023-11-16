@@ -1,17 +1,22 @@
-﻿using Microsoft.Xrm.Sdk.Metadata;
+﻿using Greg.Xrm.Command.Parsing;
+using Microsoft.Xrm.Sdk.Metadata;
+using System.ComponentModel.DataAnnotations;
 
 namespace Greg.Xrm.Command.Commands.Column
 {
-    [Command("column", "create", HelpText ="Creates a new column on a given Dataverse table.")]
-    public class CreateCommand
+    [Command("column", "create", HelpText ="Creates a new column on a given Dataverse table")]
+	[Alias("create", "column")]
+	public class CreateCommand
     {
-        [Option("table", "t", IsRequired = true, HelpText = "The name of the entity for which you want to create an attribute")]
+        [Option("table", "t", HelpText = "The name of the entity for which you want to create an attribute")]
+        [Required]
         public string? EntityName { get; set; }
 
         [Option("solution", "s", HelpText = "The name of the unmanaged solution to which you want to add this attribute.")]
         public string? SolutionName { get; set; }
 
-        [Option("name", "n", IsRequired = true, HelpText = "The display name of the attribute.")]
+        [Option("name", "n", HelpText = "The display name of the attribute.")]
+        [Required]
         public string? DisplayName { get; set; }
 
         [Option("schemaName", "sn", HelpText = "The schema name of the attribute.\nIf not specified, is deducted from the display name")]
@@ -44,7 +49,10 @@ namespace Greg.Xrm.Command.Commands.Column
         [Option("globalOptionSetName", "gon", HelpText = "For Picklist type columns that must be tied to a global option set,\nprovides the name of the global option set.")]
         public string? GlobalOptionSetName { get; set; }
 
-        [Option("intMinValue", "imin", HelpText = "For whole number type columns indicates the minimum value for the column. (default: int.MinValue)")]
+		[Option("multiselect", "m", HelpText = "Indicates whether the attribute is a multi-select picklist (default: false).", DefaultValue = false)]
+		public bool Multiselect { get; set; } = false;
+
+		[Option("intMinValue", "imin", HelpText = "For whole number type columns indicates the minimum value for the column. (default: int.MinValue)")]
         public int? IntegerMinValue{ get; set; }
 
         [Option("intMaxValue", "imax", HelpText = "For whole number type columns indicates the maximum value for the column.(default: int.MaxValue)")]

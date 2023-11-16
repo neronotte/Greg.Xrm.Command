@@ -1,22 +1,27 @@
-﻿using System.Data;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Data;
 using System.Reflection;
+using System.Linq;
 
 namespace Greg.Xrm.Command.Parsing
 {
 	public class CommandDefinition : IComparable<CommandDefinition>
 	{
-		public CommandDefinition(CommandAttribute commandAttribute, Type commandType)
+		public CommandDefinition(CommandAttribute commandAttribute, Type commandType, IReadOnlyList<AliasAttribute> aliases)
 		{
 			this.Verbs = commandAttribute.Verbs;
 			this.ExpandedVerbs = string.Join(" ", this.Verbs);
 			this.HelpText = commandAttribute.HelpText ?? string.Empty;
+			this.Hidden = commandAttribute.Hidden;
 
 			this.CommandType = commandType;
-
+			this.Aliases = aliases;
 			this.Options = (from property in this.CommandType.GetProperties()
 							let optionAttribute = property.GetCustomAttribute<OptionAttribute>()
+							let requiredAttribute = property.GetCustomAttribute<RequiredAttribute>()
+							let isRequired = requiredAttribute != null
 							where optionAttribute != null
-							select new OptionDefinition(property, optionAttribute)).ToList();
+							select new OptionDefinition(property, optionAttribute, isRequired)).ToList();
 
 
 			CheckDuplicateOptions();
@@ -41,8 +46,10 @@ namespace Greg.Xrm.Command.Parsing
 
 		public string ExpandedVerbs { get; }
 		public Type CommandType { get; }
-
+		public IReadOnlyList<AliasAttribute> Aliases { get; }
 		public string HelpText { get; }
+
+		public bool Hidden { get; }
 		public IReadOnlyList<string> Verbs { get; }
 		public IReadOnlyList<OptionDefinition> Options { get; }
 
@@ -52,7 +59,7 @@ namespace Greg.Xrm.Command.Parsing
 		}
 
 
-		public object? CreateCommand(Dictionary<string, string> options)
+		public object? CreateCommand(IReadOnlyDictionary<string, string> options)
 		{
 			var usedOptions = new List<string>();
 
@@ -70,7 +77,7 @@ namespace Greg.Xrm.Command.Parsing
 				{
 					usedOptions.Add(option.ShortName);
 				}
-				else if(option.IsRequired)
+				else if(optionDef.IsRequired)
 				{
 					throw new CommandException(CommandException.CommandRequiredArgumentNotProvided, $"Option --{option.LongName} is required.");
 				}
@@ -82,11 +89,11 @@ namespace Greg.Xrm.Command.Parsing
 				var propertyType = property.PropertyType;
 
 
-				if (string.IsNullOrWhiteSpace(optionValue) && option.IsRequired)
+				if (string.IsNullOrWhiteSpace(optionValue) && optionDef.IsRequired)
 					throw new CommandException(CommandException.CommandRequiredArgumentNotProvided, $"You must specify a value for the option --{option.LongName}.");
 
 
-				var propertyValue = Convert(optionValue, propertyType, option.LongName, option.IsRequired, option.DefaultValue);
+				var propertyValue = Convert(optionValue, propertyType, option.LongName, optionDef.IsRequired, option.DefaultValue);
 
 				property.SetValue(command, propertyValue);
 			}
@@ -102,20 +109,55 @@ namespace Greg.Xrm.Command.Parsing
 
 
 
-
-		internal bool IsMatch(List<string> verbs)
+		public bool TryMatch(CommandDefinition other, out string matchedAlias)
 		{
-			if (verbs.Count != this.Verbs.Count) return false;
-
-			for (int i = 0; i < this.Verbs.Count; i++)
+			var thisVerbs = new List<string>
 			{
-				if (!string.Equals(verbs[i], this.Verbs[i], StringComparison.OrdinalIgnoreCase)) return false;
+				this.ExpandedVerbs
+			};
+			thisVerbs.AddRange(this.Aliases.Select(x => x.ExpandedVerbs));
+
+			var otherVerbs = new List<string>
+			{
+				other.ExpandedVerbs
+			};
+			otherVerbs.AddRange(other.Aliases.Select(x => x.ExpandedVerbs));
+
+			foreach (var v1 in thisVerbs)
+			{
+				foreach (var v2 in otherVerbs)
+				{
+					if (string.Equals(v1, v2, StringComparison.OrdinalIgnoreCase))
+					{
+						matchedAlias = $"<{v1}>: {this.CommandType.FullName} and {other.CommandType.FullName}";
+						return true;
+					}
+				}
+			}
+
+			matchedAlias = string.Empty;
+			return false;
+		}
+
+
+
+		public bool IsMatch(IReadOnlyList<string> verbs)
+		{
+			if (IsMatch(verbs, this.Verbs)) return true;
+			return this.Aliases.Any(x => IsMatch(verbs, x.Verbs));
+		}
+
+		private static bool IsMatch(IReadOnlyList<string> outerVerbs, IReadOnlyList<string> innerVerbs)
+		{
+			if (outerVerbs.Count != innerVerbs.Count) return false;
+
+			for (int i = 0; i < innerVerbs.Count; i++)
+			{
+				if (!string.Equals(outerVerbs[i], innerVerbs[i], StringComparison.OrdinalIgnoreCase)) return false;
 			}
 
 			return true;
 		}
-
-
 
 
 
@@ -130,6 +172,8 @@ namespace Greg.Xrm.Command.Parsing
 				CheckIfMatchType(defaultValue, propertyType, argumentName);
 				return defaultValue;
 			}
+
+			if (propertyType == typeof(bool) && (optionValue == string.Empty)) optionValue = "true";
 
 			if (string.IsNullOrWhiteSpace(optionValue))
 			{
@@ -147,6 +191,7 @@ namespace Greg.Xrm.Command.Parsing
 
 				return enumValue;
 			}
+
 
 
 			try
@@ -169,8 +214,8 @@ namespace Greg.Xrm.Command.Parsing
 		private static void CheckIfMatchType(object? obj, Type type, string argumentName)
 		{
 			if (obj is null) return;
-			if (obj is not Type)
-				throw new CommandException(CommandException.CommandInvalidArgumentType, $"Invalid type for the default value of argument '{argumentName}': expected '{type.FullName}', actual '{obj.GetType().FullName}");
+			if (obj.GetType() != type)
+				throw new CommandException(CommandException.CommandInvalidArgumentType, $"Invalid type for the default value of argument '{argumentName}': expected '{type.FullName}', actual '{obj.GetType().FullName}'");
         }
 
 

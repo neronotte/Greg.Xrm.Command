@@ -91,6 +91,7 @@ namespace Greg.Xrm.Command
 				}
 
 				await task;
+				this.output.WriteLine();
 
 				if (task.IsFaulted)
 				{

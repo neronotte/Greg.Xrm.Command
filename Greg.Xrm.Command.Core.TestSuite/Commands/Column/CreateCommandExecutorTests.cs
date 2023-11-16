@@ -1,4 +1,5 @@
-﻿using Greg.Xrm.Command.Services.Connection;
+﻿using Greg.Xrm.Command.Commands.Column.Builders;
+using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Settings;
 using Microsoft.Xrm.Sdk.Metadata;
 
