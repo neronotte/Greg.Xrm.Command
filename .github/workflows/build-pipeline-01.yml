@@ -74,7 +74,7 @@ jobs:
 
     - name: Checkout Wiki Repository
       run: |
-        git clone --branch master https://github.com/neronotte/Greg.Xrm.Command.wiki.git $GITHUB-WORKFLOW\wiki
+        git clone --branch master https://github.com/neronotte/Greg.Xrm.Command.wiki.git $GITHUB_WORKSPACE/wiki
     
     - name: Show wiki content
       run: |
@@ -83,7 +83,7 @@ jobs:
         
     - name: Update Wiki content
       run: |
-        .\Greg.Xrm.Command\bin\Release\net7.0\pacx.exe --export $GITHUB-WORKFLOW\wiki
+        .\Greg.Xrm.Command\bin\Release\net7.0\pacx.exe --export $GITHUB_WORKSPACE/wiki
 
     - name: Commit and Push Changes
       run: |
