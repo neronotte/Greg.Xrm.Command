@@ -44,7 +44,7 @@ namespace Greg.Xrm.Command.Commands.Help
 			if (command.Hidden)
 				return;
 
-			var assemblyName = Assembly.GetEntryAssembly()?.GetName().Name;
+			var assemblyName = Assembly.GetEntryAssembly()?.GetName().Name ?? string.Empty;
 
 			var fileName = Path.Combine(directory.FullName, $"{assemblyName}-{string.Join("-", command.Verbs)}.md");
 
@@ -54,6 +54,16 @@ namespace Greg.Xrm.Command.Commands.Help
 			{
 				writer.WriteParagraph(command.HelpText);
 
+				if (command.Aliases.Count > 0)
+				{
+					writer.WriteTitle2("Aliases");
+					writer.WriteCodeBlockStart("Console");
+					foreach (var alias in command.Aliases)
+					{
+						writer.Write(assemblyName).Write(" ").Write(alias.ExpandedVerbs).WriteLine();
+					}
+					writer.WriteCodeBlockEnd();
+				}
 
 				if (command.Options.Count > 0)
 				{
