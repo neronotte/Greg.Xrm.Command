@@ -71,30 +71,17 @@ jobs:
     # Build backage
     - name: Build
       run: dotnet build --configuration Release
-
-    - name: Checkout Wiki Repository
-      run: |
-        git clone --branch master https://github.com/neronotte/Greg.Xrm.Command.wiki.git $GITHUB_WORKSPACE/wiki
-    
-    - name: Show wiki content
-      run: |
-        cd $GITHUB_WORKSPACE/wiki
-        dir
         
     - name: Update Wiki content
       run: |
         .\Greg.Xrm.Command\bin\Release\net7.0\pacx.exe --export $GITHUB_WORKSPACE/wiki
 
-    - name: Commit and Push Changes
-      run: |
-        cd $GITHUB_WORKSPACE/wiki
-        git --version
-        git config user.name "${{ github.actor }}"
-        git config user.email "${{ github.actor }}@users.noreply.github.com"
-        git add .
-        git commit -m "Update wiki from main build [skip ci]"
-        git remote set-url origin https://$GH_TOKEN@github.com/neronotte/Greg.Xrm.Command.wiki.git
-        git push origin master
+    - name: Push documentation to wiki
+      uses: SwiftDocOrg/github-wiki-publish-action@v1
+      with:
+        path: $GITHUB_WORKSPACE/wiki
+      env:
+        GH_PERSONAL_ACCESS_TOKEN: ${{ secrets.GH_TOKEN }}
 
     # Publish artifacts
     - name: Publish Artifacts
