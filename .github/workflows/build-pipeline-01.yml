@@ -78,7 +78,7 @@ jobs:
 
     - name: Export Wiki
       run: |
-        pacx --export wiki
+        .\Greg.Xrm.Command\bin\Debug\net7.0\pacx.exe --export wiki
 
     - name: Commit and Push Changes
       run: |
