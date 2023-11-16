@@ -74,17 +74,22 @@ jobs:
 
     - name: Checkout Wiki Repository
       run: |
-        git clone --branch master https://github.com/neronotte/Greg.Xrm.Command.wiki.git wiki
-
-    - name: Export Wiki
+        git clone --branch master https://github.com/neronotte/Greg.Xrm.Command.wiki.git $GITHUB-WORKFLOW\wiki
+    
+    - name: Show wiki content
       run: |
-        .\Greg.Xrm.Command\bin\Release\net7.0\pacx.exe --export wiki
+        cd $GITHUB-WORKFLOW\wiki
+        dir
+        
+    - name: Update Wiki content
+      run: |
+        .\Greg.Xrm.Command\bin\Release\net7.0\pacx.exe --export $GITHUB-WORKFLOW\wiki
 
     - name: Commit and Push Changes
       run: |
         cd wiki
-        git config user.name "${{ github.actor }}"
-        git config user.email "${{ github.actor }}@users.noreply.github.com"
+        git config user.name _neronotte
+        git config user.email riccardo.gregori@outlook.com
         git add .
         git commit -m "Update wiki from main build [skip ci]"
         git push
