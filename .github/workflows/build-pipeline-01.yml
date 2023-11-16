@@ -87,7 +87,7 @@ jobs:
 
     - name: Commit and Push Changes
       run: |
-        cd wiki
+        cd $GITHUB_WORKSPACE/wiki
         git config user.name _neronotte
         git config user.email riccardo.gregori@outlook.com
         git add .
