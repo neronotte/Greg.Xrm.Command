@@ -80,6 +80,7 @@ jobs:
       uses: actions4gh/deploy-wiki@v1
       with:
         token: ${{ secrets.GH_TOKEN }}
+        path: D:\wiki
 
     # Publish artifacts
     - name: Publish Artifacts
