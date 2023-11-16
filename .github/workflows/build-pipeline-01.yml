@@ -77,14 +77,11 @@ jobs:
         .\Greg.Xrm.Command\bin\Release\net7.0\pacx.exe --export $GITHUB_WORKSPACE/wiki
 
     - name: Push documentation to wiki
-      uses: docker://decathlon/wiki-page-creator-action:latest
+      uses: ineshbose/wiki-action@v1
       env:
-        GH_PERSONAL_ACCESS_TOKEN: ${{ secrets.GH_TOKEN }}
-        ACTION_MAIL: riccardo.gregori@outlook.com
-        ACTION_NAME: _neronotte
-        OWNER: neronotte
-        REPO_NAME: Greg.Xrm.Command
-        MD_FOLDER: $GITHUB_WORKSPACE/wiki
+        GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        WIKI_DIR: $GITHUB_WORKSPACE/wiki
+        AUTO_SIDEBAR: false
 
     # Publish artifacts
     - name: Publish Artifacts
