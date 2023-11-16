@@ -78,7 +78,7 @@ jobs:
     
     - name: Show wiki content
       run: |
-        cd $GITHUB-WORKFLOW\wiki
+        cd $GITHUB_WORKSPACE/wiki
         dir
         
     - name: Update Wiki content
