@@ -46,7 +46,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest  # For a list of available runner types, refer to
+    runs-on: windows-latest  # For a list of available runner types, refer to
                              # https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idruns-on
 
     env:
@@ -74,14 +74,17 @@ jobs:
         
     - name: Update Wiki content
       run: |
-        ./Greg.Xrm.Command/bin/Release/net7.0/pacx.exe --export $GITHUB_WORKSPACE/wiki
+        .\Greg.Xrm.Command\bin\Release\net7.0\pacx.exe --export $GITHUB_WORKSPACE/wiki
 
     - name: Push documentation to wiki
-      uses: SwiftDocOrg/github-wiki-publish-action@v1
-      with:
-        path: $GITHUB_WORKSPACE/wiki
+      uses: docker://decathlon/wiki-page-creator-action:latest
       env:
         GH_PERSONAL_ACCESS_TOKEN: ${{ secrets.GH_TOKEN }}
+        ACTION_MAIL: riccardo.gregori@outlook.com
+        ACTION_NAME: _neronotte
+        OWNER: neronotte
+        REPO_NAME: Greg.Xrm.Command
+        MD_FOLDER: $GITHUB_WORKSPACE/wiki
 
     # Publish artifacts
     - name: Publish Artifacts
