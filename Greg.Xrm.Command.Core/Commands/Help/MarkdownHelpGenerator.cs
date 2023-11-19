@@ -124,7 +124,7 @@ namespace Greg.Xrm.Command.Commands.Help
 				var tree = CreateVerbTree(commandList);
 
 
-				foreach (var node in tree.OrderByDescending(x => x.Verb))
+				foreach (var node in tree.OrderBy(x => x.Verb))
 				{
 					WriteNode(writer, assemblyName, node, 0);
 				}
@@ -158,7 +158,7 @@ namespace Greg.Xrm.Command.Commands.Help
 					.WriteLine();
 			}
 
-			foreach (var child in node.Children.OrderByDescending(x => x.Verb))
+			foreach (var child in node.Children.OrderBy(x => x.Verb))
 			{
 				WriteNode(writer, assemblyName, child, indent + 1);
 			}
@@ -168,7 +168,7 @@ namespace Greg.Xrm.Command.Commands.Help
 		{
 			var list = new List<VerbNode>();
 
-			foreach (var command in commandList.OrderByDescending(x => x.ExpandedVerbs))
+			foreach (var command in commandList.OrderBy(x => x.ExpandedVerbs))
 			{
 				var nodeList = list;
 				for (var i = 0; i < command.Verbs.Count; i++)
