@@ -34,6 +34,8 @@ namespace Greg.Xrm.Command.Commands.Help
 			if (!directory.Exists)
 				directory.Create();
 
+			CreateReadme(directory);
+
 			foreach (var command in this.commandList)
 			{
 				CreateCommand(directory, command);
@@ -42,7 +44,16 @@ namespace Greg.Xrm.Command.Commands.Help
 			CreateSidebar(directory, this.commandList);
 		}
 
+		private void CreateReadme(DirectoryInfo directory)
+		{
+			var fileName = Path.Combine(directory.FullName, $"README.md");
 
+			this.output.Write($"Generating {fileName}...");
+			using (var writer = new MarkdownWriter(fileName))
+			{
+				writer.WriteTitle1("Greg.Xrm.Command");
+			}
+		}
 
 
 
@@ -113,7 +124,7 @@ namespace Greg.Xrm.Command.Commands.Help
 				var tree = CreateVerbTree(commandList);
 
 
-				foreach (var node in tree)
+				foreach (var node in tree.OrderByDescending(x => x.Verb))
 				{
 					WriteNode(writer, assemblyName, node, 0);
 				}
@@ -147,7 +158,7 @@ namespace Greg.Xrm.Command.Commands.Help
 					.WriteLine();
 			}
 
-			foreach (var child in node.Children)
+			foreach (var child in node.Children.OrderByDescending(x => x.Verb))
 			{
 				WriteNode(writer, assemblyName, child, indent + 1);
 			}
@@ -157,7 +168,7 @@ namespace Greg.Xrm.Command.Commands.Help
 		{
 			var list = new List<VerbNode>();
 
-			foreach (var command in commandList)
+			foreach (var command in commandList.OrderByDescending(x => x.ExpandedVerbs))
 			{
 				var nodeList = list;
 				for (var i = 0; i < command.Verbs.Count; i++)
