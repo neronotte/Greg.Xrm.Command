@@ -1,14 +1,9 @@
 ﻿using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk.Metadata;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Greg.Xrm.Command.Commands.Column.Builders
 {
-    internal class AttributeMetadataBuilderMoney : AttributeMetadataBuilderNumericBase
+	internal class AttributeMetadataBuilderMoney : AttributeMetadataBuilderNumericBase
     {
 
         public override Task<AttributeMetadata> CreateFromAsync(IOrganizationServiceAsync2 crm, CreateCommand command, int languageCode, string publisherPrefix, int customizationOptionValuePrefix)

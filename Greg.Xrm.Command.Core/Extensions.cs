@@ -169,16 +169,9 @@ namespace Greg.Xrm.Command
 
 		public static Type? GetEnumType(this Type type)
 		{
-			if (type.IsEnum)
-			{
-				return type;
-			}
-
+			if (type.IsEnum) return type;
 			var u = Nullable.GetUnderlyingType(type);
-			if (u != null)
-			{
-				return u;
-			}
+			if (u != null && u.IsEnum) return u;
 			return null;
 		}
 	}
