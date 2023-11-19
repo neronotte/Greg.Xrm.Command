@@ -25,7 +25,7 @@ namespace Greg.Xrm.Command.Commands.Column
 		[Option("description", "d", HelpText = "The description of the attribute.")]
 		public string? Description { get; set; }
 
-		[Option("type", "at", HelpText = "The type of the attribute. Default: string")]
+		[Option("type", "at", HelpText = "The type of the attribute.\nCurrently supported values: Integer, Money, Picklist, String.\n[default: String]", SuppressValuesHelp = true)]
 		public AttributeTypeCode AttributeType { get; set; } = AttributeTypeCode.String;
 
 		[Option("stringFormat", "sf", HelpText = "The format of the string attribute (default: Text).")]
@@ -60,5 +60,17 @@ namespace Greg.Xrm.Command.Commands.Column
 
 		[Option("max", "max", HelpText = "For number type columns indicates the maximum value for the column.")]
 		public double? MaxValue { get; set; }
-	}
+
+
+
+        [Option("precision", "p", HelpText = "For money type columns indicates the precision for the column.", DefaultValue = 2)]
+        public int? Precision { get; set; }
+
+        [Option("precisionSource", "ps", HelpText = "For money type columns indicates if precision should be taken from:\n(0) the precision property,\n(1) the `Organization.PricingDecimalPrecision` attribute or\n(2) the `TransactionCurrency.CurrencyPrecision` property of the transaction currency that is associated the current record.\n", DefaultValue = 2)]
+        public int? PrecisionSource{ get; set; }
+
+		[Option("imeMode", "ime", HelpText = "For number type columns indicates the input method editor (IME) mode for the column.", DefaultValue = ImeMode.Disabled)]
+		public ImeMode ImeMode { get; set; } = ImeMode.Disabled;
+
+    }
 }
