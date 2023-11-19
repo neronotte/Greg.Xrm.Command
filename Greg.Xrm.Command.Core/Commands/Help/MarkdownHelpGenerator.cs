@@ -46,7 +46,7 @@ namespace Greg.Xrm.Command.Commands.Help
 
 		private void CreateReadme(DirectoryInfo directory)
 		{
-			var fileName = Path.Combine(directory.FullName, $"README.md");
+			var fileName = Path.Combine(directory.FullName, $"Home.md");
 
 			this.output.Write($"Generating {fileName}...");
 			using (var writer = new MarkdownWriter(fileName))
