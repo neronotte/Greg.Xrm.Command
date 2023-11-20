@@ -115,6 +115,7 @@ jobs:
         release_name: Release ${{ github.run_number }}
         draft: false
         prerelease: false
+        token: ${{ secrets.GH_TOKEN }}
 
     - name: Upload Release Asset
       id: upload-release-asset
