@@ -9,7 +9,7 @@
     <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
     <Title>Engine of the Greg's Command Line Utilities for Dataverse</Title>
     <PackageProjectUrl>https://github.com/neronotte/Greg.Xrm.Command</PackageProjectUrl>
-    <PackageReadmeFile>README.MD</PackageReadmeFile>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
     <RepositoryUrl>https://github.com/neronotte/Greg.Xrm.Command</RepositoryUrl>
     <Authors>neronotte</Authors>
     <Company>neronotte</Company>

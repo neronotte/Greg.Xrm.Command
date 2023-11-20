@@ -1,4 +1,4 @@
-# Greg.Xrm.Command
+﻿# Greg.Xrm.Command ⁓ aka PACX
 
 Command line utility belt for Dataverse.
 
@@ -6,3 +6,21 @@ Command line utility belt for Dataverse.
 
 - Riccardo Gregori (@\_neronotte)
 - Simone Giubbarelli (@SimonGiubs)
+
+## Installation
+
+The tool can be installed as a `dotnet` global tool using the following command:
+
+```powershell
+dotnet tool install -g Greg.Xrm.Command
+```
+
+## Usage
+
+You can get the list of the available commands by running:
+
+```powershell
+pacx --help
+```
+
+More info are available in the [wiki](https://github.com/neronotte/Greg.Xrm.Command/wiki) section of the current repository.
