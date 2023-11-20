@@ -16,6 +16,7 @@
     <PackageIcon>icon128.png</PackageIcon>
     <RepositoryType>git</RepositoryType>
     <PackAsTool>True</PackAsTool>
+    <Version>$(VersionNumber)</Version>
   </PropertyGroup>
 
   <ItemGroup>

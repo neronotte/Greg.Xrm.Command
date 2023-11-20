@@ -83,6 +83,14 @@ namespace Greg.Xrm.Command.Commands.Help
 					writer.WriteCodeBlockEnd();
 				}
 
+				if (typeof(ICanProvideUsageExample).IsAssignableFrom(command.CommandType))
+				{
+					writer.WriteTitle2("Usage");
+
+					var commandImpl = Activator.CreateInstance(command.CommandType) as ICanProvideUsageExample;
+					commandImpl?.WriteUsageExamples(writer);
+				}
+
 				if (command.Options.Count > 0)
 				{
 					writer.WriteTitle2("Arguments");
@@ -96,14 +104,6 @@ namespace Greg.Xrm.Command.Commands.Help
 							option.Option.DefaultValue?.ToString().ToMarkdownCode() ?? "-",
 							GetValuesFor(option)
 						});
-				}
-
-				if (typeof(ICanProvideUsageExample).IsAssignableFrom(command.CommandType))
-				{
-					writer.WriteTitle2("Usage");
-
-					var commandImpl = Activator.CreateInstance(command.CommandType) as ICanProvideUsageExample;
-					commandImpl?.WriteUsageExamples(writer);
 				}
 			}
 			this.output.WriteLine("Done", ConsoleColor.Green);
