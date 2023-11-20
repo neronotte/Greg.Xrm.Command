@@ -5,6 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <RootNamespace>Greg.Xrm.Command</RootNamespace>
+    <Version>$(VersionNumber)</Version>
   </PropertyGroup>
 
   <ItemGroup>
