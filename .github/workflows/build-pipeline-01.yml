@@ -73,7 +73,7 @@ jobs:
         $year = (Get-Date).ToString("yy")
         $month = Get-Date -Format MM
         $version = "1.$year.$month.$env:GITHUB_RUN_NUMBER"
-        Write-Host "##vso[task.setvariable variable=VersionNumber]$version"
+        Write-Host "VersionNumber=$version" | Out-File -FilePath $env:GITHUB_ENV:GITHUB_ENV -Append
 
     # Build backage
     - name: Build
