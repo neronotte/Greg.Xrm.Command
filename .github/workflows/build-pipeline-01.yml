@@ -41,8 +41,6 @@ name: Build Pipeline v01
 on:
   push:
     branches: [ "master" ]
-  pull_request:
-    branches: [ "master" ]
 
 jobs:
   build:
@@ -68,6 +66,14 @@ jobs:
     - name: Restore Dependencies
       run: dotnet restore
 
+    # Set the version number
+    - name: Set Version Number
+      run: |
+        year=$(date +'%y')
+        month=$(date +'%m')
+        version="1.$year.$month.$GITHUB_RUN_NUMBER"
+        sed -i "s|<Version>.*</Version>|<Version>$version</Version>|" Greg.Xrm.Command/Greg.Xrm.Command.csproj
+
     # Build backage
     - name: Build
       run: dotnet build --configuration Release
@@ -81,7 +87,35 @@ jobs:
       with:
         token: ${{ secrets.GH_TOKEN }}
         path: D:\wiki
+        
+    - name: Save build output
+      run: |
+        mkdir $GITHUB_WORKSPACE/build-output
+        cp -r Greg.Xrm.Command/Greg.Xrm.Command/bin/Release/*.nupkg $GITHUB_WORKSPACE/build-output/
 
-    # Publish artifacts
-    - name: Publish Artifacts
-      run: dotnet publish --configuration Release --output ./publish
+  release:
+    runs-on: windows-latest
+    needs: build
+    steps:
+    
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+      with:
+        tag_name: v1.0.$GITHUB_RUN_NUMBER
+        release_name: Release ${{ github.run_number }}
+        draft: false
+        prerelease: false
+
+    - name: Upload Release Asset
+      id: upload-release-asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: $GITHUB_WORKSPACE/build-output/
+        asset_name: PACX_Release_$GITHUB_RUN_NUMBER.zip  # Update this to your desired asset name
+        asset_content_type: application/zip
