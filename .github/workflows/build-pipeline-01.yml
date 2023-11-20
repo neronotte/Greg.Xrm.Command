@@ -94,7 +94,7 @@ jobs:
     - name: Save build output
       run: |
         mkdir $GITHUB_WORKSPACE/build-output
-        cp -r Greg.Xrm.Command/Greg.Xrm.Command/bin/Release/*.nupkg $GITHUB_WORKSPACE/build-output/
+        cp -r Greg.Xrm.Command/bin/Release/*.nupkg $GITHUB_WORKSPACE/build-output/
 
   release:
     runs-on: windows-latest
