@@ -76,7 +76,7 @@ jobs:
     - name: Set Version Number
       id: set_version
       run: |
-        $year = (Get-Date).ToString("yy")
+        $year = (Get-Date).ToString("yyyy")
         $month = Get-Date -Format MM
         $version = "1.$year.$month.$env:GITHUB_RUN_NUMBER"
         echo Version=$version
