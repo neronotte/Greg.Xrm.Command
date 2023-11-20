@@ -115,7 +115,7 @@ namespace Greg.Xrm.Command
 			catch (CommandException ex)
 			{
 				this.output.WriteLine(ex.Message, ConsoleColor.Red).WriteLine();
-				log.LogError(ex, ex.Message);
+				log.LogError(ex, "Unhandled error: {message}", ex.Message);
 
 				Environment.Exit(-1);
 			}
