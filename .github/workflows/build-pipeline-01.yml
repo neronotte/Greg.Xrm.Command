@@ -73,11 +73,13 @@ jobs:
         $year = (Get-Date).ToString("yy")
         $month = Get-Date -Format MM
         $version = "1.$year.$month.$env:GITHUB_RUN_NUMBER"
-        Write-Host "VersionNumber=$version" | Out-File -FilePath $env:GITHUB_ENV -Append
+        echo $version > $env:GITHUB_WORKSPACE/version.txt
 
     # Build backage
     - name: Build
-      run: dotnet build --configuration Release /p:Version=${{ steps.set_version.outputs.VersionNumber }}
+      run: |
+        $version = Get-Content $env:GITHUB_WORKSPACE/version.txt
+        dotnet build --configuration Release /p:Version=$version
         
     - name: Update Wiki content
       run: |
