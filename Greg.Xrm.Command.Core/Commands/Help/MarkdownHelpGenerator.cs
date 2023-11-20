@@ -49,10 +49,8 @@ namespace Greg.Xrm.Command.Commands.Help
 			var fileName = Path.Combine(directory.FullName, $"Home.md");
 
 			this.output.Write($"Generating {fileName}...");
-			using (var writer = new MarkdownWriter(fileName))
-			{
-				writer.WriteTitle1("Greg.Xrm.Command");
-			}
+			using var writer = new MarkdownWriter(fileName);
+			writer.WriteTitle1("Greg.Xrm.Command");
 		}
 
 
@@ -164,7 +162,7 @@ namespace Greg.Xrm.Command.Commands.Help
 			}
 		}
 
-		private List<VerbNode> CreateVerbTree(IReadOnlyList<CommandDefinition> commandList)
+		private static List<VerbNode> CreateVerbTree(IReadOnlyList<CommandDefinition> commandList)
 		{
 			var list = new List<VerbNode>();
 
@@ -191,7 +189,7 @@ namespace Greg.Xrm.Command.Commands.Help
 			return list;
 		}
 
-		private string Name(IReadOnlyList<string> verbs, int index)
+		private static string Name(IReadOnlyList<string> verbs, int index)
 		{
 			var sb = new StringBuilder();
 

@@ -62,7 +62,7 @@ namespace Greg.Xrm.Command.Parsing
 				|| runArgs.Verbs.Count == 0 
 				|| (runArgs.Verbs.Count == 1 && string.Equals("help", runArgs.Verbs[0], StringComparison.OrdinalIgnoreCase)))
 			{
-				return new HelpCommand(this.commandDefinitionList, runArgs.Options);
+				return new HelpCommand(this.commandDefinitionList, runArgs?.Options ?? new Dictionary<string, string>());
 			}
 
 
