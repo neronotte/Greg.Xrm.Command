@@ -14,26 +14,26 @@ namespace Greg.Xrm.Command.Commands.Help
 		}
 
 
-		public async Task ExecuteAsync(HelpCommand command, CancellationToken cancellationToken)
+		public Task ExecuteAsync(HelpCommand command, CancellationToken cancellationToken)
 		{
 			if (command.ExportHelp)
 			{
 				this.output.WriteLine("Generating help files...");
 				GenerateMarkdownHelp(command.CommandList, command.ExportHelpPath);
-				return;
+				return Task.CompletedTask;
 			}
 
 			if (command.CommandDefinition is null)
 			{
 				ShowGenericHelp(command.CommandList);
-				return;
+				return Task.CompletedTask;
 			}
 
 
 
 			var commandAttribute = command.CommandDefinition.CommandType.GetCustomAttribute<CommandAttribute>();
 			if (commandAttribute == null)
-				return;
+				return Task.CompletedTask;
 
 			if (!string.IsNullOrWhiteSpace(commandAttribute.HelpText))
 			{
@@ -122,6 +122,7 @@ namespace Greg.Xrm.Command.Commands.Help
 			}
 
 			output.WriteLine();
+			return Task.CompletedTask;
 		}
 
 		private void GenerateMarkdownHelp(List<CommandDefinition> commandList, string exportHelpPath)
