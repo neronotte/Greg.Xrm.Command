@@ -61,16 +61,23 @@ namespace Greg.Xrm.Command.Commands.Column
 		[Option("max", "max", HelpText = "For number type columns indicates the maximum value for the column.", SuppressValuesHelp = true)]
 		public double? MaxValue { get; set; }
 
-
-
         [Option("precision", "p", HelpText = "For money type columns indicates the precision for the column (default: 2).", SuppressValuesHelp = true)]
         public int? Precision { get; set; }
 
         [Option("precisionSource", "ps", HelpText = "For money type columns indicates the precision source for the column  (default: 2).", SuppressValuesHelp = true)]
         public int? PrecisionSource{ get; set; }
 
-		[Option("imeMode", "ime", HelpText = "For number type columns indicates the input method editor (IME) mode for the column. (default: Disabled)")]
+		[Option("imeMode", "ime", HelpText = "For number/DateTime type columns indicates the input method editor (IME) mode for the column. (default: Disabled)")]
 		public ImeMode ImeMode { get; set; } = ImeMode.Disabled;
+        [Option("dtFormat", "dtf", HelpText = "For DateTime type columns indicates the DateTimeFormat for the column. (default: DateAndTime)")]
+        public DateTimeFormat DateTimeFormat { get; set; } = DateTimeFormat.DateAndTime;
+
+        [Option("trueLabel", "tl", HelpText = "For Boolean type columns that represents the Label to be associated to the \"true\" value. (default: \"true\")")]
+		public string? TrueLabel { get; set; } = "true";
+
+        [Option("falseLabel", "fl", HelpText = "For  Boolean type columns that represents the Label to be associated to the \"false\" value.(default: \"false\")")]
+		public string? FalseLabel { get; set; } = "false";
+
 
     }
 }
