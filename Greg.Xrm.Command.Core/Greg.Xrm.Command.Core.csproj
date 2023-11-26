@@ -5,11 +5,36 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <RootNamespace>Greg.Xrm.Command</RootNamespace>
+    <Version>$(VersionNumber)</Version>
+    <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
+    <Title>Engine of the Greg's Command Line Utilities for Dataverse</Title>
+    <PackageProjectUrl>https://github.com/neronotte/Greg.Xrm.Command</PackageProjectUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RepositoryUrl>https://github.com/neronotte/Greg.Xrm.Command</RepositoryUrl>
+    <Authors>neronotte</Authors>
+    <Company>neronotte</Company>
+    <Copyright>Copyright @ neronotte</Copyright>
+    <PackageIcon>logo_80.png</PackageIcon>
+    <RepositoryType>git</RepositoryType>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\logo_80.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.PowerPlatform.Dataverse.Client" Version="1.1.14" />
     <PackageReference Include="Pluralize.NET" Version="1.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="README.md">
+      <PackagePath>\</PackagePath>
+      <Pack>True</Pack>
+    </None>
   </ItemGroup>
 
 </Project>

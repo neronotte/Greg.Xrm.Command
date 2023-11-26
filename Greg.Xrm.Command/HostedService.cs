@@ -84,7 +84,7 @@ namespace Greg.Xrm.Command
 				if (task == null)
 				{
 					this.output.WriteLine("Internal error, see logs for more info.", ConsoleColor.Red).WriteLine();
-					log.LogError("Invalid result from command executor ExecuteAsync", command.GetType());
+					log.LogError("Invalid result from command executor ExecuteAsync: {commandType}", command.GetType());
 
 					Environment.Exit(-1);
 					return;
@@ -115,7 +115,7 @@ namespace Greg.Xrm.Command
 			catch (CommandException ex)
 			{
 				this.output.WriteLine(ex.Message, ConsoleColor.Red).WriteLine();
-				log.LogError(ex, ex.Message);
+				log.LogError(ex, "Unhandled error: {message}", ex.Message);
 
 				Environment.Exit(-1);
 			}

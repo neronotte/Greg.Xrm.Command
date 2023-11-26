@@ -79,7 +79,7 @@ namespace Greg.Xrm.Command.Model
         /// <returns>
         /// The value of the property with the given name
         /// </returns>
-        protected T Get<T>([CallerMemberName] string propertyName = null)
+        protected T Get<T>([CallerMemberName] string? propertyName = null)
         {
             // recupero il campo dal target
             if (IsChangeTrackingEnabled && target.Contains(propertyName))
@@ -100,7 +100,7 @@ namespace Greg.Xrm.Command.Model
         /// <returns>
         /// The value of the property with the given name
         /// </returns>
-        protected T GetAliased<T>(string propertyName)
+        protected T? GetAliased<T>(string propertyName)
         {
             AliasedValue aliasedValue;
             if (!IsChangeTrackingEnabled)
@@ -135,7 +135,7 @@ namespace Greg.Xrm.Command.Model
         /// <returns>
         /// The value of the property with the given name
         /// </returns>
-        protected T GetAliased<T>(string alias, string propertyName)
+        protected T? GetAliased<T>(string alias, string propertyName)
         {
             return GetAliased<T>($"{alias}.{propertyName}");
         }
@@ -151,7 +151,7 @@ namespace Greg.Xrm.Command.Model
         /// <returns>
         /// The value of the property with the given name
         /// </returns>
-        protected T GetAliasedValue<T>(string propertyName, string alias)
+        protected T? GetAliasedValue<T>(string propertyName, string alias)
         {
             return GetAliased<T>($"{alias}.{propertyName}");
         }
@@ -165,7 +165,7 @@ namespace Greg.Xrm.Command.Model
         /// <returns>
         /// The formatted value of the given attribute
         /// </returns>
-        protected string GetFormatted([CallerMemberName] string propertyName = null)
+        protected string? GetFormatted([CallerMemberName] string? propertyName = null)
         {
             if (!IsChangeTrackingEnabled)
             {
@@ -199,8 +199,13 @@ namespace Greg.Xrm.Command.Model
         /// <typeparam name="T">The type of the property value</typeparam>
         /// <param name="value">The value of the property</param>
         /// <param name="propertyName">The name of the property to set</param>
-        protected void SetValue<T>(T value, [CallerMemberName] string propertyName = null)
+        protected void SetValue<T>(T value, [CallerMemberName] string? propertyName = null)
         {
+            if (propertyName == null)
+			{
+				throw new ArgumentNullException(nameof(propertyName));
+			}
+
             Set(propertyName, value);
         }
 

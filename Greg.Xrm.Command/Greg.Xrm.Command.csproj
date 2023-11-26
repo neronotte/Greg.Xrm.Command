@@ -13,13 +13,18 @@
     <Company>neronotte</Company>
     <Product>Greg.Xrm.Command</Product>
     <Copyright>Copyright @ neronotte</Copyright>
-    <PackageIcon>icon128.png</PackageIcon>
+    <PackageIcon>logo_80.png</PackageIcon>
     <RepositoryType>git</RepositoryType>
     <PackAsTool>True</PackAsTool>
+    <Version>$(VersionNumber)</Version>
+    <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
+    <PackageProjectUrl>https://github.com/neronotte/Greg.Xrm.Command</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/neronotte/Greg.Xrm.Command</RepositoryUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="..\icon128.png">
+    <None Include="..\logo_80.png">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
     </None>
@@ -32,6 +37,13 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Greg.Xrm.Command.Core\Greg.Xrm.Command.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
   </ItemGroup>
 
 </Project>

@@ -25,7 +25,7 @@ namespace Greg.Xrm.Command.Commands.Column
 		[Option("description", "d", HelpText = "The description of the attribute.")]
 		public string? Description { get; set; }
 
-		[Option("type", "at", HelpText = "The type of the attribute. Default: string")]
+		[Option("type", "at", HelpText = "The type of the attribute.\nCurrently supported values: Integer, Money, Picklist, String.\n[default: String]", SuppressValuesHelp = true)]
 		public AttributeTypeCode AttributeType { get; set; } = AttributeTypeCode.String;
 
 		[Option("stringFormat", "sf", HelpText = "The format of the string attribute (default: Text).")]
@@ -37,7 +37,7 @@ namespace Greg.Xrm.Command.Commands.Column
 		[Option("requiredLevel", "r", HelpText = "The required level of the attribute.")]
 		public AttributeRequiredLevel RequiredLevel { get; set; } = AttributeRequiredLevel.None;
 
-		[Option("len", "l", HelpText = "The maximum length for string attribute.", SuppressValuesHelp = true)]
+		[Option("len", "l", HelpText = "The maximum length for string attribute.")]
 		public int? MaxLength { get; set; }
 
 		[Option("autoNumber", "an", HelpText = "In case of autonumber field, the autonumber format to apply.")]
@@ -55,29 +55,22 @@ namespace Greg.Xrm.Command.Commands.Column
 		[Option("multiselect", "m", HelpText = "Indicates whether the attribute is a multi-select picklist (default: false).", DefaultValue = false)]
 		public bool Multiselect { get; set; } = false;
 
-		[Option("min", "min", HelpText = "For number type columns indicates the minimum value for the column.", SuppressValuesHelp = true)]
+		[Option("min", "min", HelpText = "For number type columns indicates the minimum value for the column.")]
 		public double? MinValue { get; set; }
 
-		[Option("max", "max", HelpText = "For number type columns indicates the maximum value for the column.", SuppressValuesHelp = true)]
+		[Option("max", "max", HelpText = "For number type columns indicates the maximum value for the column.")]
 		public double? MaxValue { get; set; }
 
-        [Option("precision", "p", HelpText = "For money type columns indicates the precision for the column (default: 2).", SuppressValuesHelp = true)]
+
+
+        [Option("precision", "p", HelpText = "For money type columns indicates the precision for the column.", DefaultValue = 2)]
         public int? Precision { get; set; }
 
-        [Option("precisionSource", "ps", HelpText = "For money type columns indicates the precision source for the column  (default: 2).", SuppressValuesHelp = true)]
+        [Option("precisionSource", "ps", HelpText = "For money type columns indicates if precision should be taken from:\n(0) the precision property,\n(1) the `Organization.PricingDecimalPrecision` attribute or\n(2) the `TransactionCurrency.CurrencyPrecision` property of the transaction currency that is associated the current record.\n", DefaultValue = 2)]
         public int? PrecisionSource{ get; set; }
 
-		[Option("imeMode", "ime", HelpText = "For number/DateTime type columns indicates the input method editor (IME) mode for the column. (default: Disabled)")]
+		[Option("imeMode", "ime", HelpText = "For number type columns indicates the input method editor (IME) mode for the column.", DefaultValue = ImeMode.Disabled)]
 		public ImeMode ImeMode { get; set; } = ImeMode.Disabled;
-        [Option("dtFormat", "dtf", HelpText = "For DateTime type columns indicates the DateTimeFormat for the column. (default: DateAndTime)")]
-        public DateTimeFormat DateTimeFormat { get; set; } = DateTimeFormat.DateAndTime;
-
-        [Option("trueLabel", "tl", HelpText = "For Boolean type columns that represents the Label to be associated to the \"true\" value. (default: \"true\")")]
-		public string? TrueLabel { get; set; } = "true";
-
-        [Option("falseLabel", "fl", HelpText = "For  Boolean type columns that represents the Label to be associated to the \"false\" value.(default: \"false\")")]
-		public string? FalseLabel { get; set; } = "false";
-
 
     }
 }

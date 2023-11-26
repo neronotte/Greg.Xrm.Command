@@ -27,7 +27,7 @@ namespace Greg.Xrm.Command
 		{
 			if (string.IsNullOrWhiteSpace(text)) return string.Empty;
 			if (text.Length <= len) return text;
-			return text.Substring(0, len);
+			return text[..len];
 		}
 
 		public static bool IsOnlyLowercaseLettersOrNumbers(this string? text)
@@ -43,7 +43,7 @@ namespace Greg.Xrm.Command
 		}
 
 
-		public static TValue GetValueOrDefault<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key)
+		public static TValue? GetValueOrDefault<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key)
 		{
 			if (dictionary.TryGetValue(key, out var value))
 			{
@@ -115,7 +115,7 @@ namespace Greg.Xrm.Command
 
 		private static string StringFromObject(object oValue)
 		{
-			if (oValue == null) return string.Empty;
+			if (oValue is null) return string.Empty;
 
 			if (oValue is EntityReference entityReference)
 				return entityReference.Name;
@@ -129,7 +129,7 @@ namespace Greg.Xrm.Command
 			if (oValue is AliasedValue aliasedValue)
 				return StringFromObject(aliasedValue.Value);
 
-			return oValue.ToString();
+			return oValue.ToString() ?? string.Empty;
 		}
 
 
@@ -141,8 +141,11 @@ namespace Greg.Xrm.Command
 		/// <returns>A new entity merged from the previous two</returns>
 		public static Entity Merge(this Entity main, Entity delta)
 		{
-			var entityName = main != null ? main.LogicalName : delta != null ? delta.LogicalName : string.Empty;
-			var entityId = main != null ? main.Id : delta != null ? delta.Id : Guid.Empty;
+			var deltaName = delta != null ? delta.LogicalName : string.Empty;
+			var deltaId = delta != null ? delta.Id : Guid.Empty;
+
+			var entityName = main != null ? main.LogicalName : deltaName;
+			var entityId = main != null ? main.Id : deltaId;
 
 			var entity = new Entity(entityName) { Id = entityId };
 
@@ -169,16 +172,9 @@ namespace Greg.Xrm.Command
 
 		public static Type? GetEnumType(this Type type)
 		{
-			if (type.IsEnum)
-			{
-				return type;
-			}
-
+			if (type.IsEnum) return type;
 			var u = Nullable.GetUnderlyingType(type);
-			if (u != null)
-			{
-				return u;
-			}
+			if (u != null && u.IsEnum) return u;
 			return null;
 		}
 	}
