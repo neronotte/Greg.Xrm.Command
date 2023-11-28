@@ -25,7 +25,7 @@ namespace Greg.Xrm.Command.Commands.Column
 		[Option("description", "d", HelpText = "The description of the attribute.")]
 		public string? Description { get; set; }
 
-		[Option("type", "at", HelpText = "The type of the attribute.\nCurrently supported values: Integer, Money, Picklist, String.\n[default: String]", SuppressValuesHelp = true)]
+		[Option("type", "at", HelpText = "The type of the attribute.\nCurrently supported values: Integer, Money, Picklist, String, DateTime, Memo, Boolean, Decimal.\n[default: String]", SuppressValuesHelp = true)]
 		public AttributeTypeCode AttributeType { get; set; } = AttributeTypeCode.String;
 
 		[Option("stringFormat", "sf", HelpText = "The format of the string attribute (default: Text).")]
@@ -72,5 +72,13 @@ namespace Greg.Xrm.Command.Commands.Column
 		[Option("imeMode", "ime", HelpText = "For number type columns indicates the input method editor (IME) mode for the column.", DefaultValue = ImeMode.Disabled)]
 		public ImeMode ImeMode { get; set; } = ImeMode.Disabled;
 
+        [Option("dtFormat", "dtf", HelpText = "For DateTime type columns indicates the DateTimeFormat for the column. (default: DateAndTime)")]
+        public DateTimeFormat DateTimeFormat { get; set; } = DateTimeFormat.DateAndTime;
+
+        [Option("trueLabel", "tl", HelpText = "For Boolean type columns that represents the Label to be associated to the \"true\" value. (default: \"true\")")]
+        public string? TrueLabel { get; set; } = "true";
+
+        [Option("falseLabel", "fl", HelpText = "For  Boolean type columns that represents the Label to be associated to the \"false\" value.(default: \"false\")")]
+        public string? FalseLabel { get; set; } = "false";
     }
 }
