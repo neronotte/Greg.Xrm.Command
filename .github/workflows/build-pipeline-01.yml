@@ -98,7 +98,7 @@ jobs:
         
     - name: Update Wiki content
       run: |
-        .\Greg.Xrm.Command\bin\Release\net7.0\pacx.exe --export $GITHUB_WORKSPACE/wiki
+        .\Greg.Xrm.Command\bin\Release\net7.0\pacx.exe --export ${{ github.workspace }}/wiki
 
     - name: Push documentation to wiki
       uses: actions4gh/deploy-wiki@v1
