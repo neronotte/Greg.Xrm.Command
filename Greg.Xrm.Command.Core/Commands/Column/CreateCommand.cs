@@ -70,16 +70,16 @@ namespace Greg.Xrm.Command.Commands.Column
 		[Option("imeMode", "ime", HelpText = "For number type columns indicates the input method editor (IME) mode for the column.", DefaultValue = ImeMode.Disabled)]
 		public ImeMode ImeMode { get; set; } = ImeMode.Disabled;
 
-		[Option("dateTimeBehavior", "dtb", HelpText = "For DateTime type columns indicates the DateTimeFormat for the column. (default: DateAndTime)", DefaultValue = DateTimeBehavior1.UserLocal)]
+		[Option("dateTimeBehavior", "dtb", HelpText = "For DateTime type columns indicates the DateTimeBehavior of the column.", DefaultValue = DateTimeBehavior1.UserLocal)]
 		public DateTimeBehavior1 DateTimeBehavior { get; set; } = DateTimeBehavior1.UserLocal;
 
-		[Option("dateTimeFormat", "dtf", HelpText = "For DateTime type columns indicates the DateTimeFormat for the column. (default: DateAndTime)", DefaultValue = DateTimeFormat.DateAndTime)]
+		[Option("dateTimeFormat", "dtf", HelpText = "For DateTime type columns indicates the DateTimeFormat of the column.", DefaultValue = DateTimeFormat.DateAndTime)]
 		public DateTimeFormat DateTimeFormat { get; set; } = DateTimeFormat.DateAndTime;
 
-		[Option("trueLabel", "tl", HelpText = "For Boolean type columns that represents the Label to be associated to the \"True\" value. (default: \"True\")")]
+		[Option("trueLabel", "tl", HelpText = "For Boolean type columns that represents the Label to be associated to the \"True\" value.", DefaultValue = "True")]
         public string? TrueLabel { get; set; } = "True";
 
-        [Option("falseLabel", "fl", HelpText = "For  Boolean type columns that represents the Label to be associated to the \"False\" value.(default: \"False\")")]
+        [Option("falseLabel", "fl", HelpText = "For  Boolean type columns that represents the Label to be associated to the \"False\" value.", DefaultValue = "False")]
         public string? FalseLabel { get; set; } = "False";
     }
 
