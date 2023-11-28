@@ -88,6 +88,13 @@ jobs:
         $version = Get-Content $env:GITHUB_WORKSPACE/version.txt
         dotnet build --configuration Release /p:Version=$version
         dotnet pack --configuration Release /p:Version=$version --output ${{ env.NuGetDirectory }}
+    
+    - name: Get documentation from wiki
+      uses: actions/checkout@v4
+      with:
+        repository: https://github.com/neronotte/Greg.Xrm.Command.wiki.git
+        token: ${{ secrets.GH_TOKEN }}
+        path: D:\wiki
         
     - name: Update Wiki content
       run: |
