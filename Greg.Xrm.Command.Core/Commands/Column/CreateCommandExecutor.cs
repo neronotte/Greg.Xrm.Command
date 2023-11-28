@@ -48,7 +48,6 @@ namespace Greg.Xrm.Command.Commands.Column
 				var builder = attributeMetadataBuilderFactory.CreateFor(command.AttributeType);
 				var attribute = await builder.CreateFromAsync(crm, command, defaultLanguageCode, publisherPrefix, customizationOptionValuePrefix.Value);
 
-
 				output.Write($"Creating attribute {attribute.SchemaName}...");
 				var request = new CreateAttributeRequest();
 				request.SolutionUniqueName = currentSolutionName;

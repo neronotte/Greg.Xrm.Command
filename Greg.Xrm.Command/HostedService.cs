@@ -2,6 +2,7 @@
 using Greg.Xrm.Command.Services.Output;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using System.ComponentModel.DataAnnotations;
 
 namespace Greg.Xrm.Command
 {
@@ -57,6 +58,28 @@ namespace Greg.Xrm.Command
 					Environment.Exit(-1);
 					return;
 				}
+
+
+				var validationContext = new ValidationContext(command);
+				var validationResults = new List<ValidationResult>();
+				if (!Validator.TryValidateObject(command, validationContext, validationResults, true))
+				{
+					this.output.WriteLine("Invalid command options:", ConsoleColor.Red).WriteLine();
+					foreach (var validationResult in validationResults)
+					{
+						this.output.Write("    ");
+						this.output.WriteLine(validationResult.ErrorMessage, ConsoleColor.Red);
+					}
+
+					log.LogError("Invalid command");
+					Environment.Exit(-1);
+					return;
+				}
+
+
+
+
+
 
 				var commandExecutor = commandExecutorFactory.CreateFor(command.GetType());
 				if (commandExecutor == null)
