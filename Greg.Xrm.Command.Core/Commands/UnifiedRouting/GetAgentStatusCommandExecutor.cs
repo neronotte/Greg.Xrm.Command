@@ -38,9 +38,12 @@ namespace Greg.Xrm.Command.Commands.Table
 			{
 
                 output.WriteLine($"Checking agent status {command.AgentPrimaryEmail}");
+                DateTime parsedTime;
+
+                var isDateTimeParsed = DateTime.TryParse(command.DateTimeStatus, out parsedTime);
 
                 // Set Condition Values
-                var timeQuery = command.DateTimeStatus ?? DateTime.UtcNow;
+                var timeQuery = isDateTimeParsed ? parsedTime : DateTime.UtcNow;
 
                 // Instantiate QueryExpression query
                 var query = new QueryExpression("msdyn_agentstatushistory");
@@ -56,8 +59,11 @@ namespace Greg.Xrm.Command.Commands.Table
                     "msdyn_agentid");
 
                 // Add conditions to query.Criteria
-                query.Criteria.AddCondition("msdyn_starttime", ConditionOperator.OnOrAfter, timeQuery);
-                //query.Criteria.AddCondition("msdyn_endtime", ConditionOperator.OnOrBefore, timeQuery);
+                query.Criteria.AddCondition("msdyn_starttime", ConditionOperator.LessEqual, timeQuery);
+                var endTimeFiltered = new FilterExpression(LogicalOperator.Or);
+                query.Criteria.AddFilter(endTimeFiltered);
+                endTimeFiltered.AddCondition("msdyn_endtime", ConditionOperator.GreaterEqual, timeQuery);
+                endTimeFiltered.AddCondition("msdyn_endtime", ConditionOperator.Null);
 
                 // Add orders
                 query.AddOrder("createdon", OrderType.Descending);
@@ -86,16 +92,19 @@ namespace Greg.Xrm.Command.Commands.Table
                     return;
                 }
 
-                var status = result.GetAttributeValue<string>("presenceJoin.msdyn_presencestatustext");
-                var statusOpt = result.GetAttributeValue<OptionSetValue>("presenceJoin.msdyn_basepresencestatus");
-                var dateStart = result.GetFormattedValue("msdyn_starttime");
+                var status = result.GetAliasedValue<string>("presenceJoin.msdyn_presencestatustext");
+                var statusOpt = result.GetAliasedValue<OptionSetValue>("presenceJoin.msdyn_basepresencestatus");
+                var dateStart = result.GetAttributeValue<DateTime>("msdyn_starttime");
 
-
-                this.output.WriteLine(command.AgentPrimaryEmail)
-					.Write("is ")
-					.WriteLine(status)
-					.Write("since ")
-					.WriteLine(dateStart);
+                if(!isDateTimeParsed)
+                    this.output.WriteLine(command.AgentPrimaryEmail)
+                    .Write("is ").WriteLine(status, getAgentStatusColor(statusOpt.Value))
+                    .Write("since ").WriteLine(dateStart.ToLocalTime().ToString());
+                else
+                    this.output.WriteLine(command.AgentPrimaryEmail)
+                    .Write("at ").WriteLine(parsedTime.ToString())
+                    .Write("was ").WriteLine(status, getAgentStatusColor(statusOpt.Value))
+					.Write("since ").WriteLine(dateStart.ToLocalTime().ToString());
             }
             catch (FaultException<OrganizationServiceFault> ex)
             {
@@ -109,18 +118,21 @@ namespace Greg.Xrm.Command.Commands.Table
                 }
             }
         }
+
+        private ConsoleColor getAgentStatusColor(int value)
+        {
+            switch(value)
+            {
+                case 192360000:
+                    return ConsoleColor.Green;
+                case 192360001:
+                case 192360002:
+                    return ConsoleColor.Red;
+                case 192360003:
+                    return ConsoleColor.DarkYellow;
+                default:
+                    return ConsoleColor.White;
+            }
+        }
     }
 }
-
-
-/*
- * 
- * 
- * 
- * Available	192360000
-Busy	192360001
-Busy - DND	192360002
-Away	192360003
-Offline	192360004
-
-*/
