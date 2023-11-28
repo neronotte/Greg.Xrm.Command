@@ -32,7 +32,8 @@ namespace Greg.Xrm.Command.Commands.Table
 
 			executor.ExecuteAsync(new GetAgentStatusCommand
             {
-				AgentPrimaryEmail = agentPrimaryEmail
+				AgentPrimaryEmail = agentPrimaryEmail,
+				DateTimeStatus = "28/11/2023 11:00"
             }, new CancellationToken()).Wait();
 
 			organizationServiceRepository.Verify(x => x.GetCurrentConnectionAsync(), Times.Once);

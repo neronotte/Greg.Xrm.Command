@@ -17,7 +17,7 @@ namespace Greg.Xrm.Command.Commands.UnifiedRouting
         public string? Queue { get; set; }
 
         [Option("dateTime", "t")]
-        public DateTime? DateTimeStatus { get; set; }
+        public string DateTimeStatus { get; set; }
 
 		public void WriteUsageExamples(MarkdownWriter writer)
 		{
