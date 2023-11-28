@@ -61,8 +61,6 @@ namespace Greg.Xrm.Command.Commands.Column
 		[Option("max", "max", HelpText = "For number type columns indicates the maximum value for the column.")]
 		public double? MaxValue { get; set; }
 
-
-
         [Option("precision", "p", HelpText = "For money type columns indicates the precision for the column.", DefaultValue = 2)]
         public int? Precision { get; set; }
 
@@ -72,13 +70,23 @@ namespace Greg.Xrm.Command.Commands.Column
 		[Option("imeMode", "ime", HelpText = "For number type columns indicates the input method editor (IME) mode for the column.", DefaultValue = ImeMode.Disabled)]
 		public ImeMode ImeMode { get; set; } = ImeMode.Disabled;
 
-        [Option("dtFormat", "dtf", HelpText = "For DateTime type columns indicates the DateTimeFormat for the column. (default: DateAndTime)")]
-        public DateTimeFormat DateTimeFormat { get; set; } = DateTimeFormat.DateAndTime;
+		[Option("dateTimeBehavior", "dtb", HelpText = "For DateTime type columns indicates the DateTimeFormat for the column. (default: DateAndTime)", DefaultValue = DateTimeBehavior1.UserLocal)]
+		public DateTimeBehavior1 DateTimeBehavior { get; set; } = DateTimeBehavior1.UserLocal;
 
-        [Option("trueLabel", "tl", HelpText = "For Boolean type columns that represents the Label to be associated to the \"true\" value. (default: \"true\")")]
-        public string? TrueLabel { get; set; } = "true";
+		[Option("dateTimeFormat", "dtf", HelpText = "For DateTime type columns indicates the DateTimeFormat for the column. (default: DateAndTime)", DefaultValue = DateTimeFormat.DateAndTime)]
+		public DateTimeFormat DateTimeFormat { get; set; } = DateTimeFormat.DateAndTime;
 
-        [Option("falseLabel", "fl", HelpText = "For  Boolean type columns that represents the Label to be associated to the \"false\" value.(default: \"false\")")]
-        public string? FalseLabel { get; set; } = "false";
+		[Option("trueLabel", "tl", HelpText = "For Boolean type columns that represents the Label to be associated to the \"True\" value. (default: \"True\")")]
+        public string? TrueLabel { get; set; } = "True";
+
+        [Option("falseLabel", "fl", HelpText = "For  Boolean type columns that represents the Label to be associated to the \"False\" value.(default: \"False\")")]
+        public string? FalseLabel { get; set; } = "False";
     }
+
+	public enum DateTimeBehavior1
+	{
+		UserLocal,
+		TimeZoneIndependent,
+		DateOnly
+	} 
 }
