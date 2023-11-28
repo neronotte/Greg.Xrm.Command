@@ -67,7 +67,7 @@ jobs:
       with:
         repository: neronotte/Greg.Xrm.Command.wiki
         token: ${{ secrets.GH_TOKEN }}
-        path: D:\wiki
+        path: $GITHUB_WORKSPACE/wiki
 
     # Install the .NET Core workload
     - name: Install .NET Core
