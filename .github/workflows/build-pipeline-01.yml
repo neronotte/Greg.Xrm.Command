@@ -104,7 +104,7 @@ jobs:
       uses: actions4gh/deploy-wiki@v1
       with:
         token: ${{ secrets.GH_TOKEN }}
-        path: D:\wiki
+        path: ${{ github.workspace }}/wiki
         
     - name: Upload NuGet Package as artifact
       uses: actions/upload-artifact@v3
