@@ -7,7 +7,6 @@ using Greg.Xrm.Command.Services.Settings;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using System.Diagnostics;
 
 var builder = Host.CreateApplicationBuilder(args);
 builder.Services.AddSingleton<ICommandLineArguments>(new CommandLineArguments(args));

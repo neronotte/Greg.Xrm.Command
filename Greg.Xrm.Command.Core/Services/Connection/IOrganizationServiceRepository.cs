@@ -12,9 +12,11 @@ namespace Greg.Xrm.Command.Services.Connection
 		Task<IOrganizationServiceAsync2> GetConnectionByName(string connectionName);
 
 		Task SetConnectionAsync(string name, string connectionString);
+		Task DeleteConnectionAsync(string name);
 
 		Task SetDefaultAsync(string name);
 		Task SetDefaultSolutionAsync(string uniqueName);
 		Task<string?> GetCurrentDefaultSolutionAsync();
+		Task RenameConnectionAsync(string oldName, string newName);
 	}
 }
