@@ -92,7 +92,7 @@ jobs:
     - name: Get documentation from wiki
       uses: actions/checkout@v4
       with:
-        repository: https://github.com/neronotte/Greg.Xrm.Command.wiki.git
+        repository: neronotte/Greg.Xrm.Command.wiki
         token: ${{ secrets.GH_TOKEN }}
         path: D:\wiki
         
