@@ -58,9 +58,16 @@ jobs:
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         fetch-depth: 0
+    
+    - name: Checkout documentation from wiki
+      uses: actions/checkout@v4
+      with:
+        repository: neronotte/Greg.Xrm.Command.wiki
+        token: ${{ secrets.GH_TOKEN }}
+        path: D:\wiki
 
     # Install the .NET Core workload
     - name: Install .NET Core
@@ -88,13 +95,6 @@ jobs:
         $version = Get-Content $env:GITHUB_WORKSPACE/version.txt
         dotnet build --configuration Release /p:Version=$version
         dotnet pack --configuration Release /p:Version=$version --output ${{ env.NuGetDirectory }}
-    
-    - name: Get documentation from wiki
-      uses: actions/checkout@v4
-      with:
-        repository: neronotte/Greg.Xrm.Command.wiki
-        token: ${{ secrets.GH_TOKEN }}
-        path: D:\wiki
         
     - name: Update Wiki content
       run: |
