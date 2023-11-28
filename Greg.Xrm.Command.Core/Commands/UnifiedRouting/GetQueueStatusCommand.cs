@@ -5,13 +5,13 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Greg.Xrm.Command.Commands.UnifiedRouting
 {
-	[Command("unifiedrouting", "agentstatus", HelpText = "Creates a new table in the dataverse environment that has previously been selected via `pacx auth select`")]
-    [Alias("ur","status")]
-    public class GetAgentStatusCommand : ICanProvideUsageExample
+	[Command("unifiedrouting", "queuestatus", HelpText = "Creates a new table in the dataverse environment that has previously been selected via `pacx auth select`")]
+    [Alias("ur","queuestatus")]
+    public class GetQueueStatusCommand : ICanProvideUsageExample
     {
-        [Option("agentPrimaryEmail", "a")]
+        [Option("queue", "q")]
         [Required]
-        public string? AgentPrimaryEmail { get; set; }
+        public string? Queue { get; set; }
 
         [Option("dateTime", "t")]
         public string? DateTimeStatus { get; set; }
