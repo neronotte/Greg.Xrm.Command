@@ -1,11 +1,10 @@
-﻿using Greg.Xrm.Command.Commands.UnifiedRouting;
-using Greg.Xrm.Command.Services.Connection;
+﻿using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;
 using System.ServiceModel;
 
-namespace Greg.Xrm.Command.Commands.Table
+namespace Greg.Xrm.Command.Commands.UnifiedRouting
 {
     public class GetAgentStatusCommandExecutor : ICommandExecutor<GetAgentStatusCommand>
     {
@@ -47,6 +46,7 @@ namespace Greg.Xrm.Command.Commands.Table
 
                 // Instantiate QueryExpression query
                 var query = new QueryExpression("msdyn_agentstatushistory");
+                query.NoLock = true;
 
                 // Add columns to query.ColumnSet
                 query.ColumnSet.AddColumns(
