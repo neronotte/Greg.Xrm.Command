@@ -1,11 +1,12 @@
-﻿using Greg.Xrm.Command.Commands.UnifiedRouting;
-using Greg.Xrm.Command.Services.Connection;
+﻿using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;
+using System.Collections.Generic;
+using System.Data;
 using System.ServiceModel;
 
-namespace Greg.Xrm.Command.Commands.Table
+namespace Greg.Xrm.Command.Commands.UnifiedRouting
 {
     public class GetQueueStatusCommandExecutor : ICommandExecutor<GetQueueStatusCommand>
     {
@@ -20,7 +21,7 @@ namespace Greg.Xrm.Command.Commands.Table
             organizationServiceRepository = organizationServiceFactory;
         }
 
-        public async Task ExecuteAsync(GetAgentStatusCommand command, CancellationToken cancellationToken)
+        public async Task ExecuteAsync(GetQueueStatusCommand command, CancellationToken cancellationToken)
 		{
 			this.output.Write($"Connecting to the current dataverse environment...");
 			var crm = await this.organizationServiceRepository.GetCurrentConnectionAsync();
@@ -37,7 +38,7 @@ namespace Greg.Xrm.Command.Commands.Table
 			try
 			{
 
-                output.WriteLine($"Checking agent status {command.AgentPrimaryEmail}");
+                output.WriteLine($"Checking queue status {command.Queue}");
                 DateTime parsedTime;
 
                 var isDateTimeParsed = DateTime.TryParse(command.DateTimeStatus, out parsedTime);
@@ -47,7 +48,7 @@ namespace Greg.Xrm.Command.Commands.Table
 
                 // Instantiate QueryExpression query
                 var query = new QueryExpression("msdyn_agentstatushistory");
-
+                query.NoLock = true;
                 // Add columns to query.ColumnSet
                 query.ColumnSet.AddColumns(
                     "msdyn_agentstatushistoryid",
@@ -65,19 +66,15 @@ namespace Greg.Xrm.Command.Commands.Table
                 endTimeFiltered.AddCondition("msdyn_endtime", ConditionOperator.GreaterEqual, timeQuery);
                 endTimeFiltered.AddCondition("msdyn_endtime", ConditionOperator.Null);
 
-                // Add orders
                 query.AddOrder("createdon", OrderType.Descending);
 
-                // Add link-entity aa
                 var systemuserJoin = query.AddLink("systemuser", "msdyn_agentid", "systemuserid");
                 systemuserJoin.EntityAlias = "systemuserJoin";
+                systemuserJoin.Columns.AddColumns("fullname", "internalemailaddress");
 
-                var queryAgentAddress = new FilterExpression(LogicalOperator.Or);
-                systemuserJoin.LinkCriteria.AddFilter(queryAgentAddress);
-
-                // Add conditions to aa.LinkCriteria
-                queryAgentAddress.AddCondition("internalemailaddress", ConditionOperator.Equal, command.AgentPrimaryEmail);
-                queryAgentAddress.AddCondition("domainname", ConditionOperator.Equal, command.AgentPrimaryEmail);
+                var queueMembershipJoin = systemuserJoin.AddLink("queuemembership", "systemuserid", "systemuserid");
+                var queueJoin = queueMembershipJoin.AddLink("queue", "queueid", "queueid");
+                queueJoin.LinkCriteria.AddCondition("name", ConditionOperator.Equal, command.Queue);
 
                 var presenceJoin = query.AddLink("msdyn_presence", "msdyn_presenceid", "msdyn_presenceid", JoinOperator.Inner);
                 presenceJoin.EntityAlias = "presenceJoin";
@@ -85,26 +82,31 @@ namespace Greg.Xrm.Command.Commands.Table
                 // Add columns to presence.Columns
                 presenceJoin.Columns.AddColumns("msdyn_presencestatustext", "msdyn_basepresencestatus");
 
-                var result = (await crm.RetrieveMultipleAsync(query)).Entities.FirstOrDefault();
-                if (result == null)
+                var results = (await crm.RetrieveMultipleAsync(query)).Entities;
+                if (results.Count==0)
                 {
-                    output.WriteLine("No records found for: ", ConsoleColor.Yellow).WriteLine(command.AgentPrimaryEmail, ConsoleColor.Yellow);
+                    output.WriteLine("No records found for: ", ConsoleColor.Yellow).WriteLine(command.Queue, ConsoleColor.Yellow);
                     return;
                 }
 
-                var status = result.GetAliasedValue<string>("presenceJoin.msdyn_presencestatustext");
-                var statusOpt = result.GetAliasedValue<OptionSetValue>("presenceJoin.msdyn_basepresencestatus");
-                var dateStart = result.GetAttributeValue<DateTime>("msdyn_starttime");
+                this.output.Write("The agents status in ").Write(command.Queue).Write(" at ").Write(timeQuery.ToLocalTime().ToString()).WriteLine(" is:");
 
-                if(!isDateTimeParsed)
-                    this.output.WriteLine(command.AgentPrimaryEmail)
-                    .Write("is ").WriteLine(status, getAgentStatusColor(statusOpt.Value))
-                    .Write("since ").WriteLine(dateStart.ToLocalTime().ToString());
-                else
-                    this.output.WriteLine(command.AgentPrimaryEmail)
-                    .Write("at ").WriteLine(parsedTime.ToString())
-                    .Write("was ").WriteLine(status, getAgentStatusColor(statusOpt.Value))
-					.Write("since ").WriteLine(dateStart.ToLocalTime().ToString());
+                var tableResult = new DataTable();
+                tableResult.Columns.Add("Agent", typeof(string));
+                tableResult.Columns.Add("Status", typeof(string));
+                tableResult.Columns.Add("Aging status", typeof(string));
+                foreach (Entity result in results)
+                {
+                    var userEmail = result.GetAliasedValue<string>("systemuserJoin.internalemailaddress");
+                    var userFullName = result.GetAliasedValue<string>("systemuserJoin.fullname");
+                    var status = result.GetAliasedValue<string>("presenceJoin.msdyn_presencestatustext");
+                    var statusOpt = result.GetAliasedValue<OptionSetValue>("presenceJoin.msdyn_basepresencestatus");
+                    var dateStart = result.GetAttributeValue<DateTime>("msdyn_starttime");
+                    tableResult.Rows.Add(userEmail, status, dateStart.ToString());
+                }
+
+                var tableGenerator = TableGenerator.CreateAsciiTableFromDataTable(tableResult);
+                this.output.Write(tableGenerator.ToString());
             }
             catch (FaultException<OrganizationServiceFault> ex)
             {
