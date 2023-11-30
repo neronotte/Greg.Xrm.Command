@@ -1,5 +1,8 @@
-﻿using Greg.Xrm.Command.Parsing;
+﻿using Greg.Xrm.Command.Commands.Help;
+using Greg.Xrm.Command.Parsing;
+using Greg.Xrm.Command.Services.CommandHistory;
 using Greg.Xrm.Command.Services.Output;
+using Greg.Xrm.Command.Services.Settings;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.ComponentModel.DataAnnotations;
@@ -12,17 +15,20 @@ namespace Greg.Xrm.Command
 		private readonly IOutput output;
 		private readonly ICommandLineArguments args;
 		private readonly ICommandExecutorFactory commandExecutorFactory;
+		private readonly IHistoryTracker historyTracker;
 
 		public HostedService(
 			ILogger<HostedService> logger,
 			IOutput output,
 			ICommandLineArguments args,
-			ICommandExecutorFactory commandExecutorFactory)
+			ICommandExecutorFactory commandExecutorFactory,
+			IHistoryTracker historyTracker)
 		{
 			this.log = logger;
 			this.output = output;
 			this.args = args;
 			this.commandExecutorFactory = commandExecutorFactory;
+			this.historyTracker = historyTracker;
 		}
 
 		public async Task StartAsync(CancellationToken cancellationToken)
@@ -76,9 +82,18 @@ namespace Greg.Xrm.Command
 					return;
 				}
 
+				var commandsNotToTrack = new[]
+				{
+					typeof(HelpCommand),
+					typeof(Commands.History.GetCommand),
+					typeof(Commands.History.SetLengthCommand),
+					typeof(Commands.History.ClearCommand),
+				};
 
-
-
+				if (!commandsNotToTrack.Contains(command.GetType()))
+				{
+					await this.historyTracker.AddAsync(args.ToArray());
+				}
 
 
 				var commandExecutor = commandExecutorFactory.CreateFor(command.GetType());
