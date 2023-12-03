@@ -2,14 +2,12 @@
 using Greg.Xrm.Command.Parsing;
 using Greg.Xrm.Command.Services.CommandHistory;
 using Greg.Xrm.Command.Services.Output;
-using Greg.Xrm.Command.Services.Settings;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.ComponentModel.DataAnnotations;
 
 namespace Greg.Xrm.Command
 {
-	public sealed class HostedService : IHostedService
+    public sealed class Bootstrapper
 	{
 		private readonly ILogger log;
 		private readonly IOutput output;
@@ -17,8 +15,8 @@ namespace Greg.Xrm.Command
 		private readonly ICommandExecutorFactory commandExecutorFactory;
 		private readonly IHistoryTracker historyTracker;
 
-		public HostedService(
-			ILogger<HostedService> logger,
+		public Bootstrapper(
+			ILogger<Bootstrapper> logger,
 			IOutput output,
 			ICommandLineArguments args,
 			ICommandExecutorFactory commandExecutorFactory,
@@ -154,21 +152,6 @@ namespace Greg.Xrm.Command
 
 				Environment.Exit(-1);
 			}
-		}
-
-
-
-
-
-
-		public Task StopAsync(CancellationToken cancellationToken)
-		{
-			this.output.WriteLine();
-			this.output.WriteLine("STOP RECEIVED");
-
-			Environment.Exit(-1);
-
-			return Task.CompletedTask;
 		}
 	}
 }
