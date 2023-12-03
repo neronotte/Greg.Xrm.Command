@@ -146,7 +146,7 @@ namespace Greg.Xrm.Command.Commands.Help
 					.Write("](")
 					.Write(assemblyName)
 					.Write("-")
-					.Write(node.Verb.Replace(' ', '-'))
+					.Write(node.ToString().Replace(' ', '-'))
 					.WriteLine(")");
 			}
 			else
@@ -155,7 +155,7 @@ namespace Greg.Xrm.Command.Commands.Help
 					.Write("- ")
 					.Write(assemblyName)
 					.Write(" ")
-					.Write(node.Verb)
+					.Write(node.ToString())
 					.WriteLine();
 			}
 
