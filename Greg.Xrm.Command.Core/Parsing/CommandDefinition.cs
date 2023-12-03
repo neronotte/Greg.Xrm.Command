@@ -59,11 +59,15 @@ namespace Greg.Xrm.Command.Parsing
 		}
 
 
-		public object? CreateCommand(IReadOnlyDictionary<string, string> options)
+		public object CreateCommand(IReadOnlyDictionary<string, string> options)
 		{
 			var usedOptions = new List<string>();
 
 			var command = Activator.CreateInstance(this.CommandType);
+			if (command == null)
+				throw new CommandException(CommandException.CommandCannotBeCreated, $"Command '{this.CommandType}'cannot be created. Please pull an issue on GitHub page.");
+
+
 			foreach (var optionDef in this.Options)
 			{
 				var property = optionDef.Property;
