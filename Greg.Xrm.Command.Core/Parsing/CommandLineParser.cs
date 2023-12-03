@@ -59,6 +59,7 @@ namespace Greg.Xrm.Command.Parsing
 
 			foreach (var command in commandList.OrderBy(x => x.ExpandedVerbs))
 			{
+				VerbNode? parent = null;
 				var nodeList = list;
 				for (var i = 0; i < command.Verbs.Count; i++)
 				{
@@ -68,7 +69,7 @@ namespace Greg.Xrm.Command.Parsing
 					var node = nodeList.Find(x => x.Verb == command.Verbs[i]);
 					if (node == null)
 					{
-						node = new VerbNode(command.Verbs[i]);
+						node = new VerbNode(command.Verbs[i], parent);
 
 						if (helpers.Find(x => x.Verbs.SequenceEqual(currentVerbs, StringComparer.OrdinalIgnoreCase)) is INamespaceHelper helper)
 						{
@@ -84,6 +85,7 @@ namespace Greg.Xrm.Command.Parsing
 					}
 
 					nodeList = node.Children;
+					parent = node;
 				}
 			}
 
