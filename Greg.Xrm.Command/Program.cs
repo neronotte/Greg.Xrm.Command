@@ -1,4 +1,6 @@
-﻿using Greg.Xrm.Command;
+﻿using Autofac;
+using Autofac.Extensions.DependencyInjection;
+using Greg.Xrm.Command;
 using Greg.Xrm.Command.Commands.Column.Builders;
 using Greg.Xrm.Command.Services.CommandHistory;
 using Greg.Xrm.Command.Services.Connection;
@@ -6,24 +8,47 @@ using Greg.Xrm.Command.Services.Output;
 using Greg.Xrm.Command.Services.Pluralization;
 using Greg.Xrm.Command.Services.Settings;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-var builder = Host.CreateApplicationBuilder(args);
-builder.Services.AddSingleton<ICommandLineArguments>(new CommandLineArguments(args));
-builder.Services.RegisterCommandExecutors(typeof(CommandAttribute).Assembly);
-builder.Services.AddTransient<ICommandExecutorFactory, CommandExecutorFactory>();
-builder.Services.AddTransient<IPluralizationFactory, PluralizationFactory>();
-builder.Services.AddTransient<ISettingsRepository, SettingsRepository>();
-builder.Services.AddSingleton<IOrganizationServiceRepository, OrganizationServiceRepository>();
-builder.Services.AddSingleton<IOutput, OutputToConsole>();
-builder.Services.AddTransient<IAttributeMetadataBuilderFactory, AttributeMetadataBuilderFactory>();
-builder.Services.AddTransient<IHistoryTracker, HistoryTracker>();
+var serviceCollection = new ServiceCollection();
+serviceCollection.AddSingleton<ICommandLineArguments>(new CommandLineArguments(args));
+serviceCollection.RegisterCommandExecutors(typeof(CommandAttribute).Assembly);
+serviceCollection.AddTransient<ICommandExecutorFactory, CommandExecutorFactory>();
+serviceCollection.AddTransient<IPluralizationFactory, PluralizationFactory>();
+serviceCollection.AddTransient<ISettingsRepository, SettingsRepository>();
+serviceCollection.AddSingleton<IOrganizationServiceRepository, OrganizationServiceRepository>();
+serviceCollection.AddSingleton<IOutput, OutputToConsole>();
+serviceCollection.AddTransient<IAttributeMetadataBuilderFactory, AttributeMetadataBuilderFactory>();
+serviceCollection.AddTransient<IHistoryTracker, HistoryTracker>();
+serviceCollection.AddTransient<Bootstrapper>();
 
-builder.Services.AddHostedService<HostedService>();
+serviceCollection.AddAutofac();
+serviceCollection.AddLogging(logging =>
+{
+	logging.ClearProviders();
+	logging.AddDebug();
+});
 
-builder.Logging.ClearProviders();
-builder.Logging.AddDebug();
 
-using var host = builder.Build();
-host.Run();
+var containerBuilder = new ContainerBuilder();
+containerBuilder.Populate(serviceCollection);
+
+var container = containerBuilder.Build();
+var serviceProvider = new AutofacServiceProvider(container);
+
+var hostedService = serviceProvider.GetService<Bootstrapper>();
+try
+{
+	hostedService?.StartAsync(CancellationToken.None).Wait();
+}
+catch(AggregateException ex)
+{
+	foreach(var inner in ex.InnerExceptions)
+	{
+		Console.WriteLine(inner.Message);
+	}
+}
+catch(Exception ex)
+{
+	Console.WriteLine(ex.Message);
+}
