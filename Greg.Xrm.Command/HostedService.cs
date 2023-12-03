@@ -58,9 +58,6 @@ namespace Greg.Xrm.Command
 				var command = parser.Parse(args);
 				if (command == null)
 				{
-					this.output.WriteLine("Invalid command", ConsoleColor.Red).WriteLine();
-					log.LogError("Invalid command");
-
 					Environment.Exit(-1);
 					return;
 				}
