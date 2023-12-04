@@ -9,24 +9,15 @@ namespace Greg.Xrm.Command.Commands.UnifiedRouting
     [Alias("ur","status")]
     public class GetAgentStatusCommand : ICanProvideUsageExample
     {
-        [Option("agentPrimaryEmail", "a")]
+        [Option("agentPrimaryEmail", "a", "Agent primary email (or domain name) used to perform the query.")]
         [Required]
         public string? AgentPrimaryEmail { get; set; }
 
-        [Option("dateTime", "t")]
+        [Option("dateTime", "t", "Date and time (local time) used to perform the query. Format dd/MM/yyyy HH:mm.")]
         public string? DateTimeStatus { get; set; }
 
 		public void WriteUsageExamples(MarkdownWriter writer)
 		{
-			writer.WriteParagraph("This command can be used to create a new table specifying a minimun set of information. You can simply type");
-            writer.WriteCodeBlock("pacx table create --name \"My Table\"", "Command");
-            writer.Write("to create a new table named \"My Table\" in the solution set as default via ").WriteCode("pacx solution setDefault").WriteLine(".");
-            writer.Write("The table schema name will be generated automatically extrapolating only chars, numbers and underscores from the display name,")
-                .Write("setting them lowercase, prefixed with the solution's publisher prefix.")
-                .WriteLine();
-            writer.Write("In this case, if the publisher prefix is ").WriteCode("greg").Write("), the generated schema name will be ").WriteCode("greg_mytable").WriteLine();
-            writer.WriteLine();
-
 		}
 	}
 }
