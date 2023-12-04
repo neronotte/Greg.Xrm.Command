@@ -56,7 +56,7 @@
 		}
 
 
-		public IOutput WriteTable<TRow>(IReadOnlyList<TRow> collection, Func<string[]> rowHeaders, Func<TRow, string[]> rowData, Func<int, string, ConsoleColor>? colorPicker = null)
+		public IOutput WriteTable<TRow>(IReadOnlyList<TRow> collection, Func<string[]> rowHeaders, Func<TRow, string[]> rowData, Func<int, string, ConsoleColor?>? colorPicker = null)
 		{
 			colorPicker ??= (i, _) => Console.ForegroundColor;
 			var headers = rowHeaders();
@@ -80,7 +80,8 @@
 
 				for (var i = 0; i < row.Length; i++)
 				{
-					Console.Write(row[i].PadRight(columnWidths[i]), colorPicker(i, row[i]));
+					var color = colorPicker(i, row[i]) ?? Console.ForegroundColor;
+					Console.Write(row[i].PadRight(columnWidths[i]), color);
 					Console.Write(" | ");
 				}
 				Console.WriteLine();
