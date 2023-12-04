@@ -19,19 +19,26 @@ namespace Greg.Xrm.Command.Commands.Help
 			if (command.ExportHelp)
 			{
 				this.output.WriteLine("Generating help files...");
-				GenerateMarkdownHelp(command);
+				
+				var generator = new HelpGeneratorInMarkdown(this.output, command.CommandList, command.CommandTree, command.ExportHelpPath);
+				generator.GenerateMarkdownHelp();
+
 				return Task.CompletedTask;
 			}
 
 			if (command.LastMatchingVerb is not null)
 			{
-				GenerateVerbHelp(command);
+				var generator = new HelpGeneratorForVerb(this.output, command.LastMatchingVerb);
+				generator.GenerateHelp();
+
 				return Task.CompletedTask;
 			}
 
 			if (command.CommandDefinition is null)
 			{
-				GenerateGenericHelp(command);
+				var generator = new HelpGeneratorGeneric(this.output, command.CommandList, command.CommandTree);
+				generator.GenerateHelp2();
+
 				return Task.CompletedTask;
 			}
 
@@ -135,25 +142,6 @@ namespace Greg.Xrm.Command.Commands.Help
 
 			output.WriteLine();
 			return Task.CompletedTask;
-		}
-
-		private void GenerateMarkdownHelp(HelpCommand command)
-		{
-			var generator = new HelpGeneratorInMarkdown(this.output, command.CommandList, command.CommandTree,  command.ExportHelpPath);
-			generator.GenerateMarkdownHelp() ;
-		}
-
-		private void GenerateGenericHelp(HelpCommand command)
-		{
-			var generator = new HelpGeneratorGeneric(this.output, command.CommandList, command.CommandTree);
-			generator.GenerateHelp2();
-		}
-
-
-		private void GenerateVerbHelp(HelpCommand command)
-		{
-			var generator = new HelpGeneratorForVerb(this.output, command.LastMatchingVerb);
-			generator.GenerateHelp();
 		}
 	}
 }

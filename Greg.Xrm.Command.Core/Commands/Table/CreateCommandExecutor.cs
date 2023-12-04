@@ -1,7 +1,6 @@
 ﻿using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
 using Greg.Xrm.Command.Services.Pluralization;
-using Greg.Xrm.Command.Services.Settings;
 using Microsoft.Crm.Sdk.Messages;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Messages;
@@ -87,26 +86,30 @@ namespace Greg.Xrm.Command.Commands.Table
 
                 output.Write("Setting up CreateEntityRequest...");
 
-                var entityMetadata = new EntityMetadata();
-                entityMetadata.DisplayName = SetTableDisplayName(command, defaultLanguageCode);
-                entityMetadata.DisplayCollectionName = await SetTableDisplayCollectionNameAsync(command, defaultLanguageCode);
-                entityMetadata.Description = SetTableDescription(command, defaultLanguageCode);
-                entityMetadata.SchemaName = SetTableSchemaName(command, publisherPrefix);
-                entityMetadata.OwnershipType = command.Ownership;
-                entityMetadata.IsActivity = command.IsActivity;
-                entityMetadata.IsAuditEnabled = SetTableIsAuditEnabled(command);
+				var entityMetadata = new EntityMetadata
+				{
+					DisplayName = SetTableDisplayName(command, defaultLanguageCode),
+					DisplayCollectionName = await SetTableDisplayCollectionNameAsync(command, defaultLanguageCode),
+					Description = SetTableDescription(command, defaultLanguageCode),
+					SchemaName = SetTableSchemaName(command, publisherPrefix),
+					OwnershipType = command.Ownership,
+					IsActivity = command.IsActivity,
+					IsAuditEnabled = SetTableIsAuditEnabled(command)
+				};
 
 
-                var primaryAttribute = new StringAttributeMetadata();
-                primaryAttribute.DisplayName = SetPrimaryAttributeDisplayName(command, defaultLanguageCode);
-                primaryAttribute.SchemaName = SetPrimaryAttributeSchemaName(command, primaryAttribute.DisplayName, publisherPrefix);
-                primaryAttribute.Description = SetPrimaryAttributeDescription(command, defaultLanguageCode);
-                primaryAttribute.RequiredLevel = SetPrimaryAttributeRequiredLevel(command);
-                primaryAttribute.MaxLength = SetPrimaryAttributeMaxLength(command);
-                primaryAttribute.AutoNumberFormat = SetPrimaryAttributeAutoNumberFormat(command);
-                primaryAttribute.FormatName = StringFormatName.Text;
+				var primaryAttribute = new StringAttributeMetadata
+				{
+					DisplayName = SetPrimaryAttributeDisplayName(command, defaultLanguageCode),
+					Description = SetPrimaryAttributeDescription(command, defaultLanguageCode),
+					RequiredLevel = SetPrimaryAttributeRequiredLevel(command),
+					MaxLength = SetPrimaryAttributeMaxLength(command),
+					AutoNumberFormat = SetPrimaryAttributeAutoNumberFormat(command),
+					FormatName = StringFormatName.Text
+				};
+				primaryAttribute.SchemaName = SetPrimaryAttributeSchemaName(command, primaryAttribute.DisplayName, publisherPrefix);
 
-                output.WriteLine(" Done", ConsoleColor.Green);
+				output.WriteLine(" Done", ConsoleColor.Green);
 
 
                 output.Write("Creating table...");
