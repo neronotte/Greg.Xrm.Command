@@ -27,26 +27,26 @@ namespace Greg.Xrm.Command.Commands.Relationship
 
 
 
-		[Option("cascadeAssign", "caass", "The behavior to apply to child records when the parent record is assigned to another owner\n(values: Cascade, Active, UserOwned, NoCascade)", DefaultValue = CascadeType.NoCascade, SuppressValuesHelp = true)]
-		public CascadeType CascadeAssign { get; set; } = CascadeType.NoCascade;
+		[Option("cascadeAssign", "caass", "The behavior to apply to child records when the parent record is assigned to another owner\n(values: Cascade, Active, UserOwned, NoCascade)\n(default: NoCascade)", SuppressValuesHelp = true)]
+		public CascadeType? CascadeAssign { get; set; }
 
-		[Option("cascadeArchive", "caarc", "The behavior to apply to child records when the parent record is archived\n(not available via UI)", DefaultValue = CascadeType.NoCascade, SuppressValuesHelp = true)]
-		public CascadeType CascadeArchive { get; set; } = CascadeType.NoCascade;
+		[Option("cascadeArchive", "caarc", "The behavior to apply to child records when the parent record is archived\n(not available via UI)\n(default: NoCascade)",SuppressValuesHelp = true)]
+		public CascadeType? CascadeArchive { get; set; }
 
-		[Option("cascadeShare", "cas", "The behavior to apply to child records when the parent record is shared\n(values: Cascade, Active, UserOwned, NoCascade)", DefaultValue = CascadeType.NoCascade, SuppressValuesHelp = true)]
-		public CascadeType CascadeShare { get; set; } = CascadeType.NoCascade;
+		[Option("cascadeShare", "cas", "The behavior to apply to child records when the parent record is shared\n(values: Cascade, Active, UserOwned, NoCascade)\n(default: NoCascade)", SuppressValuesHelp = true)]
+		public CascadeType? CascadeShare { get; set; }
 
-		[Option("cascadeUnshare", "cau", "The behavior to apply to child records when the parent record is unshared\n(values: Cascade, Active, UserOwned, NoCascade)", DefaultValue = CascadeType.NoCascade, SuppressValuesHelp = true)]
-		public CascadeType CascadeUnshare { get; set; } = CascadeType.NoCascade;
+		[Option("cascadeUnshare", "cau", "The behavior to apply to child records when the parent record is unshared\n(values: Cascade, Active, UserOwned, NoCascade)\n(default: NoCascade)", SuppressValuesHelp = true)]
+		public CascadeType? CascadeUnshare { get; set; }
 
-		[Option("cascadeDelete", "cad", "The behavior to apply when the parent record is deleted\n(values: Restrict, RemoveLink)", DefaultValue = CascadeType.Restrict, SuppressValuesHelp = true)]
-		public CascadeType CascadeDelete { get; set; } = CascadeType.Restrict;
+		[Option("cascadeDelete", "cad", "The behavior to apply when the parent record is deleted\n(values: Restrict, RemoveLink)\n(default: Restrict)", DefaultValue = CascadeType.Restrict, SuppressValuesHelp = true)]
+		public CascadeType? CascadeDelete { get; set; } = CascadeType.Restrict;
 
-		[Option("cascadeMerge", "cam", "The behavior to apply to child records when the parent record is merged to another one\n(not available via UI)", DefaultValue = CascadeType.NoCascade, SuppressValuesHelp = true)]
-		public CascadeType CascadeMerge { get; set; } = CascadeType.NoCascade;
+		[Option("cascadeMerge", "cam", "The behavior to apply to child records when the parent record is merged to another one\n(not available via UI)\n(default: NoCascade)", SuppressValuesHelp = true)]
+		public CascadeType? CascadeMerge { get; set; }
 
-		[Option("cascadeReparent", "car", "The behavior to apply to child records when the parent record is reparented\n(values: Cascade, Active, UserOwned, NoCascade)", DefaultValue = CascadeType.NoCascade, SuppressValuesHelp =true)]
-		public CascadeType CascadeReparent { get; set; } = CascadeType.UserOwned;
+		[Option("cascadeReparent", "car", "The behavior to apply to child records when the parent record is reparented\n(values: Cascade, Active, UserOwned, NoCascade)\n(default: NoCascade)", SuppressValuesHelp =true)]
+		public CascadeType? CascadeReparent { get; set; }
 
 
 
