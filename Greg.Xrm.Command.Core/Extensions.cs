@@ -1,5 +1,7 @@
 ﻿using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
+using Microsoft.Xrm.Sdk.Messages;
+using Microsoft.Xrm.Sdk.Metadata;
 using Microsoft.Xrm.Sdk.Query;
 using System.Globalization;
 using System.Text;
@@ -21,6 +23,21 @@ namespace Greg.Xrm.Command
 				}
 			}
 			return sb.ToString();
+		}
+
+		public static string UpperCaseInitials(this string? text)
+		{
+			if (string.IsNullOrWhiteSpace(text)) return string.Empty;
+			if (text.Length == 1) return text.ToUpperInvariant();
+
+			var initials = text
+				.Split(' ', StringSplitOptions.RemoveEmptyEntries)
+				.Select(x => x[0].ToString().ToUpperInvariant())
+				.ToArray();
+
+			if (initials.Length == 1) return initials[0];
+
+			return string.Join(string.Empty, initials);
 		}
 
 		public static string Left(this string? text, int len)
@@ -53,6 +70,81 @@ namespace Greg.Xrm.Command
 		}
 
 
+		public static string? GetLocalizedLabel(this Label? label, int defaultLanguageCode)
+		{
+			if (label is null) return null;
+			return label.LocalizedLabels.FirstOrDefault(x => x.LanguageCode == defaultLanguageCode)?.Label ?? label.UserLocalizedLabel?.Label;
+		}
+
+
+		/// <summary>
+		/// Determines whether the entity can participate in a many-to-many relationship.
+		/// </summary>
+		/// <param name="entity">Entity</param>
+		/// <returns></returns>
+		public static async Task CheckManyToManyEligibilityAsync(this IOrganizationServiceAsync2 crm, string entity)
+		{
+			CanManyToManyRequest canManyToManyRequest = new()
+			{
+				EntityName = entity
+			};
+
+			var canManyToManyResponse = (CanManyToManyResponse)await crm.ExecuteAsync(canManyToManyRequest);
+
+			if (!canManyToManyResponse.CanManyToMany)
+			{
+				throw new CommandException(CommandException.CommandInvalidArgumentValue, $"The entity {entity} cannot be part of a many-to-many relationship");
+			}
+		}
+
+
+		public static async Task CheckManyToManyExplicitEligibilityAsync(this IOrganizationServiceAsync2 crm, string table1, string table2)
+		{
+			var request1 = new CanBeReferencedRequest
+			{
+				EntityName = table1
+			};
+			var response1 = (CanBeReferencedResponse)await crm.ExecuteAsync(request1);
+			if (!response1.CanBeReferenced)
+				throw new CommandException(CommandException.CommandInvalidArgumentValue, $"The entity {table1} cannot be parent of an N-1 relationship");
+
+			var request2 = new CanBeReferencedRequest
+			{
+				EntityName = table2
+			};
+			var response2 = (CanBeReferencedResponse)await crm.ExecuteAsync(request2);
+			if (!response2.CanBeReferenced)
+				throw new CommandException(CommandException.CommandInvalidArgumentValue, $"The entity {table2} cannot be parent of an N-1 relationship");
+		}
+
+
+		/// <summary>
+		/// Determines whether the given entities can participate in a many-to-one relationship.
+		/// </summary>
+		/// <param name="parentTable">The referenced table</param>
+		/// <param name="childTable">The referencing table</param>
+		/// <returns></returns>
+		public static async Task CheckManyToOneEligibilityAsync(this IOrganizationServiceAsync2 crm, string parentTable, string childTable)
+		{
+			var request1 = new CanBeReferencedRequest
+			{
+				EntityName = parentTable
+			};
+			var response1 = (CanBeReferencedResponse)await crm.ExecuteAsync(request1);
+			if (!response1.CanBeReferenced)
+				throw new CommandException(CommandException.CommandInvalidArgumentValue, $"The entity {parentTable} cannot be parent of an N-1 relationship");
+
+
+			var request2 = new CanBeReferencingRequest()
+			{
+				EntityName = childTable
+			};
+			var response2 = (CanBeReferencingResponse)await crm.ExecuteAsync(request2);
+			if (!response2.CanBeReferencing)
+				throw new CommandException(CommandException.CommandInvalidArgumentValue, $"The entity {childTable} cannot be child of an N-1 relationship");
+		}
+
+
 
 		public static async Task<int> GetDefaultLanguageCodeAsync(this IOrganizationServiceAsync2 crm, CancellationToken? cancellationToken = null)
 		{
@@ -75,6 +167,23 @@ namespace Greg.Xrm.Command
 			var languageCode = result.Entities[0].GetAttributeValue<int>("languagecode");
 			return languageCode;
 		}
+
+
+
+		public static async Task<EntityMetadata> GetEntityMetadataAsync(this IOrganizationServiceAsync2 crm, string entityName)
+		{
+			var request = new RetrieveEntityRequest
+			{
+				EntityFilters = EntityFilters.All,
+				LogicalName = entityName,
+			};
+
+			var response = (RetrieveEntityResponse)await crm.ExecuteAsync(request);
+			return response.EntityMetadata;
+		}
+
+
+
 
 		public static string ToMarkdownCode(this string? text, string? defaultValue = null)
 		{

@@ -82,17 +82,10 @@ namespace Greg.Xrm.Command.Commands.Relationship
 				}
 
 
-				await CheckEligibilityAsync(crm, command);
+				await crm.CheckManyToOneEligibilityAsync(command.ParentTable, command.ChildTable);
 
 
-
-
-
-
-
-
-
-				output.Write("Setting up CreateOneToManyRequest...");
+				output.Write("Executing CreateOneToManyRequest...");
 
 				var request = new CreateOneToManyRequest
 				{
@@ -151,25 +144,6 @@ namespace Greg.Xrm.Command.Commands.Relationship
 			}
 		}
 
-		private async Task CheckEligibilityAsync(IOrganizationServiceAsync2 crm, CreateN1Command command)
-		{
-			var request1 = new CanBeReferencedRequest
-			{
-				EntityName = command.ParentTable
-			};
-			var response1 = (CanBeReferencedResponse)await crm.ExecuteAsync(request1);
-			if (!response1.CanBeReferenced)
-				throw new CommandException(CommandException.CommandInvalidArgumentValue, $"The entity {command.ParentTable} cannot be parent of an N-1 relationship");
-
-
-			var request2 = new CanBeReferencingRequest()
-			{
-				EntityName = command.ChildTable
-			};
-			var response2 = (CanBeReferencingResponse)await crm.ExecuteAsync(request2);
-			if (!response2.CanBeReferencing)
-				throw new CommandException(CommandException.CommandInvalidArgumentValue, $"The entity {command.ChildTable} cannot be child of an N-1 relationship");
-		}
 
 		private static AssociatedMenuGroup? CreateMenuGroup(CreateN1Command command)
 		{

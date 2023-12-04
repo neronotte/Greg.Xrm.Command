@@ -4,16 +4,16 @@ using System.Runtime.Serialization;
 
 namespace Greg.Xrm.Command.Commands.Relationship
 {
-	[Command("rel", "create", "n1", HelpText = "Creates a new N-1 relationship")]
+	[Command("rel", "create", "n1", HelpText = "Creates a new many-to-one relationship between two tables")]
 	public class CreateN1Command
 	{
 		[Option("child", "c", "The child table (N side of the relationship)")]
 		[Required]
-		public string? ChildTable { get; set; }
+		public string ChildTable { get; set; } = string.Empty;
 
 		[Option("parent", "p", "The parent table (1 side of the relationship)")]
 		[Required]
-		public string? ParentTable { get; set; }
+		public string ParentTable { get; set; } = string.Empty;
 
 		[Option("relName", "rn", "The name of the relationship. If not provided, the relationship name will be created\nconcatenating the names of the child and the parent table, with a suffix (if specified).")]
 		public string? RelationshipName { get; set; }
@@ -81,7 +81,7 @@ namespace Greg.Xrm.Command.Commands.Relationship
 
 
 
-		[Option("solution", "s", HelpText = "The name of the unmanaged solution to which you want to add this attribute.")]
+		[Option("solution", "s", HelpText = "The name of the unmanaged solution to which you want to add this relationship.")]
 		public string? SolutionName { get; set; }
 
 	}
