@@ -2,20 +2,25 @@
 using Greg.Xrm.Command.Services;
 using Greg.Xrm.Command.Services.Output;
 using System.Reflection;
-using System.Text;
 
 namespace Greg.Xrm.Command.Commands.Help
 {
-	public class MarkdownHelpGenerator
+    public class HelpGeneratorInMarkdown
 	{
 		private readonly IOutput output;
 		private readonly IReadOnlyList<CommandDefinition> commandList;
+		private readonly IReadOnlyList<VerbNode> commandTree;
 		private string exportHelpPath;
 
-		public MarkdownHelpGenerator(IOutput output, IReadOnlyList<CommandDefinition> commandList, string exportHelpPath)
+		public HelpGeneratorInMarkdown(
+			IOutput output, 
+			IReadOnlyList<CommandDefinition> commandList, 
+			IReadOnlyList<VerbNode> commandTree, 
+			string exportHelpPath)
 		{
 			this.output = output;
 			this.commandList = commandList;
+			this.commandTree = commandTree;
 			this.exportHelpPath = exportHelpPath;
 		}
 
@@ -119,10 +124,8 @@ namespace Greg.Xrm.Command.Commands.Help
 			using (var writer = new MarkdownWriter(fileName))
 			{
 				writer.WriteTitle3("Command list");
-				var tree = CreateVerbTree(commandList);
 
-
-				foreach (var node in tree.OrderBy(x => x.Verb))
+				foreach (var node in this.commandTree.OrderBy(x => x.Verb))
 				{
 					WriteNode(writer, assemblyName, node, 0);
 				}
@@ -139,11 +142,11 @@ namespace Greg.Xrm.Command.Commands.Help
 					.Write("- [")
 					.Write(assemblyName)
 					.Write(" ")
-					.Write(node.Verb)
+					.Write(node.ToString())
 					.Write("](")
 					.Write(assemblyName)
 					.Write("-")
-					.Write(node.Verb.Replace(' ', '-'))
+					.Write(node.ToString().Replace(' ', '-'))
 					.WriteLine(")");
 			}
 			else
@@ -152,7 +155,7 @@ namespace Greg.Xrm.Command.Commands.Help
 					.Write("- ")
 					.Write(assemblyName)
 					.Write(" ")
-					.Write(node.Verb)
+					.Write(node.ToString())
 					.WriteLine();
 			}
 
@@ -161,49 +164,6 @@ namespace Greg.Xrm.Command.Commands.Help
 				WriteNode(writer, assemblyName, child, indent + 1);
 			}
 		}
-
-		private static List<VerbNode> CreateVerbTree(IReadOnlyList<CommandDefinition> commandList)
-		{
-			var list = new List<VerbNode>();
-
-			foreach (var command in commandList.OrderBy(x => x.ExpandedVerbs))
-			{
-				var nodeList = list;
-				for (var i = 0; i < command.Verbs.Count; i++)
-				{
-					var node = nodeList.Find(x => x.Verb == command.Verbs[i]);
-					if (node == null)
-					{
-						node = new VerbNode(Name(command.Verbs, i));
-						nodeList.Add(node);
-					}
-
-					if (i == command.Verbs.Count - 1)
-					{
-						node.Command = command;
-					}
-
-					nodeList = node.Children;
-				}
-			}
-			return list;
-		}
-
-		private static string Name(IReadOnlyList<string> verbs, int index)
-		{
-			var sb = new StringBuilder();
-
-			for (int i = 0; i <= index; i++)
-			{
-				sb.Append(verbs[i]).Append(' ');
-			}
-
-			return sb.ToString().TrimEnd();
-		}
-
-
-
-
 
 
 		private static string GetValuesFor(OptionDefinition option)
@@ -221,21 +181,6 @@ namespace Greg.Xrm.Command.Commands.Help
 				
 
 			return option.Property.PropertyType.Name;
-		}
-
-
-		class VerbNode
-		{
-            public VerbNode(string verb)
-            {
-				this.Verb = verb;
-			}
-
-            public string Verb { get; set; }
-
-			public List<VerbNode> Children { get; } = new List<VerbNode>();
-
-			public CommandDefinition? Command { get; set; }
 		}
 	}
 }

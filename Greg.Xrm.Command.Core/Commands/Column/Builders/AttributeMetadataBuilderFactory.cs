@@ -12,6 +12,10 @@ namespace Greg.Xrm.Command.Commands.Column.Builders
             cache.Add(AttributeTypeCode.Picklist, () => new AttributeMetadataBuilderPicklist());
             cache.Add(AttributeTypeCode.Integer, () => new AttributeMetadataBuilderInteger());
             cache.Add(AttributeTypeCode.Money, () => new AttributeMetadataBuilderMoney());
+            cache.Add(AttributeTypeCode.Boolean, () => new AttributeMetadataBuilderBoolean());
+            cache.Add(AttributeTypeCode.Decimal, () => new AttributeMetadataBuilderDecimal());
+            cache.Add(AttributeTypeCode.Memo, () => new AttributeMetadataBuilderMemo());
+            cache.Add(AttributeTypeCode.DateTime, () => new AttributeMetadataBuilderDateTime());
         }
 
         public IAttributeMetadataBuilder CreateFor(AttributeTypeCode attributeType)

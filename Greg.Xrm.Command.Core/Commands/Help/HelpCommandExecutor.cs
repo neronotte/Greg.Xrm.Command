@@ -19,15 +19,25 @@ namespace Greg.Xrm.Command.Commands.Help
 			if (command.ExportHelp)
 			{
 				this.output.WriteLine("Generating help files...");
-				GenerateMarkdownHelp(command.CommandList, command.ExportHelpPath);
+				GenerateMarkdownHelp(command);
+				return Task.CompletedTask;
+			}
+
+			if (command.LastMatchingVerb is not null)
+			{
+				GenerateVerbHelp(command);
 				return Task.CompletedTask;
 			}
 
 			if (command.CommandDefinition is null)
 			{
-				ShowGenericHelp(command.CommandList);
+				GenerateGenericHelp(command);
 				return Task.CompletedTask;
 			}
+
+
+
+
 
 
 
@@ -38,19 +48,21 @@ namespace Greg.Xrm.Command.Commands.Help
 			if (!string.IsNullOrWhiteSpace(commandAttribute.HelpText))
 			{
 				output.WriteLine();
-				output.WriteLine(commandAttribute.HelpText);
+				output.WriteLine(commandAttribute.HelpText.Replace("\n", " "));
+				output.WriteLine();
 			}
 
 			output.Write("Usage: ");
 			output.Write(Assembly.GetEntryAssembly()?.GetName().Name ?? string.Empty, ConsoleColor.DarkCyan);
 			output.Write(" ");
-			foreach (var verb in command.CommandDefinition.Verbs)
+			for (int i = 0; i < command.CommandDefinition.Verbs.Count; i++)
 			{
-				output.Write(verb, ConsoleColor.DarkCyan).Write(" ");
+				var verb = command.CommandDefinition.Verbs[i];
+				output.Write(verb, i < command.CommandDefinition.Verbs.Count - 1 ? ConsoleColor.DarkCyan : ConsoleColor.White).Write(" ");
 			}
 			foreach (var optionDefinition in command.CommandDefinition.Options)
 			{
-				output.Write($"[--{optionDefinition.Option.LongName}] ", ConsoleColor.DarkCyan);
+				output.Write($"[--{optionDefinition.Option.LongName}] ", optionDefinition.IsRequired ? ConsoleColor.DarkRed : ConsoleColor.DarkGray);
 			}
 			output.WriteLine().WriteLine();
 
@@ -68,13 +80,13 @@ namespace Greg.Xrm.Command.Commands.Help
 					.Write("  ")
 					.Write($"--{option.LongName}".PadRight(padding, ' '), ConsoleColor.DarkCyan);
 
-				if (!optionDef.IsRequired)
+				if (optionDef.IsRequired)
 				{
-					output.Write("[optional] ", ConsoleColor.DarkGray);
+					output.Write("[required] ", ConsoleColor.DarkRed);
 				}
 				else
 				{
-					output.Write("[required] ", ConsoleColor.DarkRed);
+					output.Write("[optional] ", ConsoleColor.DarkGray);
 				}
 
 
@@ -125,59 +137,23 @@ namespace Greg.Xrm.Command.Commands.Help
 			return Task.CompletedTask;
 		}
 
-		private void GenerateMarkdownHelp(List<CommandDefinition> commandList, string exportHelpPath)
+		private void GenerateMarkdownHelp(HelpCommand command)
 		{
-			var generator = new MarkdownHelpGenerator(this.output, commandList, exportHelpPath);
+			var generator = new HelpGeneratorInMarkdown(this.output, command.CommandList, command.CommandTree,  command.ExportHelpPath);
 			generator.GenerateMarkdownHelp() ;
 		}
 
-
-
-
-		private void ShowGenericHelp(List<CommandDefinition> commandList)
+		private void GenerateGenericHelp(HelpCommand command)
 		{
-			output.WriteLine("Available commands: ");
-			output.WriteLine();
+			var generator = new HelpGeneratorGeneric(this.output, command.CommandList, command.CommandTree);
+			generator.GenerateHelp2();
+		}
 
-			var padding = commandList.Max(_ => _.ExpandedVerbs.Length) + 4;
-			
 
-			foreach (var command in commandList.Where(x => !x.Hidden).Order())
-			{
-				output.Write("  ")
-					.Write(command.ExpandedVerbs.PadRight(padding), ConsoleColor.DarkCyan);
-
-				var helpText = (command.HelpText ?? string.Empty).Split(Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
-
-				if (helpText.Length == 1)
-				{
-					output.Write(helpText[0]);
-				}
-				else
-				{
-					for (var i = 0; i < helpText.Length; i++)
-					{
-						if (i > 0)
-						{
-							output.Write("  ").Write(string.Empty.PadRight(padding));
-						}
-						output.Write(helpText[i]);
-						if (i < helpText.Length - 1)
-						{
-							output.WriteLine();
-						}
-					}
-				}
-
-				if (command.Aliases.Count > 0 )
-				{
-					var label = command.Aliases.Count == 1 ? "alias" : "aliases";
-
-					output.Write(" ").Write($"({label}: {string.Join(", ", command.Aliases)})", ConsoleColor.DarkGray);
-
-				}
-				output.WriteLine();
-			}
+		private void GenerateVerbHelp(HelpCommand command)
+		{
+			var generator = new HelpGeneratorForVerb(this.output, command.LastMatchingVerb);
+			generator.GenerateHelp();
 		}
 	}
 }

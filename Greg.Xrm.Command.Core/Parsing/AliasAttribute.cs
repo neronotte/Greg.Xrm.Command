@@ -1,4 +1,4 @@
-﻿namespace Greg.Xrm.Command.Parsing
+﻿namespace Greg.Xrm.Command
 {
 	[AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = false)]
 	public class AliasAttribute : Attribute

@@ -25,7 +25,7 @@ namespace Greg.Xrm.Command.Commands.Column.Builders
 
 
 
-        private static int GetMaxLength(int? maxLength)
+        public static int GetMaxLength(int? maxLength)
         {
             if (maxLength == null) return 100;
             if (maxLength <= 0) throw new CommandException(CommandException.CommandInvalidArgumentValue, $"The max length must be a positive number");

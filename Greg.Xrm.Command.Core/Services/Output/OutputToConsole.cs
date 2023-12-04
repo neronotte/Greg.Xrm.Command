@@ -54,5 +54,40 @@
 			}
 			return this;
 		}
+
+
+		public IOutput WriteTable<TRow>(IReadOnlyList<TRow> collection, Func<string[]> rowHeaders, Func<TRow, string[]> rowData, Func<int, string, ConsoleColor>? colorPicker = null)
+		{
+			colorPicker ??= (i, _) => Console.ForegroundColor;
+			var headers = rowHeaders();
+			var rows = collection.Select(rowData).ToList();
+
+			var columnWidths = new int[headers.Length];
+			for (var i = 0; i < headers.Length; i++)
+			{
+				columnWidths[i] = Math.Max(headers[i].Length, rows.Max(_ => _[i].Length));
+			}
+
+			var header = "| " + string.Join(" | ", headers.Select((_, i) => _.PadRight(columnWidths[i]))) + " |";
+			Console.WriteLine(header);
+
+			var separator = "|-" + string.Join("-|-", columnWidths.Select(_ => new string('-', _))) + "-|";
+			Console.WriteLine(separator);
+
+			foreach (var row in rows)
+			{
+				Console.Write("| ");
+
+				for (var i = 0; i < row.Length; i++)
+				{
+					Console.Write(row[i].PadRight(columnWidths[i]), colorPicker(i, row[i]));
+					Console.Write(" | ");
+				}
+				Console.WriteLine();
+			}
+			Console.WriteLine();
+
+			return this;
+		}
 	}
 }
