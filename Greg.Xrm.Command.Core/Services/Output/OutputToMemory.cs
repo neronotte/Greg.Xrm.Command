@@ -48,7 +48,7 @@ namespace Greg.Xrm.Command.Services.Output
 
 
 
-		public IOutput WriteTable<TRow>(IReadOnlyList<TRow> collection, Func<string[]> rowHeaders, Func<TRow, string[]> rowData, Func<int, string, ConsoleColor?>? colorPicker = null)
+		public IOutput WriteTable<TRow>(IReadOnlyList<TRow> collection, Func<string[]> rowHeaders, Func<TRow, string[]> rowData, Func<int, TRow, ConsoleColor?>? colorPicker = null)
 		{
 			var headers = rowHeaders();
 			var rows = collection.Select(rowData).ToList();

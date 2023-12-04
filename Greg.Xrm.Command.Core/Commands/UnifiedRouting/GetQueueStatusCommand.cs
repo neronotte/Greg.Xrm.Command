@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Greg.Xrm.Command.Commands.UnifiedRouting
 {
-	[Command("unifiedrouting", "queuestatus", HelpText = "Creates a new table in the dataverse environment that has previously been selected via `pacx auth select`")]
+	[Command("unifiedrouting", "queuestatus", HelpText = "List the agents in the queue provided. It uses the Dataverse environment selected using `pacx auth select`")]
     [Alias("ur","queuestatus")]
     public class GetQueueStatusCommand : ICanProvideUsageExample
     {
@@ -18,13 +18,10 @@ namespace Greg.Xrm.Command.Commands.UnifiedRouting
 
 		public void WriteUsageExamples(MarkdownWriter writer)
 		{
-			writer.WriteParagraph("This command can be used to create a new table specifying a minimun set of information. You can simply type");
-            writer.WriteCodeBlock("pacx table create --name \"My Table\"", "Command");
-            writer.Write("to create a new table named \"My Table\" in the solution set as default via ").WriteCode("pacx solution setDefault").WriteLine(".");
-            writer.Write("The table schema name will be generated automatically extrapolating only chars, numbers and underscores from the display name,")
-                .Write("setting them lowercase, prefixed with the solution's publisher prefix.")
-                .WriteLine();
-            writer.Write("In this case, if the publisher prefix is ").WriteCode("greg").Write("), the generated schema name will be ").WriteCode("greg_mytable").WriteLine();
+			writer.WriteParagraph("This command can be used to list all of the agents in a queue. You can simply type");
+            writer.WriteCodeBlock("pacx unifiedrouting queuestatus --queue \"QUEUENAME\"", "Command");
+            writer.Write("Optionally, you can specify a date in order to list agents status at that time. Example: ");
+            writer.WriteCodeBlock("pacx unifiedrouting queuestatus --queue \"QUEUENAME\" --dateTime \"\"", "Command");
             writer.WriteLine();
 
 		}

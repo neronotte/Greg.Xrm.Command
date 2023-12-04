@@ -1,4 +1,6 @@
-﻿using Greg.Xrm.Command.Services.Connection;
+﻿using Greg.Xrm.Command.Commands.UnifiedRouting.Model;
+using Greg.Xrm.Command.Parsing;
+using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;
@@ -91,22 +93,33 @@ namespace Greg.Xrm.Command.Commands.UnifiedRouting
 
                 this.output.Write("The agents status in ").Write(command.Queue).Write(" at ").Write(timeQuery.ToLocalTime().ToString()).WriteLine(" is:");
 
-                var tableResult = new DataTable();
-                tableResult.Columns.Add("Agent", typeof(string));
-                tableResult.Columns.Add("Status", typeof(string));
-                tableResult.Columns.Add("Aging status", typeof(string));
+                var tableResult = new List<AgentStatus>();
                 foreach (Entity result in results)
                 {
-                    var userEmail = result.GetAliasedValue<string>("systemuserJoin.internalemailaddress");
-                    var userFullName = result.GetAliasedValue<string>("systemuserJoin.fullname");
-                    var status = result.GetAliasedValue<string>("presenceJoin.msdyn_presencestatustext");
-                    var statusOpt = result.GetAliasedValue<OptionSetValue>("presenceJoin.msdyn_basepresencestatus");
-                    var dateStart = result.GetAttributeValue<DateTime>("msdyn_starttime");
-                    tableResult.Rows.Add(userEmail, status, dateStart.ToString());
+                    tableResult.Add(new AgentStatus
+                    {
+                        UserEmail = result.GetAliasedValue<string>("systemuserJoin.internalemailaddress"),
+                        Status = result.GetAliasedValue<string>("presenceJoin.msdyn_presencestatustext"),
+                        StatusCode = result.GetAliasedValue<OptionSetValue>("presenceJoin.msdyn_basepresencestatus")?.Value,
+                        DateStart = result.GetAttributeValue<DateTime>("msdyn_starttime")
+                    });
                 }
 
-                var tableGenerator = TableGenerator.CreateAsciiTableFromDataTable(tableResult);
-                this.output.Write(tableGenerator.ToString());
+                this.output.WriteTable(tableResult, 
+                    () => new[] { "User", "Status", "Since" },
+                    user => new[] {
+                        user.UserEmail ?? string.Empty,
+                        user.Status ?? string.Empty,
+                        user.DateStart.GetValueOrDefault().ToLocalTime().ToString()
+                    },
+                    (index, row) =>
+                    {
+                        if (index == 1)
+                            return GetAgentStatusColor(row.StatusCode.GetValueOrDefault());
+
+                        return null;
+                    }
+                );
             }
             catch (FaultException<OrganizationServiceFault> ex)
             {
@@ -121,9 +134,10 @@ namespace Greg.Xrm.Command.Commands.UnifiedRouting
             }
         }
 
-        private ConsoleColor getAgentStatusColor(int value)
+
+        private static ConsoleColor GetAgentStatusColor(int value)
         {
-            switch(value)
+            switch (value)
             {
                 case 192360000:
                     return ConsoleColor.Green;
@@ -133,7 +147,7 @@ namespace Greg.Xrm.Command.Commands.UnifiedRouting
                 case 192360003:
                     return ConsoleColor.DarkYellow;
                 default:
-                    return ConsoleColor.White;
+                    return ConsoleColor.DarkGray;
             }
         }
     }

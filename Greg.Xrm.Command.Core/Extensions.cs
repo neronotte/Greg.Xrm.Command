@@ -105,7 +105,7 @@ namespace Greg.Xrm.Command
         /// <param name="entity"></param>
         /// <param name="attributeLogicalName"></param>
         /// <returns></returns>
-        public static T GetAliasedValue<T>(this Entity entity, string attributeLogicalName)
+        public static T? GetAliasedValue<T>(this Entity entity, string attributeLogicalName)
         {
             if (null == entity.Attributes)
             {

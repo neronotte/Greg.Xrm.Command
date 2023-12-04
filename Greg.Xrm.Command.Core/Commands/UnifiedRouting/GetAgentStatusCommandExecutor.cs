@@ -98,12 +98,12 @@ namespace Greg.Xrm.Command.Commands.UnifiedRouting
 
                 if(!isDateTimeParsed)
                     this.output.WriteLine(command.AgentPrimaryEmail)
-                    .Write("is ").WriteLine(status, getAgentStatusColor(statusOpt.Value))
+                    .Write("is ").WriteLine(status, getAgentStatusColor(statusOpt?.Value))
                     .Write("since ").WriteLine(dateStart.ToLocalTime().ToString());
                 else
                     this.output.WriteLine(command.AgentPrimaryEmail)
                     .Write("at ").WriteLine(parsedTime.ToString())
-                    .Write("was ").WriteLine(status, getAgentStatusColor(statusOpt.Value))
+                    .Write("was ").WriteLine(status, getAgentStatusColor(statusOpt?.Value))
 					.Write("since ").WriteLine(dateStart.ToLocalTime().ToString());
             }
             catch (FaultException<OrganizationServiceFault> ex)
@@ -119,9 +119,17 @@ namespace Greg.Xrm.Command.Commands.UnifiedRouting
             }
         }
 
-        private ConsoleColor getAgentStatusColor(int value)
+        enum StatusValue
         {
-            switch(value)
+            Online = 192360000,
+            Busy = 192360001,
+            BusyDND = 192360002,
+            Away = 192360003
+        }
+
+        private ConsoleColor getAgentStatusColor(int? value)
+        {
+            switch (value)
             {
                 case 192360000:
                     return ConsoleColor.Green;
@@ -131,7 +139,7 @@ namespace Greg.Xrm.Command.Commands.UnifiedRouting
                 case 192360003:
                     return ConsoleColor.DarkYellow;
                 default:
-                    return ConsoleColor.White;
+                    return ConsoleColor.DarkGray;
             }
         }
     }
