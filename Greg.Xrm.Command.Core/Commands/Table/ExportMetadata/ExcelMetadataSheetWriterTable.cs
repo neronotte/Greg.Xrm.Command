@@ -116,7 +116,7 @@ namespace Greg.Xrm.Command.Commands.Table.ExportMetadata
 			ws.CreateTable("Summary", 4, 1, row, 2).ShowFirstColumn = true;
 		}
 
-		private void Write<T>(ExcelWorksheet ws, int row, EntityMetadata e, Expression<Func<EntityMetadata, T>> propertyAccessor)
+		private static void Write<T>(ExcelWorksheet ws, int row, EntityMetadata e, Expression<Func<EntityMetadata, T>> propertyAccessor)
 		{
 			var propertyName = e.GetMemberName(propertyAccessor);
 
@@ -130,7 +130,7 @@ namespace Greg.Xrm.Command.Commands.Table.ExportMetadata
 				.TextAlign(OfficeOpenXml.Style.ExcelHorizontalAlignment.Left);
 		}
 
-		private object? Format<T>(T? value)
+		private static object? Format<T>(T? value)
 		{
 			if (value is null) return null;
 

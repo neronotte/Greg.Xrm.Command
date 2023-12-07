@@ -99,10 +99,14 @@ namespace Greg.Xrm.Command
 			table.ShowFilter = true;
 			table.TableStyle = TableStyles.Medium2;
 
-			for (int i = fromCol; i <= toCol; i++)
+			if (autoFitColumns.GetValueOrDefault())
 			{
-				ws.Column(i).AutoFit();
+				for (int i = fromCol; i <= toCol; i++)
+				{
+					ws.Column(i).AutoFit();
+				}
 			}
+			
 
 
 			return table;

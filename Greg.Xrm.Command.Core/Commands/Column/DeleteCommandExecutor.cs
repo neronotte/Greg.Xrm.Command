@@ -21,7 +21,7 @@ namespace Greg.Xrm.Command.Commands.Column
 		}
 
 
-		public async Task ExecuteAsync(DeleteCommand command, CancellationToken cancellationToken)
+		public async Task<CommandResult> ExecuteAsync(DeleteCommand command, CancellationToken cancellationToken)
 		{
 			this.output.Write($"Connecting to the current dataverse environment...");
 			var crm = await this.organizationServiceRepository.GetCurrentConnectionAsync();
@@ -44,17 +44,12 @@ namespace Greg.Xrm.Command.Commands.Column
 				await crm.ExecuteAsync(request, cancellationToken);
 
 				this.output.WriteLine(" Done", ConsoleColor.Green);
+
+				return CommandResult.Success();
 			}
 			catch(FaultException<OrganizationServiceFault> ex)
 			{
-				this.output.WriteLine()
-					.Write("Error: ", ConsoleColor.Red)
-					.WriteLine(ex.Message, ConsoleColor.Red);
-
-				if (ex.InnerException != null)
-				{
-					this.output.Write("  ").WriteLine(ex.InnerException.Message, ConsoleColor.Red);
-				}
+				return CommandResult.Fail(ex.Message, ex);
 			}
 		}
 	}

@@ -44,6 +44,17 @@ namespace Greg.Xrm.Command.Commands.Table.ExportMetadata
 		{
 			var c = new DataverseColumn();
 
+			if (attribute is StringAttributeMetadata a1) Fill(c, a1);
+			if (attribute is MemoAttributeMetadata a2) Fill(c, a2);
+			if (attribute is LookupAttributeMetadata a3) Fill(c, a3);
+			if (attribute is DoubleAttributeMetadata a4) Fill(c, a4);
+			if (attribute is DecimalAttributeMetadata a5) Fill(c, a5);
+			if (attribute is IntegerAttributeMetadata a6) Fill(c, a6);
+			if (attribute is PicklistAttributeMetadata a7) Fill(c, a7);
+			if (attribute is MoneyAttributeMetadata a8) Fill(c, a8);
+			if (attribute is StateAttributeMetadata a9) Fill(c, a9);
+			if (attribute is StatusAttributeMetadata a10) Fill(c, a10);
+
 			c.LogicalName = attribute.LogicalName;
 			c.SchemaName = attribute.SchemaName;
 			c.DisplayName = attribute.DisplayName?.UserLocalizedLabel?.Label;
@@ -58,18 +69,6 @@ namespace Greg.Xrm.Command.Commands.Table.ExportMetadata
 			c.IsFlsSecuredForCreate = attribute.CanBeSecuredForCreate;
 			c.IsFlsSecuredForUpdate = attribute.CanBeSecuredForUpdate;
 			c.IsFlsSecuredForRead = attribute.CanBeSecuredForRead;
-
-
-			if (attribute is StringAttributeMetadata a1) Fill(c, a1);
-			if (attribute is MemoAttributeMetadata a2) Fill(c, a2);
-			if (attribute is LookupAttributeMetadata a3) Fill(c, a3);
-			if (attribute is DoubleAttributeMetadata a4) Fill(c, a4);
-			if (attribute is DecimalAttributeMetadata a5) Fill(c, a5);
-			if (attribute is IntegerAttributeMetadata a6) Fill(c, a6);
-			if (attribute is PicklistAttributeMetadata a7) Fill(c, a7);
-			if (attribute is MoneyAttributeMetadata a8) Fill(c, a8);
-			if (attribute is StateAttributeMetadata a9) Fill(c, a9);
-			if (attribute is StatusAttributeMetadata a10) Fill(c, a10);
 
 			return c;
 		}

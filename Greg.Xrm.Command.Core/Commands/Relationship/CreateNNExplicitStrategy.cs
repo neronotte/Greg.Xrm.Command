@@ -23,7 +23,7 @@ namespace Greg.Xrm.Command.Commands.Relationship
 
 
 
-		public async Task CreateAsync(CreateNNCommand command, string currentSolutionName, int defaultLanguageCode, string publisherPrefix)
+		public async Task<CommandResult> CreateAsync(CreateNNCommand command, string currentSolutionName, int defaultLanguageCode, string publisherPrefix)
 		{
 
 
@@ -200,20 +200,14 @@ namespace Greg.Xrm.Command.Commands.Relationship
 			await crm.ExecuteAsync(requestX);
 			this.output.WriteLine("Done", ConsoleColor.Green);
 
-
-			output.WriteLine("Results:")
-					.Write("  Entity ID               : ")
-					.WriteLine(createTableResponse.EntityId, ConsoleColor.Yellow)
-					.Write("  Primary Column ID       : ")
-					.WriteLine(createTableResponse.AttributeId, ConsoleColor.Yellow)
-					.Write("  Table 1 Relationship ID : ")
-					.WriteLine(createLookup1Response.RelationshipId, ConsoleColor.Yellow)
-					.Write("  Table 1 Column ID       : ")
-					.WriteLine(createLookup1Response.AttributeId, ConsoleColor.Yellow)
-					.Write("  Table 2 Relationship ID : ")
-					.WriteLine(createLookup2Response.RelationshipId, ConsoleColor.Yellow)
-					.Write("  Table 2 Column ID       : ")
-					.WriteLine(createLookup2Response.AttributeId, ConsoleColor.Yellow);
+			var result = CommandResult.Success();
+			result["Entity ID"] = createTableResponse.EntityId;
+			result["Primary Column ID"] = createTableResponse.AttributeId;
+			result["Table 1 Relationship ID"] = createLookup1Response.RelationshipId;
+			result["Table 1 Column ID"] = createLookup1Response.AttributeId;
+			result["Table 2 Relationship ID"] = createLookup2Response.RelationshipId;
+			result["Table 2 Column ID"] = createLookup2Response.AttributeId;
+			return result;
 		}
 
 

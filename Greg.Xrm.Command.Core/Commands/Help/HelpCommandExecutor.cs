@@ -14,7 +14,7 @@ namespace Greg.Xrm.Command.Commands.Help
 		}
 
 
-		public Task ExecuteAsync(HelpCommand command, CancellationToken cancellationToken)
+		public Task<CommandResult> ExecuteAsync(HelpCommand command, CancellationToken cancellationToken)
 		{
 			if (command.ExportHelp)
 			{
@@ -23,7 +23,7 @@ namespace Greg.Xrm.Command.Commands.Help
 				var generator = new HelpGeneratorInMarkdown(this.output, command.CommandList, command.CommandTree, command.ExportHelpPath);
 				generator.GenerateMarkdownHelp();
 
-				return Task.CompletedTask;
+				return Task.FromResult(CommandResult.Success());
 			}
 
 			if (command.LastMatchingVerb is not null)
@@ -31,7 +31,7 @@ namespace Greg.Xrm.Command.Commands.Help
 				var generator = new HelpGeneratorForVerb(this.output, command.LastMatchingVerb);
 				generator.GenerateHelp();
 
-				return Task.CompletedTask;
+				return Task.FromResult(CommandResult.Success());
 			}
 
 			if (command.CommandDefinition is null)
@@ -39,7 +39,7 @@ namespace Greg.Xrm.Command.Commands.Help
 				var generator = new HelpGeneratorGeneric(this.output, command.CommandList, command.CommandTree);
 				generator.GenerateHelp2();
 
-				return Task.CompletedTask;
+				return Task.FromResult(CommandResult.Success());
 			}
 
 
@@ -50,7 +50,7 @@ namespace Greg.Xrm.Command.Commands.Help
 
 			var commandAttribute = command.CommandDefinition.CommandType.GetCustomAttribute<CommandAttribute>();
 			if (commandAttribute == null)
-				return Task.CompletedTask;
+				return Task.FromResult(CommandResult.Success());
 
 			if (!string.IsNullOrWhiteSpace(commandAttribute.HelpText))
 			{
@@ -141,7 +141,7 @@ namespace Greg.Xrm.Command.Commands.Help
 			}
 
 			output.WriteLine();
-			return Task.CompletedTask;
+			return Task.FromResult(CommandResult.Success());
 		}
 	}
 }

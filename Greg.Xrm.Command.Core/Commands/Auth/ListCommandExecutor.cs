@@ -1,27 +1,29 @@
 ﻿using Greg.Xrm.Command.Services.Connection;
+using Greg.Xrm.Command.Services.Output;
 
 namespace Greg.Xrm.Command.Commands.Auth
 {
 	public class ListCommandExecutor : ICommandExecutor<ListCommand>
 	{
+		private readonly IOutput output;
 		private readonly IOrganizationServiceRepository organizationServiceRepository;
 
-		public ListCommandExecutor(IOrganizationServiceRepository organizationServiceRepository)
+		public ListCommandExecutor(IOutput output, IOrganizationServiceRepository organizationServiceRepository)
         {
+			this.output = output;
 			this.organizationServiceRepository = organizationServiceRepository;
 		}
 
-        public async Task ExecuteAsync(ListCommand command, CancellationToken cancellationToken)
+        public async Task<CommandResult> ExecuteAsync(ListCommand command, CancellationToken cancellationToken)
 		{
 			var connections = await organizationServiceRepository.GetAllConnectionDefinitionsAsync();
 
 			if (connections.ConnectionStrings.Count == 0)
 			{
-				Console.WriteLine("No authentication profiles found.");
-				return;
+				return CommandResult.Fail("No authentication profiles found.");
 			}
 
-			Console.WriteLine("The following authentication profiles are stored on this computer:");
+			output.WriteLine("The following authentication profiles are stored on this computer:");
 
 			var padding = connections.ConnectionStrings.Max(_ => _.Key.Length) + 4;
 
@@ -34,10 +36,12 @@ namespace Greg.Xrm.Command.Commands.Auth
 				}
 				name = name.PadRight(padding);
 
-				Console.Write("  ");
-				Console.Write(name);
-				Console.WriteLine(item.Value);
+				output.Write("  ");
+				output.Write(name);
+				output.WriteLine(item.Value);
 			}
+
+			return CommandResult.Success();
 		}
 	}
 }

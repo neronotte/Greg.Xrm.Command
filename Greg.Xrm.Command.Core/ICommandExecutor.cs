@@ -2,6 +2,6 @@
 {
 	public interface ICommandExecutor<T>
 	{
-		Task ExecuteAsync(T command, CancellationToken cancellationToken);
+		Task<CommandResult> ExecuteAsync(T command, CancellationToken cancellationToken);
 	}
 }

@@ -26,7 +26,7 @@ namespace Greg.Xrm.Command.Commands.Table
             this.pluralizationFactory = pluralizationFactory;
         }
 
-        public async Task ExecuteAsync(CreateCommand command, CancellationToken cancellationToken)
+        public async Task<CommandResult> ExecuteAsync(CreateCommand command, CancellationToken cancellationToken)
 		{
 			this.output.Write($"Connecting to the current dataverse environment...");
 			var crm = await this.organizationServiceRepository.GetCurrentConnectionAsync();
@@ -43,8 +43,7 @@ namespace Greg.Xrm.Command.Commands.Table
                     currentSolutionName = await organizationServiceRepository.GetCurrentDefaultSolutionAsync();
                     if (currentSolutionName == null)
                     {
-                        output.WriteLine("No solution name provided and no current solution name found in the settings. Please provide a solution name or set a current solution name in the settings.", ConsoleColor.Red);
-                        return;
+                        return CommandResult.Fail("No solution name provided and no current solution name found in the settings.");
                     }
                 }
 
@@ -64,22 +63,19 @@ namespace Greg.Xrm.Command.Commands.Table
                 var solutionList = (await crm.RetrieveMultipleAsync(query)).Entities;
                 if (solutionList.Count == 0)
                 {
-                    output.WriteLine("Invalid solution name: ", ConsoleColor.Red).WriteLine(currentSolutionName, ConsoleColor.Red);
-                    return;
+                    return CommandResult.Fail("Invalid solution name: " + currentSolutionName);
                 }
 
                 var managed = solutionList[0].GetAttributeValue<bool>("ismanaged");
                 if (managed)
                 {
-                    output.WriteLine("The provided solution is managed. You must specify an unmanaged solution.", ConsoleColor.Red);
-                    return;
+                    return CommandResult.Fail("The provided solution is managed. You must specify an unmanaged solution.");
                 }
 
                 var publisherPrefix = solutionList[0].GetAttributeValue<AliasedValue>("publisher.customizationprefix").Value as string;
                 if (string.IsNullOrWhiteSpace(publisherPrefix))
                 {
-                    output.WriteLine("Unable to retrieve the publisher prefix. Please report a bug to the project GitHub page.", ConsoleColor.Red);
-                    return;
+                    return CommandResult.Fail("Unable to retrieve the publisher prefix. Please report a bug to the project GitHub page.");
                 }
 
 
@@ -133,13 +129,13 @@ namespace Greg.Xrm.Command.Commands.Table
                 };
 
                 await crm.ExecuteAsync(request1);
+				output.WriteLine(" Done", ConsoleColor.Green);
 
-				this.output.WriteLine("Done", ConsoleColor.Green)
-					.Write("  Table ID         : ")
-					.WriteLine(response.EntityId, ConsoleColor.Yellow)
-					.Write("  Primary Column ID: ")
-					.WriteLine(response.AttributeId, ConsoleColor.Yellow);
-            }
+				var result = CommandResult.Success();
+				result["Table ID"] = response.EntityId;
+				result["Primary Column ID"] = response.AttributeId;
+                return result;
+			}
             catch (FaultException<OrganizationServiceFault> ex)
             {
                 output.WriteLine()
@@ -150,6 +146,8 @@ namespace Greg.Xrm.Command.Commands.Table
                 {
                     output.Write("  ").WriteLine(ex.InnerException.Message, ConsoleColor.Red);
                 }
+
+                return CommandResult.Fail(ex.Message, ex);
             }
         }
 

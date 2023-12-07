@@ -16,7 +16,7 @@ namespace Greg.Xrm.Command.Commands.Auth
 			this.output = output;
 		}
 
-		public async Task ExecuteAsync(DeleteCommand command, CancellationToken cancellationToken)
+		public async Task<CommandResult> ExecuteAsync(DeleteCommand command, CancellationToken cancellationToken)
 		{
 			if (string.IsNullOrWhiteSpace(command.Name))
 			{
@@ -26,6 +26,7 @@ namespace Greg.Xrm.Command.Commands.Auth
 
 			await organizationServiceRepository.DeleteConnectionAsync(command.Name);
 			output.WriteLine($"Authentication profile '{command.Name}' deleted");
+			return CommandResult.Success();
 		}
 	}
 }

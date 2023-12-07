@@ -22,7 +22,7 @@ namespace Greg.Xrm.Command.Commands.Relationship
 
 
 
-        public async Task CreateAsync(CreateNNCommand command, string currentSolutionName, int defaultLanguageCode, string publisherPrefix)
+        public async Task<CommandResult> CreateAsync(CreateNNCommand command, string currentSolutionName, int defaultLanguageCode, string publisherPrefix)
 		{
 			await crm.CheckManyToManyEligibilityAsync(command.Table1);
 			await crm.CheckManyToManyEligibilityAsync(command.Table2);
@@ -72,9 +72,9 @@ namespace Greg.Xrm.Command.Commands.Relationship
 
 			var response = (CreateManyToManyResponse)await crm.ExecuteAsync(request);
 
-			this.output.WriteLine("Done", ConsoleColor.Green)
-				.Write("  Relationship ID : ")
-				.WriteLine(response.ManyToManyRelationshipId, ConsoleColor.Yellow);
+			var result = CommandResult.Success();
+			result["Relationship ID"] = response.ManyToManyRelationshipId;
+			return result;
 		}
 
 
