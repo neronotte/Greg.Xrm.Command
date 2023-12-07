@@ -2,6 +2,7 @@
 using System.Data;
 using System.Reflection;
 using System.Linq;
+using System.ServiceModel.Channels;
 
 namespace Greg.Xrm.Command.Parsing
 {
@@ -196,6 +197,40 @@ namespace Greg.Xrm.Command.Parsing
 				return enumValue;
 			}
 
+
+			var undelyingType = Nullable.GetUnderlyingType(propertyType);
+			if (undelyingType != null && undelyingType.IsEnum)
+			{
+				if (string.IsNullOrWhiteSpace(optionValue))
+					return null;
+
+				if (!Enum.TryParse(undelyingType, optionValue, true, out var enumValue))
+					throw new CommandException(CommandException.CommandInvalidArgumentType, $"Argument '{argumentName}' error: the value '{optionValue}' is not a valid {propertyType.FullName}.");
+
+				return enumValue;
+			}
+
+			if (propertyType == typeof(Guid))
+			{
+				if (!Guid.TryParse(optionValue, out Guid guidValue))
+				{
+					throw new CommandException(CommandException.CommandInvalidArgumentType, $"Argument '{argumentName}' error: the value '{optionValue}' is not a valid {propertyType.FullName}.");
+				}
+
+				return guidValue;
+			}
+			if (propertyType == typeof(Guid?))
+			{
+				if (string.IsNullOrWhiteSpace(optionValue))
+					return null;
+
+				if (!Guid.TryParse(optionValue, out Guid guidValue))
+				{
+					throw new CommandException(CommandException.CommandInvalidArgumentType, $"Argument '{argumentName}' error: the value '{optionValue}' is not a valid {propertyType.FullName}.");
+				}
+
+				return guidValue;
+			}
 
 
 			try
