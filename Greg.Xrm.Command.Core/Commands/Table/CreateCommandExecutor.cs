@@ -138,15 +138,6 @@ namespace Greg.Xrm.Command.Commands.Table
 			}
             catch (FaultException<OrganizationServiceFault> ex)
             {
-                output.WriteLine()
-                    .Write("Error: ", ConsoleColor.Red)
-                    .WriteLine(ex.Message, ConsoleColor.Red);
-
-                if (ex.InnerException != null)
-                {
-                    output.Write("  ").WriteLine(ex.InnerException.Message, ConsoleColor.Red);
-                }
-
                 return CommandResult.Fail(ex.Message, ex);
             }
         }
