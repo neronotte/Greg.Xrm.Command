@@ -1,4 +1,5 @@
 ﻿using Greg.Xrm.Command.Commands.UnifiedRouting.Model;
+using Greg.Xrm.Command.Commands.UnifiedRouting.Repository;
 using Greg.Xrm.Command.Parsing;
 using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
@@ -39,6 +40,7 @@ namespace Greg.Xrm.Command.Commands.UnifiedRouting
 
 			try
 			{
+                var repo = new AgentStatusHistoryRepository(crm);
 
                 output.WriteLine($"Checking queue status {command.Queue}");
                 DateTime parsedTime;
@@ -48,43 +50,8 @@ namespace Greg.Xrm.Command.Commands.UnifiedRouting
                 // Set Condition Values
                 var timeQuery = isDateTimeParsed ? parsedTime : DateTime.UtcNow;
 
-                // Instantiate QueryExpression query
-                var query = new QueryExpression("msdyn_agentstatushistory");
-                query.NoLock = true;
-                // Add columns to query.ColumnSet
-                query.ColumnSet.AddColumns(
-                    "msdyn_agentstatushistoryid",
-                    "createdon",
-                    "msdyn_starttime",
-                    "msdyn_presenceid",
-                    "msdyn_endtime",
-                    "msdyn_availablecapacity",
-                    "msdyn_agentid");
+                var results = await repo.GetAgentStatusHistoryByQueue(command.Queue ?? string.Empty, timeQuery);
 
-                // Add conditions to query.Criteria
-                query.Criteria.AddCondition("msdyn_starttime", ConditionOperator.LessEqual, timeQuery);
-                var endTimeFiltered = new FilterExpression(LogicalOperator.Or);
-                query.Criteria.AddFilter(endTimeFiltered);
-                endTimeFiltered.AddCondition("msdyn_endtime", ConditionOperator.GreaterEqual, timeQuery);
-                endTimeFiltered.AddCondition("msdyn_endtime", ConditionOperator.Null);
-
-                query.AddOrder("createdon", OrderType.Descending);
-
-                var systemuserJoin = query.AddLink("systemuser", "msdyn_agentid", "systemuserid");
-                systemuserJoin.EntityAlias = "systemuserJoin";
-                systemuserJoin.Columns.AddColumns("fullname", "internalemailaddress");
-
-                var queueMembershipJoin = systemuserJoin.AddLink("queuemembership", "systemuserid", "systemuserid");
-                var queueJoin = queueMembershipJoin.AddLink("queue", "queueid", "queueid");
-                queueJoin.LinkCriteria.AddCondition("name", ConditionOperator.Equal, command.Queue);
-
-                var presenceJoin = query.AddLink("msdyn_presence", "msdyn_presenceid", "msdyn_presenceid", JoinOperator.Inner);
-                presenceJoin.EntityAlias = "presenceJoin";
-
-                // Add columns to presence.Columns
-                presenceJoin.Columns.AddColumns("msdyn_presencestatustext", "msdyn_basepresencestatus");
-
-                var results = (await crm.RetrieveMultipleAsync(query)).Entities;
                 if (results.Count==0)
                 {
                     output.WriteLine("No records found for: ", ConsoleColor.Yellow).WriteLine(command.Queue, ConsoleColor.Yellow);
@@ -93,29 +60,18 @@ namespace Greg.Xrm.Command.Commands.UnifiedRouting
 
                 this.output.Write("The agents status in ").Write(command.Queue).Write(" at ").Write(timeQuery.ToLocalTime().ToString()).WriteLine(" is:");
 
-                var tableResult = new List<AgentStatus>();
-                foreach (Entity result in results)
-                {
-                    tableResult.Add(new AgentStatus
-                    {
-                        UserEmail = result.GetAliasedValue<string>("systemuserJoin.internalemailaddress"),
-                        Status = result.GetAliasedValue<string>("presenceJoin.msdyn_presencestatustext"),
-                        StatusCode = result.GetAliasedValue<OptionSetValue>("presenceJoin.msdyn_basepresencestatus")?.Value,
-                        DateStart = result.GetAttributeValue<DateTime>("msdyn_starttime")
-                    });
-                }
 
-                this.output.WriteTable(tableResult, 
+                this.output.WriteTable(results, 
                     () => new[] { "User", "Status", "Since" },
-                    user => new[] {
-                        user.UserEmail ?? string.Empty,
-                        user.Status ?? string.Empty,
-                        user.DateStart.GetValueOrDefault().ToLocalTime().ToString()
+                    user => new [] {
+                        user.GetAliasedValue<string>(systemuser.internalemailaddress) ?? string.Empty,
+                        user.GetAliasedValue<string>(msdyn_presence.msdyn_presencestatustext) ?? string.Empty,
+                        user.GetAttributeValue<DateTime?>(msdyn_agentstatushistory.msdyn_starttime).GetValueOrDefault().ToLocalTime().ToString()
                     },
                     (index, row) =>
                     {
                         if (index == 1)
-                            return GetAgentStatusColor(row.StatusCode.GetValueOrDefault());
+                            return repo.GetAgentStatusColor(row.GetAliasedValue<OptionSetValue?>(msdyn_presence.msdyn_basepresencestatus));
 
                         return null;
                     }
@@ -132,23 +88,6 @@ namespace Greg.Xrm.Command.Commands.UnifiedRouting
                     output.Write("  ").WriteLine(ex.InnerException.Message, ConsoleColor.Red);
                 }
             }
-        }
-
-
-        private static ConsoleColor GetAgentStatusColor(int value)
-        {
-            switch (value)
-            {
-                case 192360000:
-                    return ConsoleColor.Green;
-                case 192360001:
-                case 192360002:
-                    return ConsoleColor.Red;
-                case 192360003:
-                    return ConsoleColor.DarkYellow;
-                default:
-                    return ConsoleColor.DarkGray;
-            }
-        }
+        }        
     }
 }
