@@ -64,8 +64,8 @@ namespace Greg.Xrm.Command.Commands.UnifiedRouting
                 this.output.WriteTable(results, 
                     () => new[] { "User", "Status", "Since" },
                     user => new [] {
-                        user.GetAliasedValue<string>(systemuser.internalemailaddress) ?? string.Empty,
-                        user.GetAliasedValue<string>(msdyn_presence.msdyn_presencestatustext) ?? string.Empty,
+                        user.GetAliasedValue<string>(systemuser.internalemailaddress, nameof(systemuser)) ?? string.Empty,
+                        user.GetAliasedValue<string>(msdyn_presence.msdyn_presencestatustext, nameof(msdyn_presence)) ?? string.Empty,
                         user.GetAttributeValue<DateTime?>(msdyn_agentstatushistory.msdyn_starttime).GetValueOrDefault().ToLocalTime().ToString()
                     },
                     (index, row) =>

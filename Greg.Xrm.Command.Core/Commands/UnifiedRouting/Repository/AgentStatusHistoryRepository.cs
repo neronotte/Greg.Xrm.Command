@@ -45,12 +45,14 @@ namespace Greg.Xrm.Command.Commands.UnifiedRouting.Repository
 
             var systemuserJoin = query.AddLink(nameof(systemuser), msdyn_agentstatushistory.msdyn_agentid, systemuser.systemuserid);
             systemuserJoin.Columns.AddColumns(systemuser.fullname, systemuser.internalemailaddress);
+            systemuserJoin.EntityAlias = nameof(systemuser);
 
             var queueMembershipJoin = systemuserJoin.AddLink(nameof(queuemembership), systemuser.systemuserid, queuemembership.systemuserid);
             var queueJoin = queueMembershipJoin.AddLink(nameof(queue), queue.queueid, queuemembership.queueid);
             queueJoin.LinkCriteria.AddCondition(queue.name, ConditionOperator.Equal, queueName);
 
             var presenceJoin = query.AddLink(nameof(msdyn_presence), msdyn_presence.msdyn_presenceid, msdyn_presence.msdyn_presenceid, JoinOperator.Inner);
+            presenceJoin.EntityAlias = nameof(msdyn_presence);
 
             // Add columns to presence.Columns
             presenceJoin.Columns.AddColumns(msdyn_presence.msdyn_presencestatustext, msdyn_presence.msdyn_basepresencestatus);
@@ -83,6 +85,7 @@ namespace Greg.Xrm.Command.Commands.UnifiedRouting.Repository
 
             var systemuserJoin = query.AddLink(nameof(systemuser), msdyn_agentstatushistory.msdyn_agentid, systemuser.systemuserid);
             systemuserJoin.Columns.AddColumns(systemuser.fullname, systemuser.internalemailaddress);
+            systemuserJoin.EntityAlias = nameof(systemuser);
 
             var queryAgentAddress = new FilterExpression(LogicalOperator.Or);
             systemuserJoin.LinkCriteria.AddFilter(queryAgentAddress);
@@ -91,8 +94,8 @@ namespace Greg.Xrm.Command.Commands.UnifiedRouting.Repository
             queryAgentAddress.AddCondition(systemuser.internalemailaddress, ConditionOperator.Equal, agentEmail);
             queryAgentAddress.AddCondition(systemuser.domainname, ConditionOperator.Equal, agentEmail);
 
-            var presenceJoin = query.AddLink(nameof(msdyn_presence), msdyn_presence.msdyn_presenceid, msdyn_presence.msdyn_presenceid, JoinOperator.Inner);
-
+            var presenceJoin = query.AddLink(nameof(msdyn_presence), msdyn_agentstatushistory.msdyn_presenceid, msdyn_presence.msdyn_presenceid, JoinOperator.Inner);
+            presenceJoin.EntityAlias = nameof(msdyn_presence);
             // Add columns to presence.Columns
             presenceJoin.Columns.AddColumns(msdyn_presence.msdyn_presencestatustext, msdyn_presence.msdyn_basepresencestatus);
 
