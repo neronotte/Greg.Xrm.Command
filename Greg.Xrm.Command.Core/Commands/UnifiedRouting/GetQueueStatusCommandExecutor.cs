@@ -25,16 +25,11 @@ namespace Greg.Xrm.Command.Commands.UnifiedRouting
 		{
 			try
 			{
-				DateTime timeQuery;
-				if (!string.IsNullOrEmpty(command.DateTimeFilter))
-				{
-					if (!DateTime.TryParseExact(command.DateTimeFilter, "dd/MM/yyyy HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal, out timeQuery))
-						throw new CommandException(CommandException.CommandInvalidArgumentValue, "Invalid format date provided. Expected dd/MM/yyyy.");
-				}
-				else
-					timeQuery = DateTime.UtcNow;
+                DateTime timeQuery = DateTime.UtcNow;
+                if (!string.IsNullOrEmpty(command.DateTimeFilter) && !DateTime.TryParseExact(command.DateTimeFilter, "dd/MM/yyyy HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal, out timeQuery))
+                    throw new CommandException(CommandException.CommandInvalidArgumentValue, "Invalid format date provided. Expected dd/MM/yyyy.");
 
-				this.output.Write($"Connecting to the current dataverse environment...");
+                this.output.Write($"Connecting to the current dataverse environment...");
 				var crm = await this.organizationServiceRepository.GetCurrentConnectionAsync();
 
 				if (crm == null)
