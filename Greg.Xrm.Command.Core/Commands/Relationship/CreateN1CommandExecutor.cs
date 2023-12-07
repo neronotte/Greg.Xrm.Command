@@ -125,7 +125,7 @@ namespace Greg.Xrm.Command.Commands.Relationship
 				result["Lookup Column ID"] = response.AttributeId;
 				return result;
 			}
-			catch (FaultException<OrganizationServiceFault> ex)
+			catch (Exception ex)
 			{
 				return CommandResult.Fail(ex.Message, ex);
 			}
@@ -140,7 +140,7 @@ namespace Greg.Xrm.Command.Commands.Relationship
 			return command.MenuGroup;
 		}
 
-		private Label? CreateMenuLabel(CreateN1Command command, int defaultLanguageCode)
+		private static Label? CreateMenuLabel(CreateN1Command command, int defaultLanguageCode)
 		{
 			if (command.MenuBehavior != AssociatedMenuBehavior.UseLabel)
 				return null;
@@ -215,7 +215,7 @@ namespace Greg.Xrm.Command.Commands.Relationship
 			if (command.ParentTable.StartsWith(publisherPrefix + "_")) 
 				return $"{command.ParentTable}id";
 
-			if (!command.ParentTable.Contains("_"))
+			if (!command.ParentTable.Contains('_'))
 				return $"{publisherPrefix}_{command.ParentTable}id";
 
 			var parentTableParts = command.ParentTable.Split("_");

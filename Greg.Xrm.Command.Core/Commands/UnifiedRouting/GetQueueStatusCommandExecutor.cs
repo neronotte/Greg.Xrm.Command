@@ -21,25 +21,19 @@ namespace Greg.Xrm.Command.Commands.UnifiedRouting
 			organizationServiceRepository = organizationServiceFactory;
 		}
 
-		public async Task ExecuteAsync(GetQueueStatusCommand command, CancellationToken cancellationToken)
+		public async Task<CommandResult> ExecuteAsync(GetQueueStatusCommand command, CancellationToken cancellationToken)
 		{
+			var timeQuery = DateTime.UtcNow;
+			if (!string.IsNullOrEmpty(command.DateTimeFilter) && !DateTime.TryParseExact(command.DateTimeFilter, "dd/MM/yyyy HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal, out timeQuery))
+				throw new CommandException(CommandException.CommandInvalidArgumentValue, "Invalid format date provided. Expected dd/MM/yyyy.");
+
+			this.output.Write($"Connecting to the current dataverse environment...");
+			var crm = await this.organizationServiceRepository.GetCurrentConnectionAsync();
+			this.output.WriteLine("Done", ConsoleColor.Green);
+
+
 			try
 			{
-                DateTime timeQuery = DateTime.UtcNow;
-                if (!string.IsNullOrEmpty(command.DateTimeFilter) && !DateTime.TryParseExact(command.DateTimeFilter, "dd/MM/yyyy HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal, out timeQuery))
-                    throw new CommandException(CommandException.CommandInvalidArgumentValue, "Invalid format date provided. Expected dd/MM/yyyy.");
-
-                this.output.Write($"Connecting to the current dataverse environment...");
-				var crm = await this.organizationServiceRepository.GetCurrentConnectionAsync();
-
-				if (crm == null)
-				{
-					output.WriteLine("No connection selected.");
-					return;
-				}
-
-				this.output.WriteLine("Done", ConsoleColor.Green);
-
 				output.WriteLine($"Checking queue status {command.Queue}");
 
 				var repo = new AgentStatusHistoryRepository(crm);
@@ -48,7 +42,7 @@ namespace Greg.Xrm.Command.Commands.UnifiedRouting
 				if (results.Count==0)
 				{
 					output.WriteLine("No records found for: ", ConsoleColor.Yellow).WriteLine(command.Queue, ConsoleColor.Yellow);
-					return;
+					return CommandResult.Success();
 				}
 
 				this.output.Write("The agents status in ").Write(command.Queue).Write(" at ").Write(timeQuery.ToLocalTime().ToString()).WriteLine(" is:");
@@ -69,17 +63,12 @@ namespace Greg.Xrm.Command.Commands.UnifiedRouting
 						return null;
 					}
 				);
-			}
-			catch (FaultException<OrganizationServiceFault> ex)
-			{
-				output.WriteLine()
-					.Write("Error: ", ConsoleColor.Red)
-					.WriteLine(ex.Message, ConsoleColor.Red);
 
-				if (ex.InnerException != null)
-				{
-					output.Write("  ").WriteLine(ex.InnerException.Message, ConsoleColor.Red);
-				}
+				return CommandResult.Success();
+			}
+			catch (Exception ex)
+			{
+				return CommandResult.Fail(ex.Message, ex);
 			}
 		}        
 	}

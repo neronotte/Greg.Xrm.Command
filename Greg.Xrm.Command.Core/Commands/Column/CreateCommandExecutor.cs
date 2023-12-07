@@ -49,10 +49,12 @@ namespace Greg.Xrm.Command.Commands.Column
 				var attribute = await builder.CreateFromAsync(crm, command, defaultLanguageCode, publisherPrefix, customizationOptionValuePrefix.Value);
 
 				output.Write($"Creating attribute {attribute.SchemaName}...");
-				var request = new CreateAttributeRequest();
-				request.SolutionUniqueName = currentSolutionName;
-				request.EntityName = command.EntityName;
-				request.Attribute = attribute;
+				var request = new CreateAttributeRequest
+				{
+					SolutionUniqueName = currentSolutionName,
+					EntityName = command.EntityName,
+					Attribute = attribute
+				};
 
 				var response = (CreateAttributeResponse)await crm.ExecuteAsync(request, cancellationToken);
 
@@ -60,7 +62,7 @@ namespace Greg.Xrm.Command.Commands.Column
 
 				return new CreateCommandResult(response.AttributeId);
 			}
-			catch (FaultException<OrganizationServiceFault> ex)
+			catch (Exception ex)
 			{
 				return CommandResult.Fail(ex.Message, ex);
 			}
