@@ -98,46 +98,46 @@ namespace Greg.Xrm.Command
 				entity.GetLiteralValue(propertyName);
 		}
 
-        /// <summary>
-        /// Returns an aliased value providing the required casts.
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="entity"></param>
-        /// <param name="attributeLogicalName"></param>
-        /// <returns></returns>
-        public static T? GetAliasedValue<T>(this Entity entity, string attributeLogicalName)
-        {
-            if (null == entity.Attributes)
-            {
-                entity.Attributes = new AttributeCollection();
-            }
+		/// <summary>
+		/// Returns an aliased value providing the required casts.
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="entity"></param>
+		/// <param name="attributeLogicalName"></param>
+		/// <returns></returns>
+		public static T? GetAliasedValue<T>(this Entity entity, string attributeLogicalName)
+		{
+			if (null == entity.Attributes)
+			{
+				entity.Attributes = new AttributeCollection();
+			}
 
-            var value = entity.GetAttributeValue<AliasedValue>(attributeLogicalName);
-            if (value?.Value == null) return default;
+			var value = entity.GetAttributeValue<AliasedValue>(attributeLogicalName);
+			if (value?.Value == null) return default;
+			
+			return (T)value.Value;
+		}
 
-            return (T)value.Value;
-        }
+		/// <summary>
+		/// Returns an aliased value providing the required casts.
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="entity"></param>
+		/// <param name="attributeLogicalName"></param>
+		/// <param name="alias"></param>
+		/// <returns></returns>
+		public static T GetAliasedValue<T>(this Entity entity, string attributeLogicalName, string alias)
+		{
+			return GetAliasedValue<T>(entity, string.Format("{0}.{1}", alias, attributeLogicalName));
+		}
 
-        /// <summary>
-        /// Returns an aliased value providing the required casts.
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="entity"></param>
-        /// <param name="attributeLogicalName"></param>
-        /// <param name="alias"></param>
-        /// <returns></returns>
-        public static T GetAliasedValue<T>(this Entity entity, string attributeLogicalName, string alias)
-        {
-            return GetAliasedValue<T>(entity, string.Format("{0}.{1}", alias, attributeLogicalName));
-        }
-
-        /// <summary>
-        /// Converts the value of a property to its string representation
-        /// </summary>
-        /// <param name="entity">The entity</param>
-        /// <param name="propertyName">The attribute to retrieve</param>
-        /// <returns>The string representation of the specified property</returns>
-        public static string GetLiteralValue(this Entity entity, string propertyName)
+		/// <summary>
+		/// Converts the value of a property to its string representation
+		/// </summary>
+		/// <param name="entity">The entity</param>
+		/// <param name="propertyName">The attribute to retrieve</param>
+		/// <returns>The string representation of the specified property</returns>
+		public static string GetLiteralValue(this Entity entity, string propertyName)
 		{
 			if (string.IsNullOrEmpty(propertyName)) return string.Empty;
 

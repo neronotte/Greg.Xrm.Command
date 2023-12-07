@@ -10,24 +10,24 @@ namespace Greg.Xrm.Command.Commands.Table
 {
 	[TestClass]
 	public class GetQueueStatusCommandExecutorTest
-    {
+	{
 		[TestMethod]
-        [TestCategory("Integration")]
-        public void TestQuery()
+		[TestCategory("Integration")]
+		public void TestQuery()
 		{
 			var queue = "QUEUENAME";
 			var output = new OutputToConsole();
-            var settingsRepository = new SettingsRepository();
-            var repository = new OrganizationServiceRepository(settingsRepository);
+			var settingsRepository = new SettingsRepository();
+			var repository = new OrganizationServiceRepository(settingsRepository);
 
 
 			var executor = new GetQueueStatusCommandExecutor(output, repository);
 
 			executor.ExecuteAsync(new GetQueueStatusCommand
-            {
+			{
 				Queue = queue,
-				DateTimeStatus = "28/11/2023 11:00"
-            }, new CancellationToken()).Wait();
+				DateTimeFilter = "28/11/2023 11:00"
+			}, new CancellationToken()).Wait();
 
 		}
 	}

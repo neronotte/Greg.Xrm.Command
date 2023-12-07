@@ -1,93 +1,91 @@
 ﻿using Greg.Xrm.Command.Commands.UnifiedRouting.Model;
 using Greg.Xrm.Command.Commands.UnifiedRouting.Repository;
-using Greg.Xrm.Command.Parsing;
 using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
 using Microsoft.Xrm.Sdk;
-using Microsoft.Xrm.Sdk.Query;
-using System.Collections.Generic;
-using System.Data;
+using System.Globalization;
 using System.ServiceModel;
 
 namespace Greg.Xrm.Command.Commands.UnifiedRouting
 {
-    public class GetQueueStatusCommandExecutor : ICommandExecutor<GetQueueStatusCommand>
-    {
-        private readonly IOutput output;
-        private readonly IOrganizationServiceRepository organizationServiceRepository;
+	public class GetQueueStatusCommandExecutor : ICommandExecutor<GetQueueStatusCommand>
+	{
+		private readonly IOutput output;
+		private readonly IOrganizationServiceRepository organizationServiceRepository;
 
-        public GetQueueStatusCommandExecutor(
-            IOutput output,
-            IOrganizationServiceRepository organizationServiceFactory)
-        {
-            this.output = output;
-            organizationServiceRepository = organizationServiceFactory;
-        }
-
-        public async Task ExecuteAsync(GetQueueStatusCommand command, CancellationToken cancellationToken)
+		public GetQueueStatusCommandExecutor(
+			IOutput output,
+			IOrganizationServiceRepository organizationServiceFactory)
 		{
-			this.output.Write($"Connecting to the current dataverse environment...");
-			var crm = await this.organizationServiceRepository.GetCurrentConnectionAsync();
+			this.output = output;
+			organizationServiceRepository = organizationServiceFactory;
+		}
 
-            if (crm == null)
-            {
-                output.WriteLine("No connection selected.");
-                return;
-            }
-
-            this.output.WriteLine("Done", ConsoleColor.Green);
-
-
+		public async Task ExecuteAsync(GetQueueStatusCommand command, CancellationToken cancellationToken)
+		{
 			try
 			{
-                var repo = new AgentStatusHistoryRepository(crm);
+				DateTime timeQuery;
+				if (!string.IsNullOrEmpty(command.DateTimeFilter))
+				{
+					if (!DateTime.TryParseExact(command.DateTimeFilter, "dd/MM/yyyy HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal, out timeQuery))
+						throw new CommandException(CommandException.CommandInvalidArgumentValue, "Invalid format date provided. Expected dd/MM/yyyy.");
+				}
+				else
+					timeQuery = DateTime.UtcNow;
 
-                output.WriteLine($"Checking queue status {command.Queue}");
-                DateTime parsedTime;
+				this.output.Write($"Connecting to the current dataverse environment...");
+				var crm = await this.organizationServiceRepository.GetCurrentConnectionAsync();
 
-                var isDateTimeParsed = DateTime.TryParse(command.DateTimeStatus, out parsedTime);
+				if (crm == null)
+				{
+					output.WriteLine("No connection selected.");
+					return;
+				}
 
-                // Set Condition Values
-                var timeQuery = isDateTimeParsed ? parsedTime : DateTime.UtcNow;
+				this.output.WriteLine("Done", ConsoleColor.Green);
 
-                var results = await repo.GetAgentStatusHistoryByQueue(command.Queue ?? string.Empty, timeQuery);
+				output.WriteLine($"Checking queue status {command.Queue}");
 
-                if (results.Count==0)
-                {
-                    output.WriteLine("No records found for: ", ConsoleColor.Yellow).WriteLine(command.Queue, ConsoleColor.Yellow);
-                    return;
-                }
+				var repo = new AgentStatusHistoryRepository(crm);
+				var results = await repo.GetAgentStatusHistoryByQueue(command.Queue ?? string.Empty, timeQuery);
 
-                this.output.Write("The agents status in ").Write(command.Queue).Write(" at ").Write(timeQuery.ToLocalTime().ToString()).WriteLine(" is:");
+				if (results.Count==0)
+				{
+					output.WriteLine("No records found for: ", ConsoleColor.Yellow).WriteLine(command.Queue, ConsoleColor.Yellow);
+					return;
+				}
+
+				this.output.Write("The agents status in ").Write(command.Queue).Write(" at ").Write(timeQuery.ToLocalTime().ToString()).WriteLine(" is:");
 
 
-                this.output.WriteTable(results, 
-                    () => new[] { "User", "Status", "Since" },
-                    user => new [] {
-                        user.GetAliasedValue<string>(systemuser.internalemailaddress, nameof(systemuser)) ?? string.Empty,
-                        user.GetAliasedValue<string>(msdyn_presence.msdyn_presencestatustext, nameof(msdyn_presence)) ?? string.Empty,
-                        user.GetAttributeValue<DateTime?>(msdyn_agentstatushistory.msdyn_starttime).GetValueOrDefault().ToLocalTime().ToString()
-                    },
-                    (index, row) =>
-                    {
-                        if (index == 1)
-                            return repo.GetAgentStatusColor(row.GetAliasedValue<OptionSetValue?>(msdyn_presence.msdyn_basepresencestatus));
+				this.output.WriteTable(results, 
+					() => new[] { "User", "Status", "Since" },
+					user => new [] {
+						user.GetAliasedValue<string>(systemuser.internalemailaddress, nameof(systemuser)) ?? string.Empty,
+						user.GetAliasedValue<string>(msdyn_presence.msdyn_presencestatustext, nameof(msdyn_presence)) ?? string.Empty,
+						user.GetAttributeValue<DateTime?>(msdyn_agentstatushistory.msdyn_starttime).GetValueOrDefault().ToLocalTime().ToString()
+					},
+					(index, row) =>
+					{
+						if (index == 1)
+							return repo.GetAgentStatusColor(row.GetAliasedValue<OptionSetValue?>(msdyn_presence.msdyn_basepresencestatus));
 
-                        return null;
-                    }
-                );
-            }
-            catch (FaultException<OrganizationServiceFault> ex)
-            {
-                output.WriteLine()
-                    .Write("Error: ", ConsoleColor.Red)
-                    .WriteLine(ex.Message, ConsoleColor.Red);
+						return null;
+					}
+				);
+			}
+			catch (FaultException<OrganizationServiceFault> ex)
+			{
+				output.WriteLine()
+					.Write("Error: ", ConsoleColor.Red)
+					.WriteLine(ex.Message, ConsoleColor.Red);
 
-                if (ex.InnerException != null)
-                {
-                    output.Write("  ").WriteLine(ex.InnerException.Message, ConsoleColor.Red);
-                }
-            }
-        }        
-    }
+				if (ex.InnerException != null)
+				{
+					output.Write("  ").WriteLine(ex.InnerException.Message, ConsoleColor.Red);
+				}
+			}
+		}        
+	}
 }
