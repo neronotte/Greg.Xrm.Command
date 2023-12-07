@@ -6,7 +6,7 @@
         [TestMethod]
         public void ParseWithLongNameShouldWork()
         {
-            var command = Utility.TestParseCommand<GetAgentStatusCommand>("unifiedrouting", "queuestatus", "--queue", "RECLAMI");
+            var command = Utility.TestParseCommand<GetAgentStatusCommand>("unifiedrouting", "queuestatus", "--queue", "QUEUENAME");
         }
     }
 }

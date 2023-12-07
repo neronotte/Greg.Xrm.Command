@@ -13,9 +13,9 @@ namespace Greg.Xrm.Command.Commands.Table
     {
 		[TestMethod]
         [TestCategory("Integration")]
-        public void Test1()
+        public void TestQuery()
 		{
-			var queue = "RECLAMI";
+			var queue = "QUEUENAME";
 			var output = new OutputToConsole();
             var settingsRepository = new SettingsRepository();
             var repository = new OrganizationServiceRepository(settingsRepository);

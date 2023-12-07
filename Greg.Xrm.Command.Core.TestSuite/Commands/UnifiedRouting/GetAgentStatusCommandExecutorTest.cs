@@ -1,6 +1,7 @@
 ﻿
 using Greg.Xrm.Command.Commands.UnifiedRouting;
 using Greg.Xrm.Command.Services.Connection;
+using Greg.Xrm.Command.Services.Settings;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Messages;
@@ -12,31 +13,22 @@ namespace Greg.Xrm.Command.Commands.Table
 	{
 		[TestMethod]
         [TestCategory("Integration")]
-        public void Test1()
+        public void TestQuery()
 		{
-			var agentPrimaryEmail = "francesco.catino@external.eniplenitude.com";
-			OrganizationRequest? requestToServer = null;
+			var agentPrimaryEmail = "francesco.catino@avanade.com";
+            var output = new OutputToConsole();
+            var settingsRepository = new SettingsRepository();
+            var repository = new OrganizationServiceRepository(settingsRepository);
 
-			var output = new OutputToMemory();
 
-			var organizationServiceRepository = new Mock<IOrganizationServiceRepository>();
-			var organizationService = new Mock<IOrganizationServiceAsync2>();
-			organizationService.Setup(x => x.ExecuteAsync(It.IsAny<OrganizationRequest>()))
-				.Callback<OrganizationRequest>(x => requestToServer = x);
+            var executor = new GetAgentStatusCommandExecutor(output, repository);
 
-			organizationServiceRepository
-				.Setup(organizationServiceRepository => organizationServiceRepository.GetCurrentConnectionAsync())
-				.ReturnsAsync(organizationService.Object);
-
-			var executor = new GetAgentStatusCommandExecutor(output, organizationServiceRepository.Object);
-
-			executor.ExecuteAsync(new GetAgentStatusCommand
+            executor.ExecuteAsync(new GetAgentStatusCommand
             {
 				AgentPrimaryEmail = agentPrimaryEmail,
 				DateTimeStatus = "28/11/2023 11:00"
             }, new CancellationToken()).Wait();
 
-			organizationServiceRepository.Verify(x => x.GetCurrentConnectionAsync(), Times.Once);
 		}
 	}
 }

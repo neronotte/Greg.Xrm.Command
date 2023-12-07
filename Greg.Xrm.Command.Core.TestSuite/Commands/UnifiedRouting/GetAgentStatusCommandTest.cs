@@ -6,7 +6,7 @@
         [TestMethod]
         public void ParseWithLongNameShouldWork()
         {
-            var command = Utility.TestParseCommand<GetAgentStatusCommand>("unifiedrouting", "agentstatus", "--agentPrimaryEmail", "francesco.catino@external.eniplenitude.com");
+            var command = Utility.TestParseCommand<GetAgentStatusCommand>("unifiedrouting", "agentstatus", "--agentPrimaryEmail", "francesco.catino@avanade.com");
         }
     }
 }

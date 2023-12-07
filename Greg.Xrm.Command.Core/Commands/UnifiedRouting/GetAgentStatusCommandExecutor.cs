@@ -56,8 +56,8 @@ namespace Greg.Xrm.Command.Commands.UnifiedRouting
                 }
 
                 var status = result.GetAliasedValue<string>(msdyn_presence.msdyn_presencestatustext);
-                var statusOpt = result.GetAliasedValue<OptionSetValue>("presenceJoin.msdyn_basepresencestatus");
-                var dateStart = result.GetAttributeValue<DateTime>("msdyn_starttime");
+                var statusOpt = result.GetAliasedValue<OptionSetValue>(msdyn_presence.msdyn_basepresencestatus);
+                var dateStart = result.GetAttributeValue<DateTime>(msdyn_agentstatushistory.msdyn_starttime);
 
                 if(!isDateTimeParsed)
                     this.output.WriteLine(command.AgentPrimaryEmail)
