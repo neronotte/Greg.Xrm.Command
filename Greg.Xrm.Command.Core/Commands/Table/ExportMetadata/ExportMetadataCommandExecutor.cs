@@ -24,7 +24,7 @@ namespace Greg.Xrm.Command.Commands.Table.ExportMetadata
             this.exportMetadataStrategyFactory = exportMetadataStrategyFactory;
         }
 
-        public async Task ExecuteAsync(ExportMetadataCommand command, CancellationToken cancellationToken)
+        public async Task<CommandResult> ExecuteAsync(ExportMetadataCommand command, CancellationToken cancellationToken)
         {
             output.Write($"Connecting to the current dataverse environment...");
             var crm = await organizationServiceRepository.GetCurrentConnectionAsync();
@@ -46,15 +46,7 @@ namespace Greg.Xrm.Command.Commands.Table.ExportMetadata
             }
             catch (FaultException<OrganizationServiceFault> ex)
             {
-                output.WriteLine()
-                    .Write("Error: ", ConsoleColor.Red)
-                    .WriteLine(ex.Message, ConsoleColor.Red);
-
-                if (ex.InnerException != null)
-                {
-                    output.Write("  ").WriteLine(ex.InnerException.Message, ConsoleColor.Red);
-                }
-                return;
+                return CommandResult.Fail(ex.Message, ex);
             }
 
             var folder = command.OutputFilePath;
@@ -66,10 +58,7 @@ namespace Greg.Xrm.Command.Commands.Table.ExportMetadata
 
             if (!Directory.Exists(folder))
             {
-                output.WriteLine()
-                    .Write("Error: ", ConsoleColor.Red)
-                    .WriteLine($"The folder '{folder}' does not exist", ConsoleColor.Red);
-                return;
+                return CommandResult.Fail($"The folder '{folder}' does not exist");
             }
 
             var strategy = exportMetadataStrategyFactory.Create(command.Format);
@@ -77,7 +66,7 @@ namespace Greg.Xrm.Command.Commands.Table.ExportMetadata
             output.Write($"Exporting metadata for table '{entityMetadata.SchemaName}'...");
 
             var filePath = await strategy.ExportAsync(entityMetadata, folder);
-            if (filePath == null) return;
+            if (filePath == null) return CommandResult.Fail("Unable to export metadata");
 
             output.WriteLine("Done", ConsoleColor.Green);
 
@@ -93,6 +82,10 @@ namespace Greg.Xrm.Command.Commands.Table.ExportMetadata
                 output.WriteLine("Done", ConsoleColor.Green);
             }
 
-        }
+
+			var result = CommandResult.Success();
+			result["Generated File"] = filePath;
+			return result;
+		}
     }
 }

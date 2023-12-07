@@ -15,11 +15,12 @@ namespace Greg.Xrm.Command.Commands.Auth
 			this.organizationServiceRepository = organizationServiceRepository;
 			this.output = output;
 		}
-		public async Task ExecuteAsync(RenameCommand command, CancellationToken cancellationToken)
+		public async Task<CommandResult> ExecuteAsync(RenameCommand command, CancellationToken cancellationToken)
 		{
 			await organizationServiceRepository.RenameConnectionAsync(command.OldName, command.NewName);
 
 			this.output.WriteLine($"Authentication profile '{command.OldName}' renamed in '{command.NewName}'. Type 'pacx auth list' to check the updated name.");
+			return CommandResult.Success();
 		}
 	}
 }

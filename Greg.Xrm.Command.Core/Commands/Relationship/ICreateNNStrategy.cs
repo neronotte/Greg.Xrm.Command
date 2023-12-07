@@ -2,6 +2,6 @@
 {
 	public interface ICreateNNStrategy
 	{
-		Task CreateAsync(CreateNNCommand command, string currentSolutionName, int defaultLanguageCode, string publisherPrefix);
+		Task<CommandResult> CreateAsync(CreateNNCommand command, string currentSolutionName, int defaultLanguageCode, string publisherPrefix);
 	}
 }

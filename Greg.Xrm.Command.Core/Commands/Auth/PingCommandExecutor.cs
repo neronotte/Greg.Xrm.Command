@@ -17,14 +17,13 @@ namespace Greg.Xrm.Command.Commands.Auth
             this.output = output;
         }
 
-        public async Task ExecuteAsync(PingCommand command, CancellationToken cancellationToken)
+        public async Task<CommandResult> ExecuteAsync(PingCommand command, CancellationToken cancellationToken)
         {
             var crm = await organizationServiceRepository.GetCurrentConnectionAsync();
 
             if (crm == null)
             {
-                output.WriteLine("No connection selected.");
-                return;
+                return CommandResult.Fail("No connection selected.");
             }
 
             try
@@ -36,30 +35,17 @@ namespace Greg.Xrm.Command.Commands.Auth
                     .Write("Connection successful. User: ")
                     .Write(response.UserId.ToString())
                     .WriteLine();
+
+                return CommandResult.Success();
             }
             catch (FaultException<OrganizationServiceFault> ex)
             {
-                output
-                    .Write("Connection failed. ", ConsoleColor.Red)
-                    .WriteLine(ex.Message, ConsoleColor.Red);
-                if (ex.InnerException != null)
-                {
-                    output.Write("  ").WriteLine(ex.InnerException.Message, ConsoleColor.Red);
-                }
+                return CommandResult.Fail("Connection failed. " + ex.Message, ex);
             }
             catch (Exception ex)
-            {
-                output
-                    .Write("Connection exception '", ConsoleColor.Red)
-                    .Write(ex.GetType()?.FullName ?? string.Empty, ConsoleColor.Red)
-                    .Write("'. ", ConsoleColor.Red)
-                    .WriteLine(ex.Message, ConsoleColor.Red);
-                if (ex.InnerException != null)
-                {
-                    output.Write("  ").WriteLine(ex.InnerException.Message, ConsoleColor.Red);
-                }
-            }
-
-        }
+			{
+				return CommandResult.Fail(ex.Message, ex);
+			}
+		}
     }
 }

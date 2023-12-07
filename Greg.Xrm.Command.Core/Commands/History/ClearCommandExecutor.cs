@@ -15,13 +15,15 @@ namespace Greg.Xrm.Command.Commands.History
 		}
 
 
-		public async Task ExecuteAsync(ClearCommand command, CancellationToken cancellationToken)
+		public async Task<CommandResult> ExecuteAsync(ClearCommand command, CancellationToken cancellationToken)
 		{
 			this.output.Write("Cleaning up command history...");
 
 			await this.historyTracker.ClearAsync();
 
 			this.output.WriteLine("Done", ConsoleColor.Green);
+			
+			return CommandResult.Success();
 		}
 	}
 }

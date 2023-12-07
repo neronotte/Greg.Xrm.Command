@@ -27,17 +27,15 @@ namespace Greg.Xrm.Command.Commands.Solution
 		}
 
 
-		public async Task ExecuteAsync(ComponentGetDependenciesCommand command, CancellationToken cancellationToken)
+		public async Task<CommandResult> ExecuteAsync(ComponentGetDependenciesCommand command, CancellationToken cancellationToken)
 		{
 			if (command.ComponentId == Guid.Empty)
 			{
-				this.output.WriteLine("The component id is required", ConsoleColor.Red);
-				return;
+				throw new CommandException(CommandException.CommandRequiredArgumentNotProvided, "The component id is required");
 			}
 			if (command.ComponentType == null)
 			{
-				this.output.WriteLine("The component id is required", ConsoleColor.Red);
-				return;
+				throw new CommandException(CommandException.CommandRequiredArgumentNotProvided, "The component type is required");
 			}
 
 
@@ -65,7 +63,7 @@ namespace Greg.Xrm.Command.Commands.Solution
 				if (dependencies.Length == 0)
 				{
 					this.output.WriteLine("No dependencies found!", ConsoleColor.Cyan);
-					return;
+					return CommandResult.Success();
 				}
 
 				var dependencyGroups = dependencies.GroupBy(x => x.dependentcomponenttype.Value).ToArray();
@@ -119,21 +117,13 @@ namespace Greg.Xrm.Command.Commands.Solution
 						}
 					}
 				}
+
+				return CommandResult.Success();
 			}
 			catch (FaultException<OrganizationServiceFault> ex)
 			{
-				output.WriteLine()
-					.Write("Error: ", ConsoleColor.Red)
-					.WriteLine(ex.Message, ConsoleColor.Red);
-
-				if (ex.InnerException != null)
-				{
-					output.Write("  ").WriteLine(ex.InnerException.Message, ConsoleColor.Red);
-				}
+				return CommandResult.Fail(ex.Message, ex);
 			}
-
-
-
 		}
 	}
 }

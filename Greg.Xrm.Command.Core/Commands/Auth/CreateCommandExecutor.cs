@@ -17,7 +17,7 @@ namespace Greg.Xrm.Command.Commands.Auth
 			this.output = output;
 		}
 
-        public async Task ExecuteAsync(CreateCommand command, CancellationToken cancellationToken)
+        public async Task<CommandResult> ExecuteAsync(CreateCommand command, CancellationToken cancellationToken)
 		{
 			if (string.IsNullOrWhiteSpace(command.Name))
 			{
@@ -31,6 +31,7 @@ namespace Greg.Xrm.Command.Commands.Auth
 			try
 			{
 				await organizationServiceRepository.SetConnectionAsync(command.Name, command.ConnectionString);
+				return CommandResult.Success();
 			}
 			catch(DataverseConnectionException ex)
 			{
@@ -39,6 +40,7 @@ namespace Greg.Xrm.Command.Commands.Auth
 				{
 					output.WriteLine("  " + ex.InnerException.Message, ConsoleColor.Red);
 				}
+				return CommandResult.Fail(ex.Message, ex);
 			}
 		}
 	}

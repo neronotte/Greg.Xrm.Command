@@ -29,7 +29,7 @@ namespace Greg.Xrm.Command.Commands.Column
 		}
 
 
-		public async Task ExecuteAsync(GetDependenciesCommand command, CancellationToken cancellationToken)
+		public async Task<CommandResult> ExecuteAsync(GetDependenciesCommand command, CancellationToken cancellationToken)
 		{
 			this.output.Write($"Connecting to the current dataverse environment...");
 			var crm = await this.organizationServiceRepository.GetCurrentConnectionAsync();
@@ -53,14 +53,15 @@ namespace Greg.Xrm.Command.Commands.Column
 				var attribute = response.AttributeMetadata;
 				if (!attribute.MetadataId.HasValue)
 				{
-					this.output.WriteLine("Error: the attribute has no metadata id", ConsoleColor.Red);
-					return;
+					return CommandResult.Fail("The attribute has no metadata id");
 				}
 
 
-				var request1 = new RetrieveDependentComponentsRequest();
-				request1.ObjectId = attribute.MetadataId.Value;
-				request1.ComponentType =  (int)ComponentType.Attribute; 
+				var request1 = new RetrieveDependentComponentsRequest
+				{
+					ObjectId = attribute.MetadataId.Value,
+					ComponentType = (int)ComponentType.Attribute
+				};
 
 				var response1 = (RetrieveDependentComponentsResponse)await crm.ExecuteAsync(request1);
 
@@ -72,7 +73,7 @@ namespace Greg.Xrm.Command.Commands.Column
 				if (dependencies.Length == 0)
 				{
 					this.output.WriteLine("No dependencies found!", ConsoleColor.Cyan);
-					return;
+					return CommandResult.Success();
 				}
 
 				var dependencyGroups = dependencies.GroupBy(x => x.dependentcomponenttype.Value).ToArray();
@@ -126,17 +127,11 @@ namespace Greg.Xrm.Command.Commands.Column
 						}
 					}
 				}
+				return CommandResult.Success();
 			}
 			catch (FaultException<OrganizationServiceFault> ex)
 			{
-				output.WriteLine()
-					.Write("Error: ", ConsoleColor.Red)
-					.WriteLine(ex.Message, ConsoleColor.Red);
-
-				if (ex.InnerException != null)
-				{
-					output.Write("  ").WriteLine(ex.InnerException.Message, ConsoleColor.Red);
-				}
+				return CommandResult.Fail(ex.Message, ex);
 			}
 		}
 	}

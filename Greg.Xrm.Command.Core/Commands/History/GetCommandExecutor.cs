@@ -15,9 +15,8 @@ namespace Greg.Xrm.Command.Commands.History
 			this.historyTracker = historyTracker ?? throw new ArgumentNullException(nameof(historyTracker));
 		}
 
-        public async Task ExecuteAsync(GetCommand command, CancellationToken cancellationToken)
+        public async Task<CommandResult> ExecuteAsync(GetCommand command, CancellationToken cancellationToken)
 		{
-
 			if (command.Length.HasValue)
 			{
 				this.output.Write("Retrieving last ").Write(command.Length).Write(" commands...");
@@ -37,7 +36,7 @@ namespace Greg.Xrm.Command.Commands.History
 			if (commands.Count == 0)
 			{
 				this.output.WriteLine("No commands found", ConsoleColor.Yellow);
-				return;
+				return CommandResult.Success();
 			}
 
 			var i = 0;
@@ -51,9 +50,11 @@ namespace Greg.Xrm.Command.Commands.History
 			if (!string.IsNullOrWhiteSpace(command.File))
 			{
 				this.output.Write("Saving to file ").Write(command.File).Write("...");
-				await File.WriteAllLinesAsync(command.File, commands.Select(x => $"{assemblyName} {x}"));
+				await File.WriteAllLinesAsync(command.File, commands.Select(x => $"{assemblyName} {x}"), cancellationToken);
 				this.output.WriteLine("Done", ConsoleColor.Green);
 			}
+
+			return CommandResult.Success();
 		}
 	}
 }

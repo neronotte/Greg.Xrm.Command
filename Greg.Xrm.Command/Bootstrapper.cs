@@ -3,11 +3,13 @@ using Greg.Xrm.Command.Parsing;
 using Greg.Xrm.Command.Services.CommandHistory;
 using Greg.Xrm.Command.Services.Output;
 using Microsoft.Extensions.Logging;
+using Microsoft.Xrm.Sdk;
 using System.ComponentModel.DataAnnotations;
+using System.ServiceModel;
 
 namespace Greg.Xrm.Command
 {
-    public sealed class Bootstrapper
+	public sealed class Bootstrapper
 	{
 		private readonly ILogger log;
 		private readonly IOutput output;
@@ -113,7 +115,7 @@ namespace Greg.Xrm.Command
 					return;
 				}
 
-				var task = (Task?)method.Invoke(commandExecutor, new[] { command, cancellationToken });
+				var task = (Task<CommandResult>?)method.Invoke(commandExecutor, new[] { command, cancellationToken });
 				if (task == null)
 				{
 					this.output.WriteLine("Internal error, see logs for more info.", ConsoleColor.Red).WriteLine();
@@ -123,7 +125,7 @@ namespace Greg.Xrm.Command
 					return;
 				}
 
-				await task;
+				var result = await task;
 				this.output.WriteLine();
 
 				if (task.IsFaulted)
@@ -138,6 +140,46 @@ namespace Greg.Xrm.Command
 				{
 					this.output.WriteLine("Internal error, see logs for more info.", ConsoleColor.Red).WriteLine();
 					log.LogError("Command {commandType} has been cancelled", command.GetType());
+					Environment.Exit(-1);
+					return;
+				}
+
+				if (result.IsSuccess && result.Count > 0)
+				{
+					var padding = result.Max(_ => _.Key.Length);
+					this.output.WriteLine("Result: ");
+					foreach (var kvp in result)
+					{
+						this.output.Write("  ").Write(kvp.Key.PadRight(padding)).Write(": ").WriteLine(kvp.Value, ConsoleColor.Yellow);
+					}
+				}
+
+
+				if (!result.IsSuccess)
+				{
+					this.output.Write(result.ErrorMessage, ConsoleColor.Red).WriteLine();
+					log.LogError("Command {commandType} has error", command.GetType());
+
+					var ex = result.Exception;
+
+					if (ex != null)
+					{
+						log.LogError("Fault type: {faultType}", ex.GetType());
+						if (ex.GetType() != typeof(FaultException<OrganizationServiceFault>))
+						{
+							output
+								.Write("  Exception of type '", ConsoleColor.Red)
+								.Write(ex.GetType().FullName, ConsoleColor.Red)
+								.Write("'. ", ConsoleColor.Red);
+						}
+						if (ex.InnerException != null)
+						{
+							output.Write("  ").WriteLine(ex.InnerException.Message, ConsoleColor.Red);
+						}
+					}
+
+
+
 					Environment.Exit(-1);
 					return;
 				}

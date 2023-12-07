@@ -21,25 +21,19 @@ namespace Greg.Xrm.Command.Commands.UnifiedRouting
             organizationServiceRepository = organizationServiceFactory;
         }
 
-        public async Task ExecuteAsync(GetAgentStatusCommand command, CancellationToken cancellationToken)
+        public async Task<CommandResult> ExecuteAsync(GetAgentStatusCommand command, CancellationToken cancellationToken)
         {
-            try
-            {
-                DateTime timeQuery = DateTime.UtcNow;
-                if (!string.IsNullOrEmpty(command.DateTimeFilter) && !DateTime.TryParseExact(command.DateTimeFilter, "dd/MM/yyyy HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal, out timeQuery))
-                    throw new CommandException(CommandException.CommandInvalidArgumentValue, "Invalid format date provided. Expected dd/MM/yyyy.");
+			var timeQuery = DateTime.UtcNow;
+			if (!string.IsNullOrEmpty(command.DateTimeFilter) && !DateTime.TryParseExact(command.DateTimeFilter, "dd/MM/yyyy HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal, out timeQuery))
+				throw new CommandException(CommandException.CommandInvalidArgumentValue, "Invalid format date provided. Expected dd/MM/yyyy.");
 
+			this.output.Write($"Connecting to the current dataverse environment...");
+			var crm = await this.organizationServiceRepository.GetCurrentConnectionAsync();
+			this.output.WriteLine("Done", ConsoleColor.Green);
 
-                this.output.Write($"Connecting to the current dataverse environment...");
-                var crm = await this.organizationServiceRepository.GetCurrentConnectionAsync();
-
-                if (crm == null)
-                {
-                    output.WriteLine("No connection selected.");
-                    return;
-                }
-
-                this.output.WriteLine("Done", ConsoleColor.Green);
+			try
+			{
+                
 
                 output.WriteLine($"Checking agent status {command.AgentPrimaryEmail}");
 
@@ -49,7 +43,7 @@ namespace Greg.Xrm.Command.Commands.UnifiedRouting
                 if (result == null)
                 {
                     output.WriteLine("No records found for: ", ConsoleColor.Yellow).WriteLine(command.AgentPrimaryEmail, ConsoleColor.Yellow);
-                    return;
+                    return CommandResult.Success();
                 }
 
                 var status = result.GetAliasedValue<string>(msdyn_presence.msdyn_presencestatustext, nameof(msdyn_presence));
@@ -65,17 +59,12 @@ namespace Greg.Xrm.Command.Commands.UnifiedRouting
                     .Write("at ").WriteLine(timeQuery.ToLocalTime().ToString())
                     .Write("was ").WriteLine(status, repo.GetAgentStatusColor(statusOpt))
                     .Write("since ").WriteLine(dateStart.ToLocalTime().ToString());
-            }
-            catch (FaultException<OrganizationServiceFault> ex)
-            {
-                output.WriteLine()
-                    .Write("Error: ", ConsoleColor.Red)
-                    .WriteLine(ex.Message, ConsoleColor.Red);
 
-                if (ex.InnerException != null)
-                {
-                    output.Write("  ").WriteLine(ex.InnerException.Message, ConsoleColor.Red);
-                }
+                return CommandResult.Success();
+            }
+            catch (Exception ex)
+            {
+                return CommandResult.Fail(ex.Message, ex);
             }
         }
     }

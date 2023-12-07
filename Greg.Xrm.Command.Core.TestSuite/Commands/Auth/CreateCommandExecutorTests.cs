@@ -15,9 +15,11 @@ namespace Greg.Xrm.Command.Commands.Auth
 			var repository = new OrganizationServiceRepository(settingsRepository);
 			var executor = new CreateCommandExecutor(repository, output);
 
-			var command = new CreateCommand();
-			command.Name = "test";
-			command.ConnectionString = "";
+			var command = new CreateCommand
+			{
+				Name = "test",
+				ConnectionString = ""
+			};
 
 			var task = executor.ExecuteAsync(command, CancellationToken.None);
 

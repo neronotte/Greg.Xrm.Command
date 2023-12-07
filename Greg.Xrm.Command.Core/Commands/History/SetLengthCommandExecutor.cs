@@ -15,13 +15,14 @@ namespace Greg.Xrm.Command.Commands.History
 		}
 
 
-		public async Task ExecuteAsync(SetLengthCommand command, CancellationToken cancellationToken)
+		public async Task<CommandResult> ExecuteAsync(SetLengthCommand command, CancellationToken cancellationToken)
 		{
 			this.output.Write("Setting command history max length to ").Write(command.Length).Write("...");
 
 			await this.historyTracker.SetMaxLengthAsync(command.Length);
 
 			this.output.WriteLine("Done", ConsoleColor.Green);
+			return CommandResult.Success();
 		}
 	}
 }

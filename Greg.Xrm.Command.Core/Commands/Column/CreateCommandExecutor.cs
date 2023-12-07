@@ -9,7 +9,7 @@ using System.ServiceModel;
 
 namespace Greg.Xrm.Command.Commands.Column
 {
-    public class CreateCommandExecutor : ICommandExecutor<CreateCommand>
+	public class CreateCommandExecutor : ICommandExecutor<CreateCommand>
 	{
 		private readonly IOutput output;
 		private readonly IOrganizationServiceRepository organizationServiceRepository;
@@ -26,7 +26,7 @@ namespace Greg.Xrm.Command.Commands.Column
 		}
 
 
-		public async Task ExecuteAsync(CreateCommand command, CancellationToken cancellationToken)
+		public async Task<CommandResult> ExecuteAsync(CreateCommand command, CancellationToken cancellationToken)
 		{
 			this.output.Write($"Connecting to the current dataverse environment...");
 			var crm = await this.organizationServiceRepository.GetCurrentConnectionAsync();
@@ -40,36 +40,31 @@ namespace Greg.Xrm.Command.Commands.Column
 
 
 				var (publisherPrefix, currentSolutionName, customizationOptionValuePrefix) = await CheckSolutionAndReturnPublisherPrefixAsync(crm, command.SolutionName);
-				if (publisherPrefix == null) return;
-				if (currentSolutionName == null) return;
-				if (customizationOptionValuePrefix == null) return;
+				if (publisherPrefix == null) return CommandResult.Fail("No publisher prefix found");
+				if (currentSolutionName == null) return CommandResult.Fail("No solution name found");
+				if (customizationOptionValuePrefix == null) return CommandResult.Fail("No customization option value prefix found");
 
 
 				var builder = attributeMetadataBuilderFactory.CreateFor(command.AttributeType);
 				var attribute = await builder.CreateFromAsync(crm, command, defaultLanguageCode, publisherPrefix, customizationOptionValuePrefix.Value);
 
 				output.Write($"Creating attribute {attribute.SchemaName}...");
-				var request = new CreateAttributeRequest();
-				request.SolutionUniqueName = currentSolutionName;
-				request.EntityName = command.EntityName;
-				request.Attribute = attribute;
+				var request = new CreateAttributeRequest
+				{
+					SolutionUniqueName = currentSolutionName,
+					EntityName = command.EntityName,
+					Attribute = attribute
+				};
 
 				var response = (CreateAttributeResponse)await crm.ExecuteAsync(request, cancellationToken);
 
-				output.WriteLine("Done", ConsoleColor.Green)
-					.Write("  Column ID: ")
-					.WriteLine(response.AttributeId.ToString(), ConsoleColor.Yellow);
-			}
-			catch (FaultException<OrganizationServiceFault> ex)
-			{
-				output.WriteLine()
-					.Write("Error: ", ConsoleColor.Red)
-					.WriteLine(ex.Message, ConsoleColor.Red);
+				output.WriteLine("Done", ConsoleColor.Green);
 
-				if (ex.InnerException != null)
-				{
-					output.Write("  ").WriteLine(ex.InnerException.Message, ConsoleColor.Red);
-				}
+				return new CreateCommandResult(response.AttributeId);
+			}
+			catch (Exception ex)
+			{
+				return CommandResult.Fail(ex.Message, ex);
 			}
 		}
 
