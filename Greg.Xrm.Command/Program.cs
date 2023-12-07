@@ -2,6 +2,7 @@
 using Autofac.Extensions.DependencyInjection;
 using Greg.Xrm.Command;
 using Greg.Xrm.Command.Commands.Column.Builders;
+using Greg.Xrm.Command.Commands.Table.ExportMetadata;
 using Greg.Xrm.Command.Services.CommandHistory;
 using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
@@ -9,6 +10,9 @@ using Greg.Xrm.Command.Services.Pluralization;
 using Greg.Xrm.Command.Services.Settings;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using OfficeOpenXml;
+
+ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
 
 var serviceCollection = new ServiceCollection();
 serviceCollection.AddSingleton<ICommandLineArguments>(new CommandLineArguments(args));
@@ -19,8 +23,10 @@ serviceCollection.AddTransient<ISettingsRepository, SettingsRepository>();
 serviceCollection.AddSingleton<IOrganizationServiceRepository, OrganizationServiceRepository>();
 serviceCollection.AddSingleton<IOutput, OutputToConsole>();
 serviceCollection.AddTransient<IAttributeMetadataBuilderFactory, AttributeMetadataBuilderFactory>();
+serviceCollection.AddTransient<IExportMetadataStrategyFactory, ExportMetadataStrategyFactory>();
 serviceCollection.AddTransient<IHistoryTracker, HistoryTracker>();
 serviceCollection.AddTransient<Bootstrapper>();
+
 
 serviceCollection.AddAutofac();
 serviceCollection.AddLogging(logging =>

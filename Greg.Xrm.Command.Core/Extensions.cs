@@ -10,6 +10,27 @@ namespace Greg.Xrm.Command
 {
 	public static class Extensions
 	{
+
+
+		public static string SplitNameInPartsByCapitalLetters(this string? text)
+		{
+			if (string.IsNullOrWhiteSpace(text)) return string.Empty;
+
+			var sb = new StringBuilder();
+			char previousChar = 'a';
+			for (int i = 0; i < text.Length; i++)
+			{
+				var c = text[i];
+				var nextChar = i + 1 < text.Length ? text[i + 1] : 'a';
+				if (char.IsUpper(c)		
+					&& sb.Length > 0 
+					&& (!char.IsUpper(previousChar) || (char.IsUpper(previousChar) && !char.IsUpper(nextChar)))) sb.Append(' ');
+				sb.Append(c);
+				previousChar = c;
+			}
+			return sb.ToString();
+		}
+
 		public static string OnlyLettersNumbersOrUnderscore(this string? text)
 		{
 			if (string.IsNullOrWhiteSpace(text)) return string.Empty;
