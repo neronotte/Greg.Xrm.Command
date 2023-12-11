@@ -136,6 +136,8 @@ namespace Greg.Xrm.Command
 					return;
 				}
 
+
+
 				if (task.IsCanceled)
 				{
 					this.output.WriteLine("Internal error, see logs for more info.", ConsoleColor.Red).WriteLine();
@@ -144,15 +146,6 @@ namespace Greg.Xrm.Command
 					return;
 				}
 
-				if (result.IsSuccess && result.Count > 0)
-				{
-					var padding = result.Max(_ => _.Key.Length);
-					this.output.WriteLine("Result: ");
-					foreach (var kvp in result)
-					{
-						this.output.Write("  ").Write(kvp.Key.PadRight(padding)).Write(": ").WriteLine(kvp.Value, ConsoleColor.Yellow);
-					}
-				}
 
 
 				if (!result.IsSuccess)
@@ -178,10 +171,20 @@ namespace Greg.Xrm.Command
 						}
 					}
 
-
-
 					Environment.Exit(-1);
 					return;
+				}
+
+
+
+				if (result.IsSuccess && result.Count > 0)
+				{
+					var padding = result.Max(_ => _.Key.Length);
+					this.output.WriteLine("Result: ");
+					foreach (var kvp in result)
+					{
+						this.output.Write("  ").Write(kvp.Key.PadRight(padding)).Write(": ").WriteLine(kvp.Value, ConsoleColor.Yellow);
+					}
 				}
 
 				log.LogInformation("Command {commandType} has been executed", command.GetType());

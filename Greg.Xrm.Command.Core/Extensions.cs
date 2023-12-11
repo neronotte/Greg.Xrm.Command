@@ -22,8 +22,8 @@ namespace Greg.Xrm.Command
 			{
 				var c = text[i];
 				var nextChar = i + 1 < text.Length ? text[i + 1] : 'a';
-				if (char.IsUpper(c)		
-					&& sb.Length > 0 
+				if (char.IsUpper(c)
+					&& sb.Length > 0
 					&& (!char.IsUpper(previousChar) || (char.IsUpper(previousChar) && !char.IsUpper(nextChar)))) sb.Append(' ');
 				sb.Append(c);
 				previousChar = c;
@@ -138,6 +138,10 @@ namespace Greg.Xrm.Command
 				throw new CommandException(CommandException.CommandInvalidArgumentValue, $"The entity {table2} cannot be parent of an N-1 relationship");
 		}
 
+		public static async Task CheckManyToOneEligibilityAsync(this IOrganizationServiceAsync2 crm, string parentTable, string childTable)
+		{ 
+			await crm.CheckManyToOneEligibilityAsync(new[] { parentTable }, childTable); 
+		}
 
 		/// <summary>
 		/// Determines whether the given entities can participate in a many-to-one relationship.
@@ -145,16 +149,8 @@ namespace Greg.Xrm.Command
 		/// <param name="parentTable">The referenced table</param>
 		/// <param name="childTable">The referencing table</param>
 		/// <returns></returns>
-		public static async Task CheckManyToOneEligibilityAsync(this IOrganizationServiceAsync2 crm, string parentTable, string childTable)
+		public static async Task CheckManyToOneEligibilityAsync(this IOrganizationServiceAsync2 crm, string[] parentTables, string childTable)
 		{
-			var request1 = new CanBeReferencedRequest
-			{
-				EntityName = parentTable
-			};
-			var response1 = (CanBeReferencedResponse)await crm.ExecuteAsync(request1);
-			if (!response1.CanBeReferenced)
-				throw new CommandException(CommandException.CommandInvalidArgumentValue, $"The entity {parentTable} cannot be parent of an N-1 relationship");
-
 
 			var request2 = new CanBeReferencingRequest()
 			{
@@ -163,6 +159,19 @@ namespace Greg.Xrm.Command
 			var response2 = (CanBeReferencingResponse)await crm.ExecuteAsync(request2);
 			if (!response2.CanBeReferencing)
 				throw new CommandException(CommandException.CommandInvalidArgumentValue, $"The entity {childTable} cannot be child of an N-1 relationship");
+
+			foreach (var parentTable in parentTables)
+			{
+
+				var request1 = new CanBeReferencedRequest
+				{
+					EntityName = parentTable
+				};
+				var response1 = (CanBeReferencedResponse)await crm.ExecuteAsync(request1);
+				if (!response1.CanBeReferenced)
+					throw new CommandException(CommandException.CommandInvalidArgumentValue, $"The entity {parentTable} cannot be parent of an N-1 relationship");
+
+			}
 		}
 
 
@@ -244,7 +253,7 @@ namespace Greg.Xrm.Command
 
 			var value = entity.GetAttributeValue<AliasedValue>(attributeLogicalName);
 			if (value?.Value == null) return default;
-			
+
 			return (T)value.Value;
 		}
 
