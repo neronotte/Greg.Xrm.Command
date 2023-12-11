@@ -4,8 +4,8 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Greg.Xrm.Command.Commands.UnifiedRouting
 {
-	[Command("unifiedrouting", "queuestatus", HelpText = "List the agents in the queue provided. Optionally, you can specify a date in order to list agents status at that time. It uses the Dataverse environment selected using `pacx auth select`")]
-	[Alias("ur","queuestatus")]
+	[Command("unifiedrouting", "queueStatus", HelpText = "List the agents in the queue provided. Optionally, you can specify a date in order to list agents status at that time. It uses the Dataverse environment selected using `pacx auth select`")]
+	[Alias("ur","queueStatus")]
 	public class GetQueueStatusCommand : ICanProvideUsageExample
 	{
 		[Option("queue", "q", "Queue name used to perform the query.")]
