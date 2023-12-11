@@ -1,36 +1,29 @@
 ﻿using Microsoft.Xrm.Sdk.Metadata;
 using System.ComponentModel.DataAnnotations;
-using System.Runtime.Serialization;
 
 namespace Greg.Xrm.Command.Commands.Relationship
 {
-	[Command("rel", "create", "n1", HelpText = "Creates a new many-to-one relationship between two tables")]
-	public class CreateN1Command
+    [Command("rel", "create", "poly", HelpText = "Creates a new many-to-one **polymorphic** relationship between Dataverse tables")]
+	[Alias("rel", "create", "poli")]
+	public class CreatePolyCommand
 	{
 		[Option("child", "c", "The child table (N side of the relationship)")]
 		[Required]
 		public string ChildTable { get; set; } = string.Empty;
 
-		[Option("parent", "p", "The parent table (1 side of the relationship)")]
+		[Option("parents", "p", "A comma or pipe separated list of entities that will act as parent for the relationship")]
 		[Required]
-		public string ParentTable { get; set; } = string.Empty;
+		public string Parents { get; set; } = string.Empty;
 
-		[Option("relName", "rn", "The name of the relationship. If not provided, the relationship name will be created\nconcatenating the names of the child and the parent table, with a suffix (if specified).")]
-		public string? RelationshipName { get; set; }
-
-		[Option("relNameSuffix", "suff", "The suffix to append to the relationship name. If not provided, the relationship name will contain only\nthe concatenated names of the child and the parent table.")]
+		[Option("relNameSuffix", "suff", "The suffix to append to the relationship name. If not provided, will be set equal to the display name of the lookup attribute (only letters, numbers, or underscores, lowercase).")]
 		public string? RelationshipNameSuffix { get; set; }
-
-
-
-
 
 
 
 		[Option("cascadeAssign", "caass", "The behavior to apply to child records when the parent record is assigned to another owner\n(values: Cascade, Active, UserOwned, NoCascade)\n(default: NoCascade)", SuppressValuesHelp = true)]
 		public CascadeType? CascadeAssign { get; set; }
 
-		[Option("cascadeArchive", "caarc", "The behavior to apply to child records when the parent record is archived\n(not available via UI)\n(default: NoCascade)",SuppressValuesHelp = true)]
+		[Option("cascadeArchive", "caarc", "The behavior to apply to child records when the parent record is archived\n(not available via UI)\n(default: NoCascade)", SuppressValuesHelp = true)]
 		public CascadeType? CascadeArchive { get; set; }
 
 		[Option("cascadeShare", "cas", "The behavior to apply to child records when the parent record is shared\n(values: Cascade, Active, UserOwned, NoCascade)\n(default: NoCascade)", SuppressValuesHelp = true)]
@@ -45,7 +38,7 @@ namespace Greg.Xrm.Command.Commands.Relationship
 		[Option("cascadeMerge", "cam", "The behavior to apply to child records when the parent record is merged to another one\n(not available via UI)\n(default: NoCascade)", SuppressValuesHelp = true)]
 		public CascadeType? CascadeMerge { get; set; }
 
-		[Option("cascadeReparent", "car", "The behavior to apply to child records when the parent record is reparented\n(values: Cascade, Active, UserOwned, NoCascade)\n(default: NoCascade)", SuppressValuesHelp =true)]
+		[Option("cascadeReparent", "car", "The behavior to apply to child records when the parent record is reparented\n(values: Cascade, Active, UserOwned, NoCascade)\n(default: NoCascade)", SuppressValuesHelp = true)]
 		public CascadeType? CascadeReparent { get; set; }
 
 
@@ -68,8 +61,9 @@ namespace Greg.Xrm.Command.Commands.Relationship
 
 
 
-		[Option("lookupDisplayName", "ldn", "The display name of the lookup attribute. If not specified, the display name of the parent table is taken as default.")]
-		public string? LookupAttributeDisplayName { get; set; }
+		[Option("lookupDisplayName", "ldn", "The display name of the lookup attribute.")]
+		[Required]
+		public string LookupAttributeDisplayName { get; set; } = string.Empty;
 
 		[Option("lookupSchemaName", "lsn", "The schema name of the lookup attribute. If not specified, it is inferred by the display name.")]
 		public string? LookupAttributeSchemaName { get; set; }
@@ -83,6 +77,5 @@ namespace Greg.Xrm.Command.Commands.Relationship
 
 		[Option("solution", "s", HelpText = "The name of the unmanaged solution to which you want to add this relationship.")]
 		public string? SolutionName { get; set; }
-
 	}
 }

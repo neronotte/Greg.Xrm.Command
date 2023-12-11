@@ -1,27 +1,26 @@
 ﻿using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
-using Microsoft.PowerPlatform.Dataverse.Client;
-using Microsoft.Xrm.Sdk;
-using Microsoft.Xrm.Sdk.Messages;
 using Microsoft.Xrm.Sdk.Metadata;
 using Microsoft.Xrm.Sdk.Query;
-using System.ServiceModel;
+using Microsoft.Xrm.Sdk;
 using System.Text;
 
 namespace Greg.Xrm.Command.Commands.Relationship
 {
-	public class CreateN1CommandExecutor : ICommandExecutor<CreateN1Command>
+    public class CreatePolyCommandExecutor : ICommandExecutor<CreatePolyCommand>
 	{
 		private readonly IOutput output;
 		private readonly IOrganizationServiceRepository organizationServiceRepository;
 
-		public CreateN1CommandExecutor(IOutput output, IOrganizationServiceRepository organizationServiceRepository)
-        {
+		public CreatePolyCommandExecutor(IOutput output, IOrganizationServiceRepository organizationServiceRepository)
+		{
 			this.output = output;
 			this.organizationServiceRepository = organizationServiceRepository;
 		}
 
-		public async Task<CommandResult> ExecuteAsync(CreateN1Command command, CancellationToken cancellationToken)
+
+
+		public async Task<CommandResult> ExecuteAsync(CreatePolyCommand command, CancellationToken cancellationToken)
 		{
 			this.output.Write($"Connecting to the current dataverse environment...");
 			var crm = await this.organizationServiceRepository.GetCurrentConnectionAsync();
@@ -78,19 +77,29 @@ namespace Greg.Xrm.Command.Commands.Relationship
 				}
 
 
-				await crm.CheckManyToOneEligibilityAsync(command.ParentTable, command.ChildTable);
-
-
-				output.Write("Executing CreateOneToManyRequest...");
-
-				var request = new CreateOneToManyRequest
+				var parents = command.Parents.Split(",|".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
+				if (parents.Length == 0)
 				{
-					SolutionUniqueName = command.SolutionName,
-					OneToManyRelationship = new OneToManyRelationshipMetadata
+					return CommandResult.Fail($"The parent table must be specified. Current value: <{command.Parents}>");
+				}
+
+
+
+
+
+				await crm.CheckManyToOneEligibilityAsync(parents, command.ChildTable);
+
+
+				output.Write("Executing CreatePolymorphicLookupAttribute Request...");
+
+				var relationshipList = new List<OneToManyRelationshipMetadata>();
+				foreach (var parent in parents)
+				{
+					var r = new OneToManyRelationshipMetadata
 					{
 						ReferencingEntity = command.ChildTable,
-						ReferencedEntity = command.ParentTable,
-						SchemaName = CreateRelationshipSchemaName(command, publisherPrefix),
+						ReferencedEntity = parent,
+						SchemaName = CreateRelationshipSchemaName(command, parent, publisherPrefix),
 						AssociatedMenuConfiguration = new AssociatedMenuConfiguration
 						{
 							Behavior = command.MenuBehavior,
@@ -108,21 +117,37 @@ namespace Greg.Xrm.Command.Commands.Relationship
 							Merge = command.CascadeMerge,
 							Reparent = command.CascadeReparent
 						}
-					},
-					Lookup = new LookupAttributeMetadata
-					{
-						DisplayName = await CreateLookupDisplayNameAsync(crm, output, command, defaultLanguageCode),
-						SchemaName = CreateLookupSchemaName(command, publisherPrefix),
-						Description = null,
-						RequiredLevel = new AttributeRequiredLevelManagedProperty(command.RequiredLevel)
-					}
-				};
+					};
+					relationshipList.Add(r);
+				}
 
-				var response = (CreateOneToManyResponse)await crm.ExecuteAsync(request);
+
+
+				var request = new OrganizationRequest("CreatePolymorphicLookupAttribute");
+				request["SolutionUniqueName"] = currentSolutionName;
+				request["Lookup"] = new LookupAttributeMetadata
+				{
+					DisplayName = CreateLookupDisplayName(command, defaultLanguageCode),
+					SchemaName = CreateLookupSchemaName(command, publisherPrefix),
+					Description = null,
+					RequiredLevel = new AttributeRequiredLevelManagedProperty(command.RequiredLevel)
+				};
+				request["OneToManyRelationships"] = relationshipList.ToArray();
+
+				this.output.WriteLine("Done", ConsoleColor.Green);
+
+
+
+				this.output.Write("Executing request...");
+
+				var response = await crm.ExecuteAsync(request);
+
+				this.output.WriteLine("Done", ConsoleColor.Green);
+
 
 				var result = CommandResult.Success();
-				result["Relationship ID"] = response.RelationshipId;
-				result["Lookup Column ID"] = response.AttributeId;
+				result["Lookup Column ID"] = response["AttributeId"];
+				result["Relationship IDs"] = string.Join(", ", ((Guid[])response["RelationshipIds"]).Select(x => x.ToString()));
 				return result;
 			}
 			catch (Exception ex)
@@ -132,7 +157,7 @@ namespace Greg.Xrm.Command.Commands.Relationship
 		}
 
 
-		private static AssociatedMenuGroup? CreateMenuGroup(CreateN1Command command)
+		private static AssociatedMenuGroup? CreateMenuGroup(CreatePolyCommand command)
 		{
 			if (command.MenuBehavior == AssociatedMenuBehavior.DoNotDisplay)
 				return null;
@@ -140,7 +165,7 @@ namespace Greg.Xrm.Command.Commands.Relationship
 			return command.MenuGroup;
 		}
 
-		private static Label? CreateMenuLabel(CreateN1Command command, int defaultLanguageCode)
+		private static Label? CreateMenuLabel(CreatePolyCommand command, int defaultLanguageCode)
 		{
 			if (command.MenuBehavior != AssociatedMenuBehavior.UseLabel)
 				return null;
@@ -151,23 +176,14 @@ namespace Greg.Xrm.Command.Commands.Relationship
 			return new Label(command.MenuLabel, defaultLanguageCode);
 		}
 
-		private static string CreateRelationshipSchemaName(CreateN1Command command, string publisherPrefix)
+		private static string CreateRelationshipSchemaName(CreatePolyCommand command, string parentTable, string publisherPrefix)
 		{
-			if (!string.IsNullOrWhiteSpace(command.RelationshipName))
-			{
-				if (!command.RelationshipName.StartsWith(publisherPrefix + "_"))
-					throw new CommandException(CommandException.CommandInvalidArgumentValue, $"The relationship name must start with the publisher prefix. Current publisher prefix is <{publisherPrefix}>, provided value is <{command.RelationshipName.Split("_").FirstOrDefault()}>");
-
-				return command.RelationshipName;
-			}
-
-
 			var sb = new StringBuilder();
 			sb.Append(publisherPrefix);
 			sb.Append('_');
-			
 
-			var childTable = command.ChildTable?? string.Empty;
+
+			var childTable = command.ChildTable ?? string.Empty;
 			if (childTable.StartsWith(publisherPrefix + "_"))
 				sb.Append(childTable.AsSpan(publisherPrefix.Length + 1));
 			else
@@ -175,7 +191,6 @@ namespace Greg.Xrm.Command.Commands.Relationship
 
 			sb.Append('_');
 
-			var parentTable = command.ParentTable ?? string.Empty;
 			if (parentTable.StartsWith(publisherPrefix + "_"))
 				sb.Append(parentTable.AsSpan(publisherPrefix.Length + 1));
 			else
@@ -186,11 +201,18 @@ namespace Greg.Xrm.Command.Commands.Relationship
 				sb.Append('_');
 				sb.Append(command.RelationshipNameSuffix);
 			}
+			else 
+			{
+				var suffix = command.LookupAttributeDisplayName.OnlyLettersNumbersOrUnderscore();
+
+				sb.Append('_');
+				sb.Append(suffix);
+			}
 
 			return sb.ToString();
 		}
 
-		private static string CreateLookupSchemaName(CreateN1Command command, string publisherPrefix)
+		private static string CreateLookupSchemaName(CreatePolyCommand command, string publisherPrefix)
 		{
 			if (!string.IsNullOrWhiteSpace(command.LookupAttributeSchemaName))
 			{
@@ -200,56 +222,20 @@ namespace Greg.Xrm.Command.Commands.Relationship
 				return command.LookupAttributeSchemaName;
 			}
 
-			if (!string.IsNullOrWhiteSpace(command.LookupAttributeDisplayName))
-			{
-				var namePart = command.LookupAttributeDisplayName.OnlyLettersNumbersOrUnderscore();
-				if (string.IsNullOrWhiteSpace(namePart))
-					throw new CommandException(CommandException.CommandRequiredArgumentNotProvided, $"Is not possible to infer the primary attribute schema name from the display name, please explicit a primary attribute schema name");
 
-				if (!namePart.EndsWith("id")) namePart += "id";
+			var namePart = command.LookupAttributeDisplayName.OnlyLettersNumbersOrUnderscore();
+			if (string.IsNullOrWhiteSpace(namePart))
+				throw new CommandException(CommandException.CommandRequiredArgumentNotProvided, $"Is not possible to infer the primary attribute schema name from the display name, please explicit a primary attribute schema name");
 
-				return $"{publisherPrefix}_{namePart}";
-			}
+			if (!namePart.EndsWith("id")) namePart += "id";
 
-			if (command.ParentTable == null)
-				throw new CommandException(CommandException.CommandRequiredArgumentNotProvided, $"Is not possible to infer the primary attribute schema name from the parent table name, please explicit a primary attribute schema name");
-
-			if (command.ParentTable.StartsWith(publisherPrefix + "_")) 
-				return $"{command.ParentTable}id";
-
-			if (!command.ParentTable.Contains('_'))
-				return $"{publisherPrefix}_{command.ParentTable}id";
-
-			var parentTableParts = command.ParentTable.Split("_");
-			if (parentTableParts.Length != 2)
-				throw new CommandException(CommandException.CommandRequiredArgumentNotProvided, $"Is not possible to infer the primary attribute schema name from the parent table name, please explicit a primary attribute schema name");
-
-			if (string.IsNullOrWhiteSpace(parentTableParts[1]))
-				throw new CommandException(CommandException.CommandRequiredArgumentNotProvided, $"Is not possible to infer the primary attribute schema name from the parent table name, please explicit a primary attribute schema name");
-
-			return $"{publisherPrefix}_{parentTableParts[1]}id";
+			return $"{publisherPrefix}_{namePart}";
 		}
 
 
-		private static async Task<Label> CreateLookupDisplayNameAsync(IOrganizationServiceAsync2 crm, IOutput output, CreateN1Command command, int defaultLanguageCode)
+		private static Label CreateLookupDisplayName(CreatePolyCommand command, int defaultLanguageCode)
 		{
-			if (!string.IsNullOrWhiteSpace(command.LookupAttributeDisplayName))
-			{
-				return new Label(command.LookupAttributeDisplayName, defaultLanguageCode);
-			}
-
-			output.Write("Lookup attribute display name has not been specified. Retrieving parent table display name...");
-
-			var parentTableName = command.ParentTable;
-			var request = new RetrieveEntityRequest
-			{
-				LogicalName = parentTableName,
-				EntityFilters = Microsoft.Xrm.Sdk.Metadata.EntityFilters.Entity,
-				RetrieveAsIfPublished = false
-			};
-
-			var response = (RetrieveEntityResponse)await crm.ExecuteAsync(request);
-			return response.EntityMetadata.DisplayName;
+			return new Label(command.LookupAttributeDisplayName, defaultLanguageCode);
 		}
 	}
 }
