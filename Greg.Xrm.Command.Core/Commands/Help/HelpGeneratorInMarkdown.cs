@@ -170,6 +170,32 @@ namespace Greg.Xrm.Command.Commands.Help
 			using (var writer = new MarkdownWriter(fileName))
 			{
 				node.WriteNamespaceHelp(writer);
+
+				var childNamespaces = node.Children.Where(x => x.Command is null).ToList();
+				if (childNamespaces.Count > 0)
+				{
+					writer.WriteTitle2("Namespaces");
+
+					writer.WriteTable(childNamespaces,
+						() => new[] { "Namespace", "Description" },
+						child => new[] { $"[**{assemblyName} {child}**]({assemblyName}-{child.ToString().Replace(" ", "-")})",
+						child.Help ?? string.Empty });
+
+					writer.WriteLine();
+				}
+
+				var childCommands = node.Children.Where(x => x.Command is not null).ToList();
+				if (childCommands.Count > 0)
+				{
+					writer.WriteTitle2("Commands");
+
+					writer.WriteTable(childCommands,
+						() => new[] { "Command", "Description" },
+						child => new[] { $"[**{assemblyName} {child}**]({assemblyName}-{child.ToString().Replace(" ", "-")})",
+					child.Command?.HelpText ?? string.Empty });
+
+					writer.WriteLine();
+				}
 			}
 			this.output.WriteLine("Done", ConsoleColor.Green);
 		}
