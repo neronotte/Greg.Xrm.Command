@@ -51,7 +51,7 @@ namespace Greg.Xrm.Command.Commands.Help
 			
 			using var writer = new MarkdownWriter(fileName);
 
-			writer.WriteTitle1("Greg.Xrm.Command, aka PACX");
+			writer.WriteTitle1("Greg.Xrm.Command ⁓ aka PACX");
 
 			writer.WriteParagraph("PACX is a command line tool to interact with Dynamics 365 and Power Platform environments. It can be used to automate tasks that would otherwise require a lot of manual work. It can be also used to perform tasks that are not possible to do with the standard user interface.");
 
