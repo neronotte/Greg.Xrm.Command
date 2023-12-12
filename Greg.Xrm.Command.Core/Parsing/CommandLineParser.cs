@@ -69,13 +69,8 @@ namespace Greg.Xrm.Command.Parsing
 					var node = nodeList.Find(x => x.Verb == command.Verbs[i]);
 					if (node == null)
 					{
-						node = new VerbNode(command.Verbs[i], parent);
-
-						if (helpers.Find(x => x.Verbs.SequenceEqual(currentVerbs, StringComparer.OrdinalIgnoreCase)) is INamespaceHelper helper)
-						{
-							node.Help = helper.GetHelp();
-						}
-
+						var helper = helpers.Find(x => x.Verbs.SequenceEqual(currentVerbs, StringComparer.OrdinalIgnoreCase)) ?? NamespaceHelper.Empty;
+						node = new VerbNode(command.Verbs[i], parent, helper);
 						nodeList.Add(node);
 					}
 

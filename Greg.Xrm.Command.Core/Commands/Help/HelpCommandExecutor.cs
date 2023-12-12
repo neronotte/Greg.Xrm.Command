@@ -20,7 +20,7 @@ namespace Greg.Xrm.Command.Commands.Help
 			{
 				this.output.WriteLine("Generating help files...");
 				
-				var generator = new HelpGeneratorInMarkdown(this.output, command.CommandList, command.CommandTree, command.ExportHelpPath);
+				var generator = new HelpGeneratorInMarkdown(this.output, command.CommandTree, command.ExportHelpPath);
 				generator.GenerateMarkdownHelp();
 
 				return Task.FromResult(CommandResult.Success());
