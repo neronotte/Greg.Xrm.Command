@@ -8,18 +8,15 @@ namespace Greg.Xrm.Command.Commands.Help
     public class HelpGeneratorInMarkdown
 	{
 		private readonly IOutput output;
-		private readonly IReadOnlyList<CommandDefinition> commandList;
 		private readonly IReadOnlyList<VerbNode> commandTree;
 		private string exportHelpPath;
 
 		public HelpGeneratorInMarkdown(
 			IOutput output, 
-			IReadOnlyList<CommandDefinition> commandList, 
 			IReadOnlyList<VerbNode> commandTree, 
 			string exportHelpPath)
 		{
 			this.output = output;
-			this.commandList = commandList;
 			this.commandTree = commandTree;
 			this.exportHelpPath = exportHelpPath;
 		}
@@ -41,12 +38,7 @@ namespace Greg.Xrm.Command.Commands.Help
 
 			CreateReadme(directory);
 
-			foreach (var command in this.commandList)
-			{
-				CreateCommand(directory, command);
-			}
-
-			CreateSidebar(directory, this.commandList);
+			CreateSidebar(directory);
 		}
 
 		private void CreateReadme(DirectoryInfo directory)
@@ -58,14 +50,72 @@ namespace Greg.Xrm.Command.Commands.Help
 			writer.WriteTitle1("Greg.Xrm.Command");
 		}
 
+		private void CreateSidebar(DirectoryInfo directory)
+		{
+			var assemblyName = Assembly.GetEntryAssembly()?.GetName().Name ?? string.Empty;
 
 
-		private void CreateCommand(DirectoryInfo directory, CommandDefinition command)
+			var fileName = Path.Combine(directory.FullName, $"_Sidebar.md");
+			this.output.Write($"Generating {fileName}...");
+			using (var writer = new MarkdownWriter(fileName))
+			{
+				writer.WriteTitle3("Command list");
+
+				foreach (var node in this.commandTree.OrderBy(x => x.Verb))
+				{
+					WriteNode(writer, directory, assemblyName, node, 0);
+				}
+			}
+			this.output.WriteLine("Done", ConsoleColor.Green);
+		}
+
+		private void WriteNode(MarkdownWriter writer, DirectoryInfo directory, string assemblyName, VerbNode node, int indent)
+		{
+			if (node.IsHidden) return;
+
+			var indentString = indent == 0 ? string.Empty : new string(' ', indent * 2);
+			if (node.Command is not null)
+			{
+				writer.Write(indentString)
+						.Write("- [")
+						.Write(assemblyName)
+						.Write(" ")
+						.Write(node.ToString())
+						.Write("](")
+						.Write(assemblyName)
+						.Write("-")
+						.Write(node.ToString().Replace(' ', '-'))
+						.WriteLine(")");
+
+				CreateCommand(directory, assemblyName, node.Command);
+			}
+			else
+			{
+				writer.Write(indentString)
+					.Write("- [")
+					.Write(assemblyName)
+					.Write(" ")
+					.Write(node.ToString())
+					.Write("](")
+					.Write(assemblyName)
+					.Write("-")
+					.Write(node.ToString().Replace(' ', '-'))
+					.WriteLine(")");
+
+				CreateNamespace(directory, assemblyName, node);
+			}
+
+			foreach (var child in node.Children.OrderBy(x => x.Verb))
+			{
+				WriteNode(writer, directory, assemblyName, child, indent + 1);
+			}
+		}
+
+
+		private void CreateCommand(DirectoryInfo directory, string assemblyName, CommandDefinition command)
 		{
 			if (command.Hidden)
 				return;
-
-			var assemblyName = Assembly.GetEntryAssembly()?.GetName().Name ?? string.Empty;
 
 			var fileName = Path.Combine(directory.FullName, $"{assemblyName}-{string.Join("-", command.Verbs)}.md");
 
@@ -112,58 +162,18 @@ namespace Greg.Xrm.Command.Commands.Help
 			this.output.WriteLine("Done", ConsoleColor.Green);
 		}
 
-
-
-		private void CreateSidebar(DirectoryInfo directory, IReadOnlyList<CommandDefinition> commandList)
+		private void CreateNamespace(DirectoryInfo directory, string assemblyName, VerbNode node)
 		{
-			var assemblyName = Assembly.GetEntryAssembly()?.GetName().Name ?? string.Empty;
+			var fileName = Path.Combine(directory.FullName, $"{assemblyName}-{node.ToString().Replace(' ', '-')}.md");
 
-
-			var fileName = Path.Combine(directory.FullName, $"_Sidebar.md");
 			this.output.Write($"Generating {fileName}...");
 			using (var writer = new MarkdownWriter(fileName))
 			{
-				writer.WriteTitle3("Command list");
-
-				foreach (var node in this.commandTree.OrderBy(x => x.Verb))
-				{
-					WriteNode(writer, assemblyName, node, 0);
-				}
+				node.WriteNamespaceHelp(writer);
 			}
 			this.output.WriteLine("Done", ConsoleColor.Green);
 		}
 
-		private void WriteNode(MarkdownWriter writer, string assemblyName, VerbNode node, int indent)
-		{
-			var indentString = indent == 0 ? string.Empty : new string(' ', indent * 2);
-			if (node.Command is not null)
-			{
-				writer.Write(indentString)
-					.Write("- [")
-					.Write(assemblyName)
-					.Write(" ")
-					.Write(node.ToString())
-					.Write("](")
-					.Write(assemblyName)
-					.Write("-")
-					.Write(node.ToString().Replace(' ', '-'))
-					.WriteLine(")");
-			}
-			else
-			{
-				writer.Write(indentString)
-					.Write("- ")
-					.Write(assemblyName)
-					.Write(" ")
-					.Write(node.ToString())
-					.WriteLine();
-			}
-
-			foreach (var child in node.Children.OrderBy(x => x.Verb))
-			{
-				WriteNode(writer, assemblyName, child, indent + 1);
-			}
-		}
 
 
 		private static string GetValuesFor(OptionDefinition option)

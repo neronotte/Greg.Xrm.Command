@@ -1,19 +1,24 @@
-﻿namespace Greg.Xrm.Command.Parsing
+﻿using Greg.Xrm.Command.Services;
+
+namespace Greg.Xrm.Command.Parsing
 {
 	/// <summary>
 	/// Represents a node in the verb tree.
 	/// </summary>
 	public class VerbNode
 	{
+		private readonly INamespaceHelper helper;
+
 		/// <summary>
 		/// Creates a new instance of <see cref="VerbNode"/>.
 		/// </summary>
 		/// <param name="verb">The current level of the verb</param>
 		/// <param name="parent">The parent node (optional)</param>
-		public VerbNode(string verb, VerbNode? parent = null)
+		public VerbNode(string verb, VerbNode? parent = null, INamespaceHelper? helper = null)
 		{
 			this.Verb = verb;
 			this.Parent = parent;
+			this.helper = helper ?? NamespaceHelper.Empty;
 		}
 
 		/// <summary>
@@ -29,7 +34,7 @@
 		/// <summary>
 		///	Gets the help for the current verb, if provided.
 		/// </summary>
-		public string Help { get; set; } = string.Empty;
+		public string Help => this.helper.GetHelp();
 
 		/// <summary>
 		/// Gets the list of children of the current verb.
@@ -42,7 +47,7 @@
 		/// Valid only for leaf nodes.
 		/// </summary>
 		public CommandDefinition? Command { get; set; }
-
+		
 
 		/// <summary>
 		/// Indicates whether the current verb should be hidden from the help.
@@ -56,6 +61,11 @@
 
 				return this.Children.TrueForAll(_ => _.IsHidden);
 			}
+		}
+
+		public void WriteNamespaceHelp(MarkdownWriter writer)
+		{
+			this.helper.WriteHelp(writer);
 		}
 
 
