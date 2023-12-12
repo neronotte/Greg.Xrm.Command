@@ -31,7 +31,10 @@ namespace Greg.Xrm.Command.Commands.Column
 		[Option("stringFormat", "sf", HelpText = "The format of the string attribute (default: Text).")]
 		public StringFormat StringFormat { get; set; } = StringFormat.Text;
 
-		[Option("intFormat", "if", HelpText = "For whole number type columns indicates the integer format for the column.(default: None)")]
+        [Option("memoFormat", "mf", HelpText = "The format of the memo attribute (default: Text).")]
+        public MemoFormatName MemoFormat { get; set; } = MemoFormatName.Text;
+
+        [Option("intFormat", "if", HelpText = "For whole number type columns indicates the integer format for the column.(default: None)")]
 		public IntegerFormat IntegerFormat { get; set; } = IntegerFormat.None;
 
 		[Option("requiredLevel", "r", HelpText = "The required level of the attribute.")]
@@ -70,11 +73,12 @@ namespace Greg.Xrm.Command.Commands.Column
 		[Option("imeMode", "ime", HelpText = "For number type columns indicates the input method editor (IME) mode for the column.", DefaultValue = ImeMode.Disabled)]
 		public ImeMode ImeMode { get; set; } = ImeMode.Disabled;
 
-		[Option("dateTimeBehavior", "dtb", HelpText = "For DateTime type columns indicates the DateTimeBehavior of the column.", DefaultValue = DateTimeBehavior1.UserLocal)]
+		[Option("dateTimeBehavior", "dtb", HelpText = "For DateTime type columns indicates the DateTimeBehavior of the column.", DefaultValue = DateTimeBehavior1.UserLocal	)]
 		public DateTimeBehavior1 DateTimeBehavior { get; set; } = DateTimeBehavior1.UserLocal;
 
-		[Option("dateTimeFormat", "dtf", HelpText = "For DateTime type columns indicates the DateTimeFormat of the column.", DefaultValue = DateTimeFormat.DateAndTime)]
-		public DateTimeFormat DateTimeFormat { get; set; } = DateTimeFormat.DateAndTime;
+		[Option("dateTimeFormat", "dtf", HelpText = "For DateTime type columns indicates the DateTimeFormat of the column.", DefaultValue = DateTimeFormat.DateAndTime	)]
+
+        public DateTimeFormat DateTimeFormat { get; set; } = DateTimeFormat.DateAndTime;
 
 		[Option("trueLabel", "tl", HelpText = "For Boolean type columns that represents the Label to be associated to the \"True\" value.", DefaultValue = "True")]
         public string? TrueLabel { get; set; } = "True";
