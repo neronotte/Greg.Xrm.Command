@@ -5,15 +5,15 @@ using System.Reflection;
 
 namespace Greg.Xrm.Command.Commands.Help
 {
-    public class HelpGeneratorInMarkdown
+	public class HelpGeneratorInMarkdown
 	{
 		private readonly IOutput output;
 		private readonly IReadOnlyList<VerbNode> commandTree;
 		private string exportHelpPath;
 
 		public HelpGeneratorInMarkdown(
-			IOutput output, 
-			IReadOnlyList<VerbNode> commandTree, 
+			IOutput output,
+			IReadOnlyList<VerbNode> commandTree,
 			string exportHelpPath)
 		{
 			this.output = output;
@@ -30,7 +30,7 @@ namespace Greg.Xrm.Command.Commands.Help
 			}
 
 			this.output.WriteLine("Generating help files into " + this.exportHelpPath);
-				
+
 
 			var directory = new DirectoryInfo(this.exportHelpPath);
 			if (!directory.Exists)
@@ -121,7 +121,7 @@ namespace Greg.Xrm.Command.Commands.Help
 
 
 			this.output.Write($"Generating {fileName}...");
-			using(var writer = new MarkdownWriter(fileName))
+			using (var writer = new MarkdownWriter(fileName))
 			{
 				writer.WriteParagraph(command.HelpText);
 
@@ -147,10 +147,10 @@ namespace Greg.Xrm.Command.Commands.Help
 				if (command.Options.Count > 0)
 				{
 					writer.WriteTitle2("Arguments");
-					writer.WriteTable(command.Options, 
+					writer.WriteTable(command.Options,
 						() => new[] { "Long Name", "Short Name", "Required?", "Description", "Default value", "Valid values" },
-						option => new [] {
-							option.Option.LongName.ToMarkdownCode(), 
+						option => new[] {
+							option.Option.LongName.ToMarkdownCode(),
 							option.Option.ShortName.ToMarkdownCode(),
 							option.IsRequired ? "Y" : "N",
 							option.Option.HelpText?.Replace("\n", " ") ?? string.Empty,
@@ -179,7 +179,7 @@ namespace Greg.Xrm.Command.Commands.Help
 					writer.WriteTable(childNamespaces,
 						() => new[] { "Namespace", "Description" },
 						child => new[] { $"[**{assemblyName} {child}**]({assemblyName}-{child.ToString().Replace(" ", "-")})",
-						child.Help ?? string.Empty });
+						Clean(child.Help ?? string.Empty) });
 
 					writer.WriteLine();
 				}
@@ -192,7 +192,7 @@ namespace Greg.Xrm.Command.Commands.Help
 					writer.WriteTable(childCommands,
 						() => new[] { "Command", "Description" },
 						child => new[] { $"[**{assemblyName} {child}**]({assemblyName}-{child.ToString().Replace(" ", "-")})",
-					child.Command?.HelpText ?? string.Empty });
+						Clean(child.Command?.HelpText ?? string.Empty) });
 
 					writer.WriteLine();
 				}
@@ -200,7 +200,13 @@ namespace Greg.Xrm.Command.Commands.Help
 			this.output.WriteLine("Done", ConsoleColor.Green);
 		}
 
+		private static string Clean(string v)
+		{
+			if (string.IsNullOrEmpty(v))
+				return v;
 
+			return v.Replace("\n", " ").Replace("\r", " ").Replace("  ", " ");
+		}
 
 		private static string GetValuesFor(OptionDefinition option)
 		{
