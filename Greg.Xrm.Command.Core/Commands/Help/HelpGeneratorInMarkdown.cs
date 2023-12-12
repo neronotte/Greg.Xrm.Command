@@ -214,9 +214,23 @@ namespace Greg.Xrm.Command.Commands.Help
 
 				return string.Join(", ", Enum.GetNames(option.Property.PropertyType));
 			}
-				
 
-			return option.Property.PropertyType.Name;
+			var nullableProperty = Nullable.GetUnderlyingType(option.Property.PropertyType);
+			if (nullableProperty is null)
+			{
+				return option.Property.PropertyType.Name;
+			}
+
+
+			if (nullableProperty.IsEnum)
+			{
+				if (option.Option.SuppressValuesHelp)
+					return "see description";
+
+				return string.Join(", ", Enum.GetNames(nullableProperty));
+			}
+
+			return nullableProperty.Name;
 		}
 	}
 }
