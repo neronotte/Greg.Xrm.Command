@@ -2,6 +2,7 @@
 using Greg.Xrm.Command.Services;
 using Greg.Xrm.Command.Services.Output;
 using System.Reflection;
+using System.Xml.Linq;
 
 namespace Greg.Xrm.Command.Commands.Help
 {
@@ -43,11 +44,26 @@ namespace Greg.Xrm.Command.Commands.Help
 
 		private void CreateReadme(DirectoryInfo directory)
 		{
+			var assemblyName = Assembly.GetEntryAssembly()?.GetName().Name ?? string.Empty;
 			var fileName = Path.Combine(directory.FullName, $"Home.md");
 
 			this.output.Write($"Generating {fileName}...");
+			
 			using var writer = new MarkdownWriter(fileName);
-			writer.WriteTitle1("Greg.Xrm.Command");
+
+			writer.WriteTitle1("Greg.Xrm.Command, aka PACX");
+
+			writer.WriteParagraph("PACX is a command line tool to interact with Dynamics 365 and Power Platform environments. It can be used to automate tasks that would otherwise require a lot of manual work. It can be also used to perform tasks that are not possible to do with the standard user interface.");
+
+			writer.WriteTitle2("Command Groups");
+
+			var childNamespaces = this.commandTree.Where(x => x.Command is null).ToList();
+			writer.WriteTable(childNamespaces,
+				() => new[] { "Command group", "Description" },
+				child => new[] { $"[**{assemblyName} {child}**]({assemblyName}-{child.ToString().Replace(" ", "-")})",
+				Clean(child.Help ?? string.Empty) });
+
+			writer.WriteLine();
 		}
 
 		private void CreateSidebar(DirectoryInfo directory)
@@ -174,10 +190,10 @@ namespace Greg.Xrm.Command.Commands.Help
 				var childNamespaces = node.Children.Where(x => x.Command is null).ToList();
 				if (childNamespaces.Count > 0)
 				{
-					writer.WriteTitle2("Namespaces");
+					writer.WriteTitle2("Command Groups");
 
 					writer.WriteTable(childNamespaces,
-						() => new[] { "Namespace", "Description" },
+						() => new[] { "Command Group", "Description" },
 						child => new[] { $"[**{assemblyName} {child}**]({assemblyName}-{child.ToString().Replace(" ", "-")})",
 						Clean(child.Help ?? string.Empty) });
 
