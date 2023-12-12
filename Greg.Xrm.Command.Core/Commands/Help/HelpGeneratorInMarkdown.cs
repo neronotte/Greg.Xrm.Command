@@ -2,18 +2,19 @@
 using Greg.Xrm.Command.Services;
 using Greg.Xrm.Command.Services.Output;
 using System.Reflection;
+using System.Xml.Linq;
 
 namespace Greg.Xrm.Command.Commands.Help
 {
-    public class HelpGeneratorInMarkdown
+	public class HelpGeneratorInMarkdown
 	{
 		private readonly IOutput output;
 		private readonly IReadOnlyList<VerbNode> commandTree;
 		private string exportHelpPath;
 
 		public HelpGeneratorInMarkdown(
-			IOutput output, 
-			IReadOnlyList<VerbNode> commandTree, 
+			IOutput output,
+			IReadOnlyList<VerbNode> commandTree,
 			string exportHelpPath)
 		{
 			this.output = output;
@@ -30,7 +31,7 @@ namespace Greg.Xrm.Command.Commands.Help
 			}
 
 			this.output.WriteLine("Generating help files into " + this.exportHelpPath);
-				
+
 
 			var directory = new DirectoryInfo(this.exportHelpPath);
 			if (!directory.Exists)
@@ -43,11 +44,26 @@ namespace Greg.Xrm.Command.Commands.Help
 
 		private void CreateReadme(DirectoryInfo directory)
 		{
+			var assemblyName = Assembly.GetEntryAssembly()?.GetName().Name ?? string.Empty;
 			var fileName = Path.Combine(directory.FullName, $"Home.md");
 
 			this.output.Write($"Generating {fileName}...");
+			
 			using var writer = new MarkdownWriter(fileName);
-			writer.WriteTitle1("Greg.Xrm.Command");
+
+			writer.WriteTitle1("Greg.Xrm.Command ⁓ aka PACX");
+
+			writer.WriteParagraph("PACX is a command line tool to interact with Dynamics 365 and Power Platform environments. It can be used to automate tasks that would otherwise require a lot of manual work. It can be also used to perform tasks that are not possible to do with the standard user interface.");
+
+			writer.WriteTitle2("Command Groups");
+
+			var childNamespaces = this.commandTree.Where(x => x.Command is null).ToList();
+			writer.WriteTable(childNamespaces,
+				() => new[] { "Command group", "Description" },
+				child => new[] { $"[**{assemblyName} {child}**]({assemblyName}-{child.ToString().Replace(" ", "-")})",
+				Clean(child.Help ?? string.Empty) });
+
+			writer.WriteLine();
 		}
 
 		private void CreateSidebar(DirectoryInfo directory)
@@ -121,7 +137,7 @@ namespace Greg.Xrm.Command.Commands.Help
 
 
 			this.output.Write($"Generating {fileName}...");
-			using(var writer = new MarkdownWriter(fileName))
+			using (var writer = new MarkdownWriter(fileName))
 			{
 				writer.WriteParagraph(command.HelpText);
 
@@ -147,10 +163,10 @@ namespace Greg.Xrm.Command.Commands.Help
 				if (command.Options.Count > 0)
 				{
 					writer.WriteTitle2("Arguments");
-					writer.WriteTable(command.Options, 
+					writer.WriteTable(command.Options,
 						() => new[] { "Long Name", "Short Name", "Required?", "Description", "Default value", "Valid values" },
-						option => new [] {
-							option.Option.LongName.ToMarkdownCode(), 
+						option => new[] {
+							option.Option.LongName.ToMarkdownCode(),
 							option.Option.ShortName.ToMarkdownCode(),
 							option.IsRequired ? "Y" : "N",
 							option.Option.HelpText?.Replace("\n", " ") ?? string.Empty,
@@ -174,12 +190,12 @@ namespace Greg.Xrm.Command.Commands.Help
 				var childNamespaces = node.Children.Where(x => x.Command is null).ToList();
 				if (childNamespaces.Count > 0)
 				{
-					writer.WriteTitle2("Namespaces");
+					writer.WriteTitle2("Command Groups");
 
 					writer.WriteTable(childNamespaces,
-						() => new[] { "Namespace", "Description" },
+						() => new[] { "Command Group", "Description" },
 						child => new[] { $"[**{assemblyName} {child}**]({assemblyName}-{child.ToString().Replace(" ", "-")})",
-						child.Help ?? string.Empty });
+						Clean(child.Help ?? string.Empty) });
 
 					writer.WriteLine();
 				}
@@ -192,7 +208,7 @@ namespace Greg.Xrm.Command.Commands.Help
 					writer.WriteTable(childCommands,
 						() => new[] { "Command", "Description" },
 						child => new[] { $"[**{assemblyName} {child}**]({assemblyName}-{child.ToString().Replace(" ", "-")})",
-					child.Command?.HelpText ?? string.Empty });
+						Clean(child.Command?.HelpText ?? string.Empty) });
 
 					writer.WriteLine();
 				}
@@ -200,7 +216,13 @@ namespace Greg.Xrm.Command.Commands.Help
 			this.output.WriteLine("Done", ConsoleColor.Green);
 		}
 
+		private static string Clean(string v)
+		{
+			if (string.IsNullOrEmpty(v))
+				return v;
 
+			return v.Replace("\n", " ").Replace("\r", " ").Replace("  ", " ");
+		}
 
 		private static string GetValuesFor(OptionDefinition option)
 		{
