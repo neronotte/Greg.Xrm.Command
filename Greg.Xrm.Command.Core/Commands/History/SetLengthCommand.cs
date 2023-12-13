@@ -2,7 +2,9 @@
 
 namespace Greg.Xrm.Command.Commands.History
 {
-	[Command("history", "setLenght", HelpText = "Allows to specify the lenght of the command history that will be persisted.")]
+	[Command("history", "setLength", HelpText = "Allows to specify the length of the command history that will be persisted.")]
+	[Alias("history", "set-length")]
+	[Alias("history", "len")]
 	public class SetLengthCommand
 	{
 		[Option("length", "l", HelpText = "The maximum number of commands to keep in history.")]

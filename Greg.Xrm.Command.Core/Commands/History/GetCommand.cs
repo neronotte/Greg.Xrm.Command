@@ -1,9 +1,8 @@
-﻿using Microsoft.Extensions.Options;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace Greg.Xrm.Command.Commands.History
 {
-	[Command("history", "get", HelpText = "Get the list of commands executed in the past")]
+    [Command("history", "get", HelpText = "Get the list of commands executed in the past")]
 	[Alias("get-history")]
 	[Alias("get", "history")]
     public class GetCommand
