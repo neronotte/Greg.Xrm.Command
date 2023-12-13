@@ -58,9 +58,16 @@ jobs:
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         fetch-depth: 0
+    
+    - name: Checkout documentation from wiki
+      uses: actions/checkout@v4
+      with:
+        repository: neronotte/Greg.Xrm.Command.wiki
+        token: ${{ secrets.GH_TOKEN }}
+        path: ${{ github.workspace }}/wiki
 
     # Install the .NET Core workload
     - name: Install .NET Core
@@ -91,13 +98,13 @@ jobs:
         
     - name: Update Wiki content
       run: |
-        .\Greg.Xrm.Command\bin\Release\net7.0\pacx.exe --export $GITHUB_WORKSPACE/wiki
+        .\Greg.Xrm.Command\bin\Release\net7.0\pacx.exe --export ${{ github.workspace }}/wiki
 
     - name: Push documentation to wiki
       uses: actions4gh/deploy-wiki@v1
       with:
         token: ${{ secrets.GH_TOKEN }}
-        path: D:\wiki
+        path: ${{ github.workspace }}/wiki
         
     - name: Upload NuGet Package as artifact
       uses: actions/upload-artifact@v3

@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Greg.Xrm.Command.Commands.Solution
 {
-	[Command("solution", "create", HelpText = "Creates a new unmanaged solution in the current Dataverse environment,\ncreating also the publisher [if needed].")]
+	[Command("solution", "create", HelpText = "Creates a new unmanaged solution in the current Dataverse environment,\nalso creating the publisher, if needed.")]
 	public class CreateCommand
 	{
 		[Option("name", "n", HelpText = "The display name of the solution to create")]

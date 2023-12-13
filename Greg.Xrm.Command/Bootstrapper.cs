@@ -1,27 +1,34 @@
-﻿using Greg.Xrm.Command.Parsing;
+﻿using Greg.Xrm.Command.Commands.Help;
+using Greg.Xrm.Command.Parsing;
+using Greg.Xrm.Command.Services.CommandHistory;
 using Greg.Xrm.Command.Services.Output;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Xrm.Sdk;
+using System.ComponentModel.DataAnnotations;
+using System.ServiceModel;
 
 namespace Greg.Xrm.Command
 {
-	public sealed class HostedService : IHostedService
+	public sealed class Bootstrapper
 	{
 		private readonly ILogger log;
 		private readonly IOutput output;
 		private readonly ICommandLineArguments args;
 		private readonly ICommandExecutorFactory commandExecutorFactory;
+		private readonly IHistoryTracker historyTracker;
 
-		public HostedService(
-			ILogger<HostedService> logger,
+		public Bootstrapper(
+			ILogger<Bootstrapper> logger,
 			IOutput output,
 			ICommandLineArguments args,
-			ICommandExecutorFactory commandExecutorFactory)
+			ICommandExecutorFactory commandExecutorFactory,
+			IHistoryTracker historyTracker)
 		{
 			this.log = logger;
 			this.output = output;
 			this.args = args;
 			this.commandExecutorFactory = commandExecutorFactory;
+			this.historyTracker = historyTracker;
 		}
 
 		public async Task StartAsync(CancellationToken cancellationToken)
@@ -51,12 +58,40 @@ namespace Greg.Xrm.Command
 				var command = parser.Parse(args);
 				if (command == null)
 				{
-					this.output.WriteLine("Invalid command", ConsoleColor.Red).WriteLine();
-					log.LogError("Invalid command");
-
 					Environment.Exit(-1);
 					return;
 				}
+
+
+				var validationContext = new ValidationContext(command);
+				var validationResults = new List<ValidationResult>();
+				if (!Validator.TryValidateObject(command, validationContext, validationResults, true))
+				{
+					this.output.WriteLine("Invalid command options:", ConsoleColor.Red).WriteLine();
+					foreach (var validationResult in validationResults)
+					{
+						this.output.Write("    ");
+						this.output.WriteLine(validationResult.ErrorMessage, ConsoleColor.Red);
+					}
+
+					log.LogError("Invalid command");
+					Environment.Exit(-1);
+					return;
+				}
+
+				var commandsNotToTrack = new[]
+				{
+					typeof(HelpCommand),
+					typeof(Commands.History.GetCommand),
+					typeof(Commands.History.SetLengthCommand),
+					typeof(Commands.History.ClearCommand),
+				};
+
+				if (!commandsNotToTrack.Contains(command.GetType()))
+				{
+					await this.historyTracker.AddAsync(args.ToArray());
+				}
+
 
 				var commandExecutor = commandExecutorFactory.CreateFor(command.GetType());
 				if (commandExecutor == null)
@@ -80,7 +115,7 @@ namespace Greg.Xrm.Command
 					return;
 				}
 
-				var task = (Task?)method.Invoke(commandExecutor, new[] { command, cancellationToken });
+				var task = (Task<CommandResult>?)method.Invoke(commandExecutor, new[] { command, cancellationToken });
 				if (task == null)
 				{
 					this.output.WriteLine("Internal error, see logs for more info.", ConsoleColor.Red).WriteLine();
@@ -90,7 +125,7 @@ namespace Greg.Xrm.Command
 					return;
 				}
 
-				await task;
+				var result = await task;
 				this.output.WriteLine();
 
 				if (task.IsFaulted)
@@ -101,12 +136,55 @@ namespace Greg.Xrm.Command
 					return;
 				}
 
+
+
 				if (task.IsCanceled)
 				{
 					this.output.WriteLine("Internal error, see logs for more info.", ConsoleColor.Red).WriteLine();
 					log.LogError("Command {commandType} has been cancelled", command.GetType());
 					Environment.Exit(-1);
 					return;
+				}
+
+
+
+				if (!result.IsSuccess)
+				{
+					this.output.Write(result.ErrorMessage, ConsoleColor.Red).WriteLine();
+					log.LogError("Command {commandType} has error", command.GetType());
+
+					var ex = result.Exception;
+
+					if (ex != null)
+					{
+						log.LogError("Fault type: {faultType}", ex.GetType());
+						if (ex.GetType() != typeof(FaultException<OrganizationServiceFault>))
+						{
+							output
+								.Write("  Exception of type '", ConsoleColor.Red)
+								.Write(ex.GetType().FullName, ConsoleColor.Red)
+								.Write("'. ", ConsoleColor.Red);
+						}
+						if (ex.InnerException != null)
+						{
+							output.Write("  ").WriteLine(ex.InnerException.Message, ConsoleColor.Red);
+						}
+					}
+
+					Environment.Exit(-1);
+					return;
+				}
+
+
+
+				if (result.IsSuccess && result.Count > 0)
+				{
+					var padding = result.Max(_ => _.Key.Length);
+					this.output.WriteLine("Result: ");
+					foreach (var kvp in result)
+					{
+						this.output.Write("  ").Write(kvp.Key.PadRight(padding)).Write(": ").WriteLine(kvp.Value, ConsoleColor.Yellow);
+					}
 				}
 
 				log.LogInformation("Command {commandType} has been executed", command.GetType());
@@ -119,21 +197,6 @@ namespace Greg.Xrm.Command
 
 				Environment.Exit(-1);
 			}
-		}
-
-
-
-
-
-
-		public Task StopAsync(CancellationToken cancellationToken)
-		{
-			this.output.WriteLine();
-			this.output.WriteLine("STOP RECEIVED");
-
-			Environment.Exit(-1);
-
-			return Task.CompletedTask;
 		}
 	}
 }

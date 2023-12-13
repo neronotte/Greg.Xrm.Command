@@ -21,9 +21,8 @@ namespace Greg.Xrm.Command.Commands.Column
 			this.organizationServiceRepository = organizationServiceRepository;
 		}
 
-        public async Task ExecuteAsync(ExportMetadataCommand command, CancellationToken cancellationToken)
+        public async Task<CommandResult> ExecuteAsync(ExportMetadataCommand command, CancellationToken cancellationToken)
 		{
-
 			this.output.Write($"Connecting to the current dataverse environment...");
 			var crm = await this.organizationServiceRepository.GetCurrentConnectionAsync();
 			this.output.WriteLine("Done", ConsoleColor.Green);
@@ -43,16 +42,10 @@ namespace Greg.Xrm.Command.Commands.Column
 			}
 			catch(FaultException<OrganizationServiceFault> ex)
 			{
-				output.WriteLine()
-					.Write("Error: ", ConsoleColor.Red)
-					.WriteLine(ex.Message, ConsoleColor.Red);
-
-				if (ex.InnerException != null)
-				{
-					output.Write("  ").WriteLine(ex.InnerException.Message, ConsoleColor.Red);
-				}
-				return;
+				return CommandResult.Fail(ex.Message, ex);
 			}
+
+
 
 			var folder = command.OutputFilePath;
 			if (string.IsNullOrWhiteSpace(folder))
@@ -62,10 +55,7 @@ namespace Greg.Xrm.Command.Commands.Column
 
 			if (!Directory.Exists(folder))
 			{
-				output.WriteLine()
-					.Write("Error: ", ConsoleColor.Red)
-					.WriteLine($"The folder '{folder}' does not exist", ConsoleColor.Red);
-				return;
+				return CommandResult.Fail($"The folder '{folder}' does not exist");
 			}
 
 			var fileName = $"{command.TableSchemaName}.{command.ColumnSchemaName}.json";
@@ -85,11 +75,12 @@ namespace Greg.Xrm.Command.Commands.Column
 			}
 			catch(Exception ex)
 			{
-				output.WriteLine()
-					.Write("Error while trying to write on the generated file: ", ConsoleColor.Red)
-					.WriteLine(ex.Message, ConsoleColor.Red);
+				return CommandResult.Fail("Error while trying to write on the generated file: " + ex.Message, ex);
 			}
 
+			var result = CommandResult.Success();
+			result["Generated File"] = filePath;
+			return result;
 		}
 	}
 }

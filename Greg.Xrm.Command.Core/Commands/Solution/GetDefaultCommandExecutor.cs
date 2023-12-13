@@ -18,7 +18,7 @@ namespace Greg.Xrm.Command.Commands.Solution
 
 
 
-		public async Task ExecuteAsync(GetDefaultCommand command, CancellationToken cancellationToken)
+		public async Task<CommandResult> ExecuteAsync(GetDefaultCommand command, CancellationToken cancellationToken)
 		{
 
 			try
@@ -28,21 +28,21 @@ namespace Greg.Xrm.Command.Commands.Solution
 				var currentConnection = connections.CurrentConnectionStringKey;
 				if (string.IsNullOrWhiteSpace(currentConnection))
 				{
-					this.output.WriteLine("No default connection selected. Please use 'pacx auth select' to select a default connection.", ConsoleColor.Red);
-					return;
+					return CommandResult.Fail("No default connection selected. Please use 'pacx auth select' to select a default connection.");
 				}
 
 				if (connections.DefaultSolutions.TryGetValue(currentConnection, out var defaultSolutionName))
 				{
 					this.output.Write("Default solution is: '").Write(defaultSolutionName, ConsoleColor.Yellow).Write("'").WriteLine();
-					return;
+					return CommandResult.Success();
 				}
 
 				this.output.WriteLine("No default solution set for the current connection. Current connection is " + currentConnection, ConsoleColor.Yellow);
+				return CommandResult.Success();
 			}
 			catch (Exception ex)
 			{
-				this.output.WriteLine("Error while getting default solution: " + ex.Message, ConsoleColor.Red);
+				return CommandResult.Fail("Error while getting default solution: " + ex.Message, ex);
 			}
 		}
 	}

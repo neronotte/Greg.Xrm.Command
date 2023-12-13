@@ -1,4 +1,5 @@
-﻿using Greg.Xrm.Command.Services.Connection;
+﻿using Greg.Xrm.Command.Commands.Column.Builders;
+using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Messages;
@@ -6,52 +7,50 @@ using System.ServiceModel;
 
 namespace Greg.Xrm.Command.Commands.Column
 {
-    public class DeleteCommandExecutor : ICommandExecutor<DeleteCommand>
-    {
-        private readonly IOutput output;
-        private readonly IOrganizationServiceRepository organizationServiceRepository;
+	public class DeleteCommandExecutor : ICommandExecutor<DeleteCommand>
+	{
+		private readonly IOutput output;
+		private readonly IOrganizationServiceRepository organizationServiceRepository;
 
-        public DeleteCommandExecutor(
-            IOutput output,
-            IOrganizationServiceRepository organizationServiceRepository)
-        {
-            this.output = output;
-            this.organizationServiceRepository = organizationServiceRepository;
-        }
-
-
-        public async Task ExecuteAsync(DeleteCommand command, CancellationToken cancellationToken)
-        {
-            this.output.Write($"Connecting to the current dataverse environment...");
-            var crm = await this.organizationServiceRepository.GetCurrentConnectionAsync();
-            this.output.WriteLine("Done", ConsoleColor.Green);
+		public DeleteCommandExecutor(
+			IOutput output,
+			IOrganizationServiceRepository organizationServiceRepository)
+		{
+			this.output = output;
+			this.organizationServiceRepository = organizationServiceRepository;
+		}
 
 
-            try
-            {
-                output.Write($"Deleting column ").Write(command.SchemaName, ConsoleColor.Yellow).Write(" from table ").Write(command.EntityName, ConsoleColor.Yellow).Write("...");
+		public async Task<CommandResult> ExecuteAsync(DeleteCommand command, CancellationToken cancellationToken)
+		{
+			this.output.Write($"Connecting to the current dataverse environment...");
+			var crm = await this.organizationServiceRepository.GetCurrentConnectionAsync();
+			this.output.WriteLine("Done", ConsoleColor.Green);
 
-                var request = new DeleteAttributeRequest
-                {
-                    EntityLogicalName = command.EntityName,
-                    LogicalName = command.SchemaName
-                };
+			var request = new DeleteAttributeRequest
+			{
+				EntityLogicalName = command.EntityName,
+				LogicalName = command.SchemaName
+			};
 
-                await crm.ExecuteAsync(request);
+			try
+			{
+				this.output.Write("Deleting column ")
+					.Write(command.SchemaName, ConsoleColor.Yellow)
+					.Write(".", ConsoleColor.Yellow)
+					.Write(command.SchemaName, ConsoleColor.Yellow)
+					.Write("...");
 
-                output.WriteLine(" Done", ConsoleColor.Green);
-            }
-            catch (FaultException<OrganizationServiceFault> ex)
-            {
-                output.WriteLine()
-                    .Write("Error: ", ConsoleColor.Red)
-                    .WriteLine(ex.Message, ConsoleColor.Red);
+				await crm.ExecuteAsync(request, cancellationToken);
 
-                if (ex.InnerException != null)
-                {
-                    output.Write("  ").WriteLine(ex.InnerException.Message, ConsoleColor.Red);
-                }
-            }
-        }
-    }
+				this.output.WriteLine(" Done", ConsoleColor.Green);
+
+				return CommandResult.Success();
+			}
+			catch(FaultException<OrganizationServiceFault> ex)
+			{
+				return CommandResult.Fail(ex.Message, ex);
+			}
+		}
+	}
 }
