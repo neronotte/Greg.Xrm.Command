@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Greg.Xrm.Command.Commands.UnifiedRouting
 {
-	[Command("unifiedrouting", "agentstatus", HelpText = "Creates a new table in the dataverse environment that has previously been selected via `pacx auth select`")]
+	[Command("unifiedrouting", "agentStatus", HelpText = "Creates a new table in the dataverse environment that has previously been selected via `pacx auth select`")]
 	[Alias("ur","status")]
 	public class GetAgentStatusCommand : ICanProvideUsageExample
 	{
