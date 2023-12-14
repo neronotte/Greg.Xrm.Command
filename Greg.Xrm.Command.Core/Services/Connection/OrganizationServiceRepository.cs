@@ -3,6 +3,7 @@ using Microsoft.Crm.Sdk.Messages;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
 using System.ServiceModel;
+using System.Xml.Linq;
 
 namespace Greg.Xrm.Command.Services.Connection
 {
@@ -90,10 +91,70 @@ namespace Greg.Xrm.Command.Services.Connection
 
 				await this.settings.SetAsync("connections", connectionStrings);
 			}
-			catch(FaultException<OrganizationServiceFault> ex)
+			catch (FaultException<OrganizationServiceFault> ex)
 			{
 				throw new CommandException(CommandException.ConnectionInvalid, "Dataverse connection has not been set yet.", ex);
 			}
+		}
+
+		public async Task RenameConnectionAsync(string oldName, string newName)
+		{
+			var connectionStrings = await this.settings.GetAsync<ConnectionSetting>("connections");
+			if (connectionStrings == null)
+			{
+				throw new CommandException(CommandException.ConnectionNotSet, "No connections set, nothing to update");
+			}
+
+
+			if (!connectionStrings.ConnectionStrings.ContainsKey(oldName))
+			{
+				throw new CommandException(CommandException.CommandInvalidArgumentValue, "Invalid connection name: " + oldName);
+			}
+
+			if (connectionStrings.ConnectionStrings.ContainsKey(newName))
+			{
+				throw new CommandException(CommandException.CommandInvalidArgumentValue, $"The new connection name '{newName}' is already in use!");
+			}
+
+			connectionStrings.ConnectionStrings[newName] = connectionStrings.ConnectionStrings[oldName];
+			connectionStrings.ConnectionStrings.Remove(oldName);
+
+			if (connectionStrings.DefaultSolutions.ContainsKey(oldName))
+			{
+				connectionStrings.DefaultSolutions[newName] = connectionStrings.DefaultSolutions[oldName];
+				connectionStrings.DefaultSolutions.Remove(oldName);
+			}
+
+			if (connectionStrings.CurrentConnectionStringKey == oldName)
+			{
+				connectionStrings.CurrentConnectionStringKey = newName;
+			}
+
+			await this.settings.SetAsync("connections", connectionStrings);
+		}
+
+		public async Task DeleteConnectionAsync(string name)
+		{
+			var connectionStrings = await this.settings.GetAsync<ConnectionSetting>("connections");
+			if (connectionStrings == null)
+			{
+				throw new CommandException(CommandException.ConnectionNotSet, "No connections set, nothing to update");
+			}
+
+
+			if (!connectionStrings.ConnectionStrings.ContainsKey(name))
+			{
+				throw new CommandException(CommandException.CommandInvalidArgumentValue, "Invalid connection name: " + name);
+			}
+
+			connectionStrings.ConnectionStrings.Remove(name);
+			connectionStrings.DefaultSolutions.Remove(name);
+			if (connectionStrings.CurrentConnectionStringKey == name)
+			{
+				connectionStrings.CurrentConnectionStringKey = null;
+			}
+
+			await this.settings.SetAsync("connections", connectionStrings);
 		}
 
 		public async Task SetDefaultAsync(string name)

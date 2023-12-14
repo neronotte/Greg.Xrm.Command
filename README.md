@@ -4,8 +4,11 @@ Command line utility belt for Dataverse.
 
 ## Contributors
 
-- Riccardo Gregori (@\_neronotte)
-- Simone Giubbarelli (@SimonGiubs)
+-   Riccardo Gregori (@\_neronotte)
+-   Simone Giubbarelli (@SimonGiubs)
+-   Francesco Catino (@reloweb)
+
+If you want to contribute to the current project, please follow the [guidelines described in this wiki article](https://github.com/neronotte/Greg.Xrm.Command/wiki/How-to-contribute).
 
 ## Installation
 

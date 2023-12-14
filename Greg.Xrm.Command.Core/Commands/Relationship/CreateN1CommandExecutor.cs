@@ -21,7 +21,7 @@ namespace Greg.Xrm.Command.Commands.Relationship
 			this.organizationServiceRepository = organizationServiceRepository;
 		}
 
-		public async Task ExecuteAsync(CreateN1Command command, CancellationToken cancellationToken)
+		public async Task<CommandResult> ExecuteAsync(CreateN1Command command, CancellationToken cancellationToken)
 		{
 			this.output.Write($"Connecting to the current dataverse environment...");
 			var crm = await this.organizationServiceRepository.GetCurrentConnectionAsync();
@@ -38,8 +38,7 @@ namespace Greg.Xrm.Command.Commands.Relationship
 					currentSolutionName = await organizationServiceRepository.GetCurrentDefaultSolutionAsync();
 					if (currentSolutionName == null)
 					{
-						output.WriteLine("No solution name provided and no current solution name found in the settings. Please provide a solution name or set a current solution name in the settings.", ConsoleColor.Red);
-						return;
+						return CommandResult.Fail("No solution name provided and no current solution name found in the settings. Please provide a solution name or set a current solution name in the settings.");
 					}
 				}
 
@@ -63,36 +62,26 @@ namespace Greg.Xrm.Command.Commands.Relationship
 				var solutionList = (await crm.RetrieveMultipleAsync(query)).Entities;
 				if (solutionList.Count == 0)
 				{
-					output.WriteLine("Invalid solution name: ", ConsoleColor.Red).WriteLine(currentSolutionName, ConsoleColor.Red);
-					return;
+					return CommandResult.Fail($"Invalid solution name: {currentSolutionName}");
 				}
 
 				var managed = solutionList[0].GetAttributeValue<bool>("ismanaged");
 				if (managed)
 				{
-					output.WriteLine("The provided solution is managed. You must specify an unmanaged solution.", ConsoleColor.Red);
-					return;
+					return CommandResult.Fail("The provided solution is managed. You must specify an unmanaged solution.");
 				}
 
 				var publisherPrefix = solutionList[0].GetAttributeValue<AliasedValue>("publisher.customizationprefix").Value as string;
 				if (string.IsNullOrWhiteSpace(publisherPrefix))
 				{
-					output.WriteLine("Unable to retrieve the publisher prefix. Please report a bug to the project GitHub page.", ConsoleColor.Red);
-					return;
+					return CommandResult.Fail("Unable to retrieve the publisher prefix. Please report a bug to the project GitHub page.");
 				}
 
 
-				await CheckEligibilityAsync(crm, command);
+				await crm.CheckManyToOneEligibilityAsync(command.ParentTable, command.ChildTable);
 
 
-
-
-
-
-
-
-
-				output.Write("Setting up CreateOneToManyRequest...");
+				output.Write("Executing CreateOneToManyRequest...");
 
 				var request = new CreateOneToManyRequest
 				{
@@ -131,45 +120,17 @@ namespace Greg.Xrm.Command.Commands.Relationship
 
 				var response = (CreateOneToManyResponse)await crm.ExecuteAsync(request);
 
-				this.output.WriteLine("Done", ConsoleColor.Green)
-					.Write("  Relationship ID : ")
-					.WriteLine(response.RelationshipId, ConsoleColor.Yellow)
-					.Write("  Lookup Column ID: ")
-					.WriteLine(response.AttributeId, ConsoleColor.Yellow);
-
+				var result = CommandResult.Success();
+				result["Relationship ID"] = response.RelationshipId;
+				result["Lookup Column ID"] = response.AttributeId;
+				return result;
 			}
-			catch (FaultException<OrganizationServiceFault> ex)
+			catch (Exception ex)
 			{
-				output.WriteLine()
-					.Write("Error: ", ConsoleColor.Red)
-					.WriteLine(ex.Message, ConsoleColor.Red);
-
-				if (ex.InnerException != null)
-				{
-					output.Write("  ").WriteLine(ex.InnerException.Message, ConsoleColor.Red);
-				}
+				return CommandResult.Fail(ex.Message, ex);
 			}
 		}
 
-		private async Task CheckEligibilityAsync(IOrganizationServiceAsync2 crm, CreateN1Command command)
-		{
-			var request1 = new CanBeReferencedRequest
-			{
-				EntityName = command.ParentTable
-			};
-			var response1 = (CanBeReferencedResponse)await crm.ExecuteAsync(request1);
-			if (!response1.CanBeReferenced)
-				throw new CommandException(CommandException.CommandInvalidArgumentValue, $"The entity {command.ParentTable} cannot be parent of an N-1 relationship");
-
-
-			var request2 = new CanBeReferencingRequest()
-			{
-				EntityName = command.ChildTable
-			};
-			var response2 = (CanBeReferencingResponse)await crm.ExecuteAsync(request2);
-			if (!response2.CanBeReferencing)
-				throw new CommandException(CommandException.CommandInvalidArgumentValue, $"The entity {command.ChildTable} cannot be child of an N-1 relationship");
-		}
 
 		private static AssociatedMenuGroup? CreateMenuGroup(CreateN1Command command)
 		{
@@ -179,7 +140,7 @@ namespace Greg.Xrm.Command.Commands.Relationship
 			return command.MenuGroup;
 		}
 
-		private Label? CreateMenuLabel(CreateN1Command command, int defaultLanguageCode)
+		private static Label? CreateMenuLabel(CreateN1Command command, int defaultLanguageCode)
 		{
 			if (command.MenuBehavior != AssociatedMenuBehavior.UseLabel)
 				return null;
@@ -245,6 +206,8 @@ namespace Greg.Xrm.Command.Commands.Relationship
 				if (string.IsNullOrWhiteSpace(namePart))
 					throw new CommandException(CommandException.CommandRequiredArgumentNotProvided, $"Is not possible to infer the primary attribute schema name from the display name, please explicit a primary attribute schema name");
 
+				if (!namePart.EndsWith("id")) namePart += "id";
+
 				return $"{publisherPrefix}_{namePart}";
 			}
 
@@ -254,7 +217,7 @@ namespace Greg.Xrm.Command.Commands.Relationship
 			if (command.ParentTable.StartsWith(publisherPrefix + "_")) 
 				return $"{command.ParentTable}id";
 
-			if (!command.ParentTable.Contains("_"))
+			if (!command.ParentTable.Contains('_'))
 				return $"{publisherPrefix}_{command.ParentTable}id";
 
 			var parentTableParts = command.ParentTable.Split("_");

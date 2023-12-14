@@ -2,6 +2,7 @@
 using System.Data;
 using System.Reflection;
 using System.Linq;
+using System.ServiceModel.Channels;
 
 namespace Greg.Xrm.Command.Parsing
 {
@@ -59,11 +60,15 @@ namespace Greg.Xrm.Command.Parsing
 		}
 
 
-		public object? CreateCommand(IReadOnlyDictionary<string, string> options)
+		public object CreateCommand(IReadOnlyDictionary<string, string> options)
 		{
 			var usedOptions = new List<string>();
 
 			var command = Activator.CreateInstance(this.CommandType);
+			if (command == null)
+				throw new CommandException(CommandException.CommandCannotBeCreated, $"Command '{this.CommandType}'cannot be created. Please pull an issue on GitHub page.");
+
+
 			foreach (var optionDef in this.Options)
 			{
 				var property = optionDef.Property;
@@ -192,6 +197,40 @@ namespace Greg.Xrm.Command.Parsing
 				return enumValue;
 			}
 
+
+			var undelyingType = Nullable.GetUnderlyingType(propertyType);
+			if (undelyingType != null && undelyingType.IsEnum)
+			{
+				if (string.IsNullOrWhiteSpace(optionValue))
+					return null;
+
+				if (!Enum.TryParse(undelyingType, optionValue, true, out var enumValue))
+					throw new CommandException(CommandException.CommandInvalidArgumentType, $"Argument '{argumentName}' error: the value '{optionValue}' is not a valid {propertyType.FullName}.");
+
+				return enumValue;
+			}
+
+			if (propertyType == typeof(Guid))
+			{
+				if (!Guid.TryParse(optionValue, out Guid guidValue))
+				{
+					throw new CommandException(CommandException.CommandInvalidArgumentType, $"Argument '{argumentName}' error: the value '{optionValue}' is not a valid {propertyType.FullName}.");
+				}
+
+				return guidValue;
+			}
+			if (propertyType == typeof(Guid?))
+			{
+				if (string.IsNullOrWhiteSpace(optionValue))
+					return null;
+
+				if (!Guid.TryParse(optionValue, out Guid guidValue))
+				{
+					throw new CommandException(CommandException.CommandInvalidArgumentType, $"Argument '{argumentName}' error: the value '{optionValue}' is not a valid {propertyType.FullName}.");
+				}
+
+				return guidValue;
+			}
 
 
 			try

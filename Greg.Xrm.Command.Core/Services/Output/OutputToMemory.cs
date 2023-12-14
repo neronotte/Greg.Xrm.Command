@@ -45,5 +45,40 @@ namespace Greg.Xrm.Command.Services.Output
 		{
 			return sb.ToString();
 		}
+
+
+
+		public IOutput WriteTable<TRow>(IReadOnlyList<TRow> collection, Func<string[]> rowHeaders, Func<TRow, string[]> rowData, Func<int, TRow, ConsoleColor?>? colorPicker = null)
+		{
+			var headers = rowHeaders();
+			var rows = collection.Select(rowData).ToList();
+
+			var columnWidths = new int[headers.Length];
+			for (var i = 0; i < headers.Length; i++)
+			{
+				columnWidths[i] = Math.Max(headers[i].Length, rows.Max(_ => _[i].Length));
+			}
+
+			var header = "| " + string.Join(" | ", headers.Select((_, i) => _.PadRight(columnWidths[i]))) + " |";
+			sb.AppendLine(header);
+
+			var separator = "|-" + string.Join("-|-", columnWidths.Select(_ => new string('-', _))) + "-|";
+			sb.AppendLine(separator);
+
+			foreach (var row in rows)
+			{
+				sb.Append("| ");
+
+				for (var i = 0; i < row.Length; i++)
+				{
+					sb.Append(row[i].PadRight(columnWidths[i]));
+					sb.Append(" | ");
+				}
+				sb.AppendLine();
+			}
+			sb.AppendLine();
+
+			return this;
+		}
 	}
 }

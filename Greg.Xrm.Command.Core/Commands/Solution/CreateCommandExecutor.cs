@@ -23,7 +23,7 @@ namespace Greg.Xrm.Command.Commands.Solution
 			this.organizationServiceRepository = organizationServiceRepository;
 		}
 
-		public async Task ExecuteAsync(CreateCommand command, CancellationToken cancellationToken)
+		public async Task<CommandResult> ExecuteAsync(CreateCommand command, CancellationToken cancellationToken)
 		{
 			var friendlyName = GetFriendlyName(command);
 			var uniqueName = GetUniqueName(command);
@@ -49,8 +49,7 @@ namespace Greg.Xrm.Command.Commands.Solution
 				if (exists)
 				{
 					this.output.WriteLine("Found", ConsoleColor.Red);
-					this.output.WriteLine("Error: a solution with the same unique name already exists", ConsoleColor.Red);
-					return;
+					return CommandResult.Fail("A solution with the same unique name already exists");
 				}
 				else
 				{
@@ -63,27 +62,21 @@ namespace Greg.Xrm.Command.Commands.Solution
 
 				var solution = new Entity("solution");
 				solution["friendlyname"] = friendlyName;
-				solution["uniquename"] = uniqueName;	
+				solution["uniquename"] = uniqueName;
 				solution["publisherid"] = publisherRef;
 				solution["version"] = "1.0.0.0";
 				solution["ismanaged"] = false;
 				solution.Id = await crm.CreateAsync(solution);
 
 				this.output.WriteLine("Done", ConsoleColor.Green)
-                    .Write("  Solution ID: ")
+					.Write("  Solution ID: ")
 					.WriteLine(solution.Id, ConsoleColor.Yellow);
 
+				return new CreateCommandResult(solution.Id, publisherRef.Id);
 			}
 			catch (FaultException<OrganizationServiceFault> ex)
 			{
-				output.WriteLine()
-					.Write("Error: ", ConsoleColor.Red)
-					.WriteLine(ex.Message, ConsoleColor.Red);
-
-				if (ex.InnerException != null)
-				{
-					output.Write("  ").WriteLine(ex.InnerException.Message, ConsoleColor.Red);
-				}
+				return CommandResult.Fail(ex.Message, ex);
 			}
 
 		}
@@ -143,7 +136,7 @@ namespace Greg.Xrm.Command.Commands.Solution
 					.WriteLine(publisher.Id, ConsoleColor.Yellow);
 
 			return publisher.ToEntityReference();
-	}
+		}
 
 		private static int? GetPublisherOptionSetPrefix(CreateCommand command)
 		{
@@ -193,22 +186,22 @@ namespace Greg.Xrm.Command.Commands.Solution
 			if (!string.IsNullOrWhiteSpace(command.PublisherUniqueName)) return command.PublisherUniqueName;
 			if (!string.IsNullOrWhiteSpace(command.PublisherCustomizationPrefix)) return command.PublisherCustomizationPrefix;
 
-			throw new CommandException(CommandException.CommandInvalidArgumentValue, "Unable to extrapolate publisher friendly name. One of publisher friendly name, unique name or customization prefix must be provided.");	
+			throw new CommandException(CommandException.CommandInvalidArgumentValue, "Unable to extrapolate publisher friendly name. One of publisher friendly name, unique name or customization prefix must be provided.");
 		}
 
 		private static string GetPublisherUniqueName(CreateCommand command)
 		{
-			if (!string.IsNullOrWhiteSpace(command.PublisherUniqueName)) 
+			if (!string.IsNullOrWhiteSpace(command.PublisherUniqueName))
 				return command.PublisherUniqueName;
 
-			if (!string.IsNullOrWhiteSpace(command.PublisherFriendlyName)) 
+			if (!string.IsNullOrWhiteSpace(command.PublisherFriendlyName))
 			{
 				var uniqueName = command.PublisherFriendlyName.OnlyLettersNumbersOrUnderscore();
 				if (!string.IsNullOrWhiteSpace(uniqueName))
 					return uniqueName;
 			}
 
-			if (!string.IsNullOrWhiteSpace(command.PublisherCustomizationPrefix)) 
+			if (!string.IsNullOrWhiteSpace(command.PublisherCustomizationPrefix))
 				return command.PublisherCustomizationPrefix;
 
 			throw new CommandException(CommandException.CommandInvalidArgumentValue, "Unable to extrapolate publisher unique name. One of publisher friendly name, unique name or customization prefix must be provided.");
@@ -232,4 +225,5 @@ namespace Greg.Xrm.Command.Commands.Solution
 			return command.DisplayName.OnlyLettersNumbersOrUnderscore();
 		}
 	}
+
 }
