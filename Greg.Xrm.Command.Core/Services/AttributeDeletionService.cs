@@ -37,7 +37,7 @@ namespace Greg.Xrm.Command.Services
 			await UpdatePluginSteps(crm, attribute, dependencies.OfType(ComponentType.SDKMessageProcessingStep), simulation.GetValueOrDefault());
 			await UpdatePluginImages(crm, attribute, dependencies.OfType(ComponentType.SDKMessageProcessingStepImage), simulation.GetValueOrDefault());
 			await UpdateRelationships(crm, attribute, dependencies.OfType(ComponentType.Relationship), simulation.GetValueOrDefault());
-			await UpdateMappings(crm, dependencies.OfType(ComponentType.AttributeMap), simulation.GetValueOrDefault());
+			await UpdateMappings(crm, attribute, simulation.GetValueOrDefault());
 			await UpdateWorkflows(crm, attribute, dependencies.OfType(ComponentType.Workflow), simulation.GetValueOrDefault());
 			await PublishAll(crm);
 		}
@@ -259,25 +259,45 @@ namespace Greg.Xrm.Command.Services
 
 
 
-		private async Task UpdateMappings(IOrganizationServiceAsync2 crm, IReadOnlyList<Dependency> dependencies, bool simulation)
+		private async Task UpdateMappings(IOrganizationServiceAsync2 crm, AttributeMetadata attribute, bool simulation)
 		{
-			if (dependencies.Count == 0)
-				return;
-
-			var ids = dependencies.Select(x => x.dependentcomponentobjectid).Cast<object>().ToArray();
-
 			var query = new QueryExpression("attributemap");
-			query.ColumnSet.AllColumns = false;
-			query.Criteria.AddCondition("attributemapid", ConditionOperator.In, ids);
-			query.Criteria.AddCondition("ismanaged", ConditionOperator.NotEqual, 1);
-			query.Criteria.AddCondition("issystem", ConditionOperator.NotEqual, 1);
+			query.ColumnSet.AddColumns("sourceattributename", "targetattributename");
+			query.Criteria.AddCondition("ismanaged", ConditionOperator.Equal, false);
+			query.Criteria.AddCondition("issystem", ConditionOperator.Equal, false);
+
+			var filter = query.Criteria.AddFilter(LogicalOperator.Or);
+			filter.AddCondition("sourceattributename", ConditionOperator.Equal, attribute.LogicalName);
+			filter.AddCondition("targetattributename", ConditionOperator.Equal, attribute.LogicalName);
+
+			var entityLink = query.AddLink("entitymap", "entitymapid", "entitymapid");
+			entityLink.Columns.AddColumns("sourceentityname", "targetentityname");
+			entityLink.LinkCriteria.FilterOperator = LogicalOperator.Or;
+			entityLink.LinkCriteria.AddCondition("sourceentityname", ConditionOperator.Equal, attribute.EntityLogicalName);
+			entityLink.LinkCriteria.AddCondition("targetentityname", ConditionOperator.Equal, attribute.EntityLogicalName);
+			entityLink.EntityAlias = "e";
+
 			query.NoLock = true;
 
 			var result = await crm.RetrieveMultipleAsync(query);
 
+			var attributeKey = attribute.EntityLogicalName + "." + attribute.LogicalName;
+
+			var maps = result.Entities.Select(x =>
+			new
+			{
+				x.Id,
+				x.LogicalName,
+				Source = x.GetAliasedValue<string>("e.sourceentityname") + "." + x.GetAttributeValue<string>("sourceattributename"),
+				Target = x.GetAliasedValue<string>("e.targetentityname") + "." + x.GetAttributeValue<string>("targetattributename"),
+			})
+			.Where(x => string.Equals(attributeKey, x.Source, StringComparison.OrdinalIgnoreCase) || string.Equals(attributeKey, x.Target, StringComparison.OrdinalIgnoreCase))
+			.ToArray() ;
+
+
 
 			var i = 0;
-			foreach (var e in result.Entities)
+			foreach (var e in maps)
 			{
 				++i;
 				this.output.Write($"Deleting attributemap {i}/{result.Entities.Count} {e.Id}...");
