@@ -28,6 +28,7 @@ namespace Greg.Xrm.Command.Services.ComponentResolvers
 			this.AddStrategy(ComponentType.WebResource);
 			this.AddStrategy(ComponentType.Workflow, () => ByQuery("workflow", "uniquename"));
 			this.AddStrategy(ComponentType.EntityRelationship, () => ByQuery("entityrelationship", "schemaname"));
+			this.AddStrategy(ComponentType.SavedQueryVisualization);
 
 		}
 

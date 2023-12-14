@@ -56,6 +56,8 @@ namespace Greg.Xrm.Command.Commands.Column
 
 			try
 			{
+				this.output.WriteLine();
+
 				if (dependencies.Count == 0)
 				{
 					this.output.WriteLine("No dependency found.");
@@ -88,10 +90,12 @@ namespace Greg.Xrm.Command.Commands.Column
 							this.output.WriteLine($"These dependencies cannot be removed via pacx, you need to remove it manually to delete the column.", ConsoleColor.Yellow);
 							return CommandResult.Fail($"Column {command.TableName}.{command.SchemaName} has {dependencies.Count} dependencies.");
 						}
+						else
+						{
+							this.output.WriteLine($"After dependency pruning, column {command.TableName}.{command.SchemaName} has no more dependencies, and can be deleted.");
+						}
 					}
 				}
-
-
 
 
 				this.output.Write("Deleting column ")
