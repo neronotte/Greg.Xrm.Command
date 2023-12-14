@@ -1,13 +1,12 @@
 ﻿using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
-using Microsoft.Extensions.Logging;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;
 using System.ServiceModel;
 
 namespace Greg.Xrm.Command.Commands.Solution
 {
-	public class SetDefaultCommandExecutor : ICommandExecutor<SetDefaultCommand>
+    public class SetDefaultCommandExecutor : ICommandExecutor<SetDefaultCommand>
 	{
 		private readonly IOutput output;
 		private readonly IOrganizationServiceRepository organizationServiceRepository;

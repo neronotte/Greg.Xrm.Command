@@ -1,29 +1,25 @@
-﻿using Greg.Xrm.Command.Commands.Column;
-using Greg.Xrm.Command.Model;
-using Greg.Xrm.Command.Services.ComponentResolvers;
+﻿using Greg.Xrm.Command.Model;
 using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
-using Microsoft.Crm.Sdk.Messages;
-using Microsoft.Extensions.Logging;
 using Microsoft.Xrm.Sdk;
 using System.ServiceModel;
 
 namespace Greg.Xrm.Command.Commands.Solution
 {
-	public class ComponentGetDependenciesCommandExecutor : ICommandExecutor<ComponentGetDependenciesCommand>
+    public class ComponentGetDependenciesCommandExecutor : ICommandExecutor<ComponentGetDependenciesCommand>
 	{
-		private readonly ILogger<GetDependenciesCommand> log;
 		private readonly IOutput output;
 		private readonly IOrganizationServiceRepository organizationServiceRepository;
+		private readonly IDependencyRepository dependencyRepository;
 
 		public ComponentGetDependenciesCommandExecutor(
-			ILogger<GetDependenciesCommand> log,
 			IOutput output,
-			IOrganizationServiceRepository organizationServiceRepository)
+			IOrganizationServiceRepository organizationServiceRepository,
+			IDependencyRepository dependencyRepository)
 		{
-			this.log = log;
 			this.output = output;
 			this.organizationServiceRepository = organizationServiceRepository;
+			this.dependencyRepository = dependencyRepository;
 		}
 
 
@@ -43,80 +39,17 @@ namespace Greg.Xrm.Command.Commands.Solution
 			var crm = await this.organizationServiceRepository.GetCurrentConnectionAsync();
 			this.output.WriteLine("Done", ConsoleColor.Green);
 
-			var componentResolverFactory = new ComponentResolverFactory(crm, this.log);
 
 			try
 			{
-				var request = new RetrieveDependentComponentsRequest
-				{
-					ObjectId = command.ComponentId,
-					ComponentType = (int)command.ComponentType
-				};
-
-				var response = (RetrieveDependentComponentsResponse)await crm.ExecuteAsync(request);
-
-				var dependencies = response.EntityCollection.Entities.Select(x => new Dependency(x))
-					.OrderBy(x => x.DependentComponentTypeFormatted)
-					.ThenBy(x => x.dependentcomponentobjectid)
-					.ToArray();
-
-				if (dependencies.Length == 0)
+				var dependencies = await this.dependencyRepository.GetDependenciesAsync(crm, command.ComponentType.Value, command.ComponentId);
+				if (dependencies.Count == 0)
 				{
 					this.output.WriteLine("No dependencies found!", ConsoleColor.Cyan);
 					return CommandResult.Success();
 				}
 
-				var dependencyGroups = dependencies.GroupBy(x => x.dependentcomponenttype.Value).ToArray();
-
-				foreach (var dependencyGroup in dependencyGroups)
-				{
-					var componentType = dependencyGroup.Key;
-					var componentTypeName = dependencyGroup.First().DependentComponentTypeFormatted;
-					var resolver = componentResolverFactory.GetComponentResolverFor(componentType);
-
-
-					this.output.WriteLine()
-						.Write(componentTypeName, ConsoleColor.Cyan)
-						.WriteLine();
-
-					if (resolver == null)
-					{
-						foreach (var dependency in dependencyGroup)
-						{
-							output
-								.Write(dependency.dependentcomponentobjectid, ConsoleColor.Yellow)
-								.Write(" (", ConsoleColor.DarkGray)
-								.Write(dependency.DependencyTypeFormatted, ConsoleColor.DarkGray)
-								.Write(")", ConsoleColor.DarkGray);
-							output.WriteLine();
-						}
-					}
-					else
-					{
-						var componentIds = dependencyGroup.Select(x => x.dependentcomponentobjectid).ToArray();
-						var componentNames = await resolver.GetNamesAsync(componentIds);
-
-						var values = componentNames.OrderBy(x => x.Value).ToArray();
-						foreach (var value in values)
-						{
-							var dependencyType = dependencyGroup.FirstOrDefault(x => x.dependentcomponentobjectid == x.Id)?.DependencyTypeFormatted;
-
-							output
-								.Write(value.Key, ConsoleColor.Yellow)
-								.Write(" | ")
-								.Write(value.Value);
-
-							if (!string.IsNullOrWhiteSpace(dependencyType))
-							{
-								output
-									.Write(" (", ConsoleColor.DarkGray)
-									.Write(dependencyType, ConsoleColor.DarkGray)
-									.Write(")", ConsoleColor.DarkGray);
-							}
-							output.WriteLine();
-						}
-					}
-				}
+				dependencies.WriteTo(this.output);
 
 				return CommandResult.Success();
 			}

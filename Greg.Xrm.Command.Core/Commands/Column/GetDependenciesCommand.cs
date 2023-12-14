@@ -1,9 +1,8 @@
-﻿using Greg.Xrm.Command.Parsing;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace Greg.Xrm.Command.Commands.Column
 {
-	[Command("column", "getDependencies", HelpText = "Retrieves the list of solution components that depend from a given column")]
+    [Command("column", "getDependencies", HelpText = "Retrieves the list of solution components that depend from a given column")]
 	[Alias("column", "getdeps")]
 	[Alias("column", "get-dependencies")]
 	public class GetDependenciesCommand
@@ -15,5 +14,9 @@ namespace Greg.Xrm.Command.Commands.Column
 		[Option("column", "c", HelpText = "The name of the column to retrieve the dependencies for")]
 		[Required]
 		public string? ColumnName { get; set; }
+
+
+		[Option("forDelete", "d", HelpText = "Specifies whether to retrieve the dependencies for delete or not", DefaultValue = true)]
+		public bool ForDelete { get; set; } = true;
 	}
 }

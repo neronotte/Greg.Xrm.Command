@@ -265,7 +265,7 @@ namespace Greg.Xrm.Command
 		/// <param name="attributeLogicalName"></param>
 		/// <param name="alias"></param>
 		/// <returns></returns>
-		public static T GetAliasedValue<T>(this Entity entity, string attributeLogicalName, string alias)
+		public static T? GetAliasedValue<T>(this Entity entity, string attributeLogicalName, string alias)
 		{
 			return GetAliasedValue<T>(entity, string.Format("{0}.{1}", alias, attributeLogicalName));
 		}
@@ -349,5 +349,142 @@ namespace Greg.Xrm.Command
 			if (u != null && u.IsEnum) return u;
 			return null;
 		}
+
+
+		#region SubstringAllByString
+
+		/// <summary>
+		/// Loops through the string, retrieving sub strings for the values.  i.e. "_1_2_".SubstringAllByString("_","_") would return a list containing two items, "1" and "2".
+		/// Credits @darylabar
+		/// </summary>
+		/// <param name="value">The value.</param>
+		/// <param name="startString">The start string.</param>
+		/// <param name="endString">The end string.</param>
+		/// <param name="comparison">The comparison.</param>
+		/// <param name="splitOptions">The split options.</param>
+		/// <returns></returns>
+		public static List<string> SubstringAllByString(this string value, string startString, string endString, StringComparison comparison = StringComparison.Ordinal, StringSplitOptions splitOptions = StringSplitOptions.None)
+		{
+			var results = new List<string>();
+
+			while (true)
+			{
+				var sub = value.SubstringByString(startString, endString, out var index, comparison);
+				if (index < 0)
+				{
+					break;
+				}
+				if (!string.IsNullOrEmpty(sub) || splitOptions != StringSplitOptions.RemoveEmptyEntries)
+				{
+					results.Add(sub ?? string.Empty);
+				}
+				value = value[index..];
+			}
+
+			return results;
+		}
+
+		#endregion SubstringAllByString
+
+
+
+
+		#region SubstringByString
+
+		/// <summary>
+		/// Returns a the substring after the index of the first occurence of the startString.
+		/// Example: "012345678910".SubstringByString("2"); returns "345678910"
+		/// </summary>
+		/// <param name="value">The value.</param>
+		/// <param name="startString">The string that marks the start of the substring to be returned.</param>
+		/// <param name="comparison">The comparison method for finding the index of the endString.</param>
+		/// <returns></returns>
+		public static string? SubstringByString(this string value, string startString, StringComparison comparison = StringComparison.Ordinal)
+		{
+			var start = value.IndexOf(startString, comparison);
+			return start < 0 ? null : value[(start + startString.Length)..];
+		}
+
+		/// <summary>
+		/// Returns a the substring after the index of the first occurence of the startString and ending before the first instance of the end string.
+		/// Example: "012345678910".SubstringByString("2", "8"); returns "34567"
+		/// </summary>
+		/// <param name="value">The value.</param>
+		/// <param name="startString">The string that marks the start of the substring to be returned.</param>
+		/// <param name="endString">The string that marks the end of the substring to be returned.</param>
+		/// <param name="comparison">The comparison method for finding the index of the endString.</param>
+		/// <returns></returns>
+		public static string? SubstringByString(this string value, string startString, string endString, StringComparison comparison = StringComparison.Ordinal)
+		{
+			return value.SubstringByString(startString, endString, out _, comparison);
+		}
+
+		/// <summary>
+		/// Returns a the substring after the index of the first occurence of the startString and ending before the first instance of the endString.
+		/// Example: "012345678910".SubstringByString("2", "8"); returns "34567"
+		/// </summary>
+		/// <param name="value">The value.</param>
+		/// <param name="startString">The string that marks the start of the substring to be returned.</param>
+		/// <param name="endString">The string that marks the end of the substring to be returned.</param>
+		/// <param name="endIndex">The end index of the endString.  Returns -1 if endString is not found.</param>
+		/// <param name="comparison">The comparison method for finding the index of the endString.</param>
+		/// <returns></returns>
+		public static string? SubstringByString(this string value, string startString, string endString, out int endIndex, StringComparison comparison = StringComparison.Ordinal)
+		{
+			var start = value.IndexOf(startString, comparison);
+			string? result = null;
+			if (start < 0)
+			{
+				endIndex = -1;
+			}
+			else
+			{
+				result = value.SubstringByString(start + startString.Length, endString, out endIndex);
+			}
+			return result;
+		}
+
+		/// <summary>
+		/// Returns a the substring starting with the index of the startIndex and ending before the first instance of the end string.
+		/// Example: "012345678910".SubstringByString("2", "8"); returns "34567"
+		/// </summary>
+		/// <param name="value">The value.</param>
+		/// <param name="startIndex">The start index of the substring.</param>
+		/// <param name="endString">The string that marks the end of the substring to be returned.</param>
+		/// <param name="comparison">The comparison method for finding the index of the endString.</param>
+		/// <returns></returns>
+		public static string? SubstringByString(this string value, int startIndex, string endString, StringComparison comparison = StringComparison.Ordinal)
+		{
+			return value.SubstringByString(startIndex, endString, out _, comparison);
+		}
+
+		/// <summary>
+		/// Returns a the substring starting with the index of the startIndex and ending before the first instance of the end string.
+		/// Example: "012345678910".SubstringByString("2", "8"); returns "34567"
+		/// </summary>
+		/// <param name="value">The value.</param>
+		/// <param name="startIndex">The start index of the substring.</param>
+		/// <param name="endString">The string that marks the end of the substring to be returned.</param>
+		/// <param name="endIndex">The end index of the endString.  Returns -1 if endString is not found.</param>
+		/// <param name="comparison">The comparison method for finding the index of the endString.</param>
+		/// <returns></returns>
+		public static string? SubstringByString(this string value, int startIndex, string endString, out int endIndex, StringComparison comparison = StringComparison.Ordinal)
+		{
+			var end = value.IndexOf(endString, startIndex, comparison);
+			string? result = null;
+			if (end < 0)
+			{
+				endIndex = -1;
+			}
+			else
+			{
+
+				endIndex = end;
+				result = value[startIndex..end];
+			}
+			return result;
+		}
+
+		#endregion SubstringByString
 	}
 }
