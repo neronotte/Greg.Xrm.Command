@@ -4,8 +4,8 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Greg.Xrm.Command.Commands.UnifiedRouting
 {
-	[Command("unifiedrouting", "agentStatus", HelpText = "Creates a new table in the dataverse environment that has previously been selected via `pacx auth select`")]
-	[Alias("ur","status")]
+    [Command("unifiedrouting", "agentStatus", HelpText = "Get the agent status with the primary email/domain name provided. Optionally, you can specify a date in order to get agent status at that time. It uses the Dataverse environment selected using `pacx auth select`")]
+    [Alias("ur","status")]
 	public class GetAgentStatusCommand : ICanProvideUsageExample
 	{
 		[Option("agentPrimaryEmail", "a", "Agent primary email (or domain name) used to perform the query.")]
