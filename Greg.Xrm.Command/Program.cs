@@ -31,6 +31,8 @@ serviceCollection.AddTransient<IAttributeDeletionService, AttributeDeletionServi
 serviceCollection.AddTransient<IDependencyRepository, Dependency.Repository>();
 serviceCollection.AddTransient<IWorkflowRepository, Workflow.Repository>();
 serviceCollection.AddTransient<IProcessTriggerRepository, ProcessTrigger.Repository>();
+serviceCollection.AddTransient<ISavedQueryRepository, SavedQuery.Repository>();
+serviceCollection.AddTransient<IUserQueryRepository, UserQuery.Repository>();
 serviceCollection.AddTransient<Bootstrapper>();
 
 

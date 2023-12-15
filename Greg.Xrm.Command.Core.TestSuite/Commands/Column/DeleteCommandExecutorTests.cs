@@ -29,7 +29,14 @@ namespace Greg.Xrm.Command.Commands.Column
 			var dependencyRepository = new Dependency.Repository(logger);
 			var workflowRepository = new Workflow.Repository();
 			var processTriggerRepository = new ProcessTrigger.Repository();
-			var attributeDeletionService = new AttributeDeletionService(output, workflowRepository, processTriggerRepository);
+			var savedQueryRepository = new SavedQuery.Repository();
+			var userQueryRepository = new UserQuery.Repository();
+			var attributeDeletionService = new AttributeDeletionService(
+				output, 
+				savedQueryRepository, 
+				userQueryRepository, 
+				workflowRepository, 
+				processTriggerRepository);
 
 			
 			var command = new DeleteCommand
