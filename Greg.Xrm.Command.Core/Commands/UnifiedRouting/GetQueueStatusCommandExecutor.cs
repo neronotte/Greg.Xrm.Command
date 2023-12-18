@@ -53,7 +53,7 @@ namespace Greg.Xrm.Command.Commands.UnifiedRouting
 					user => new [] {
 						user.GetAliasedValue<string>(systemuser.internalemailaddress, nameof(systemuser)) ?? string.Empty,
 						user.GetAliasedValue<string>(msdyn_presence.msdyn_presencestatustext, nameof(msdyn_presence)) ?? string.Empty,
-						user.GetAttributeValue<DateTime?>(msdyn_agentstatushistory.msdyn_starttime).GetValueOrDefault().ToLocalTime().ToString()
+						user.GetAttributeValue<DateTime?>(msdyn_agentcapacityupdatehistory.msdyn_starttime).GetValueOrDefault().ToLocalTime().ToString()
 					},
 					(index, row) =>
 					{

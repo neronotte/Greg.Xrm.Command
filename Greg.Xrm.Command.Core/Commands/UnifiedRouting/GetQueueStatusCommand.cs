@@ -15,7 +15,10 @@ namespace Greg.Xrm.Command.Commands.UnifiedRouting
 		[Option("dateTime", "t", "Date and time (local time) used to perform the query. Format dd/MM/yyyy HH:mm.")]
 		public string? DateTimeFilter { get; set; }
 
-		public void WriteUsageExamples(MarkdownWriter writer)
+        [Option("isUnitBased", "ub", DefaultValue = false)]
+        public bool UnitBased { get; set; } = false;
+
+        public void WriteUsageExamples(MarkdownWriter writer)
 		{
 
 		}
