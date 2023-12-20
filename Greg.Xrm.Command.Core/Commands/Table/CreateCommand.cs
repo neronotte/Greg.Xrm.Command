@@ -31,8 +31,23 @@ namespace Greg.Xrm.Command.Commands.Table
         [Option("isActivity", "act", DefaultValue = false)]
         public bool IsActivity { get; set; } = false;
 
+        [Option("offline", "off", DefaultValue = false)]
+        public bool IsAvailableOffline { get; set; } = false;
+
+        [Option("queue", "queue", DefaultValue = false)]
+        public bool IsValidForQueue { get; set; } = false;
+
+        [Option("feedback", "fb", DefaultValue = false)]
+        public bool HasFeedback { get; set; } = false;
+
+        [Option("notes", DefaultValue = false)]
+        public bool HasNotes { get; set; } = false;
+
         [Option("audit", "a", DefaultValue = true)]
         public bool IsAuditEnabled { get; set; } = true;
+
+        [Option("connection", "conn", DefaultValue = true)]
+        public bool IsConnectionsEnabled { get; set; } = true;
 
         [Option("primaryAttributeName", "pan")]
         public string? PrimaryAttributeDisplayName { get; set; }

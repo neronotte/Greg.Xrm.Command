@@ -17,6 +17,10 @@ namespace Greg.Xrm.Command.Commands.Table
             Assert.AreEqual("master", command.SolutionName);
             Assert.AreEqual(OwnershipTypes.UserOwned, command.Ownership);
             Assert.IsFalse(command.IsActivity);
+            Assert.IsFalse(command.IsAvailableOffline);
+            Assert.IsFalse(command.IsValidForQueue);
+            Assert.IsFalse(command.HasNotes);
+            Assert.IsFalse(command.HasFeedback);
             Assert.IsTrue(command.IsAuditEnabled);
             Assert.IsNull(command.PrimaryAttributeSchemaName);
             Assert.IsNull(command.PrimaryAttributeDisplayName);
