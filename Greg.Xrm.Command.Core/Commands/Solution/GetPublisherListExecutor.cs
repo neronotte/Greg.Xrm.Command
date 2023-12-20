@@ -50,8 +50,8 @@ namespace Greg.Xrm.Command.Commands.Solution
 
 
 				this.output.WriteTable(listPublisher,
-                    publisherListColumns(command.Verbose),
-                    publisherListData(command.Verbose),
+					publisherListColumns(command.Verbose),
+					publisherListData(command.Verbose),
 					(index, row) =>
 					{
 						if (index == 0)
