@@ -27,15 +27,15 @@ namespace Greg.Xrm.Command.Commands.Table
         }
 
         public async Task<CommandResult> ExecuteAsync(CreateCommand command, CancellationToken cancellationToken)
-		{
-			this.output.Write($"Connecting to the current dataverse environment...");
-			var crm = await this.organizationServiceRepository.GetCurrentConnectionAsync();
-			this.output.WriteLine("Done", ConsoleColor.Green);
+        {
+            this.output.Write($"Connecting to the current dataverse environment...");
+            var crm = await this.organizationServiceRepository.GetCurrentConnectionAsync();
+            this.output.WriteLine("Done", ConsoleColor.Green);
 
 
-			try
-			{
-			    var defaultLanguageCode = await crm.GetDefaultLanguageCodeAsync();
+            try
+            {
+                var defaultLanguageCode = await crm.GetDefaultLanguageCodeAsync();
 
                 var currentSolutionName = command.SolutionName;
                 if (string.IsNullOrWhiteSpace(currentSolutionName))
@@ -82,37 +82,43 @@ namespace Greg.Xrm.Command.Commands.Table
 
                 output.Write("Setting up CreateEntityRequest...");
 
-				var entityMetadata = new EntityMetadata
-				{
-					DisplayName = SetTableDisplayName(command, defaultLanguageCode),
-					DisplayCollectionName = await SetTableDisplayCollectionNameAsync(command, defaultLanguageCode),
-					Description = SetTableDescription(command, defaultLanguageCode),
-					SchemaName = SetTableSchemaName(command, publisherPrefix),
-					OwnershipType = command.Ownership,
-					IsActivity = command.IsActivity,
-					IsAuditEnabled = SetTableIsAuditEnabled(command)
-				};
+                var entityMetadata = new EntityMetadata
+                {
+                    DisplayName = SetTableDisplayName(command, defaultLanguageCode),
+                    DisplayCollectionName = await SetTableDisplayCollectionNameAsync(command, defaultLanguageCode),
+                    Description = SetTableDescription(command, defaultLanguageCode),
+                    SchemaName = SetTableSchemaName(command, publisherPrefix),
+                    OwnershipType = command.Ownership,
+                    IsActivity = command.IsActivity,
+                    IsAvailableOffline = command.IsAvailableOffline || command.IsActivity,
+                    IsValidForQueue = new BooleanManagedProperty(command.IsValidForQueue || command.IsActivity),
+                    IsConnectionsEnabled = new BooleanManagedProperty(command.IsConnectionsEnabled || command.IsActivity),
+                    HasNotes = command.HasNotes || command.IsActivity,
+                    HasFeedback = command.HasFeedback || command.IsActivity,
+                    IsAuditEnabled = SetTableIsAuditEnabled(command)
+                };
 
 
-				var primaryAttribute = new StringAttributeMetadata
-				{
-					DisplayName = SetPrimaryAttributeDisplayName(command, defaultLanguageCode),
-					Description = SetPrimaryAttributeDescription(command, defaultLanguageCode),
-					RequiredLevel = SetPrimaryAttributeRequiredLevel(command),
-					MaxLength = SetPrimaryAttributeMaxLength(command),
-					AutoNumberFormat = SetPrimaryAttributeAutoNumberFormat(command),
-					FormatName = StringFormatName.Text
-				};
-				primaryAttribute.SchemaName = SetPrimaryAttributeSchemaName(command, primaryAttribute.DisplayName, publisherPrefix);
+                var primaryAttribute = new StringAttributeMetadata
+                {
+                    DisplayName = SetPrimaryAttributeDisplayName(command, defaultLanguageCode, command.IsActivity),
+                    Description = SetPrimaryAttributeDescription(command, defaultLanguageCode),
+                    RequiredLevel = SetPrimaryAttributeRequiredLevel(command),
+                    MaxLength = SetPrimaryAttributeMaxLength(command),
+                    AutoNumberFormat = SetPrimaryAttributeAutoNumberFormat(command),
+                    FormatName = StringFormatName.Text
+                };
+                primaryAttribute.SchemaName = SetPrimaryAttributeSchemaName(command, primaryAttribute.DisplayName, publisherPrefix, command.IsActivity);
 
-				output.WriteLine(" Done", ConsoleColor.Green);
+                output.WriteLine(" Done", ConsoleColor.Green);
 
 
                 output.Write("Creating table...");
                 var request = new CreateEntityRequest
                 {
                     Entity = entityMetadata,
-                    PrimaryAttribute = primaryAttribute
+                    PrimaryAttribute = primaryAttribute,
+                    HasNotes = command.HasNotes || command.IsActivity
                 };
                 var response = (CreateEntityResponse)await crm.ExecuteAsync(request);
                 output.WriteLine(" Done", ConsoleColor.Green);
@@ -129,13 +135,13 @@ namespace Greg.Xrm.Command.Commands.Table
                 };
 
                 await crm.ExecuteAsync(request1);
-				output.WriteLine(" Done", ConsoleColor.Green);
+                output.WriteLine(" Done", ConsoleColor.Green);
 
-				var result = CommandResult.Success();
-				result["Table ID"] = response.EntityId;
-				result["Primary Column ID"] = response.AttributeId;
+                var result = CommandResult.Success();
+                result["Table ID"] = response.EntityId;
+                result["Primary Column ID"] = response.AttributeId;
                 return result;
-			}
+            }
             catch (FaultException<OrganizationServiceFault> ex)
             {
                 return CommandResult.Fail(ex.Message, ex);
@@ -239,8 +245,11 @@ namespace Greg.Xrm.Command.Commands.Table
 
 
 
-        private static Label SetPrimaryAttributeDisplayName(CreateCommand command, int defaultLanguageCode)
+        private static Label SetPrimaryAttributeDisplayName(CreateCommand command, int defaultLanguageCode, bool isActivity = false)
         {
+            if(isActivity)
+                return new Label("Subject", defaultLanguageCode);
+
             if (command.PrimaryAttributeDisplayName != null)
             {
                 return new Label(command.PrimaryAttributeDisplayName, defaultLanguageCode);
@@ -258,8 +267,11 @@ namespace Greg.Xrm.Command.Commands.Table
 
 
 
-        private static string SetPrimaryAttributeSchemaName(CreateCommand command, Label displayNameLabel, string publisherPrefix)
+        private static string SetPrimaryAttributeSchemaName(CreateCommand command, Label displayNameLabel, string publisherPrefix, bool isActivity = false)
         {
+            if (isActivity)
+                return "Subject";
+
             if (!string.IsNullOrWhiteSpace(command.PrimaryAttributeSchemaName))
             {
                 if (!command.PrimaryAttributeSchemaName.StartsWith(publisherPrefix + "_"))
