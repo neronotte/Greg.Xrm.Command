@@ -50,8 +50,8 @@ namespace Greg.Xrm.Command.Commands.Solution
 
 
 				this.output.WriteTable(listPublisher,
-					rowHeaders(command.Verbose),
-					rowData(command.Verbose),
+                    publisherListColumns(command.Verbose),
+                    publisherListData(command.Verbose),
 					(index, row) =>
 					{
 						if (index == 0)
@@ -71,7 +71,7 @@ namespace Greg.Xrm.Command.Commands.Solution
 
 		}
 
-		private Func<string[]> rowHeaders(bool verbose)
+		private Func<string[]> publisherListColumns(bool verbose)
 		{
 			string[] columns = {
 				"Unique name",
@@ -91,7 +91,7 @@ namespace Greg.Xrm.Command.Commands.Solution
 
 			return () => columns;
 		}
-		private Func<Entity, string[]> rowData(bool verbose)
+		private Func<Entity, string[]> publisherListData(bool verbose)
 		{
 			return (user) =>
 			{
