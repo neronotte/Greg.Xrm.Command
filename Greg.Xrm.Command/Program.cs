@@ -2,6 +2,7 @@
 using Autofac.Extensions.DependencyInjection;
 using Greg.Xrm.Command;
 using Greg.Xrm.Command.Commands.Column.Builders;
+using Greg.Xrm.Command.Commands.Table.Builders;
 using Greg.Xrm.Command.Commands.Table.ExportMetadata;
 using Greg.Xrm.Command.Services.CommandHistory;
 using Greg.Xrm.Command.Services.Connection;
@@ -26,6 +27,7 @@ serviceCollection.AddTransient<IAttributeMetadataBuilderFactory, AttributeMetada
 serviceCollection.AddTransient<IExportMetadataStrategyFactory, ExportMetadataStrategyFactory>();
 serviceCollection.AddTransient<IHistoryTracker, HistoryTracker>();
 serviceCollection.AddTransient<Bootstrapper>();
+serviceCollection.AddTransient<IAttributeMetadataScriptBuilderFactory, AttributeMetadataScriptBuilderFactory>();
 
 
 serviceCollection.AddAutofac();
