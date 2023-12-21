@@ -9,7 +9,6 @@ namespace Greg.Xrm.Command.Commands.Solution
 	{
 		private readonly IOutput output;
 		private readonly IOrganizationServiceRepository organizationServiceRepository;
-		private readonly string[] blackListPublisher = { "MicrosoftCorporation", "microsoftfirstparty" };
 
 		public GetPublisherListExecutor(
 			IOutput output,
@@ -30,9 +29,14 @@ namespace Greg.Xrm.Command.Commands.Solution
 				var crm = await this.organizationServiceRepository.GetCurrentConnectionAsync();
 				this.output.WriteLine("Done", ConsoleColor.Green);
 
+				string[] blackListPublisher = { "MicrosoftCorporation", "microsoftfirstparty" };
+
+				if(!string.IsNullOrEmpty(command.publisherBlacklist))
+					blackListPublisher = command.publisherBlacklist.Split(',', StringSplitOptions.TrimEntries);
+
 				var query = new QueryExpression("publisher");
 				query.NoLock = true;
-				// Add columns to query.ColumnSet
+				
 				query.ColumnSet.AddColumns(
 					"friendlyname",
 					"customizationprefix",
@@ -42,10 +46,11 @@ namespace Greg.Xrm.Command.Commands.Solution
 					"createdby",
 					"createdon");
 
-				// Add conditions to query.Criteria
-				query.Criteria.AddCondition("uniquename", ConditionOperator.NotIn, blackListPublisher);
 				query.Criteria.AddCondition("isreadonly", ConditionOperator.Equal, false);
 
+				if (blackListPublisher.Count()>0)
+					query.Criteria.AddCondition("uniquename", ConditionOperator.NotIn, blackListPublisher);
+				
 				var listPublisher = (await crm.RetrieveMultipleAsync(query)).Entities;
 
 
