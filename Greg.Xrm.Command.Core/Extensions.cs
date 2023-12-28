@@ -340,7 +340,10 @@ namespace Greg.Xrm.Command
 			return entity;
 		}
 
-
+		public static string AddSpace(this string text)
+		{
+			return text + (string.IsNullOrWhiteSpace(text) ? String.Empty : " ");
+		}
 
 		public static Type? GetEnumType(this Type type)
 		{

@@ -2,6 +2,7 @@
 using Autofac.Extensions.DependencyInjection;
 using Greg.Xrm.Command;
 using Greg.Xrm.Command.Commands.Column.Builders;
+using Greg.Xrm.Command.Commands.Table.Builders;
 using Greg.Xrm.Command.Commands.Table.ExportMetadata;
 using Greg.Xrm.Command.Model;
 using Greg.Xrm.Command.Services;
@@ -32,6 +33,7 @@ serviceCollection.AddTransient<IDependencyRepository, Dependency.Repository>();
 serviceCollection.AddTransient<IWorkflowRepository, Workflow.Repository>();
 serviceCollection.AddTransient<IProcessTriggerRepository, ProcessTrigger.Repository>();
 serviceCollection.AddTransient<Bootstrapper>();
+serviceCollection.AddTransient<IAttributeMetadataScriptBuilderFactory, AttributeMetadataScriptBuilderFactory>();
 
 
 serviceCollection.AddAutofac();
