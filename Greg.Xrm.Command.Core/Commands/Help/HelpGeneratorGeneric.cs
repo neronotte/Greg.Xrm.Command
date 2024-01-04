@@ -7,10 +7,10 @@ namespace Greg.Xrm.Command.Commands.Help
     public class HelpGeneratorGeneric
 	{
 		private readonly IOutput output;
-		private readonly List<CommandDefinition> commandList;
-		private readonly List<VerbNode> commandTree;
+		private readonly IReadOnlyList<CommandDefinition> commandList;
+		private readonly IReadOnlyList<VerbNode> commandTree;
 
-		public HelpGeneratorGeneric(IOutput output, List<CommandDefinition> commandList, List<VerbNode> commandTree)
+		public HelpGeneratorGeneric(IOutput output, IReadOnlyList<CommandDefinition> commandList, IReadOnlyList<VerbNode> commandTree)
         {
 			this.output = output;
 			this.commandList = commandList;

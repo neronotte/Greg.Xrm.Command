@@ -1,11 +1,8 @@
 ﻿using Autofac;
+using Autofac.Core;
 using Autofac.Extensions.DependencyInjection;
 using Greg.Xrm.Command;
-using Greg.Xrm.Command.Commands.Column.Builders;
-using Greg.Xrm.Command.Commands.Table.Builders;
-using Greg.Xrm.Command.Commands.Table.ExportMetadata;
-using Greg.Xrm.Command.Model;
-using Greg.Xrm.Command.Services;
+using Greg.Xrm.Command.Parsing;
 using Greg.Xrm.Command.Services.CommandHistory;
 using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
@@ -19,22 +16,16 @@ ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
 
 var serviceCollection = new ServiceCollection();
 serviceCollection.AddSingleton<ICommandLineArguments>(new CommandLineArguments(args));
+serviceCollection.AddSingleton<ICommandRegistry, CommandRegistry>();
+serviceCollection.AddSingleton<ICommandParser, CommandParser>();
 serviceCollection.RegisterCommandExecutors(typeof(CommandAttribute).Assembly);
 serviceCollection.AddTransient<ICommandExecutorFactory, CommandExecutorFactory>();
 serviceCollection.AddTransient<IPluralizationFactory, PluralizationFactory>();
 serviceCollection.AddTransient<ISettingsRepository, SettingsRepository>();
 serviceCollection.AddSingleton<IOrganizationServiceRepository, OrganizationServiceRepository>();
 serviceCollection.AddSingleton<IOutput, OutputToConsole>();
-serviceCollection.AddTransient<IAttributeMetadataBuilderFactory, AttributeMetadataBuilderFactory>();
-serviceCollection.AddTransient<IExportMetadataStrategyFactory, ExportMetadataStrategyFactory>();
 serviceCollection.AddTransient<IHistoryTracker, HistoryTracker>();
-serviceCollection.AddTransient<IAttributeDeletionService, AttributeDeletionService>();
-serviceCollection.AddTransient<IDependencyRepository, Dependency.Repository>();
-serviceCollection.AddTransient<IWorkflowRepository, Workflow.Repository>();
-serviceCollection.AddTransient<IProcessTriggerRepository, ProcessTrigger.Repository>();
 serviceCollection.AddTransient<Bootstrapper>();
-serviceCollection.AddTransient<IAttributeMetadataScriptBuilderFactory, AttributeMetadataScriptBuilderFactory>();
-
 
 serviceCollection.AddAutofac();
 serviceCollection.AddLogging(logging =>
@@ -48,21 +39,28 @@ var containerBuilder = new ContainerBuilder();
 containerBuilder.Populate(serviceCollection);
 
 var container = containerBuilder.Build();
-var serviceProvider = new AutofacServiceProvider(container);
 
-var hostedService = serviceProvider.GetService<Bootstrapper>();
-try
+using(var scope = container.BeginLifetimeScope("activation"))
 {
-	hostedService?.StartAsync(CancellationToken.None).Wait();
-}
-catch(AggregateException ex)
-{
-	foreach(var inner in ex.InnerExceptions)
+	try
 	{
-		Console.WriteLine(inner.Message);
+		var hostedService = scope.Resolve<Bootstrapper>();
+
+		hostedService?.StartAsync(CancellationToken.None).Wait();
 	}
-}
-catch(Exception ex)
-{
-	Console.WriteLine(ex.Message);
+	catch (AggregateException ex)
+	{
+		foreach (var inner in ex.InnerExceptions)
+		{
+			Console.WriteLine(inner.Message);
+		}
+	}
+	catch(DependencyResolutionException ex)
+	{
+		Console.WriteLine(ex);
+	}
+	catch (Exception ex)
+	{
+		Console.WriteLine(ex.Message);
+	}
 }

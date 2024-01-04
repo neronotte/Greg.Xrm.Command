@@ -54,7 +54,7 @@ namespace Greg.Xrm.Command.Commands.Table
 								.Where(x => x.IsCustomAttribute.HasValue && x.IsCustomAttribute.Value
 									&& x.IsPrimaryName.HasValue && !x.IsPrimaryName.Value
 									&& (x.AttributeType.HasValue && x.AttributeType.Value != AttributeTypeCode.Virtual
-										|| x.AttributeType.Value == AttributeTypeCode.Virtual && x.AttributeTypeName.Value == "MultiSelectPicklistType")
+										|| x.AttributeType == AttributeTypeCode.Virtual && x.AttributeTypeName.Value == "MultiSelectPicklistType")
 									&& !x.LogicalName.ToLower().Contains("_base"))
 								.ToList();
 
@@ -119,14 +119,15 @@ namespace Greg.Xrm.Command.Commands.Table
             return CommandResult.Success();
         }
 
-		private string GenerateTableScript(RetrieveEntityResponse response)
+		private static string GenerateTableScript(RetrieveEntityResponse response)
 		{
             var sb = new StringBuilder();
 			var tableBuilder = new TableMetadataScriptBuilder();
 			sb.Append(tableBuilder.GetTableScript(response.EntityMetadata));
+#pragma warning disable S6602 // "Find" method should be used instead of the "FirstOrDefault" extension
 			var primaryKeyAttribute = response.EntityMetadata.Attributes
-										.Where(x => x.IsPrimaryName.HasValue && x.IsPrimaryName.Value)
-										.FirstOrDefault();
+										.FirstOrDefault(x => x.IsPrimaryName.HasValue && x.IsPrimaryName.Value);
+#pragma warning restore S6602 // "Find" method should be used instead of the "FirstOrDefault" extension
 
 			if (primaryKeyAttribute != null)
 				sb.Append(tableBuilder.GetColumnScript(primaryKeyAttribute));
@@ -136,9 +137,8 @@ namespace Greg.Xrm.Command.Commands.Table
 
 		public string GenerateColumnScript(AttributeMetadata attributeMetadata)
         {
-
             if (!attributeMetadata.AttributeType.HasValue)
-                throw new ArgumentNullException(nameof(attributeMetadata.AttributeType));
+                throw new ArgumentNullException(nameof(attributeMetadata), "The attributeMetadata.AttributeType is null.");
 
             var builder = attributeMetadataScriptBuilderFactory.CreateFor(attributeMetadata.AttributeType.Value);
 

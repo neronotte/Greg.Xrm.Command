@@ -2,7 +2,6 @@
 using OfficeOpenXml.Style;
 using OfficeOpenXml.Table;
 using System.Drawing;
-using System.Runtime.CompilerServices;
 
 namespace Greg.Xrm.Command
 {

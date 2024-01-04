@@ -1,3 +1,4 @@
+using Autofac;
 using Greg.Xrm.Command.Commands.Auth;
 
 namespace Greg.Xrm.Command.Parsing
@@ -8,8 +9,11 @@ namespace Greg.Xrm.Command.Parsing
         [TestMethod]
         public void AuthListShouldBeResolvedProperly()
         {
-            var parser = new CommandLineParser(new OutputToMemory());
-            parser.InitializeFromAssembly(typeof(ListCommand).Assembly);
+            var container = new ContainerBuilder().Build();
+			var registry = new CommandRegistry(container);
+			registry.InitializeFromAssembly(typeof(ListCommand).Assembly);
+
+			var parser = new CommandParser(new OutputToMemory(), registry);
 
             var command = parser.Parse("auth", "list");
 

@@ -20,7 +20,7 @@ namespace Greg.Xrm.Command.Commands.Help
 			this.LastMatchingVerb = null;
 		}
 
-		public HelpCommand(List<CommandDefinition> commandDefinitionList, List<VerbNode> commandTree, IReadOnlyDictionary<string, string> options)
+		public HelpCommand(IReadOnlyList<CommandDefinition> commandDefinitionList, IReadOnlyList<VerbNode> commandTree, IReadOnlyDictionary<string, string> options)
 		{
 			this.CommandList = commandDefinitionList;
 			this.CommandTree = commandTree;
@@ -39,9 +39,9 @@ namespace Greg.Xrm.Command.Commands.Help
 
 		public string ExportHelpPath { get; }
 
-		public List<CommandDefinition> CommandList { get; } = new();
+		public IReadOnlyList<CommandDefinition> CommandList { get; } = new List<CommandDefinition>();
 
-		public List<VerbNode> CommandTree { get; } = new();
+		public IReadOnlyList<VerbNode> CommandTree { get; } = new List<VerbNode>();
 
 		public VerbNode? LastMatchingVerb { get; }
 	}

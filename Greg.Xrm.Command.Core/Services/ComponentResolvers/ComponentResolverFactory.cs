@@ -3,7 +3,7 @@ using Microsoft.PowerPlatform.Dataverse.Client;
 
 namespace Greg.Xrm.Command.Services.ComponentResolvers
 {
-	public class ComponentResolverFactory
+	public class ComponentResolverFactory : IComponentResolverFactory
     {
         private readonly IOrganizationServiceAsync2 crm;
         private readonly ILogger log;
@@ -69,16 +69,18 @@ namespace Greg.Xrm.Command.Services.ComponentResolvers
         public IComponentResolver? GetComponentResolverFor(int componentType)
         {
             var componentTypeName = componentType.ToString();
-#pragma warning disable S2486 // Generic exceptions should not be ignored
-            try
+			try
             {
                 componentTypeName = Enum.GetName(typeof(ComponentType), componentType);
-            }
-            catch { }
+			}
+#pragma warning disable S2486 // Generic exceptions should not be ignored
+#pragma warning disable S108 // Nested blocks of code should not be left empty
+			catch { }
+#pragma warning restore S108 // Nested blocks of code should not be left empty
 #pragma warning restore S2486 // Generic exceptions should not be ignored
 
 
-            if (!resolverStrategyCache.TryGetValue(componentType, out var factoryMethod))
+			if (!resolverStrategyCache.TryGetValue(componentType, out var factoryMethod))
             {
                 return null;
             }

@@ -1,21 +1,66 @@
-﻿using Greg.Xrm.Command.Commands.Help;
-using Greg.Xrm.Command.Services.Output;
+﻿using Autofac;
+using Autofac.Core;
 using System.Reflection;
 
 namespace Greg.Xrm.Command.Parsing
 {
-	public class CommandLineParser
+	public class CommandRegistry : ICommandRegistry
 	{
 		private readonly List<CommandDefinition> commandDefinitionList = new();
 		private readonly CommandTree commandTree = new();
-		private readonly IOutput output;
+		private readonly List<IModule> moduleDefinitions = new();
+		private readonly ILifetimeScope container;
 
-		public CommandLineParser(IOutput output)
-        {
-			this.output = output;
+
+		public CommandRegistry(ILifetimeScope container)
+		{
+			this.container = container;
 		}
 
-        public void InitializeFromAssembly(Assembly assembly)
+
+		public CommandTree Tree => this.commandTree;
+
+		public IReadOnlyList<CommandDefinition> Commands => this.commandDefinitionList;
+
+		public IReadOnlyList<IModule> Modules => this.moduleDefinitions;
+
+
+
+
+
+
+
+		public void InitializeFromAssembly(Assembly assembly)
+		{
+			ScanForModules(assembly);
+			var commandList = ScanForCommands(assembly);
+			var namespaceHelpers = ScanForNamespaceHelpers(assembly);
+			CreateVerbTree(commandList, namespaceHelpers);
+		}
+
+
+
+
+
+
+		private void ScanForModules(Assembly assembly)
+		{
+			var moduleType = typeof(IModule);
+			var moduleList = (from type in assembly.GetTypes()
+							  where moduleType.IsAssignableFrom(type) && !type.IsAbstract && type.GetCustomAttribute<ObsoleteAttribute>() == null
+							  let module = this.container.ResolveOptional(type) as IModule
+							  where module != null
+							  select module).ToList();
+
+			this.moduleDefinitions.AddRange(moduleList);
+		}
+
+
+
+
+
+
+		private List<CommandDefinition> ScanForCommands(Assembly assembly)
 		{
 #pragma warning disable S6605 // Collection-specific "Exists" method should be used instead of the "Any" extension
 			var commandList = (from commandType in assembly.GetTypes()
@@ -38,19 +83,23 @@ namespace Greg.Xrm.Command.Parsing
 				this.commandDefinitionList.Add(command);
 			}
 
+			return commandList;
+		}
 
-#pragma warning disable S6605 // Collection-specific "Exists" method should be used instead of the "Any" extension
+		private List<INamespaceHelper> ScanForNamespaceHelpers(Assembly assembly)
+		{
 			var helperType = typeof(INamespaceHelper);
 			var namespaceHelpers = (from type in assembly.GetTypes()
-									where helperType.IsAssignableFrom(type) && !type.IsAbstract && type.GetConstructors().Any(c => c.IsPublic && c.GetParameters().Length == 0)
-									let helper = Activator.CreateInstance(type) as INamespaceHelper
+									where helperType.IsAssignableFrom(type) && !type.IsAbstract
+									let helper = this.container.ResolveOptional(type) as INamespaceHelper
 									where helper != null
 									select helper).ToList();
-#pragma warning restore S6605 // Collection-specific "Exists" method should be used instead of the "Any" extension
 
-
-			CreateVerbTree(commandList, namespaceHelpers);
+			return namespaceHelpers;
 		}
+
+
+
 
 
 		private void CreateVerbTree(IReadOnlyList<CommandDefinition> commandList, List<INamespaceHelper> helpers)
@@ -86,63 +135,6 @@ namespace Greg.Xrm.Command.Parsing
 
 			this.commandTree.Clear();
 			this.commandTree.AddRange(list);
-		}
-
-
-
-
-		public object Parse(IEnumerable<string> args)
-		{
-			return Parse(args.ToArray());
-		}
-
-
-
-		public object Parse(params string[] args)
-		{
-			if (!CommandRunArgs.TryParse(args, this.output, out var runArgs))
-				return new HelpCommand(this.commandDefinitionList, this.commandTree, runArgs?.Options ?? new Dictionary<string, string>());
-
-
-			// shows the generic help
-			if (runArgs == null 
-				|| runArgs.Verbs.Count == 0 
-				|| (runArgs.Verbs.Count == 1 && string.Equals("help", runArgs.Verbs[0], StringComparison.OrdinalIgnoreCase)))
-			{
-				return new HelpCommand(this.commandDefinitionList, this.commandTree, runArgs?.Options ?? new Dictionary<string, string>());
-			}
-
-
-			var showHelp = runArgs.Options.ContainsKey("--help")
-				|| runArgs.Options.ContainsKey("-h")
-				|| runArgs.Options.ContainsKey("/?");
-			
-
-			var commandDefinition = commandDefinitionList.Find(c => c.IsMatch(runArgs.Verbs));
-			if (commandDefinition is null)
-			{
-				var lastMatchingVerb = this.commandTree.FindNode(runArgs.Verbs);
-				if (lastMatchingVerb is null)
-				{
-					this.output.WriteLine("Invalid command", ConsoleColor.Red).WriteLine();
-
-					return new HelpCommand(this.commandDefinitionList, this.commandTree, runArgs?.Options ?? new Dictionary<string, string>());
-				}
-				else
-				{
-					return new HelpCommand(lastMatchingVerb);
-				}
-			}
-
-
-			if (showHelp)
-			{
-				return new HelpCommand(commandDefinition);
-			}
-
-
-			var command = commandDefinition.CreateCommand(runArgs.Options);
-			return command;
 		}
 	}
 }

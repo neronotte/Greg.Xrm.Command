@@ -8,7 +8,9 @@ namespace Greg.Xrm.Command.Commands.Table.Builders
 		public override string GetColumnScript(AttributeMetadata attributeMetadata)
 		{
 			//Check multiselect
-			EnumAttributeMetadata attr = attributeMetadata.AttributeType.Value == AttributeTypeCode.Picklist ? (PicklistAttributeMetadata)attributeMetadata :  (MultiSelectPicklistAttributeMetadata)attributeMetadata;
+			EnumAttributeMetadata attr = attributeMetadata.AttributeType == AttributeTypeCode.Picklist ? 
+				(PicklistAttributeMetadata)attributeMetadata : 
+				(MultiSelectPicklistAttributeMetadata)attributeMetadata;
 
 			var sb = new StringBuilder(GetCommonColumns(attributeMetadata, AttributeTypeCode.Picklist.ToString()));
 

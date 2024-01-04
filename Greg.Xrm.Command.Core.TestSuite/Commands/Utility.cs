@@ -7,8 +7,12 @@ namespace Greg.Xrm.Command.Commands
 	{
 		public static TCommand TestParseCommand<TCommand>(params string[] args)
 		{
-			var parser = new CommandLineParser(new OutputToMemory());
-			parser.InitializeFromAssembly(typeof(ListCommand).Assembly);
+			var container = new Autofac.ContainerBuilder().Build();	
+
+			var registry = new CommandRegistry(container);
+			registry.InitializeFromAssembly(typeof(ListCommand).Assembly);
+
+			var parser = new CommandParser(new OutputToMemory(), registry);
 
 			var parseResult = parser.Parse(args);
 

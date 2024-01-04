@@ -116,28 +116,18 @@ namespace Greg.Xrm.Command.Parsing
 
 		public bool TryMatch(CommandDefinition other, out string matchedAlias)
 		{
-			var thisVerbs = new List<string>
-			{
-				this.ExpandedVerbs
-			};
+			var thisVerbs = new List<string> { this.ExpandedVerbs };
 			thisVerbs.AddRange(this.Aliases.Select(x => x.ExpandedVerbs));
 
-			var otherVerbs = new List<string>
-			{
-				other.ExpandedVerbs
-			};
+			var otherVerbs = new List<string> { other.ExpandedVerbs };
 			otherVerbs.AddRange(other.Aliases.Select(x => x.ExpandedVerbs));
 
-			foreach (var v1 in thisVerbs)
+
+			var v = thisVerbs.Intersect(otherVerbs, StringComparer.OrdinalIgnoreCase).FirstOrDefault();
+			if (v != null)
 			{
-				foreach (var v2 in otherVerbs)
-				{
-					if (string.Equals(v1, v2, StringComparison.OrdinalIgnoreCase))
-					{
-						matchedAlias = $"<{v1}>: {this.CommandType.FullName} and {other.CommandType.FullName}";
-						return true;
-					}
-				}
+				matchedAlias = $"<{v}>: {this.CommandType.FullName} and {other.CommandType.FullName}";
+				return true;
 			}
 
 			matchedAlias = string.Empty;

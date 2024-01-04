@@ -6,11 +6,13 @@ namespace Greg.Xrm.Command.Commands.Table.Builders
 {
 	public abstract class AttributeMetadataScriptBuilderBase : IAttributeMetadataScriptBuilder
 	{
-		public readonly Dictionary<string, string> argumentsDictionary = new();
+		private readonly Dictionary<string, string> argumentsDictionary;
+
+		public Dictionary<string, string> ArgumentsDictionary => this.argumentsDictionary;
 
 		public abstract string GetColumnScript(AttributeMetadata attributeMetadata);
 
-		public AttributeMetadataScriptBuilderBase()
+		protected AttributeMetadataScriptBuilderBase()
 		{
 			argumentsDictionary = CommandArgsConstants.GetArgumentDictionary();
 		}
@@ -18,7 +20,7 @@ namespace Greg.Xrm.Command.Commands.Table.Builders
 		public string GetCommonColumns(AttributeMetadata attributeMetadata, string? typeName = null)
 		{
 			var sb = new StringBuilder();
-			var typeString = typeName ?? attributeMetadata?.AttributeType.Value.ToString();
+			var typeString = typeName ?? attributeMetadata.AttributeType?.ToString();
 			sb.Append(CommandArgsConstants.COLUMN_COMMAND);
 
 			//table i.Space(f)o
@@ -36,35 +38,34 @@ namespace Greg.Xrm.Command.Commands.Table.Builders
 		}
 
 
-		public string CreatePropertyAttribute<T>(T attributeMetadata, string dictKey, object defaultValue = null)
+		public string CreatePropertyAttribute<T>(T attributeMetadata, string dictKey, object? defaultValue = null)
 		{
 			var result = String.Empty;
 			if (attributeMetadata == null)
 				return result;
 
-			if (!argumentsDictionary.TryGetValue(dictKey, out var shortArg))
+			if (!ArgumentsDictionary.TryGetValue(dictKey, out var shortArg))
 				throw new ArgumentNullException($"The key {dictKey} is not supported for this type");
 
-			if (attributeMetadata is string strProp)
-			{
-				if (!string.IsNullOrWhiteSpace(strProp?.ToString()))
-					return $"-{shortArg} {WrapString(strProp.ToString())}".AddSpace();
-			}
+			if (attributeMetadata is string strProp && !string.IsNullOrWhiteSpace(strProp.ToString()))
+				return $"-{shortArg} {WrapString(strProp.ToString())}".AddSpace();
+
+
 			if (attributeMetadata is Label labProp) 
 			{
-				if (!string.IsNullOrWhiteSpace(labProp?.UserLocalizedLabel?.Label))
+				if (!string.IsNullOrWhiteSpace(labProp.UserLocalizedLabel?.Label))
 					return $"-{shortArg} {WrapString(labProp.UserLocalizedLabel.Label)}".AddSpace();
 				return result;
 			}
 			if (attributeMetadata is AttributeRequiredLevelManagedProperty arlProp)
 			{
-				if (arlProp != null && arlProp.Value != AttributeRequiredLevel.None)
+				if (arlProp.Value != AttributeRequiredLevel.None)
 					return $"-{shortArg} {arlProp.Value}".AddSpace();
 				return result;
 			}
 			if (attributeMetadata is BooleanManagedProperty bProp)
 			{
-				if (bProp.Value != (bool)defaultValue)
+				if (defaultValue != null && bProp.Value != (bool)defaultValue)
 					return $"-{shortArg} {bProp.Value}".AddSpace();
 				return result;
 			}
@@ -84,14 +85,14 @@ namespace Greg.Xrm.Command.Commands.Table.Builders
 			}
 			if (attributeMetadata is DateTimeBehavior dtProp)
 			{
-				if (dtProp.Value != (DateTimeBehavior)defaultValue)
-					return $"-{shortArg} {(DateTimeBehavior)dtProp?.Value}".AddSpace();
+				if (defaultValue!= null && dtProp.Value != (DateTimeBehavior)defaultValue)
+					return $"-{shortArg} {(DateTimeBehavior)dtProp.Value}".AddSpace();
 				return result;
 			}
 			if (attributeMetadata is OwnershipTypes ownProp)
 			{
-				if (ownProp != (OwnershipTypes)defaultValue)
-					return $"-{shortArg} {(OwnershipTypes)ownProp}".AddSpace();
+				if (defaultValue != null && ownProp != (OwnershipTypes)defaultValue)
+					return $"-{shortArg} {ownProp}".AddSpace();
 				return result;
 			}
 			return result;
@@ -99,15 +100,12 @@ namespace Greg.Xrm.Command.Commands.Table.Builders
 		}
 
 		#region Format Utilities
-		//public string Space(string text)
-		//{
-		//	return text + (string.IsNullOrWhiteSpace(text) ? String.Empty : " ");
-		//}
-		public string WrapString(string? str)
+
+		public static string WrapString(string? str)
 		{
 			return (String.IsNullOrEmpty(str) || str.Contains(' ')) ? $"\"{str}\"" : str;
 		}
-		public string WrapNumber(decimal str)
+		public static string WrapNumber(decimal str)
 		{
 			return str.ToString().Contains('.') ? $"\"{str}\"" : str.ToString();
 		}
