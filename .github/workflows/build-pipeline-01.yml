@@ -109,7 +109,7 @@ jobs:
     - name: Upload NuGet Package as artifact
       uses: actions/upload-artifact@v3
       with:
-        name: nuget
+        name: nuget-package
         if-no-files-found: error
         retention-days: 7
         path: ${{ env.NuGetDirectory }}/*.nupkg
@@ -122,14 +122,14 @@ jobs:
       - name: Download NuGet package
         uses: actions/download-artifact@v2
         with:
-          name: package
+          name: nuget-package
         
       # Publish all NuGet packages to NuGet.org
       # Use --skip-duplicate to prevent errors if a package with the same version already exists.
       # If you retry a failed workflow, already published packages will be skipped without error.
       - name: Publish NuGet package
         run: |
-          foreach($file in (Get-ChildItem "./package" -Recurse -Include *.nupkg)) {
+          foreach($file in (Get-ChildItem "./nuget-package" -Recurse -Include *.nupkg)) {
             dotnet nuget push $file --api-key "${{ secrets.NUGET_APIKEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate
           }
           
@@ -151,6 +151,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
-          asset_path: ./package/Greg.Xrm.Command.nupkg
+          asset_path: ./nuget-package/Greg.Xrm.Command.nupkg
           asset_name: Greg.Xrm.Command.nupkg
           asset_content_type: application/zip
