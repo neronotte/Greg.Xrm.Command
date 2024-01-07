@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net7.0</TargetFramework>
@@ -16,6 +16,8 @@
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <RepositoryUrl>https://github.com/neronotte/Greg.Xrm.Command</RepositoryUrl>
     <PackageTags>pacx dataverse sdk pac cli</PackageTags>
+    <PackageVersion>1.0.0.0-alpha</PackageVersion>
+    <Version>1.0.0.0-alpha</Version>
   </PropertyGroup>
 
   <ItemGroup>

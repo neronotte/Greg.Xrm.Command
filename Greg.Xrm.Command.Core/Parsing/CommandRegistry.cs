@@ -1,5 +1,10 @@
 ﻿using Autofac;
 using Autofac.Core;
+using Greg.Xrm.Command.Services;
+using Greg.Xrm.Command.Services.Output;
+using McMaster.NETCore.Plugins;
+using Microsoft.Extensions.Logging;
+using System.Data;
 using System.Reflection;
 
 namespace Greg.Xrm.Command.Parsing
@@ -7,18 +12,28 @@ namespace Greg.Xrm.Command.Parsing
 	public class CommandRegistry : ICommandRegistry
 	{
 		private readonly List<CommandDefinition> commandDefinitionList = new();
+		private readonly List<INamespaceHelper> namespaceHelperList = new();
 		private readonly CommandTree commandTree = new();
 		private readonly List<IModule> moduleDefinitions = new();
+		private readonly ILogger<CommandRegistry> log;
+		private readonly IOutput output;
 		private readonly ILifetimeScope container;
+		private readonly IStorage storage;
 
-
-		public CommandRegistry(ILifetimeScope container)
+		public CommandRegistry(
+			ILogger<CommandRegistry> log,
+			IOutput output,
+			ILifetimeScope container,
+			IStorage storage)
 		{
+			this.log = log;
+			this.output = output;
 			this.container = container;
+			this.storage = storage;
 		}
 
 
-		public CommandTree Tree => this.commandTree;
+		public ICommandTree Tree => this.commandTree;
 
 		public IReadOnlyList<CommandDefinition> Commands => this.commandDefinitionList;
 
@@ -27,15 +42,153 @@ namespace Greg.Xrm.Command.Parsing
 
 
 
+		public void ScanPluginsFolder(ICommandLineArguments args)
+		{
+			var loaders = new List<(string, PluginLoader)>();
+
+
+			var indexOfPluginsArgument = args.IndexOf("--plugin");
+			if (indexOfPluginsArgument < 0)
+			{
+				var storageFolder = this.storage.GetOrCreateStorageFolder();
+				var pluginStorageDirectory = storageFolder.GetDirectories("Plugins").FirstOrDefault();
+				if (pluginStorageDirectory == null)
+				{
+					this.log.LogInformation("No plugins folder found under <{StorageFolder}> No plugins will be loaded.", storageFolder.FullName);
+					return;
+				}
+
+
+				// each plugin is stored in a subdirectory
+				// the name of the subdirectory is the name of the plugin
+				foreach (var pluginFolder in pluginStorageDirectory.GetDirectories())
+				{
+					this.log.LogDebug("Creating loader for plugin {PluginName}...", pluginFolder.Name);
+					try
+					{
+						var assemblyFile = pluginFolder.GetFiles(pluginFolder.Name + ".dll").FirstOrDefault();
+						if (assemblyFile == null)
+						{
+							log.LogWarning("Plugin {PluginName} does not contain a DLL with the same name.", pluginFolder.Name);
+							continue;
+						}
+
+						var loader = PluginLoader.CreateFromAssemblyFile(assemblyFile.FullName,
+							config => config.PreferSharedTypes = true);
+
+						loaders.Add((pluginFolder.Name, loader));
+					}
+					catch (Exception ex)
+					{
+						log.LogError(ex, "Error while creating loader for plugin {PluginName}: {Message}", pluginFolder.Name, ex.Message);
+					}
+				}
+
+
+
+
+			}
+			else
+			{
+				if (args.Count <= indexOfPluginsArgument + 1)
+				{
+					this.output.WriteLine("Invalid syntax. --plugin argument must be followed by the plugin path.", ConsoleColor.Red);
+					this.log.LogWarning("Invalid syntax. --plugin argument must be followed by the plugin path.");
+					return;
+				}
+
+				var pluginPath = args[indexOfPluginsArgument + 1]; 
+				
+				if (!File.Exists(pluginPath))
+				{
+					this.output.WriteLine($"The provided assembly <{pluginPath}> does not exists.", ConsoleColor.Red);
+					this.log.LogWarning("The provided assembly <{PluginFolder}> does not exists.", pluginPath);
+					return;
+				}
+
+				args.RemoveAt(indexOfPluginsArgument);
+				args.RemoveAt(indexOfPluginsArgument);
+
+				var assemblyFile = new FileInfo(pluginPath);
+				if (!string.Equals(".dll", assemblyFile.Extension, StringComparison.OrdinalIgnoreCase))
+				{
+					this.output.WriteLine($"The provided file <{pluginPath}> is not a valid dll.", ConsoleColor.Red);
+					this.log.LogWarning("The provided file <{PluginFolder}> is not a valid dll.", pluginPath);
+					return;
+				}
+				
+				
+				var pluginName = assemblyFile.Name.Replace(".dll", string.Empty);
+
+				this.log.LogDebug("Creating loader for plugin {PluginName}...",  pluginName);
+				try
+				{
+
+					var loader = PluginLoader.CreateFromAssemblyFile(assemblyFile.FullName,
+						config => config.PreferSharedTypes = true);
+
+					loaders.Add((pluginName, loader));
+				}
+				catch (Exception ex)
+				{
+					this.output.WriteLine($"Error while creating loader for plugin {pluginName}: {ex.Message}", ConsoleColor.Red);
+					log.LogError(ex, "Error while creating loader for plugin {PluginName}: {Message}", pluginName, ex.Message);
+				}
+			}
+
+
+
+
+
+
+
+
+
+
+			foreach (var (pluginName, loader) in loaders)
+			{
+				this.log.LogDebug("Loading plugin {PluginName}...", pluginName);
+				try
+				{
+					var pluginAssembly = loader.LoadDefaultAssembly();
+					if (pluginAssembly == null)
+					{
+						log.LogWarning("Plugin {PluginName} does not contain a default assembly.", pluginName);
+						continue;
+					}
+
+					var moduleList = ScanForModules(pluginAssembly);
+					var commandList = ScanForCommands(pluginAssembly, pluginName);
+					var namespaceHelpers = ScanForNamespaceHelpers(pluginAssembly);
+
+					this.moduleDefinitions.AddRange(moduleList);
+					this.commandDefinitionList.AddRange(commandList);
+					this.namespaceHelperList.AddRange(namespaceHelpers);
+
+					CreateVerbTree();
+				}
+				catch (Exception ex)
+				{
+					log.LogError(ex, "Error while loading plugin {PluginName}: {Message}", pluginName, ex.Message);
+				}
+			}
+		}
+
+
 
 
 
 		public void InitializeFromAssembly(Assembly assembly)
 		{
-			ScanForModules(assembly);
+			var moduleList = ScanForModules(assembly);
 			var commandList = ScanForCommands(assembly);
 			var namespaceHelpers = ScanForNamespaceHelpers(assembly);
-			CreateVerbTree(commandList, namespaceHelpers);
+
+			this.moduleDefinitions.AddRange(moduleList);
+			this.commandDefinitionList.AddRange(commandList);
+			this.namespaceHelperList.AddRange(namespaceHelpers);
+
+			CreateVerbTree();
 		}
 
 
@@ -43,7 +196,9 @@ namespace Greg.Xrm.Command.Parsing
 
 
 
-		private void ScanForModules(Assembly assembly)
+
+
+		private List<IModule> ScanForModules(Assembly assembly)
 		{
 			var moduleType = typeof(IModule);
 			var moduleList = (from type in assembly.GetTypes()
@@ -52,7 +207,7 @@ namespace Greg.Xrm.Command.Parsing
 							  where module != null
 							  select module).ToList();
 
-			this.moduleDefinitions.AddRange(moduleList);
+			return moduleList;
 		}
 
 
@@ -60,7 +215,7 @@ namespace Greg.Xrm.Command.Parsing
 
 
 
-		private List<CommandDefinition> ScanForCommands(Assembly assembly)
+		private List<CommandDefinition> ScanForCommands(Assembly assembly, string? pluginName = null)
 		{
 #pragma warning disable S6605 // Collection-specific "Exists" method should be used instead of the "Any" extension
 			var commandList = (from commandType in assembly.GetTypes()
@@ -69,21 +224,35 @@ namespace Greg.Xrm.Command.Parsing
 							   where !commandType.IsAbstract && commandType.GetConstructors().Any(c => c.IsPublic && c.GetParameters().Length == 0)
 							   where !commandDefinitionList.Exists(c => c.CommandType == commandType)
 							   let aliasAttributes = (commandType.GetCustomAttributes<AliasAttribute>()?.ToArray() ?? Array.Empty<AliasAttribute>())
-							   select new CommandDefinition(commandAttribute, commandType, aliasAttributes)).ToList();
+							   let commandExecutorType = FindCommandExecutorType(commandType, assembly)
+							   where commandExecutorType != null
+							   select new CommandDefinition(commandAttribute, commandType, commandExecutorType, aliasAttributes, pluginName)).ToList();
 #pragma warning restore S6605 // Collection-specific "Exists" method should be used instead of the "Any" extension
 
 			foreach (var command in commandList)
 			{
-				foreach (var command2 in this.commandDefinitionList)
+				foreach (var command2 in this.commandDefinitionList.Union(commandList))
 				{
+					if (command == command2) continue;
+
 					if (command.TryMatch(command2, out var matchedAlias))
 						throw new CommandException(CommandException.DuplicateCommand, $"Duplicate command {matchedAlias}.");
 				}
-
-				this.commandDefinitionList.Add(command);
 			}
 
 			return commandList;
+		}
+
+		private static Type? FindCommandExecutorType(Type commandType, Assembly assembly)
+		{
+			var executorType = typeof(ICommandExecutor<>).MakeGenericType(commandType);
+
+			var commandExecutorType = (from type in assembly.GetTypes()
+									   where executorType.IsAssignableFrom(type) && !type.IsAbstract
+									   orderby type.FullName
+									   select type).FirstOrDefault();
+
+			return commandExecutorType;
 		}
 
 		private List<INamespaceHelper> ScanForNamespaceHelpers(Assembly assembly)
@@ -98,15 +267,21 @@ namespace Greg.Xrm.Command.Parsing
 			return namespaceHelpers;
 		}
 
+		public Type? GetExecutorTypeFor(Type commandType)
+		{
+			return this.commandDefinitionList
+				.Where(x => x.CommandType == commandType)
+				.Select(x => x.CommandExecutorType)
+				.FirstOrDefault();
+		}
 
 
 
-
-		private void CreateVerbTree(IReadOnlyList<CommandDefinition> commandList, List<INamespaceHelper> helpers)
+		private void CreateVerbTree()
 		{
 			var list = new List<VerbNode>();
 
-			foreach (var command in commandList.OrderBy(x => x.ExpandedVerbs))
+			foreach (var command in this.commandDefinitionList.OrderBy(x => x.ExpandedVerbs))
 			{
 				VerbNode? parent = null;
 				var nodeList = list;
@@ -118,7 +293,7 @@ namespace Greg.Xrm.Command.Parsing
 					var node = nodeList.Find(x => x.Verb == command.Verbs[i]);
 					if (node == null)
 					{
-						var helper = helpers.Find(x => x.Verbs.SequenceEqual(currentVerbs, StringComparer.OrdinalIgnoreCase)) ?? NamespaceHelper.Empty;
+						var helper = this.namespaceHelperList.Find(x => x.Verbs.SequenceEqual(currentVerbs, StringComparer.OrdinalIgnoreCase)) ?? NamespaceHelper.Empty;
 						node = new VerbNode(command.Verbs[i], parent, helper);
 						nodeList.Add(node);
 					}

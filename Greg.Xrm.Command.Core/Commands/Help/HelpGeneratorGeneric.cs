@@ -36,8 +36,10 @@ namespace Greg.Xrm.Command.Commands.Help
 			var padding = 28;
 			foreach (var node in commandTree.Where(x => !x.IsHidden).OrderBy(x => x.Verb))
 			{
+				var color = node.Command is not null ? ConsoleColor.White : ConsoleColor.DarkCyan;
+
 				output.Write("  ")
-					.Write(node.Verb.PadRight(padding), ConsoleColor.DarkCyan);
+					.Write(node.Verb.PadRight(padding), color);
 				
 				var helpText = (node.Help ?? string.Empty).Split(Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
 

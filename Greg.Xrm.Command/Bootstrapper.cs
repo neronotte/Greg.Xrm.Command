@@ -70,8 +70,8 @@ namespace Greg.Xrm.Command
 			{
 				log.LogInformation("1. StartAsync has been called.");
 
-				this.registry.InitializeFromAssembly(typeof(CommandAttribute).Assembly);
-
+				this.registry.InitializeFromAssembly(typeof(HelpCommand).Assembly);
+				this.registry.ScanPluginsFolder(args);
 
 
 

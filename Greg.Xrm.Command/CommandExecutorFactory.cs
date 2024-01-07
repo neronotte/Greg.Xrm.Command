@@ -3,7 +3,7 @@ using Greg.Xrm.Command.Parsing;
 
 namespace Greg.Xrm.Command
 {
-    public class CommandExecutorFactory : ICommandExecutorFactory
+	public class CommandExecutorFactory : ICommandExecutorFactory
 	{
 		private readonly ILifetimeScope container;
 		private readonly ICommandRegistry commandRegistry;
@@ -11,7 +11,7 @@ namespace Greg.Xrm.Command
 		private ILifetimeScope? scope;
 
 		public CommandExecutorFactory(ILifetimeScope container, ICommandRegistry commandRegistry)
-        {
+		{
 			this.container = container;
 			this.commandRegistry = commandRegistry;
 		}
@@ -19,19 +19,30 @@ namespace Greg.Xrm.Command
 
 
 
-        public object? CreateFor(Type commandType)
+		public object? CreateFor(Type commandType)
 		{
-			var executorType = typeof(ICommandExecutor<>).MakeGenericType(commandType);
-
 			scope ??= this.container.BeginLifetimeScope("executor", builder =>
 			{
-                foreach (var module in commandRegistry.Modules)
-                {
-                    builder.RegisterModule(module);
-                }
-            });
+				foreach (var module in commandRegistry.Modules)
+				{
+					builder.RegisterModule(module);
+				}
 
-			var executor = this.scope.Resolve(executorType);
+				builder
+					.RegisterAssemblyTypes(commandType.Assembly)
+					.Where(t => t.GetInterfaces().Any(x => x.IsGenericType && x.GetGenericTypeDefinition() == typeof(ICommandExecutor<>)))
+					.AsSelf()
+					.AsImplementedInterfaces();
+			});
+
+
+			var commandExecutorType = commandRegistry.GetExecutorTypeFor(commandType);
+			if (commandExecutorType == null)
+			{
+				commandExecutorType = typeof(ICommandExecutor<>).MakeGenericType(commandType);
+			}
+
+			var executor = this.scope.ResolveOptional(commandExecutorType);
 			return executor;
 		}
 

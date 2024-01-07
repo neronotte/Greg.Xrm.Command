@@ -3,6 +3,7 @@ using Autofac.Core;
 using Autofac.Extensions.DependencyInjection;
 using Greg.Xrm.Command;
 using Greg.Xrm.Command.Parsing;
+using Greg.Xrm.Command.Services;
 using Greg.Xrm.Command.Services.CommandHistory;
 using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
@@ -15,6 +16,7 @@ using OfficeOpenXml;
 ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
 
 var serviceCollection = new ServiceCollection();
+serviceCollection.AddSingleton<IStorage>(new Storage());
 serviceCollection.AddSingleton<ICommandLineArguments>(new CommandLineArguments(args));
 serviceCollection.AddSingleton<ICommandRegistry, CommandRegistry>();
 serviceCollection.AddSingleton<ICommandParser, CommandParser>();
@@ -40,7 +42,7 @@ containerBuilder.Populate(serviceCollection);
 
 var container = containerBuilder.Build();
 
-using(var scope = container.BeginLifetimeScope("activation"))
+using (var scope = container.BeginLifetimeScope("activation"))
 {
 	try
 	{
@@ -55,7 +57,7 @@ using(var scope = container.BeginLifetimeScope("activation"))
 			Console.WriteLine(inner.Message);
 		}
 	}
-	catch(DependencyResolutionException ex)
+	catch (DependencyResolutionException ex)
 	{
 		Console.WriteLine(ex);
 	}
@@ -63,4 +65,11 @@ using(var scope = container.BeginLifetimeScope("activation"))
 	{
 		Console.WriteLine(ex.Message);
 	}
+#if DEBUG
+	finally
+	{
+		Console.WriteLine("Press any key to exit...");
+		Console.ReadKey();
+	}
+#endif
 }

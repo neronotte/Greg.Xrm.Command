@@ -5,29 +5,18 @@ namespace Greg.Xrm.Command.Services.Settings
 	public class SettingsRepository : ISettingsRepository
 	{
 		private string? settingsFolder = null;
+		private readonly IStorage storage;
 
-        public SettingsRepository()
+		public SettingsRepository(IStorage storage)
         {
+			this.storage = storage;
 		}
 
 
 		private void InitializeSettings()
 		{
 			if (this.settingsFolder != null) return;
-
-			var folderPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-			if (!Directory.Exists(folderPath))
-			{
-				Directory.CreateDirectory(folderPath);
-			}
-
-			folderPath = Path.Combine(folderPath, "Greg.Xrm.Command");
-			if (!Directory.Exists(folderPath))
-			{
-				Directory.CreateDirectory(folderPath);
-			}
-
-			this.settingsFolder = folderPath;
+			this.settingsFolder = this.storage.GetOrCreateStorageFolder().FullName;
 		}
 
 
