@@ -78,7 +78,7 @@ jobs:
       id: tag_version
       uses: mathieudutour/github-tag-action@v6.1
       with:
-        custom_tag: $env:Current_Version
+        custom_tag: ${{ env:Current_Version }}
         github_token: ${{ secrets.GH_TOKEN }}
         
     - name: Checkout documentation from wiki
