@@ -146,10 +146,6 @@ jobs:
           foreach($file in (Get-ChildItem "./nuget-package" -Recurse -Include *.nupkg)) {
             dotnet nuget push $file --api-key "${{ secrets.NUGET_APIKEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate
           }
-      
-      - name: Get the version
-        id: get_version
-        run: echo ${{ needs.build.outputs.version }}
         
       - name: Create Release
         id: create_release
