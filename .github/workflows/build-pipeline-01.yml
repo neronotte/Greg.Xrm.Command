@@ -56,7 +56,10 @@ jobs:
     env:
       Solution_Name: Greg.Xrm.Command.sln                        # Replace with your solution name, i.e. MyWpfApp.sln.
       Current_Version: ""
-
+      
+    outputs: 
+      version: ${{ steps.set_version.outputs.Current_Version }}
+      
     steps:
     - name: Checkout
       uses: actions/checkout@v4
@@ -73,6 +76,7 @@ jobs:
         echo Version=$version
         echo $version > $env:GITHUB_WORKSPACE/version.txt
         echo "Current_Version=$version" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf8 -Append
+        echo "Current_Version=v$version" >> $GITHUB_OUTPUT
         
     - name: Bump version and push tag
       id: tag_version
@@ -153,7 +157,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         with:
-          tag_name: ${{ steps.get_version.outputs.VERSION }}
+          tag_name: ${{ needs.build.outputs.version }}
           release_name: Release ${{ steps.get_version.outputs.VERSION }}
           draft: false
           prerelease: false
