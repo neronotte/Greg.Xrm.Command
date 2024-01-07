@@ -61,7 +61,23 @@ jobs:
       uses: actions/checkout@v4
       with:
         fetch-depth: 0
-    
+
+    # Set the version number
+    - name: Set Version Number
+      id: set_version
+      run: |
+        $year = (Get-Date).ToString("yyyy")
+        $month = Get-Date -Format MM
+        $version = "1.$year.$month.$env:GITHUB_RUN_NUMBER"
+        echo Version=$version
+        echo $version > $env:GITHUB_WORKSPACE/version.txt
+        
+    - name: Bump version and push tag
+      id: tag_version
+      uses: mathieudutour/github-tag-action@v6.1
+      with:
+        github_token: ${{ secrets.GH_TOKEN }}
+        
     - name: Checkout documentation from wiki
       uses: actions/checkout@v4
       with:
@@ -78,16 +94,6 @@ jobs:
     # Restore nuget dependencies
     - name: Restore Dependencies
       run: dotnet restore
-
-    # Set the version number
-    - name: Set Version Number
-      id: set_version
-      run: |
-        $year = (Get-Date).ToString("yyyy")
-        $month = Get-Date -Format MM
-        $version = "1.$year.$month.$env:GITHUB_RUN_NUMBER"
-        echo Version=$version
-        echo $version > $env:GITHUB_WORKSPACE/version.txt
         
     # Build backage
     - name: Build
@@ -134,28 +140,28 @@ jobs:
             dotnet nuget push $file --api-key "${{ secrets.NUGET_APIKEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate
           }
       
-#      - name: Get the version
-#        id: get_version
-#        run: echo ::set-output name=VERSION::${GITHUB_REF#refs/tags/}
-#        
-#      - name: Create Release
-#        id: create_release
-#        uses: actions/create-release@v1
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-#        with:
-#          tag_name: ${{ steps.get_version.outputs.VERSION }}
-#          release_name: Release ${{ steps.get_version.outputs.VERSION }}
-#          draft: false
-#          prerelease: false
-#          
-#      - name: Upload Release Asset
-#        id: upload-release-asset
-#        uses: actions/upload-release-asset@v1
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#        with:
-#          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
-#          asset_path: ./nuget-package/Greg.Xrm.Command.nupkg
+      - name: Get the version
+        id: get_version
+        run: echo ::set-output name=VERSION::${GITHUB_REF#refs/tags/}
+        
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        with:
+          tag_name: ${{ steps.get_version.outputs.VERSION }}
+          release_name: Release ${{ steps.get_version.outputs.VERSION }}
+          draft: false
+          prerelease: false
+          
+      - name: Upload Release Asset
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+          asset_path: ./nuget-package/Greg.Xrm.Command.nupkg
 #          asset_name: Greg.Xrm.Command.nupkg
 #          asset_content_type: application/zip
