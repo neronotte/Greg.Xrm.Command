@@ -88,7 +88,14 @@ jobs:
         $version = "1.$year.$month.$env:GITHUB_RUN_NUMBER"
         echo Version=$version
         echo $version > $env:GITHUB_WORKSPACE/version.txt
-
+    
+    # Create a tag for the current commit
+    - name: Create Tag
+      run: |
+        $version = Get-Content $env:GITHUB_WORKSPACE/version.txt
+        git tag $version
+        git push origin $version
+        
     # Build backage
     - name: Build
       run: |
@@ -133,15 +140,19 @@ jobs:
           foreach($file in (Get-ChildItem "./nuget-package" -Recurse -Include *.nupkg)) {
             dotnet nuget push $file --api-key "${{ secrets.NUGET_APIKEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate
           }
-          
+      
+      - name: Get the version
+        id: get_version
+        run: echo ::set-output name=VERSION::${GITHUB_REF#refs/tags/}
+        
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         with:
-          tag_name: master
-          release_name: Release ${{ github.ref }}
+          tag_name: ${{ steps.get_version.outputs.VERSION }}
+          release_name: Release ${{ steps.get_version.outputs.VERSION }}
           draft: false
           prerelease: false
           
