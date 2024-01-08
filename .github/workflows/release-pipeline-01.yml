@@ -3,7 +3,10 @@ name: Release Pipeline v01
 on:
   release:
     types:
-      - created
+      - published
+
+# Use created if you want the workflow to run when any kind of release is created, including drafts and prereleases.
+# Use published if you want the workflow to run only when a full release (non-draft, non-prerelease) is published.
 
 jobs:
   build-and-publish:
