@@ -27,7 +27,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\..\..\..\Users\riccardo.gregori\Pictures\Logo_80.png">
+    <None Include="Logo_80.png">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
     </None>
