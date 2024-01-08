@@ -7,10 +7,10 @@ namespace Greg.Xrm.Command.Commands.Help
     public class HelpGeneratorGeneric
 	{
 		private readonly IOutput output;
-		private readonly List<CommandDefinition> commandList;
-		private readonly List<VerbNode> commandTree;
+		private readonly IReadOnlyList<CommandDefinition> commandList;
+		private readonly IReadOnlyList<VerbNode> commandTree;
 
-		public HelpGeneratorGeneric(IOutput output, List<CommandDefinition> commandList, List<VerbNode> commandTree)
+		public HelpGeneratorGeneric(IOutput output, IReadOnlyList<CommandDefinition> commandList, IReadOnlyList<VerbNode> commandTree)
         {
 			this.output = output;
 			this.commandList = commandList;
@@ -36,8 +36,10 @@ namespace Greg.Xrm.Command.Commands.Help
 			var padding = 28;
 			foreach (var node in commandTree.Where(x => !x.IsHidden).OrderBy(x => x.Verb))
 			{
+				var color = node.Command is not null ? ConsoleColor.White : ConsoleColor.DarkCyan;
+
 				output.Write("  ")
-					.Write(node.Verb.PadRight(padding), ConsoleColor.DarkCyan);
+					.Write(node.Verb.PadRight(padding), color);
 				
 				var helpText = (node.Help ?? string.Empty).Split(Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
 

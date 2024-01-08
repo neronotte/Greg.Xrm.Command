@@ -1,4 +1,5 @@
-﻿using Greg.Xrm.Command.Services.Connection;
+﻿using Greg.Xrm.Command.Services;
+using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Settings;
 
 namespace Greg.Xrm.Command.Commands.Auth
@@ -10,8 +11,9 @@ namespace Greg.Xrm.Command.Commands.Auth
 		[TestCategory("Integration")]
 		public void Integration_Execute01()
 		{
+			var storage = new Storage();
 			var output = new OutputToMemory();
-			var settingsRepository = new SettingsRepository();
+			var settingsRepository = new SettingsRepository(storage);
 			var repository = new OrganizationServiceRepository(settingsRepository);
 			var executor = new CreateCommandExecutor(repository, output);
 

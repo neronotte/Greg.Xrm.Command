@@ -1,6 +1,6 @@
 ﻿namespace Greg.Xrm.Command.Parsing
 {
-	public class CommandTree : List<VerbNode>
+	public class CommandTree : List<VerbNode>, ICommandTree
 	{
 		public VerbNode? FindNode(IReadOnlyList<string> verbs)
 		{

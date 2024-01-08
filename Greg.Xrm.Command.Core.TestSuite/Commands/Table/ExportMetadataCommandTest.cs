@@ -1,4 +1,5 @@
 ﻿using Greg.Xrm.Command.Commands.Table.ExportMetadata;
+using Greg.Xrm.Command.Services;
 using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Settings;
 using OfficeOpenXml;
@@ -14,9 +15,10 @@ namespace Greg.Xrm.Command.Commands.Table
 		public void Integration_ExecuteExportExcel()
 		{
 			ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
-			
+
+			var storage = new Storage();
 			var output = new OutputToMemory();
-			var settingsRepository = new SettingsRepository();
+			var settingsRepository = new SettingsRepository(storage);
 			var repository = new OrganizationServiceRepository(settingsRepository);
 
 			var exportMetadataStrategyFactory = new ExportMetadataStrategyFactory(output);
