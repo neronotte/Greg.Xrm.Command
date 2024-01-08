@@ -18,10 +18,10 @@ jobs:
       run: |
         if (Select-String -Pattern 'Updated interfaces' -InputObject "${{ github.event.release.body }}") {
           echo "Release description contains the keyword 'Updated interfaces'."
-          echo "::set-output name=contains_keyword::true"
+          echo "contains_keyword=true" >> $GITHUB_OUTPUT
         } else {
           echo "Release description does not contain the keyword 'Updated interfaces'."
-          echo "::set-output name=contains_keyword::false"
+          echo "contains_keyword=false" >> $GITHUB_OUTPUT
         }
 
     - name: Download Artifact
@@ -31,7 +31,7 @@ jobs:
         # Download the artifact with a wildcard for the version number
         nuget_package=$(find . -name "Greg.Xrm.Command.Interfaces.*.nupkg" -type f)
         echo "Downloaded NuGet package: $nuget_package"
-        echo "::set-output name=nuget_package::$nuget_package"
+        echo "nuget_package=$nuget_package" >> $GITHUB_OUTPUT
 
     - name: Publish to NuGet
       if: steps.check_keyword.outputs.contains_keyword == 'true'
