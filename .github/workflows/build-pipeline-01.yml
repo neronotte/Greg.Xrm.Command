@@ -145,8 +145,8 @@ jobs:
         draft: false
         prerelease: false
           
-    - name: Upload Release Asset
-      id: upload-release-asset
+    - name: Upload Release Asset - Command
+      id: upload-release-asset-1
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
@@ -154,4 +154,15 @@ jobs:
           upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
           asset_path: ${{ env.NuGetDirectory }}\Greg.Xrm.Command.${{ env.CurrentVersion }}.nupkg
           asset_name: Greg.Xrm.Command.${{ env.CurrentVersion }}.nupkg
+          asset_content_type: application/zip
+          
+    - name: Upload Release Asset - Command Core
+      id: upload-release-asset-2
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+      with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+          asset_path: ${{ env.NuGetDirectory }}\Greg.Xrm.Command.Core.${{ env.CurrentVersion }}.nupkg
+          asset_name: Greg.Xrm.Command.Core.${{ env.CurrentVersion }}.nupkg
           asset_content_type: application/zip
