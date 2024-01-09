@@ -28,6 +28,9 @@ namespace Greg.Xrm.Command.Commands.Help
 
 			if (command.LastMatchingVerb is not null)
 			{
+				if (command.LastMatchingVerb.Command is not null)
+					return GenerateHelpForCommand(command.LastMatchingVerb.Command);	
+
 				var generator = new HelpGeneratorForVerb(this.output, command.LastMatchingVerb);
 				generator.GenerateHelp();
 
@@ -45,10 +48,13 @@ namespace Greg.Xrm.Command.Commands.Help
 
 
 
+			return GenerateHelpForCommand(command.CommandDefinition);
+		}
 
+		private Task<CommandResult> GenerateHelpForCommand(CommandDefinition commandDefinition)
+		{
 
-
-			var commandAttribute = command.CommandDefinition.CommandType.GetCustomAttribute<CommandAttribute>();
+			var commandAttribute = commandDefinition.CommandType.GetCustomAttribute<CommandAttribute>();
 			if (commandAttribute == null)
 				return Task.FromResult(CommandResult.Success());
 
@@ -62,12 +68,12 @@ namespace Greg.Xrm.Command.Commands.Help
 			output.Write("Usage: ");
 			output.Write(Assembly.GetEntryAssembly()?.GetName().Name ?? string.Empty, ConsoleColor.DarkCyan);
 			output.Write(" ");
-			for (int i = 0; i < command.CommandDefinition.Verbs.Count; i++)
+			for (int i = 0; i < commandDefinition.Verbs.Count; i++)
 			{
-				var verb = command.CommandDefinition.Verbs[i];
-				output.Write(verb, i < command.CommandDefinition.Verbs.Count - 1 ? ConsoleColor.DarkCyan : ConsoleColor.White).Write(" ");
+				var verb = commandDefinition.Verbs[i];
+				output.Write(verb, i < commandDefinition.Verbs.Count - 1 ? ConsoleColor.DarkCyan : ConsoleColor.White).Write(" ");
 			}
-			foreach (var optionDefinition in command.CommandDefinition.Options)
+			foreach (var optionDefinition in commandDefinition.Options)
 			{
 				output.Write($"[--{optionDefinition.Option.LongName}] ", optionDefinition.IsRequired ? ConsoleColor.DarkRed : ConsoleColor.DarkGray);
 			}
@@ -77,8 +83,8 @@ namespace Greg.Xrm.Command.Commands.Help
 
 
 
-			var padding = command.CommandDefinition.Options.Max(_ => _.Option.LongName.Length) + 6;
-			foreach (var optionDef in command.CommandDefinition.Options)
+			var padding = commandDefinition.Options.Max(_ => _.Option.LongName.Length) + 6;
+			foreach (var optionDef in commandDefinition.Options)
 			{
 				var option = optionDef.Option;
 				var prop = optionDef.Property;
@@ -114,7 +120,7 @@ namespace Greg.Xrm.Command.Commands.Help
 						{
 							if (i > 0)
 							{
-								output.WriteLine().Write("  ").Write(string.Empty.PadRight(padding+11));
+								output.WriteLine().Write("  ").Write(string.Empty.PadRight(padding + 11));
 							}
 							output.Write(helpText[i]);
 						}
@@ -134,13 +140,14 @@ namespace Greg.Xrm.Command.Commands.Help
 				var enumType = prop.PropertyType.GetEnumType();
 				if (enumType != null && !option.SuppressValuesHelp)
 				{
-					output.WriteLine().Write("  ").Write(string.Empty.PadRight(padding+11));
+					output.WriteLine().Write("  ").Write(string.Empty.PadRight(padding + 11));
 					output.Write($"[values: {string.Join(", ", Enum.GetNames(enumType))}] ", ConsoleColor.DarkGray);
 				}
 				output.WriteLine();
 			}
 
 			output.WriteLine();
+
 			return Task.FromResult(CommandResult.Success());
 		}
 	}
