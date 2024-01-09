@@ -203,7 +203,7 @@ namespace Greg.Xrm.Command.Parsing
 			var moduleType = typeof(IModule);
 			var moduleList = (from type in assembly.GetTypes()
 							  where moduleType.IsAssignableFrom(type) && !type.IsAbstract && type.GetCustomAttribute<ObsoleteAttribute>() == null
-							  let module = this.container.ResolveOptional(type) as IModule
+							  let module = Activator.CreateInstance(type) as IModule
 							  where module != null
 							  select module).ToList();
 
