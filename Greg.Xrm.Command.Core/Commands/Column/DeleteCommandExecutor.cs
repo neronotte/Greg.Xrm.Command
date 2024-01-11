@@ -99,7 +99,7 @@ namespace Greg.Xrm.Command.Commands.Column
 
 
 				this.output.Write("Deleting column ")
-					.Write(command.SchemaName, ConsoleColor.Yellow)
+					.Write(command.TableName, ConsoleColor.Yellow)
 					.Write(".", ConsoleColor.Yellow)
 					.Write(command.SchemaName, ConsoleColor.Yellow)
 					.Write("...");
@@ -127,7 +127,7 @@ namespace Greg.Xrm.Command.Commands.Column
 			try
 			{
 				this.output.Write("Retrieving dependencies for column ")
-					.Write(command.SchemaName, ConsoleColor.Yellow)
+					.Write(command.TableName, ConsoleColor.Yellow)
 					.Write(".", ConsoleColor.Yellow)
 					.Write(command.SchemaName, ConsoleColor.Yellow)
 					.Write("...");
@@ -151,7 +151,7 @@ namespace Greg.Xrm.Command.Commands.Column
 			try
 			{
 				this.output.Write("Retrieving metadata for column ")
-					.Write(command.SchemaName, ConsoleColor.Yellow)
+					.Write(command.TableName, ConsoleColor.Yellow)
 					.Write(".", ConsoleColor.Yellow)
 					.Write(command.SchemaName, ConsoleColor.Yellow)
 					.Write("...");
