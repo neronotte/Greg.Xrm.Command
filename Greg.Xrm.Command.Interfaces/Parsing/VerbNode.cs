@@ -29,7 +29,7 @@ namespace Greg.Xrm.Command.Parsing
 		/// <summary>
 		///	Gets the current verb.
 		/// </summary>
-		public string Verb { get; set; }
+		public string Verb { get; }
 
 		/// <summary>
 		///	Gets the help for the current verb, if provided.

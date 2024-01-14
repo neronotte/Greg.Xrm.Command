@@ -1,0 +1,47 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Greg.Xrm.Command</RootNamespace>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Title>PACX - Interfaces</Title>
+    <Authors>_neronotte</Authors>
+    <Company>_neronotte</Company>
+    <Product>Greg.Xrm.Command - Interfaces</Product>
+    <Copyright>Copyright @ _neronotte</Copyright>
+    <PackageProjectUrl>https://github.com/neronotte/Greg.Xrm.Command</PackageProjectUrl>
+    <PackageIcon>Logo_80.png</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RepositoryUrl>https://github.com/neronotte/Greg.Xrm.Command</RepositoryUrl>
+    <PackageTags>pacx dataverse sdk pac cli</PackageTags>
+	  <Version>1.0.2</Version>
+      <PackageVersion>1.0.2</PackageVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="net7.0\**" />
+    <EmbeddedResource Remove="net7.0\**" />
+    <None Remove="net7.0\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Logo_80.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Include="README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="8.0.0" />
+    <PackageReference Include="EPPlus" Version="7.0.5" />
+    <PackageReference Include="Microsoft.PowerPlatform.Dataverse.Client" Version="1.1.16" />
+  </ItemGroup>
+
+</Project>

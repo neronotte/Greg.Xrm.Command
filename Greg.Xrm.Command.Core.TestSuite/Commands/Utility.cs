@@ -1,5 +1,7 @@
 ﻿using Greg.Xrm.Command.Commands.Auth;
 using Greg.Xrm.Command.Parsing;
+using Greg.Xrm.Command.Services;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Greg.Xrm.Command.Commands
 {
@@ -7,8 +9,14 @@ namespace Greg.Xrm.Command.Commands
 	{
 		public static TCommand TestParseCommand<TCommand>(params string[] args)
 		{
-			var parser = new CommandLineParser(new OutputToMemory());
-			parser.InitializeFromAssembly(typeof(ListCommand).Assembly);
+			var log = NullLogger<CommandRegistry>.Instance;
+			var output = new OutputToMemory();
+			var storage = new Storage();
+
+			var registry = new CommandRegistry(log, output, storage);
+			registry.InitializeFromAssembly(typeof(ListCommand).Assembly);
+
+			var parser = new CommandParser(new OutputToMemory(), registry);
 
 			var parseResult = parser.Parse(args);
 

@@ -1,6 +1,6 @@
 ﻿namespace Greg.Xrm.Command
 {
-	public interface ICommandExecutorFactory
+	public interface ICommandExecutorFactory : IDisposable
 	{
 		object? CreateFor(Type commandType);
 	}

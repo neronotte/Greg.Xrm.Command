@@ -1,14 +1,12 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Reflection;
-using System.Linq;
-using System.ServiceModel.Channels;
 
 namespace Greg.Xrm.Command.Parsing
 {
 	public class CommandDefinition : IComparable<CommandDefinition>
 	{
-		public CommandDefinition(CommandAttribute commandAttribute, Type commandType, IReadOnlyList<AliasAttribute> aliases)
+		public CommandDefinition(CommandAttribute commandAttribute, Type commandType, Type commandExecutorType, IReadOnlyList<AliasAttribute> aliases, string? pluginName = null)
 		{
 			this.Verbs = commandAttribute.Verbs;
 			this.ExpandedVerbs = string.Join(" ", this.Verbs);
@@ -16,7 +14,9 @@ namespace Greg.Xrm.Command.Parsing
 			this.Hidden = commandAttribute.Hidden;
 
 			this.CommandType = commandType;
+			this.CommandExecutorType = commandExecutorType;
 			this.Aliases = aliases;
+			this.PluginName = pluginName;
 			this.Options = (from property in this.CommandType.GetProperties()
 							let optionAttribute = property.GetCustomAttribute<OptionAttribute>()
 							let requiredAttribute = property.GetCustomAttribute<RequiredAttribute>()
@@ -47,7 +47,9 @@ namespace Greg.Xrm.Command.Parsing
 
 		public string ExpandedVerbs { get; }
 		public Type CommandType { get; }
+		public Type CommandExecutorType { get; }
 		public IReadOnlyList<AliasAttribute> Aliases { get; }
+		public string? PluginName { get; }
 		public string HelpText { get; }
 
 		public bool Hidden { get; }
@@ -64,11 +66,9 @@ namespace Greg.Xrm.Command.Parsing
 		{
 			var usedOptions = new List<string>();
 
-			var command = Activator.CreateInstance(this.CommandType);
-			if (command == null)
-				throw new CommandException(CommandException.CommandCannotBeCreated, $"Command '{this.CommandType}'cannot be created. Please pull an issue on GitHub page.");
-
-
+			var command = Activator.CreateInstance(this.CommandType) 
+				?? throw new CommandException(CommandException.CommandCannotBeCreated, $"Command '{this.CommandType}'cannot be created. Please pull an issue on GitHub page.");
+			
 			foreach (var optionDef in this.Options)
 			{
 				var property = optionDef.Property;
@@ -116,28 +116,18 @@ namespace Greg.Xrm.Command.Parsing
 
 		public bool TryMatch(CommandDefinition other, out string matchedAlias)
 		{
-			var thisVerbs = new List<string>
-			{
-				this.ExpandedVerbs
-			};
+			var thisVerbs = new List<string> { this.ExpandedVerbs };
 			thisVerbs.AddRange(this.Aliases.Select(x => x.ExpandedVerbs));
 
-			var otherVerbs = new List<string>
-			{
-				other.ExpandedVerbs
-			};
+			var otherVerbs = new List<string> { other.ExpandedVerbs };
 			otherVerbs.AddRange(other.Aliases.Select(x => x.ExpandedVerbs));
 
-			foreach (var v1 in thisVerbs)
+
+			var v = thisVerbs.Intersect(otherVerbs, StringComparer.OrdinalIgnoreCase).FirstOrDefault();
+			if (v != null)
 			{
-				foreach (var v2 in otherVerbs)
-				{
-					if (string.Equals(v1, v2, StringComparison.OrdinalIgnoreCase))
-					{
-						matchedAlias = $"<{v1}>: {this.CommandType.FullName} and {other.CommandType.FullName}";
-						return true;
-					}
-				}
+				matchedAlias = $"<{v}>: {this.CommandType.FullName} and {other.CommandType.FullName}";
+				return true;
 			}
 
 			matchedAlias = string.Empty;

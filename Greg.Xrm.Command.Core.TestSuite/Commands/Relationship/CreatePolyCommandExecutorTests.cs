@@ -1,7 +1,6 @@
-﻿using Greg.Xrm.Command.Commands.Column.Builders;
+﻿using Greg.Xrm.Command.Services;
 using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Settings;
-using Microsoft.Xrm.Sdk.Metadata;
 
 namespace Greg.Xrm.Command.Commands.Relationship
 {
@@ -12,8 +11,9 @@ namespace Greg.Xrm.Command.Commands.Relationship
 		[TestCategory("Integration")]
 		public void Integration_CreateGlobalOptionSetField()
 		{
+			var storage = new Storage();
 			var output = new OutputToMemory();
-			var settingsRepository = new SettingsRepository();
+			var settingsRepository = new SettingsRepository(storage);
 			var repository = new OrganizationServiceRepository(settingsRepository);
 
 

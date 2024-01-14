@@ -1,10 +1,8 @@
 ﻿
 using Greg.Xrm.Command.Commands.UnifiedRouting;
+using Greg.Xrm.Command.Services;
 using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Settings;
-using Microsoft.PowerPlatform.Dataverse.Client;
-using Microsoft.Xrm.Sdk;
-using Microsoft.Xrm.Sdk.Messages;
 
 namespace Greg.Xrm.Command.Commands.Table
 {
@@ -16,8 +14,9 @@ namespace Greg.Xrm.Command.Commands.Table
 		public void TestQuery()
 		{
 			var queue = "QUEUENAME";
+			var storage = new Storage();
 			var output = new OutputToConsole();
-			var settingsRepository = new SettingsRepository();
+			var settingsRepository = new SettingsRepository(storage);
 			var repository = new OrganizationServiceRepository(settingsRepository);
 
 

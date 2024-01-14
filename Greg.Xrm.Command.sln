@@ -5,9 +5,15 @@ VisualStudioVersion = 17.7.34221.43
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Greg.Xrm.Command", "Greg.Xrm.Command\Greg.Xrm.Command.csproj", "{F5BBDC67-488E-4825-ADD0-64D3BF00FF9B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Greg.Xrm.Command.Core", "Greg.Xrm.Command.Core\Greg.Xrm.Command.Core.csproj", "{6B5120AF-1186-431C-9B60-3F9A5C39987E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Greg.Xrm.Command.Core", "Greg.Xrm.Command.Core\Greg.Xrm.Command.Core.csproj", "{6B5120AF-1186-431C-9B60-3F9A5C39987E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Greg.Xrm.Command.Core.TestSuite", "Greg.Xrm.Command.Core.TestSuite\Greg.Xrm.Command.Core.TestSuite.csproj", "{AF14C156-444F-4AC2-A117-3F8AC77E8FBD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Greg.Xrm.Command.Core.TestSuite", "Greg.Xrm.Command.Core.TestSuite\Greg.Xrm.Command.Core.TestSuite.csproj", "{AF14C156-444F-4AC2-A117-3F8AC77E8FBD}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Greg.Xrm.Command.Interfaces", "Greg.Xrm.Command.Interfaces\Greg.Xrm.Command.Interfaces.csproj", "{53666122-2ED9-4880-BD1E-1EF755E19509}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{00E14068-A467-4EDC-8A52-55F8EF6238EC}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{3EF61E16-BAAE-48A5-8594-8C20EDF9A635}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,9 +33,19 @@ Global
 		{AF14C156-444F-4AC2-A117-3F8AC77E8FBD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AF14C156-444F-4AC2-A117-3F8AC77E8FBD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AF14C156-444F-4AC2-A117-3F8AC77E8FBD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{53666122-2ED9-4880-BD1E-1EF755E19509}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{53666122-2ED9-4880-BD1E-1EF755E19509}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{53666122-2ED9-4880-BD1E-1EF755E19509}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{53666122-2ED9-4880-BD1E-1EF755E19509}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{F5BBDC67-488E-4825-ADD0-64D3BF00FF9B} = {00E14068-A467-4EDC-8A52-55F8EF6238EC}
+		{6B5120AF-1186-431C-9B60-3F9A5C39987E} = {00E14068-A467-4EDC-8A52-55F8EF6238EC}
+		{AF14C156-444F-4AC2-A117-3F8AC77E8FBD} = {3EF61E16-BAAE-48A5-8594-8C20EDF9A635}
+		{53666122-2ED9-4880-BD1E-1EF755E19509} = {00E14068-A467-4EDC-8A52-55F8EF6238EC}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {9638D889-E2DB-4321-9D72-9789BB667BA3}

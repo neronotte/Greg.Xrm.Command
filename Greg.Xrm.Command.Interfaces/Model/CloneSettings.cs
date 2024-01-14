@@ -7,7 +7,7 @@ namespace Greg.Xrm.Command.Model
 	/// </summary>
 	public static class CloneSettings
 	{
-		private static readonly List<string> ForbiddenAttributes = new List<string>();
+		private static readonly List<string> ForbiddenAttributes = new();
 
 		static CloneSettings()
 		{
@@ -36,11 +36,13 @@ namespace Greg.Xrm.Command.Model
 		/// <returns></returns>
 		public static bool IsForbidden(Entity original, string propertyName, string[] otherForbiddenAttributes)
 		{
-			if (otherForbiddenAttributes == null) otherForbiddenAttributes = new string[0];
+			otherForbiddenAttributes ??= Array.Empty<string>();
+			
 			if (string.Equals(propertyName, original.LogicalName + "id", StringComparison.OrdinalIgnoreCase)) return true;
-			if (ForbiddenAttributes.Any(x => string.Equals(x, propertyName, StringComparison.OrdinalIgnoreCase))) return true;
-			if (otherForbiddenAttributes.Any(x => string.Equals(x, propertyName, StringComparison.OrdinalIgnoreCase))) return true;
-			return false;
+			if (ForbiddenAttributes.Exists(x => string.Equals(x, propertyName, StringComparison.OrdinalIgnoreCase))) return true;
+#pragma warning disable S6605 // Collection-specific "Exists" method should be used instead of the "Any" extension
+			return otherForbiddenAttributes.Any(x => string.Equals(x, propertyName, StringComparison.OrdinalIgnoreCase));
+#pragma warning restore S6605 // Collection-specific "Exists" method should be used instead of the "Any" extension
 		}
 	}
 }

@@ -41,12 +41,13 @@ name: Build Pipeline v01
 on:
   push:
     branches: [ "master" ]
-  release:
-    types:
-      - published    # Run the workflow when a new GitHub release is published
+#  release:
+#    types:
+#      - published    # Run the workflow when a new GitHub release is published
 
 env:
-  NuGetDirectory: ${{ github.workspace}}/nuget
+  NuGetDirectory: ${{ github.workspace}}\nuget
+  CurrentVersion: ""
 
 jobs:
   build:
@@ -55,13 +56,31 @@ jobs:
 
     env:
       Solution_Name: Greg.Xrm.Command.sln                        # Replace with your solution name, i.e. MyWpfApp.sln.
-
+      
     steps:
     - name: Checkout
       uses: actions/checkout@v4
       with:
         fetch-depth: 0
-    
+
+    # Set the version number
+    - name: Set Version Number
+      id: set_version
+      run: |
+        $year = (Get-Date).ToString("yyyy")
+        $month = Get-Date -Format %M
+        $version = "1.$year.$month.$env:GITHUB_RUN_NUMBER"
+        echo Version=$version
+        echo $version > $env:GITHUB_WORKSPACE/version.txt
+        echo "CurrentVersion=$version" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf8 -Append
+        
+    - name: Bump version and push tag
+      id: tag_version
+      uses: mathieudutour/github-tag-action@v6.1
+      with:
+        custom_tag: ${{ env.CurrentVersion }}
+        github_token: ${{ secrets.GH_TOKEN }}
+        
     - name: Checkout documentation from wiki
       uses: actions/checkout@v4
       with:
@@ -78,17 +97,7 @@ jobs:
     # Restore nuget dependencies
     - name: Restore Dependencies
       run: dotnet restore
-
-    # Set the version number
-    - name: Set Version Number
-      id: set_version
-      run: |
-        $year = (Get-Date).ToString("yyyy")
-        $month = Get-Date -Format MM
-        $version = "1.$year.$month.$env:GITHUB_RUN_NUMBER"
-        echo Version=$version
-        echo $version > $env:GITHUB_WORKSPACE/version.txt
-
+        
     # Build backage
     - name: Build
       run: |
@@ -109,16 +118,62 @@ jobs:
     - name: Upload NuGet Package as artifact
       uses: actions/upload-artifact@v3
       with:
-        name: nuget
+        name: nuget-package
         if-no-files-found: error
         retention-days: 7
         path: ${{ env.NuGetDirectory }}/*.nupkg
 
-    # Publish all NuGet packages to NuGet.org
-    # Use --skip-duplicate to prevent errors if a package with the same version already exists.
-    # If you retry a failed workflow, already published packages will be skipped without error.
+
+        
+      # Publish all NuGet packages to NuGet.org
+      # Use --skip-duplicate to prevent errors if a package with the same version already exists.
+      # If you retry a failed workflow, already published packages will be skipped without error.
     - name: Publish NuGet package
       run: |
         foreach($file in (Get-ChildItem "${{ env.NuGetDirectory }}" -Recurse -Include *.nupkg)) {
-            dotnet nuget push $file --api-key "${{ secrets.NUGET_APIKEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate
+          dotnet nuget push $file --api-key "${{ secrets.NUGET_APIKEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate
         }
+        
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+      with:
+        tag_name: ${{ env.CurrentVersion }}
+        release_name: Release ${{ env.CurrentVersion }}
+        draft: false
+        prerelease: false
+          
+    # - name: Upload Release Asset - Command
+    #   id: upload-release-asset-1
+    #   uses: actions/upload-release-asset@v1
+    #   env:
+    #     GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+    #   with:
+    #       upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+    #       asset_path: ${{ env.NuGetDirectory }}\Greg.Xrm.Command.${{ env.CurrentVersion }}.nupkg
+    #       asset_name: Greg.Xrm.Command.nupkg
+    #       asset_content_type: application/zip
+          
+    # - name: Upload Release Asset - Command Core
+    #   id: upload-release-asset-2
+    #   uses: actions/upload-release-asset@v1
+    #   env:
+    #     GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+    #   with:
+    #       upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+    #       asset_path: ${{ env.NuGetDirectory }}\Greg.Xrm.Command.Core.${{ env.CurrentVersion }}.nupkg
+    #       asset_name: Greg.Xrm.Command.Core.nupkg
+    #       asset_content_type: application/zip
+          
+    # - name: Upload Release Asset - Command Interfaces
+    #   id: upload-release-asset-3
+    #   uses: actions/upload-release-asset@v1
+    #   env:
+    #     GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+    #   with:
+    #       upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+    #       asset_path: ${{ env.NuGetDirectory }}\Greg.Xrm.Command.Interfaces.*.nupkg
+    #       asset_name: Greg.Xrm.Command.Interfaces.nupkg
+    #       asset_content_type: application/zip

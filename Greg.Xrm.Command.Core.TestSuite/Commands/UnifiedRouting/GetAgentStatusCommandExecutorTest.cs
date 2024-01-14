@@ -1,5 +1,6 @@
 ﻿
 using Greg.Xrm.Command.Commands.UnifiedRouting;
+using Greg.Xrm.Command.Services;
 using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Settings;
 
@@ -13,8 +14,9 @@ namespace Greg.Xrm.Command.Commands.Table
 		public void TestQuery()
 		{
 			var agentPrimaryEmail = "francesco.catino@avanade.com";
+			var storage = new Storage();
 			var output = new OutputToConsole();
-			var settingsRepository = new SettingsRepository();
+			var settingsRepository = new SettingsRepository(storage);
 			var repository = new OrganizationServiceRepository(settingsRepository);
 
 
