@@ -13,20 +13,9 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    - name: Check Release Keyword in Description
-      id: check_keyword
-      run: |
-        if (Select-String -Pattern 'Updated interfaces' -InputObject "${{ github.event.release.body }}") {
-          echo "Release description contains the keyword 'Updated interfaces'."
-          echo "contains_keyword=true" >> $GITHUB_OUTPUT
-        } else {
-          echo "Release description does not contain the keyword 'Updated interfaces'."
-          echo "contains_keyword=false" >> $GITHUB_OUTPUT
-        }
 
     - name: Download Artifact
       id: download_artifact
-      if: steps.check_keyword.outputs.contains_keyword == 'true'
       run: |
         # Download the artifact with a wildcard for the version number
         nuget_package=$(find . -name "Greg.Xrm.Command.Interfaces.*.nupkg" -type f)
@@ -34,7 +23,6 @@ jobs:
         echo "nuget_package=$nuget_package" >> $GITHUB_OUTPUT
 
     - name: Publish to NuGet
-      if: steps.check_keyword.outputs.contains_keyword == 'true'
       run: |
         # Get the downloaded NuGet package path
         nuget_package_path=${{ steps.download_artifact.outputs.nuget_package }}
