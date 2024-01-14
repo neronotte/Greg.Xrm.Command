@@ -17,18 +17,15 @@ namespace Greg.Xrm.Command.Parsing
 		private readonly List<IModule> moduleDefinitions = new();
 		private readonly ILogger<CommandRegistry> log;
 		private readonly IOutput output;
-		private readonly ILifetimeScope container;
 		private readonly IStorage storage;
 
 		public CommandRegistry(
 			ILogger<CommandRegistry> log,
 			IOutput output,
-			ILifetimeScope container,
 			IStorage storage)
 		{
 			this.log = log;
 			this.output = output;
-			this.container = container;
 			this.storage = storage;
 		}
 
@@ -45,7 +42,6 @@ namespace Greg.Xrm.Command.Parsing
 		public void ScanPluginsFolder(ICommandLineArguments args)
 		{
 			var loaders = new List<(string, PluginLoader)>();
-
 
 			var indexOfPluginsArgument = args.IndexOf("--plugin");
 			if (indexOfPluginsArgument < 0)
@@ -66,6 +62,12 @@ namespace Greg.Xrm.Command.Parsing
 					this.log.LogDebug("Creating loader for plugin {PluginName}...", pluginFolder.Name);
 					try
 					{
+						// checks if the current plugin folder is marked for deletion
+						// if so, deletes the folder and skips the plugin
+						if (CheckDeletionMark(pluginFolder)) continue;
+
+
+						// checks if the plugin folder contains a DLL with the same name. Otherwise is not a valid plugin folder
 						var assemblyFile = pluginFolder.GetFiles(pluginFolder.Name + ".dll").FirstOrDefault();
 						if (assemblyFile == null)
 						{
@@ -175,6 +177,29 @@ namespace Greg.Xrm.Command.Parsing
 		}
 
 
+		/// <summary>
+		/// Checks if the current plugin folder is marked for deletion.
+		/// If yes, deletes the plugin folder
+		/// </summary>
+		/// <param name="pluginFolder"></param>
+		/// <returns></returns>
+		/// <exception cref="NotImplementedException"></exception>
+		private static bool CheckDeletionMark(DirectoryInfo pluginFolder)
+		{
+			if (!pluginFolder.Exists)
+				throw new ArgumentException("The specified plugin folder does not exists: " + pluginFolder.FullName, nameof(pluginFolder));
+
+			var hasDeleteFile = pluginFolder.GetFiles(".delete").Length > 0;
+
+			if (hasDeleteFile)
+			{
+				pluginFolder.Delete(true);
+				pluginFolder.Refresh();
+			}
+
+			return hasDeleteFile;
+		}
+
 
 
 
@@ -259,8 +284,8 @@ namespace Greg.Xrm.Command.Parsing
 		{
 			var helperType = typeof(INamespaceHelper);
 			var namespaceHelpers = (from type in assembly.GetTypes()
-									where helperType.IsAssignableFrom(type) && !type.IsAbstract
-									let helper = this.container.ResolveOptional(type) as INamespaceHelper
+									where helperType.IsAssignableFrom(type) && !type.IsAbstract && type.GetConstructors().Any(c => c.IsPublic && c.GetParameters().Length == 0)
+									let helper = Activator.CreateInstance(type) as INamespaceHelper
 									where helper != null
 									select helper).ToList();
 

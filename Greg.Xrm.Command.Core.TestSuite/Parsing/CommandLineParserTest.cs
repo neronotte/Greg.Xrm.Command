@@ -13,10 +13,9 @@ namespace Greg.Xrm.Command.Parsing
 		{
 			var log = NullLogger<CommandRegistry>.Instance;
 			var output = new OutputToMemory();
-			var container = new Autofac.ContainerBuilder().Build();
 			var storage = new Storage();
 
-			var registry = new CommandRegistry(log, output, container, storage);
+			var registry = new CommandRegistry(log, output, storage);
 			registry.InitializeFromAssembly(typeof(ListCommand).Assembly);
 
 			var parser = new CommandParser(new OutputToMemory(), registry);
