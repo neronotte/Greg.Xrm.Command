@@ -20,6 +20,7 @@ namespace Greg.Xrm.Command
 			builder.RegisterType<Workflow.Repository>().As<IWorkflowRepository>();
 			builder.RegisterType<ProcessTrigger.Repository>().As<IProcessTriggerRepository>();
 			builder.RegisterType<AttributeMetadataScriptBuilderFactory>().As<IAttributeMetadataScriptBuilderFactory>();
+			builder.RegisterType<WebResource.Repository>().As<IWebResourceRepository>();
 		}
 	}
 }

@@ -13,15 +13,21 @@ namespace Greg.Xrm.Command.Services
 	public class AttributeDeletionService : IAttributeDeletionService
 	{
 		private readonly IOutput output;
+		private readonly ISavedQueryRepository savedQueryRepository;
+		private readonly IUserQueryRepository userQueryRepository;
 		private readonly IWorkflowRepository workflowRepository;
 		private readonly IProcessTriggerRepository processTriggerRepository;
 
 		public AttributeDeletionService(
 			IOutput output,
+			ISavedQueryRepository savedQueryRepository,
+			IUserQueryRepository userQueryRepository,
 			IWorkflowRepository workflowRepository,
 			IProcessTriggerRepository processTriggerRepository)
 		{
 			this.output = output;
+			this.savedQueryRepository = savedQueryRepository;
+			this.userQueryRepository = userQueryRepository;
 			this.workflowRepository = workflowRepository;
 			this.processTriggerRepository = processTriggerRepository;
 		}
@@ -32,7 +38,7 @@ namespace Greg.Xrm.Command.Services
 		public async Task DeleteAttributeAsync(IOrganizationServiceAsync2 crm, AttributeMetadata attribute, DependencyList dependencies, bool? simulation = false)
 		{
 			await UpdateCharts(crm, attribute, dependencies.OfType(ComponentType.SavedQueryVisualization), simulation.GetValueOrDefault()); // mancano le userQueryVisualization
-			await UpdateViews(crm, attribute, dependencies.OfType(ComponentType.SavedQuery), simulation.GetValueOrDefault());
+			await UpdateViews(crm, attribute, dependencies.OfType(ComponentType.SavedQuery), simulation.GetValueOrDefault()); //mancano le userquery
 			await UpdateForms(crm, attribute, dependencies.OfType(ComponentType.SystemForm), simulation.GetValueOrDefault());
 			await UpdatePluginSteps(crm, attribute, dependencies.OfType(ComponentType.SDKMessageProcessingStep), simulation.GetValueOrDefault());
 			await UpdatePluginImages(crm, attribute, dependencies.OfType(ComponentType.SDKMessageProcessingStepImage), simulation.GetValueOrDefault());
@@ -74,25 +80,31 @@ namespace Greg.Xrm.Command.Services
 			if (dependencies.Count == 0)
 				return;
 
-			var result = await RetrieveDataAsync(crm, dependencies, "savedquery", "savedqueryid", "name", "querytype", "fetchxml", "layoutxml", "returnedtypecode");
+			var viewList = new List<TableView>();
+			
+			var savedQueries = await this.savedQueryRepository.GetByIdAsync(crm, dependencies.Select(x => x.dependentcomponentobjectid));
+			viewList.AddRange(savedQueries);
+
+			var userQueries = await this.userQueryRepository.GetContainingAsync(crm, attribute.EntityLogicalName, attribute.SchemaName);
+			viewList.AddRange(userQueries);
 
 			var i = 0;
-			foreach (var e in result)
+			foreach (var e in viewList)
 			{
 				++i;
 
-				this.output.Write($"Updating savedquery {i}/{result.Count} {e.GetAttributeValue<string>("name")}...");
+				this.output.Write($"Updating {e.EntityName} {i}/{viewList.Count} {e.name}...");
 
-				e["fetchxml"] = RemoveFieldFromFetchXml(e.GetAttributeValue<string>("fetchxml"), attribute.LogicalName);
+				e.fetchxml = RemoveFieldFromFetchXml(e.fetchxml, attribute.LogicalName);
 
-				if (e.GetAttributeValue<string>("layoutxml") is not null)
+				if (e.layoutxml is not null)
 				{
-					e["layoutxml"] = RemoveFieldFromFetchXml(e.GetAttributeValue<string>("layoutxml"), attribute.LogicalName);
+					e.layoutxml = RemoveFieldFromFetchXml(e.layoutxml, attribute.LogicalName);
 				}
 
 				if (!simulation)
 				{
-					await crm.UpdateAsync(e);
+					await e.SaveOrUpdateAsync(crm);
 				}
 
 				this.output.WriteLine("Done", ConsoleColor.Green);
@@ -439,8 +451,10 @@ namespace Greg.Xrm.Command.Services
 			return string.Join(",", values);
 		}
 
-		private static string RemoveFieldFromFetchXml(string xml, string attName)
+		private static string? RemoveFieldFromFetchXml(string? xml, string attName)
 		{
+			if (xml == null) return null;
+
 			xml = RemoveXmlNodesWithTagValue(xml, "condition", "attribute", attName);
 			xml = RemoveXmlNodesWithTagValue(xml, "attribute", "name", attName);
 			xml = RemoveXmlNodesWithTagValue(xml, "cell", "name", attName); // Layout Xml from Views
