@@ -26,21 +26,20 @@ namespace Greg.Xrm.Command.Commands.WebResources
 
 			writer.WriteParagraph("This command can be used to set-up the folder that will contain the WebResources used by your solution.");
 
-			writer.WriteParagraph("The command will create a **.wr.pacx** file in the specified folder. That file will be used as placeholder to identify the root folder for the WebResources. It will then create the following folders:");
+			writer.WriteParagraph("The command will create a **.wr.pacx** file in the specified folder. That file will be used as placeholder to identify the root folder for the WebResources. It supports 2 main ways to initialize the folder:");
+
+			writer.WriteLine("- From scratch, assuming no WebResource is already present in your solution");
+			writer.WriteLine("- By synchronizing the folder with the WebResources in a given solution (using the --remote argument)");
+
+			writer.WriteParagraph("If starting from scratch, the command will create the following folder structure:");
 
 			writer.WriteLine("- **<publisher prefix>**: the folder that will contain the WebResources organized by publisher prefix (e.g. new, fabrikam, etc)");
 			writer.WriteLine("  - **images**: the folder that will contain the images (png, svg, etc) used by your solution");
 			writer.WriteLine("  - **scripts**: the folder that will contain the JavaScript files for Forms or Ribbons");
 			writer.WriteLine("  - **pages**: the folder that will contain the custom HTML webresources");
 
-			writer.WriteParagraph("And any other folder extracted from the actual WebResources in the solution (if the `--remote` option is used)");
-
-			writer.WriteParagraph("It supports 2 main ways to initialize the folder:");
-			writer.WriteLine("- From scratch, assuming no WebResource is already present in your solution");
-			writer.WriteLine("- By synchronizing the folder with the WebResources in a given solution (using the --remote argument)");
-
+			writer.WriteParagraph("If starting from a remote solution, it will create a folder structure reflecting the one in the solution.");
 			writer.WriteParagraph("In both cases, a remote solution must be present and set as default solution for the environment (or provided using the --solution argument), because it is needed to determine the **publisher prefix** to set as root folder.");
-
 
 			writer.WriteTitle3("Examples");
 
