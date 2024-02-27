@@ -35,7 +35,7 @@ namespace Greg.Xrm.Command.Model
 
 
 				var query = new QueryExpression("solution");
-				query.ColumnSet.AddColumns("ismanaged");
+				query.ColumnSet.AddColumns("ismanaged", "uniquename", "version");
 				query.Criteria.AddCondition("uniquename", ConditionOperator.Equal, uniqueName);
 				var link = query.AddLink("publisher", "publisherid", "publisherid");
 				link.Columns.AddColumns("customizationprefix", "uniquename", "customizationoptionvalueprefix");

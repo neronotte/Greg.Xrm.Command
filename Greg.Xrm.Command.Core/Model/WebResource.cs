@@ -149,8 +149,6 @@ namespace Greg.Xrm.Command.Model
 				var result = await crm.RetrieveMultipleAsync(query);
 				this.output.WriteLine("DONE", ConsoleColor.Green) ;
 
-				this.output.WriteLine($"Retrieved {result.Entities.Count} web resources from solution '{solutionUniqueName}'");
-
 				return result.Entities.Select(e => new WebResource(e)).ToList();
 			}
 		}
