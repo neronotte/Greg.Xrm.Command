@@ -8,4 +8,12 @@ namespace Greg.Xrm.Command.Commands.WebResources
 		{
 		}
 	}
+
+
+	public class Help2 : NamespaceHelperBase
+	{
+		public Help2() : base("(Preview) Commands that can be used to create webresource files starting from templates", "webresources", "create")
+		{
+		}
+	}
 }

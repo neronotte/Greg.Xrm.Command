@@ -32,6 +32,11 @@ namespace Greg.Xrm.Command.Services.Settings
 			if (File.Exists(fileName))
 			{
 				var json = await File.ReadAllTextAsync(fileName);
+
+				if (typeof(T) == typeof(string))
+					return (T)(object)json;
+
+
 				return JsonConvert.DeserializeObject<T>(json);
 			}
 
@@ -47,6 +52,13 @@ namespace Greg.Xrm.Command.Services.Settings
 			var fileName = Path.Combine(this.settingsFolder, $"{key}.json");
 			using(var writer = new StreamWriter(fileName, false, System.Text.Encoding.UTF8))
 			{
+				if (typeof(T) == typeof(string))
+				{
+					writer.Write(value);
+					return Task.CompletedTask;
+				}
+
+
 				var serializer = new JsonSerializer
 				{
 					Formatting = Formatting.Indented
