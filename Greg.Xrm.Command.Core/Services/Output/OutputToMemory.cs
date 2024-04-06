@@ -56,7 +56,7 @@ namespace Greg.Xrm.Command.Services.Output
 			var columnWidths = new int[headers.Length];
 			for (var i = 0; i < headers.Length; i++)
 			{
-				columnWidths[i] = Math.Max(headers[i].Length, rows.Max(_ => _[i].Length));
+				columnWidths[i] = Math.Max(headers[i].Length, rows.Count == 0 ? 0 : rows.Max(_ => _[i].Length));
 			}
 
 			var header = "| " + string.Join(" | ", headers.Select((_, i) => _.PadRight(columnWidths[i]))) + " |";
