@@ -30,13 +30,15 @@ namespace Greg.Xrm.Command.Commands.WebResources
 
 			writer.WriteLine("- From scratch, assuming no WebResource is already present in your solution");
 			writer.WriteLine("- By synchronizing the folder with the WebResources in a given solution (using the --remote argument)");
+			writer.WriteLine();
 
 			writer.WriteParagraph("If starting from scratch, the command will create the following folder structure:");
 
-			writer.WriteLine("- **<publisher prefix>**: the folder that will contain the WebResources organized by publisher prefix (e.g. new, fabrikam, etc)");
+			writer.WriteLine("- **publisher prefix with underscore**: the folder that will contain the WebResources organized by publisher prefix (e.g. new_, fabrikam_, etc)");
 			writer.WriteLine("  - **images**: the folder that will contain the images (png, svg, etc) used by your solution");
 			writer.WriteLine("  - **scripts**: the folder that will contain the JavaScript files for Forms or Ribbons");
 			writer.WriteLine("  - **pages**: the folder that will contain the custom HTML webresources");
+			writer.WriteLine();
 
 			writer.WriteParagraph("If starting from a remote solution, it will create a folder structure reflecting the one in the solution.");
 			writer.WriteParagraph("In both cases, a remote solution must be present and set as default solution for the environment (or provided using the --solution argument), because it is needed to determine the **publisher prefix** to set as root folder.");
