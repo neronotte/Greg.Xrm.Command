@@ -120,13 +120,13 @@ namespace Greg.Xrm.Command
 					PrintSuccess(result);
 				}
 
-				log.LogInformation("Command {commandType} has been executed", command.GetType());
+				log.LogInformation("Command {CommandType} has been executed", command.GetType());
 				Environment.Exit(0);
 			}
 			catch (CommandException ex)
 			{
 				this.output.WriteLine(ex.Message, ConsoleColor.Red).WriteLine();
-				log.LogError(ex, "Unhandled error: {message}", ex.Message);
+				log.LogError(ex, "Unhandled error: {Message}", ex.Message);
 
 				Environment.Exit(-1);
 			}

@@ -68,5 +68,10 @@
 		SimilarityRule = 165,
 		CustomControl = 66,
 		CustomControlDefaultConfig = 68,
+		SettingDefinition = 10059,
+		/// <summary>
+		/// OrganizationSetting
+		/// </summary>
+		OrganizationSetting = 10058
 	}
 }
