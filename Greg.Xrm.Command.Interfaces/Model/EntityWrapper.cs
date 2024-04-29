@@ -228,7 +228,14 @@ namespace Greg.Xrm.Command.Model
 
 			if (!preImage.Contains(propertyName))
 			{
-				target[propertyName] = value;
+				if (value is null)
+				{
+					target.Attributes.Remove(propertyName);
+				}
+				else
+				{
+					target[propertyName] = value;
+				}
 				return;
 			}
 

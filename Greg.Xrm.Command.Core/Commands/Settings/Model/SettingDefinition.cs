@@ -34,9 +34,9 @@ namespace Greg.Xrm.Command.Commands.Settings.Model
 		}
 
 		[DataverseColumn]
-		public string description
+		public string? description
 		{
-			get => this.Get<string>();
+			get => this.Get<string?>();
 			set => this.SetValue(value);
 		}
 
@@ -48,16 +48,16 @@ namespace Greg.Xrm.Command.Commands.Settings.Model
 		}
 
 		[DataverseColumn]
-		public string defaultvalue
+		public string? defaultvalue
 		{
-			get => this.Get<string>();
+			get => this.Get<string?>();
 			set => this.SetValue(value);
 		}
 
 		[DataverseColumn]
-		public string informationurl
+		public string? informationurl
 		{
-			get => this.Get<string>();
+			get => this.Get<string?>();
 			set => this.SetValue(value);
 		}
 
@@ -106,7 +106,7 @@ namespace Greg.Xrm.Command.Commands.Settings.Model
 
 		public string? FormattedDataType => this.GetFormatted(nameof(datatype));
 		public string? FormattedReleaseLevel => this.GetFormatted(nameof(releaselevel));
-		public string? FormattedOverridableLevel => this.GetFormatted(nameof(overridablelevel));
+		public string? FormattedOverridableLevel => !this.isoverridable ? "None" : this.GetFormatted(nameof(overridablelevel));
 		public string? FormattedStateCode => this.GetFormatted(nameof(statecode));
 		public string? FormattedStatusCode => this.GetFormatted(nameof(statuscode));
 
@@ -152,6 +152,25 @@ namespace Greg.Xrm.Command.Commands.Settings.Model
 
 				this.output.WriteLine("DONE", ConsoleColor.Green);
 				return settings;
+			}
+
+			public async Task<SettingDefinition?> GetByUniqueNameAsync(IOrganizationServiceAsync2 crm, string uniqueName)
+			{
+				this.output.Write($"Retrieving setting {uniqueName}...");
+
+				var query = new QueryExpression("settingdefinition");
+				query.ColumnSet.AddColumns(DataverseColumnAttribute.GetFromClass<SettingDefinition>());
+				query.Criteria.AddCondition(nameof(uniquename), ConditionOperator.Equal, uniqueName);
+				query.AddOrder(nameof(uniquename), OrderType.Ascending);
+				query.NoLock = true;
+				query.TopCount = 1;
+
+				var result = await crm.RetrieveMultipleAsync(query);
+
+				var settings = result.Entities.Select(e => new SettingDefinition(e)).ToList();
+
+				this.output.WriteLine("DONE", ConsoleColor.Green);
+				return settings.FirstOrDefault();
 			}
 		}
 	}

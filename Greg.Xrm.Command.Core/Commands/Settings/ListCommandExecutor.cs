@@ -81,7 +81,7 @@ namespace Greg.Xrm.Command.Commands.Settings
 			this.output.WriteLine();
 			this.output.WriteTable(
 				settingList,
-				rowHeaders: () => new [] { "Unique Name", "Default Value", "Org. Value", "Type", "Visible", "Overridable on" },
+				rowHeaders: () => new [] { "Unique Name", "Default Value", "Env. Value", "Type", "Visible", "Overridable on" },
 				rowData: setting => new [] { 
 					setting.uniquename, 
 					setting.defaultvalue?.Trim() ?? string.Empty,
