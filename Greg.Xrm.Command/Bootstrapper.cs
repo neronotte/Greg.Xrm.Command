@@ -85,7 +85,6 @@ namespace Greg.Xrm.Command
 			var result = await ExecuteCommand(command, op, cancellationToken);
 
 			await this.client.FlushAsync(cancellationToken);
-			await Task.Delay(5000, cancellationToken);
 
 			return result;
 
