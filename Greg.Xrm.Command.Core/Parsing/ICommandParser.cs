@@ -14,7 +14,7 @@
 		/// <returns>
 		/// A command object, or an help command if no command has been found or an error happened during parsing.
 		/// </returns>
-		object Parse(params string[] args);
+		(object, CommandRunArgs) Parse(params string[] args);
 
 
 		/// <summary>
@@ -26,6 +26,6 @@
 		/// <returns>
 		/// A command object, or an help command if no command has been found or an error happened during parsing.
 		/// </returns>
-		object Parse(IEnumerable<string> args);
+		(object, CommandRunArgs) Parse(IEnumerable<string> args);
 	}
 }

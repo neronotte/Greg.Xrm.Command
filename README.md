@@ -18,6 +18,12 @@ The tool can be installed as a `dotnet` global tool using the following command:
 dotnet tool install -g Greg.Xrm.Command
 ```
 
+To update the tool to a newer version
+
+```powershell
+dotnet tool update -g Greg.Xrm.Command
+```
+
 ## Usage
 
 You can get the list of the available commands by running:

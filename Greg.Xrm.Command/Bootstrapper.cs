@@ -3,9 +3,13 @@ using Greg.Xrm.Command.Commands.History;
 using Greg.Xrm.Command.Parsing;
 using Greg.Xrm.Command.Services.CommandHistory;
 using Greg.Xrm.Command.Services.Output;
+using Microsoft.ApplicationInsights;
+using Microsoft.ApplicationInsights.DataContracts;
+using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.Extensions.Logging;
 using Microsoft.Xrm.Sdk;
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics;
 using System.Reflection;
 using System.ServiceModel;
 
@@ -14,6 +18,7 @@ namespace Greg.Xrm.Command
     public sealed class Bootstrapper
 	{
 		private readonly ILogger log;
+		private readonly TelemetryClient client;
 		private readonly ICommandRegistry registry;
 		private readonly ICommandParser parser;
 		private readonly IOutput output;
@@ -33,6 +38,7 @@ namespace Greg.Xrm.Command
 
 		public Bootstrapper(
 			ILogger<Bootstrapper> logger,
+			TelemetryClient client,
 			IOutput output,
 			ICommandRegistry registry,
 			ICommandParser parser,
@@ -41,6 +47,7 @@ namespace Greg.Xrm.Command
 			IHistoryTracker historyTracker)
 		{
 			this.log = logger;
+			this.client = client;
 			this.output = output;
 			this.registry = registry;
 			this.parser = parser;
@@ -49,7 +56,102 @@ namespace Greg.Xrm.Command
 			this.historyTracker = historyTracker;
 		}
 
-		public async Task StartAsync(CancellationToken cancellationToken)
+		public async Task<int> StartAsync(CancellationToken cancellationToken)
+		{
+			ShowTitleBanner();
+
+
+			log.LogTrace("1. StartAsync has been called.");
+
+			this.registry.InitializeFromAssembly(typeof(HelpCommand).Assembly);
+			this.registry.ScanPluginsFolder(args);
+
+			var (command, runArgs) = this.parser.Parse(args);
+			if (command == null)
+			{
+				return -1;
+			}
+
+			if (!IsValidCommand(command))
+			{
+				return -1;
+			}
+
+			await TrackCommandIntoHistoryAsync(command);
+
+			using var op = this.client.StartOperation<RequestTelemetry>(string.Join(" ", runArgs.Verbs));
+			op.Telemetry.Properties.Add("CommandType", command.GetType().FullName);
+
+			var result = await ExecuteCommand(command, op, cancellationToken);
+
+			await this.client.FlushAsync(cancellationToken);
+			await Task.Delay(5000, cancellationToken);
+
+			return result;
+
+		}
+
+		private async Task<int> ExecuteCommand(object command, IOperationHolder<RequestTelemetry> op, CancellationToken cancellationToken)
+		{
+			try
+			{
+				if (!GetCommandExecutor(command, out MethodInfo? method, out object? commandExecutor) || method == null || commandExecutor == null)
+				{
+					op.Telemetry.Success = false;
+					op.Telemetry.ResponseCode = "404";
+					op.Telemetry.Properties.Add("Error", "Command executor not found.");
+					return -1;
+				}
+
+				var result = await ExecuteCommandAsync(command, commandExecutor, method, cancellationToken);
+				op.Telemetry.Success = result?.IsSuccess ?? false;
+				op.Telemetry.ResponseCode = result?.IsSuccess ?? false ? "200" : "500";
+
+				if (result == null)
+				{
+					log.LogInformation("Command {CommandType} has been executed. Result is null.", command.GetType());
+					op.Telemetry.Properties.Add("Error", $"Command {command.GetType()} has been executed. Result is null.");
+					return -1;
+				}
+
+				if (!result.IsSuccess)
+				{
+					log.LogInformation("Command {CommandType} has been executed. Result is {CommandResult}.", command.GetType(), result.IsSuccess);
+					PrintFailure(command, result);
+
+					return -1;
+				}
+
+				if (result.IsSuccess && result.Count > 0)
+				{
+					PrintSuccess(result);
+				}
+
+				log.LogInformation("Command {CommandType} has been executed. Result is {CommandResult}", command.GetType(), result.IsSuccess);
+				return 0;
+			}
+			catch (Exception ex)
+			{
+				op.Telemetry.Success = false;
+				op.Telemetry.ResponseCode = "500";
+				op.Telemetry.Properties.Add("Exception", ex.Message);
+				op.Telemetry.Properties.Add("ExceptionType", ex.GetType().FullName);
+
+				if (ex.InnerException != null)
+				{
+					op.Telemetry.Properties.Add("InnerException", ex.InnerException.Message);
+					op.Telemetry.Properties.Add("InnerExceptionType", ex.InnerException.GetType().FullName);
+				}
+
+				this.output.WriteLine(ex.Message, ConsoleColor.Red).WriteLine();
+				log.LogError(ex, "Unhandled error: {ErrorMessage}", ex.Message);
+
+				return -1;
+			}
+		}
+
+
+		private void ShowTitleBanner()
 		{
 			if (!args.Contains("--noprompt"))
 			{
@@ -65,78 +167,7 @@ namespace Greg.Xrm.Command
 			{
 				args.Remove("--noprompt");
 			}
-
-			try
-			{
-				log.LogInformation("1. StartAsync has been called.");
-
-				this.registry.InitializeFromAssembly(typeof(HelpCommand).Assembly);
-				this.registry.ScanPluginsFolder(args);
-
-
-
-
-				var command = this.parser.Parse(args);
-				if (command == null)
-				{
-					Environment.Exit(-1);
-					return;
-				}
-
-
-
-				if (!IsValidCommand(command))
-				{
-					Environment.Exit(-1);
-					return;
-				}
-
-				await TrackCommandIntoHistoryAsync(command);
-
-				if (!GetCommandExecutor(command, out MethodInfo? method, out object? commandExecutor) || method == null || commandExecutor == null)
-				{
-					Environment.Exit(-1);
-					return;
-				}
-
-				var result = await ExecuteCommandAsync(command, commandExecutor, method, cancellationToken);
-
-				if (result == null)
-				{
-					Environment.Exit(-1);
-					return;
-				}
-
-				if (!result.IsSuccess)
-				{
-					PrintFailure(command, result);
-
-					Environment.Exit(-1);
-					return;
-				}
-
-				if (result.IsSuccess && result.Count > 0)
-				{
-					PrintSuccess(result);
-				}
-
-				log.LogInformation("Command {CommandType} has been executed", command.GetType());
-				Environment.Exit(0);
-			}
-			catch (CommandException ex)
-			{
-				this.output.WriteLine(ex.Message, ConsoleColor.Red).WriteLine();
-				log.LogError(ex, "Unhandled error: {Message}", ex.Message);
-
-				Environment.Exit(-1);
-			}
 		}
-
-
-
-
-
-
 
 		private bool IsValidCommand(object command)
 		{
@@ -151,7 +182,7 @@ namespace Greg.Xrm.Command
 					this.output.WriteLine(validationResult.ErrorMessage, ConsoleColor.Red);
 				}
 
-				log.LogError("Invalid command");
+				log.LogError("Invalid command options");
 				return false;
 			}
 
@@ -180,7 +211,7 @@ namespace Greg.Xrm.Command
 			if (commandExecutor == null)
 			{
 				this.output.WriteLine("Internal error, see logs for more info.", ConsoleColor.Red).WriteLine();
-				log.LogError("No command executor found for command {commandType}", command.GetType());
+				log.LogError("No command executor found for command {CommandType}.", command.GetType());
 
 				return false;
 			}
@@ -191,7 +222,7 @@ namespace Greg.Xrm.Command
 			if (method == null)
 			{
 				this.output.WriteLine("Internal error, see logs for more info.", ConsoleColor.Red).WriteLine();
-				log.LogError("No ExecuteAsync method found for command executor {commandExecutorType}", specificCommandExecutorType);
+				log.LogError("No ExecuteAsync method found for command executor {CommandExecutorType}.", specificCommandExecutorType);
 
 				return false;
 			}
@@ -206,7 +237,7 @@ namespace Greg.Xrm.Command
 			if (task == null)
 			{
 				this.output.WriteLine("Internal error, see logs for more info.", ConsoleColor.Red).WriteLine();
-				log.LogError("Invalid result from command executor ExecuteAsync: {commandType}", command.GetType());
+				log.LogError("Invalid result from command executor ExecuteAsync: {CommandType}.", command.GetType());
 
 				return null;
 			}
@@ -217,14 +248,14 @@ namespace Greg.Xrm.Command
 			if (task.IsFaulted)
 			{
 				this.output.WriteLine("Internal error, see logs for more info.", ConsoleColor.Red).WriteLine();
-				log.LogError(task.Exception, "Error while executing command {commandType}", command.GetType());
+				log.LogError(task.Exception, "Error while executing command {CommandType}.", command.GetType());
 				return null;
 			}
 
 			if (task.IsCanceled)
 			{
 				this.output.WriteLine("Internal error, see logs for more info.", ConsoleColor.Red).WriteLine();
-				log.LogError("Command {commandType} has been cancelled", command.GetType());
+				log.LogError("Command {CommandType} has been cancelled.", command.GetType());
 				return null;
 			}
 
@@ -237,12 +268,17 @@ namespace Greg.Xrm.Command
 		private void PrintFailure(object command, CommandResult result)
 		{
 			this.output.Write(result.ErrorMessage, ConsoleColor.Red).WriteLine();
-			log.LogError("Command {commandType} has error", command.GetType());
+			log.LogError("Command {CommandType} has error", command.GetType());
 
 			var ex = result.Exception;
 			if (ex == null) return;
 
-			log.LogError("Fault type: {faultType}", ex.GetType());
+			log.LogError(ex, "Fault type: {FaultType}, {ErrorMessage}.", ex.GetType(), ex.Message);
+			if (ex.InnerException != null)
+			{
+				log.LogError(ex.InnerException, "Inner exception: {ErrorMessage}.", ex.InnerException.Message);
+			}
+
 			if (ex.GetType() != typeof(FaultException<OrganizationServiceFault>))
 			{
 				output

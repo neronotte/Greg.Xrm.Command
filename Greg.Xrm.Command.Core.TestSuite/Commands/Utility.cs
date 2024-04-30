@@ -18,7 +18,7 @@ namespace Greg.Xrm.Command.Commands
 
 			var parser = new CommandParser(new OutputToMemory(), registry);
 
-			var parseResult = parser.Parse(args);
+			var (parseResult, _) = parser.Parse(args);
 
 			Assert.IsNotNull(parseResult, $"Parsing of arguments <{Concatenate(args)}> returned no command");
 			Assert.AreEqual(typeof(TCommand), parseResult.GetType(), $"On arguments <{Concatenate(args)}> the expected command type is '{typeof(TCommand).FullName}', actual is '{parseResult.GetType().FullName}'");
