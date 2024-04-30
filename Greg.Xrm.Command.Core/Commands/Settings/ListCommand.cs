@@ -10,6 +10,15 @@ namespace Greg.Xrm.Command.Commands.Settings
 		[Option("filter", "f", "Indicates if the list of settings to retrieve should include all settings, or only visible settings.", DefaultValue = Which.Visible)]
 		public Which Filter { get; set; } = Which.Visible;
 
+
+		[Option("format", "fmt", "The format of the output. Default is Text. Use Json to get the output in JSON format.")]
+		public Format Format { get; set; } = Format.Text;
+
+
+		[Option("output", "out", "If the format specified is Json, this is the name of the file where the output will be saved. If not specified, the output will be written only to the console.")]
+		public string? OutputFileName { get; set; }
+
+
 		[Option("solution", "s", HelpText = "The solution to get the settings from. If not specified, the default solution is considered.")]
 		public string? SolutionName { get; set; }
 	}
@@ -25,5 +34,11 @@ namespace Greg.Xrm.Command.Commands.Settings
 	{
 		Visible,
 		All
+	}
+
+	public enum Format
+	{
+		Text,
+		Json
 	}
 }

@@ -2,6 +2,7 @@
 using Greg.Xrm.Command.Model;
 using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
+using Newtonsoft.Json;
 
 namespace Greg.Xrm.Command.Commands.Settings
 {
@@ -77,18 +78,52 @@ namespace Greg.Xrm.Command.Commands.Settings
 				.DistinctBy(x => x.Id)
 				.OrderBy(x => x.Name)
 				.ToList();
-			
-			this.output.WriteLine();
-			this.output.WriteTable(
-				settingList,
-				rowHeaders: () => new [] { "Unique Name", "Default Value", "Env. Value", "Type", "Visible", "Overridable on" },
-				rowData: setting => new [] { 
-					setting.uniquename, 
+
+
+
+			if (command.Format == Format.Text)
+			{
+				this.output.WriteLine();
+				this.output.WriteTable(
+					settingList,
+					rowHeaders: () => new[] { "Unique Name", "Default Value", "Env. Value", "Type", "Visible", "Overridable on" },
+					rowData: setting => new[] {
+					setting.uniquename,
 					setting.defaultvalue?.Trim() ?? string.Empty,
 					organizationSettingList.FirstOrDefault(x => x.settingdefinitionid?.Id == setting.Id)?.value ?? string.Empty,
-					setting.FormattedDataType ?? string.Empty, 
+					setting.FormattedDataType ?? string.Empty,
 					setting.ishidden ? string.Empty : "X",
 					setting.FormattedOverridableLevel ?? string.Empty});
+			}
+
+			if (command.Format == Format.Json)
+			{
+				var jsonItems = settingList.Select(x => new JsonSettingDefinition(
+						x,
+						organizationSettingList.FirstOrDefault(y => y.settingdefinitionid?.Id == x.Id),
+						appSettingList.Where(y => y.settingdefinitionid?.Id == x.Id).ToArray()))
+					.OrderBy(x => x.uniquename)
+					.ToList();
+
+				var text = JsonConvert.SerializeObject(jsonItems, new JsonSerializerSettings { 
+					NullValueHandling = NullValueHandling.Ignore, 
+					Formatting = Formatting.Indented,
+				});
+				this.output.WriteLine(text);
+
+				if (!string.IsNullOrWhiteSpace(command.OutputFileName))
+				{
+					try
+					{
+						File.WriteAllText(command.OutputFileName, text);
+					}
+					catch(Exception ex)
+					{
+						this.output.WriteLine($"Error writing to file <{command.OutputFileName}>: {ex.Message}", ConsoleColor.Red);
+					}
+				}
+			}
+			
 
 			return CommandResult.Success();
 		}

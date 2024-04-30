@@ -3,6 +3,7 @@ using Autofac.Core;
 using Autofac.Extensions.DependencyInjection;
 using Greg.Xrm.Command;
 using Greg.Xrm.Command.Parsing;
+using Greg.Xrm.Command.Properties;
 using Greg.Xrm.Command.Services;
 using Greg.Xrm.Command.Services.CommandHistory;
 using Greg.Xrm.Command.Services.Connection;
@@ -36,19 +37,32 @@ serviceCollection.AddLogging(logging =>
 	logging.AddDebug();
 });
 
+serviceCollection.AddApplicationInsightsTelemetryWorkerService(options => 
+{
+#if DEBUG
+	options.ConnectionString = Resources.ApplicationInsightsConnectionStringDev;
+
+#elif RELEASE
+
+	options.ConnectionString = Resources.ApplicationInsightsConnectionStringProd;
+#endif
+});
+
 
 var containerBuilder = new ContainerBuilder();
 containerBuilder.Populate(serviceCollection);
 
 var container = containerBuilder.Build();
 
+var result = -500;
+
 using (var scope = container.BeginLifetimeScope("activation"))
 {
 	try
 	{
 		var hostedService = scope.Resolve<Bootstrapper>();
-
-		hostedService?.StartAsync(CancellationToken.None).Wait();
+		var task = hostedService.StartAsync(CancellationToken.None);
+		result = task.GetAwaiter().GetResult();
 	}
 	catch (AggregateException ex)
 	{
@@ -72,4 +86,5 @@ using (var scope = container.BeginLifetimeScope("activation"))
 		Console.ReadKey();
 	}
 #endif
+	return result;
 }

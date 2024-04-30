@@ -9,7 +9,7 @@ using Greg.Xrm.Command.Services;
 
 namespace Greg.Xrm.Command
 {
-    public class IoCModule : Module
+	public class IoCModule : Module
 	{
 		protected override void Load(ContainerBuilder builder)
 		{

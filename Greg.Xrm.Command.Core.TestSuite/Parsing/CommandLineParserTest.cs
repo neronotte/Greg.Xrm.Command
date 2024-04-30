@@ -1,6 +1,6 @@
-using Autofac;
 using Greg.Xrm.Command.Commands.Auth;
 using Greg.Xrm.Command.Services;
+using Microsoft.ApplicationInsights;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Greg.Xrm.Command.Parsing
@@ -25,8 +25,5 @@ namespace Greg.Xrm.Command.Parsing
             Assert.IsNotNull(command);
             Assert.AreEqual(typeof(ListCommand), command.GetType());
         }
-
-
-
     }
 }
