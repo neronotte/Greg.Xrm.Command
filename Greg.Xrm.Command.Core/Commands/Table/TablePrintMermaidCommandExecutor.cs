@@ -62,12 +62,23 @@ namespace Greg.Xrm.Command.Commands.Table
 
 			output.WriteLine($"Found {tableIds.Count} tables in solution '{currentSolutionName}'");
 
+			if (tableIds.Count == 0)
+			{
+				return CommandResult.Fail("No tables found in the solution. Please check the solution name and try again.");
+			}
 
 
 			output.WriteLine("Retrieving tables metadata...");
 			query = new QueryExpression("entity");
 			query.ColumnSet.AddColumns("logicalname");
-			query.Criteria.AddCondition("entityid", ConditionOperator.In, tableIds.Cast<object>().ToArray());
+			if (tableIds.Count == 1)
+			{
+				query.Criteria.AddCondition("entityid", ConditionOperator.Equal, tableIds[0]);
+			}
+			else
+			{
+				query.Criteria.AddCondition("entityid", ConditionOperator.In, tableIds.Cast<object>().ToArray());
+			}
 			query.NoLock = true;
 
 			var tableNames = (await crm.RetrieveMultipleAsync(query))
