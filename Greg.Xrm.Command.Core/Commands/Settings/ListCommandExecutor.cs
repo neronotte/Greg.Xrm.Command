@@ -2,6 +2,7 @@
 using Greg.Xrm.Command.Model;
 using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
+using Microsoft.Xrm.Sdk;
 using Newtonsoft.Json;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
@@ -10,7 +11,7 @@ using System.Drawing;
 
 namespace Greg.Xrm.Command.Commands.Settings
 {
-	public class ListCommandExecutor : ICommandExecutor<ListCommand>
+    public class ListCommandExecutor : ICommandExecutor<ListCommand>
 	{
 		private readonly IOutput output;
 		private readonly IOrganizationServiceRepository organizationServiceRepository;
@@ -77,6 +78,11 @@ namespace Greg.Xrm.Command.Commands.Settings
 			var appSettingList = await this.appSettingRepository.GetByDefinitionsAsync(crm, settingList);
 
 
+			// if the file name contains the {version} token, replace it with the current date time
+			if (command.OutputFileName?.Contains("{version}") == true)
+			{
+				command.OutputFileName = command.OutputFileName.Replace("{version}", DateTime.Now.ToString("yyyy.MM.dd.HH.mm.ss"));
+			}
 
 
 			if (command.Format == Format.Text)
@@ -180,18 +186,26 @@ namespace Greg.Xrm.Command.Commands.Settings
 
 
 				var row = 1;
-				var col = 5;
-				var range = ws.Cells[row, col, row, col + appList.Count - 1];
-				range.Merge = true;
-				range.Value = "App value";
-				range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
-				range.Style.VerticalAlignment = ExcelVerticalAlignment.Center;
-				range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-				range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(68, 114, 196));
-				range.Style.Font.Color.SetColor(Color.White);
-				range.Style.Font.Bold = true;
-				range.Style.Font.Size = 13;
-				range.Style.Border.BorderAround(ExcelBorderStyle.Thin, Color.White);
+				var col = 0;
+				ws.Cells[row, 1].Title().SetValue("Settings list");
+
+				row++;
+
+				if (appList.Count > 0)
+				{
+					col = 5;
+					var range = ws.Cells[row, col, row, col + appList.Count - 1];
+					range.Merge = true;
+					range.Value = "App value";
+					range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+					range.Style.VerticalAlignment = ExcelVerticalAlignment.Center;
+					range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+					range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(68, 114, 196));
+					range.Style.Font.Color.SetColor(Color.White);
+					range.Style.Font.Bold = true;
+					range.Style.Font.Size = 13;
+					range.Style.Border.BorderAround(ExcelBorderStyle.Thin, Color.White);
+				}
 
 				row++;
 				col = 0;
@@ -212,16 +226,25 @@ namespace Greg.Xrm.Command.Commands.Settings
 				{
 					row++;
 					col = 0;
-					ws.Cells[row, ++col].Value = setting.uniquename;
+					ws.Cells[row, ++col].SetValue(setting.uniquename).Bold();
 					ws.Cells[row, ++col].Value = setting.description;
 					ws.Cells[row, col].Style.WrapText = true;
-					ws.Cells[row, ++col].Value = setting.defaultvalue;
-					ws.Cells[row, ++col].Value = organizationSettingList.FirstOrDefault(x => x.settingdefinitionid?.Id == setting.Id)?.value;
+					ws.Cells[row, ++col]
+						.SetFormat(setting.datatype, setting.defaultvalue)
+						.ApplyValidation(setting.datatype)
+						.Unlocked();
+					ws.Cells[row, ++col]
+						.SetFormat(setting.datatype, organizationSettingList.FirstOrDefault(x => x.settingdefinitionid?.Id == setting.Id)?.value)
+						.ApplyValidation(setting.datatype)
+						.Unlocked(setting.overridablelevel, SettingDefinitionOverridableLevel.Organization, SettingDefinitionOverridableLevel.AppAndOrganization);
 
 					foreach (var app in appList)
 					{
 						var appSetting = appSettingList.FirstOrDefault(x => x.settingdefinitionid?.Id == setting.Id && x.parentappmoduleid?.Id == app.Id);
-						ws.Cells[row, ++col].Value = appSetting?.value;
+						ws.Cells[row, ++col]
+							.SetFormat(setting.datatype, appSetting?.value)
+							.ApplyValidation(setting.datatype)
+							.Unlocked(setting.overridablelevel, SettingDefinitionOverridableLevel.App, SettingDefinitionOverridableLevel.AppAndOrganization);
 					}
 
 					ws.Cells[row, ++col].Value = setting.FormattedDataType;
@@ -229,10 +252,10 @@ namespace Greg.Xrm.Command.Commands.Settings
 					ws.Cells[row, ++col].Value = setting.FormattedOverridableLevel;
 				}
 
-				var tableRange = ws.Cells[2, 1, row, col];
+				var tableRange = ws.Cells[3, 1, row, col];
 				tableRange.Style.VerticalAlignment = ExcelVerticalAlignment.Center;
 				var table = ws.Tables.Add(tableRange, "Settings");
-				table.TableStyle = OfficeOpenXml.Table.TableStyles.Medium9;
+				table.TableStyle = OfficeOpenXml.Table.TableStyles.Medium2;
 
 				var colWidth = 25;
 				ws.Column(1).AutoFit();
@@ -241,15 +264,21 @@ namespace Greg.Xrm.Command.Commands.Settings
 				{
 					ws.Column(i).Width = colWidth;
 
-					if (i >= col-3)
+					if (i >= col-2)
 					{ 
 						ws.Column(i).AutoFit();
 						ws.Column(i).Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
 					}
 				}
 
-				ws.View.FreezePanes(3, 3);
+				ws.View.FreezePanes(4, 3);
 
+				ws.Protection.IsProtected = true;
+				ws.Protection.AllowSort = true;
+				ws.Protection.AllowAutoFilter = true;
+				ws.Protection.SetPassword("ciaociao");
+
+				package.Workbook.Protection.LockStructure = true;
 				await package.SaveAsAsync(new FileInfo(command.OutputFileName));
 
 				this.output.WriteLine("DONE", ConsoleColor.Green);
@@ -270,6 +299,102 @@ namespace Greg.Xrm.Command.Commands.Settings
 			}
 
 			return CommandResult.Success();
+		}
+
+
+
+	}
+
+    public static class ExcelExtensions
+    {
+		public static ExcelRange SetFormat(this ExcelRange range, OptionSetValue? type, string? value)
+		{
+			if (type?.Value == (int)SettingDefinitionDataType.Boolean)
+			{
+				return range.SetFormatBoolean(value);
+			}
+			if (type?.Value == (int)SettingDefinitionDataType.Number)
+			{
+				return range.SetFormatNumber(value);
+			}
+
+			return range.SetValue(value);
+		}
+
+		public static ExcelRange SetFormatBoolean(this ExcelRange range, string? value)
+		{
+			return range.TextAlign(ExcelHorizontalAlignment.Center).SetValue(value?.ToString().ToUpperInvariant());
+		}
+
+		public static ExcelRange SetFormatNumber(this ExcelRange range, string? value)
+		{
+			range.TextAlign(ExcelHorizontalAlignment.Right);
+			range.Style.Numberformat.Format = "#,##0.0";
+
+			if (value != null && double.TryParse(value, out var number))
+			{
+				return range.SetValue(number);
+			}
+
+			return range;
+		}
+
+
+		public static ExcelRange ApplyValidation(this ExcelRange range, OptionSetValue? value)
+		{
+			if (value == null) return range;
+			if (value.Value == (int)SettingDefinitionDataType.Boolean)
+			{
+				return range.ApplyValidationBoolean();
+			}
+			if (value.Value == (int)SettingDefinitionDataType.Number)
+			{
+				return range.ApplyValidationNumber();
+			}
+
+			return range;
+		}
+
+		public static ExcelRange ApplyValidationNumber(this ExcelRange range)
+		{
+			var list = range.DataValidation.AddDecimalDataValidation();
+			list.AllowBlank = true;
+			list.ShowErrorMessage = true;
+			list.Error = "Invalid value, only numbers are supported!";
+			list.ErrorStyle = OfficeOpenXml.DataValidation.ExcelDataValidationWarningStyle.stop;
+			list.ErrorTitle = "Invalid value";
+			return range;
+		}
+
+        public static ExcelRange ApplyValidationBoolean(this ExcelRange range)
+		{
+			var list = range.DataValidation.AddListDataValidation();
+			list.Formula.Values.Add("TRUE");
+			list.Formula.Values.Add("FALSE");
+			list.AllowBlank = true;
+			list.ShowErrorMessage = true;
+			list.Error = "Invalid value, only 'true' and 'false' are supported!";
+			list.ErrorStyle = OfficeOpenXml.DataValidation.ExcelDataValidationWarningStyle.stop;
+			list.ErrorTitle = "Invalid value";
+			return range;
+		}
+
+		public static ExcelRange Unlocked(this ExcelRange range, OptionSetValue? overridableLevel = null, params SettingDefinitionOverridableLevel[] validLevels)
+		{
+			var isLocked = overridableLevel != null && !validLevels.Contains((SettingDefinitionOverridableLevel)overridableLevel.Value);
+			range.Style.Locked = isLocked;
+
+			if (isLocked)
+			{
+				range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+				range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
+			}
+			else
+			{
+				range.Input();
+			}
+
+			return range;
 		}
 	}
 }
