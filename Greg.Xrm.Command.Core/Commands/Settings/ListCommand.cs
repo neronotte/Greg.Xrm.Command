@@ -1,10 +1,12 @@
 ﻿
+using Greg.Xrm.Command.Parsing;
+using Greg.Xrm.Command.Services;
 using System.ComponentModel.DataAnnotations;
 
 namespace Greg.Xrm.Command.Commands.Settings
 {
 	[Command("settings", "list", HelpText = "List settings defined for the current environment")]
-	public class ListCommand : IValidatableObject
+	public class ListCommand : IValidatableObject, ICanProvideUsageExample
 	{
 		[Option("origin", "o", "Indicates if the list of settings to retrieve is the whole list of settings, or just the settings in the specified solution.", DefaultValue = Origin.Solution)]
 		public Origin Origin { get; set; } = Origin.Solution;
@@ -33,6 +35,20 @@ namespace Greg.Xrm.Command.Commands.Settings
 			{
 				yield return new ValidationResult("When the format is Excel, the output file name must be specified.", new[] { nameof(OutputFileName) });
 			}
+		}
+
+		public void WriteUsageExamples(MarkdownWriter writer)
+		{
+			writer.WriteLine("The current command will list all the settings in a given solution, or in the current environment.");
+			writer.WriteLine("It can output the settings value to console in a tabular format (´-fmt Text´), to console and/or file in JSON format (´-fmt Json´) or in an excel file (´-fmt Excel´).");
+			writer.WriteLine();
+			writer.WriteLine("**Easter egg**: if you put the {version} token in the output file name, it will be replaced by the current timestamp. E.g.");
+			writer.WriteLine();
+			writer.WriteCodeBlock("pacx settings list -fmt Excel -out settings_{version}.xlsx");
+			writer.WriteLine();
+			writer.WriteLine("Will generate an Excel file named ´settings_2024.05.05.12.34.56.xlsx´.");
+			writer.WriteLine();
+			writer.WriteParagraph("In both Excel and Json format, the output is deterministic: settings are sorted by name, and the values_per_app are sorted by app name. This means that the output structure will remain fixed, to improve versioning and simplify comparison between different environments.");
 		}
 	}
 

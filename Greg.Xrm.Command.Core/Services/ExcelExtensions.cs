@@ -43,6 +43,12 @@ namespace Greg.Xrm.Command
 			return range;
 		}
 
+		public static ExcelRange Bold(this ExcelRange range)
+		{
+			range.Style.Font.Bold = true;
+			return range;
+		}
+
 		public static ExcelRange Explanatory(this ExcelRange range)
 		{
 			range.Style.Font.SetFromFont("Calibri", 11, italic: true);
@@ -87,6 +93,15 @@ namespace Greg.Xrm.Command
 			range.Style.Fill.PatternType = ExcelFillStyle.Solid;
 			range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(142, 169, 219));
 			range.Style.Font.Color.SetColor(Color.Black);
+			return range;
+		}
+
+		public static ExcelRange Input(this ExcelRange range)
+		{
+			range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+			range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(255, 204, 153));
+			range.Style.Font.Color.SetColor(Color.FromArgb(63, 63, 118));
+			range.Style.Border.BorderAround(ExcelBorderStyle.Thin, Color.FromArgb(127, 127, 127));
 			return range;
 		}
 
