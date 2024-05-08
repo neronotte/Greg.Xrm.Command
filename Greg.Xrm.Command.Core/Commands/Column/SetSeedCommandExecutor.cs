@@ -34,7 +34,7 @@ namespace Greg.Xrm.Command.Commands.Column
 				var request = new OrganizationRequest("SetAutoNumberSeed");
 				request["EntityName"] = command.TableName;
 				request["AttributeName"] = command.ColumnName;
-				request["Value"] = command.Seed;
+				request["Value"] = (long)command.Seed;
 
 				await crm.ExecuteAsync(request, cancellationToken);
 

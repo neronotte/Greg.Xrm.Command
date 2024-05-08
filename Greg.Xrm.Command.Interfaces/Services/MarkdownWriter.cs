@@ -65,6 +65,24 @@ namespace Greg.Xrm.Command.Services
 			return this;
 		}
 
+		public MarkdownWriter WriteList(params string[] lines)
+		{
+			return WriteList(0, lines);
+		}
+		public MarkdownWriter WriteList(int indentLevel, params string[] lines)
+		{
+			var indent = new string(' ', indentLevel * 2);
+
+			foreach (var line in lines)
+			{
+				writer.Write(indent);
+				writer.Write("- ");
+				writer.WriteLine(line);
+			}
+			writer.WriteLine();
+			return this;
+		}
+
 		public MarkdownWriter WriteTable<TRow>(IReadOnlyList<TRow> collection, Func<string[]> rowHeaders, Func<TRow, string[]> rowData)
 		{
 			var headers = rowHeaders();
