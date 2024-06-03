@@ -1,8 +1,8 @@
-﻿# Greg.Xrm.Command ⁓ aka PACX
+﻿# Greg.Xrm.Command ⁓ aka PACX 🔧
 
 Command line utility belt for Dataverse.
 
-## Contributors
+## Contributors 👨🏻‍💻
 
 -   Riccardo Gregori (@\_neronotte)
 -   Simone Giubbarelli (@SimonGiubs)
@@ -10,7 +10,7 @@ Command line utility belt for Dataverse.
 
 If you want to contribute to the current project, please follow the [guidelines described in this wiki article](https://github.com/neronotte/Greg.Xrm.Command/wiki/How-to-contribute).
 
-## Installation
+## Installation 🛠️
 
 The tool can be installed as a `dotnet` global tool using the following command:
 
@@ -24,7 +24,7 @@ To update the tool to a newer version
 dotnet tool update -g Greg.Xrm.Command
 ```
 
-## Usage
+## Usage 🚀
 
 You can get the list of the available commands by running:
 
