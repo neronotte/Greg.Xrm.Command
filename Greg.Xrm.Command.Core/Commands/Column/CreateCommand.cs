@@ -49,7 +49,7 @@ namespace Greg.Xrm.Command.Commands.Column
         [Option("audit", "a", HelpText = "Indicates whether the attribute is enabled for auditing (default: true).")]
         public bool IsAuditEnabled { get; set; } = true;
 
-        [Option("options", "o", HelpText = "The list of options for the attribute, as a single string separated by comma or pipe.\nValues will be automatically generated")]
+        [Option("options", "o", HelpText = "The list of options for the attribute, as a single string separated by comma (,) or semicolon (;) or pipe (|).\nValues will be automatically generated")]
         public string? Options { get; internal set; }
 
         [Option("globalOptionSetName", "gon", HelpText = "For Picklist type columns that must be tied to a global option set,\nprovides the name of the global option set.")]
@@ -64,7 +64,7 @@ namespace Greg.Xrm.Command.Commands.Column
         [Option("max", "max", HelpText = "For number type columns indicates the maximum value for the column.")]
         public double? MaxValue { get; set; }
 
-        [Option("precision", "p", HelpText = "For money type columns indicates the precision for the column.", DefaultValue = 2)]
+        [Option("precision", "p", HelpText = "For money or decimal type columns indicates the precision for the column.", DefaultValue = 2)]
         public int? Precision { get; set; }
 
         [Option("precisionSource", "ps", HelpText = "For money type columns indicates if precision should be taken from:\n(0) the precision property,\n(1) the `Organization.PricingDecimalPrecision` attribute or\n(2) the `TransactionCurrency.CurrencyPrecision` property of the transaction currency that is associated the current record.\n", DefaultValue = 2)]
