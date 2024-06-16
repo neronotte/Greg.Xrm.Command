@@ -26,9 +26,12 @@ namespace Greg.Xrm.Command
 			builder.RegisterType<Solution.Repository>().As<ISolutionRepository>();
 			builder.RegisterType<JsTemplateManager>().As<IJsTemplateManager>();
 			builder.RegisterType<IconFinder>().As<IIconFinder>();
+			builder.RegisterType<SavedQuery.Repository>().As<ISavedQueryRepository>();
+			builder.RegisterType<UserQuery.Repository>().As<IUserQueryRepository>();
 			builder.RegisterType<Commands.Settings.Model.SettingDefinition.Repository>().As<Commands.Settings.Model.ISettingDefinitionRepository>();
 			builder.RegisterType<Commands.Settings.Model.OrganizationSetting.Repository>().As<Commands.Settings.Model.IOrganizationSettingRepository>();
 			builder.RegisterType<Commands.Settings.Model.AppSetting.Repository>().As<Commands.Settings.Model.IAppSettingRepository>();
+			builder.RegisterType<Commands.Settings.Imports.ImportStrategyFactory>().As<Commands.Settings.Imports.IImportStrategyFactory>();
 			builder.RegisterType<Commands.Table.Migration.TableGraphBuilder>().AsSelf();
 		}
 	}

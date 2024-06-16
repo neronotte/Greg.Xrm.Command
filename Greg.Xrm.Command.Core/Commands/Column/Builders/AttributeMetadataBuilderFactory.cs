@@ -9,12 +9,12 @@ namespace Greg.Xrm.Command.Commands.Column.Builders
         public AttributeMetadataBuilderFactory()
         {
             cache.Add(AttributeTypeCode.String, () => new AttributeMetadataBuilderString());
-            cache.Add(AttributeTypeCode.Picklist, () => new AttributeMetadataBuilderPicklist());
             cache.Add(AttributeTypeCode.Integer, () => new AttributeMetadataBuilderInteger());
-            cache.Add(AttributeTypeCode.Money, () => new AttributeMetadataBuilderMoney());
-            cache.Add(AttributeTypeCode.Boolean, () => new AttributeMetadataBuilderBoolean());
-            cache.Add(AttributeTypeCode.Decimal, () => new AttributeMetadataBuilderDecimal());
-            cache.Add(AttributeTypeCode.Memo, () => new AttributeMetadataBuilderMemo());
+			cache.Add(AttributeTypeCode.Decimal, () => new AttributeMetadataBuilderDecimal());
+			cache.Add(AttributeTypeCode.Boolean, () => new AttributeMetadataBuilderBoolean());
+			cache.Add(AttributeTypeCode.Picklist, () => new AttributeMetadataBuilderPicklist());
+			cache.Add(AttributeTypeCode.Money, () => new AttributeMetadataBuilderMoney());
+			cache.Add(AttributeTypeCode.Memo, () => new AttributeMetadataBuilderMemo());
             cache.Add(AttributeTypeCode.DateTime, () => new AttributeMetadataBuilderDateTime());
         }
 

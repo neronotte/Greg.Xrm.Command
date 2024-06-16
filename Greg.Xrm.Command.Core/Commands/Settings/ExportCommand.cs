@@ -1,12 +1,13 @@
-﻿
-using Greg.Xrm.Command.Parsing;
+﻿using Greg.Xrm.Command.Parsing;
 using Greg.Xrm.Command.Services;
 using System.ComponentModel.DataAnnotations;
 
 namespace Greg.Xrm.Command.Commands.Settings
 {
-	[Command("settings", "list", HelpText = "List settings defined for the current environment")]
-	public class ListCommand : IValidatableObject, ICanProvideUsageExample
+	[Command("settings", "export", HelpText = "List settings defined for the current environment")]
+	[Alias("settings", "list")]
+	[Alias("settings", "ls")]
+	public class ExportCommand : IValidatableObject, ICanProvideUsageExample
 	{
 		[Option("origin", "o", "Indicates if the list of settings to retrieve is the whole list of settings, or just the settings in the specified solution.", DefaultValue = Origin.Solution)]
 		public Origin Origin { get; set; } = Origin.Solution;
@@ -44,7 +45,7 @@ namespace Greg.Xrm.Command.Commands.Settings
 			writer.WriteLine();
 			writer.WriteLine("**Easter egg**: if you put the {version} token in the output file name, it will be replaced by the current timestamp. E.g.");
 			writer.WriteLine();
-			writer.WriteCodeBlock("pacx settings list -fmt Excel -out settings_{version}.xlsx");
+			writer.WriteCodeBlock("pacx settings export -fmt Excel -out settings_{version}.xlsx");
 			writer.WriteLine();
 			writer.WriteLine("Will generate an Excel file named `settings_2024.05.05.12.34.56.xlsx`.");
 			writer.WriteLine();

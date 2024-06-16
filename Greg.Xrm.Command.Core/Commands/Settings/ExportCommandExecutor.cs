@@ -11,7 +11,7 @@ using System.Drawing;
 
 namespace Greg.Xrm.Command.Commands.Settings
 {
-    public class ListCommandExecutor : ICommandExecutor<ListCommand>
+    public class ExportCommandExecutor : ICommandExecutor<ExportCommand>
 	{
 		private readonly IOutput output;
 		private readonly IOrganizationServiceRepository organizationServiceRepository;
@@ -20,7 +20,7 @@ namespace Greg.Xrm.Command.Commands.Settings
 		private readonly IOrganizationSettingRepository organizationSettingRepository;
 		private readonly IAppSettingRepository appSettingRepository;
 
-		public ListCommandExecutor(
+		public ExportCommandExecutor(
 			IOutput output,
 			IOrganizationServiceRepository organizationServiceRepository,
 			ISolutionRepository solutionRepository,
@@ -37,7 +37,7 @@ namespace Greg.Xrm.Command.Commands.Settings
 		}
 
 
-        public async Task<CommandResult> ExecuteAsync(ListCommand command, CancellationToken cancellationToken)
+        public async Task<CommandResult> ExecuteAsync(ExportCommand command, CancellationToken cancellationToken)
 		{
 			this.output.Write($"Connecting to the current dataverse environment...");
 			var crm = await this.organizationServiceRepository.GetCurrentConnectionAsync();
@@ -119,7 +119,7 @@ namespace Greg.Xrm.Command.Commands.Settings
 					setting.FormattedOverridableLevel ?? string.Empty});
 		}
 
-		private void WriteJson(ListCommand command, IReadOnlyList<SettingDefinition> settingList, IReadOnlyList<OrganizationSetting> organizationSettingList, IReadOnlyList<AppSetting> appSettingList)
+		private void WriteJson(ExportCommand command, IReadOnlyList<SettingDefinition> settingList, IReadOnlyList<OrganizationSetting> organizationSettingList, IReadOnlyList<AppSetting> appSettingList)
 		{
 			var jsonItems = settingList.Select(x => new JsonSettingDefinition(
 				x,
@@ -161,7 +161,7 @@ namespace Greg.Xrm.Command.Commands.Settings
 			});
 		}
 
-		private async Task<CommandResult> WriteExcelAsync(ListCommand command, IReadOnlyList<SettingDefinition> settingList, IReadOnlyList<OrganizationSetting> organizationSettingList, IReadOnlyList<AppSetting> appSettingList)
+		private async Task<CommandResult> WriteExcelAsync(ExportCommand command, IReadOnlyList<SettingDefinition> settingList, IReadOnlyList<OrganizationSetting> organizationSettingList, IReadOnlyList<AppSetting> appSettingList)
 		{
 			if (string.IsNullOrWhiteSpace(command.OutputFileName))
 			{

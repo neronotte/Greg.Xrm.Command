@@ -56,7 +56,10 @@ namespace Greg.Xrm.Command.Commands.Column.Builders
                 if (string.IsNullOrWhiteSpace(optionString))
                     throw new CommandException(CommandException.CommandRequiredArgumentNotProvided, $"The options are required for columns of type Picklist");
 
-                var optionArray = optionString.Split(',', '|', StringSplitOptions.RemoveEmptyEntries);
+                var optionArray = optionString.Split(",;|".ToCharArray(), StringSplitOptions.RemoveEmptyEntries)
+                    .Select( x => x.Trim())
+                    .Where(x => !string.IsNullOrWhiteSpace(x))
+                    .ToArray();
                 if (optionArray.Length == 0)
                     throw new CommandException(CommandException.CommandRequiredArgumentNotProvided, $"The options are required for columns of type Picklist");
 
