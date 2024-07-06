@@ -237,13 +237,13 @@ namespace Greg.Xrm.Command.Commands.WebResources
 				return (false, "The provided solution is managed. You must specify an unmanaged solution.");
 			}
 
-			var uniqueName = solution.PublisherUniqueName;
-			if (string.IsNullOrWhiteSpace(uniqueName))
+			var publisherPrefix = solution.PublisherCustomizationPrefix;
+			if (string.IsNullOrWhiteSpace(publisherPrefix))
 			{
 				return (false, "Unable to retrieve the publisher. Please report a bug to the project GitHub page.");
 			}
 
-			return (true, uniqueName);
+			return (true, publisherPrefix);
 		}
 	}
 }
