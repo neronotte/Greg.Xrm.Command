@@ -48,48 +48,48 @@ namespace Greg.Xrm.Command.Commands.WebResources
 			writer.WriteParagraph("Initialize the current folder from scratch, taking the publisher from the default solution set on the current environment:");
 
 			writer.WriteCodeBlockStart("Powershell");
-			writer.WriteLine("xrm webresources init");
-			writer.WriteLine("xrm ws init");
+			writer.WriteLine("pacx webresources init");
+			writer.WriteLine("pacx wr init");
 			writer.WriteCodeBlockEnd();
 
 
 			writer.WriteParagraph("Initialize the .\\webresources subfolder from scratch, taking the publisher from the default solution set on the current environment:");
 
 			writer.WriteCodeBlockStart("Powershell");
-			writer.WriteLine("xrm webresources init --folder .\\webresources");
-			writer.WriteLine("xrm ws init -f .\\webresources");
+			writer.WriteLine("pacx webresources init --folder .\\webresources");
+			writer.WriteLine("pacx wr init -f .\\webresources");
 			writer.WriteCodeBlockEnd();
 
 
 			writer.WriteParagraph("Initialize the current folder from the remote solution set as default for the current environment:");
 
 			writer.WriteCodeBlockStart("Powershell");
-			writer.WriteLine("xrm webresources init --remote");
-			writer.WriteLine("xrm ws init -r");
+			writer.WriteLine("pacx webresources init --remote");
+			writer.WriteLine("pacx wr init -r");
 			writer.WriteCodeBlockEnd();
 
 
 			writer.WriteParagraph("Initialize the current folder from the specified remote solution:");
 
 			writer.WriteCodeBlockStart("Powershell");
-			writer.WriteLine("xrm webresources init --remote --solution my_solution");
-			writer.WriteLine("xrm ws init -r -s my_solution");
+			writer.WriteLine("pacx webresources init --remote --solution my_solution");
+			writer.WriteLine("pacx wr init -r -s my_solution");
 			writer.WriteCodeBlockEnd();
 
 
 			writer.WriteParagraph("Initialize the .\\webresources folder from the remote solution set as default for the current environment:");
 
 			writer.WriteCodeBlockStart("Powershell");
-			writer.WriteLine("xrm webresources init --remote --folder .\\webresources");
-			writer.WriteLine("xrm ws init -r -f .\\webresources");
+			writer.WriteLine("pacx webresources init --remote --folder .\\webresources");
+			writer.WriteLine("pacx wr init -r -f .\\webresources");
 			writer.WriteCodeBlockEnd();
 
 
 			writer.WriteParagraph("Initialize the .\\webresources folder from the specified remote solution:");
 
 			writer.WriteCodeBlockStart("Powershell");
-			writer.WriteLine("xrm webresources init --remote --solution my_solution --folder .\\webresources");
-			writer.WriteLine("xrm ws init -r -s my_solution -f .\\webresources");
+			writer.WriteLine("pacx webresources init --remote --solution my_solution --folder .\\webresources");
+			writer.WriteLine("pacx wr init -r -s my_solution -f .\\webresources");
 			writer.WriteCodeBlockEnd();
 
 		}
