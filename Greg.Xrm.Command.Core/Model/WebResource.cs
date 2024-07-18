@@ -90,6 +90,12 @@ namespace Greg.Xrm.Command.Model
 				throw new ArgumentNullException(nameof(fileName), nameof(fileName) + " cannot be null");
 
 			var extension = fileName;
+			if (fileName.EndsWith(".css.map"))
+				return WebResourceType.StyleSheet;
+			if (fileName.EndsWith(".js.map"))
+				return WebResourceType.Script;
+
+
 			if (fileName.Contains('.'))
 			{
 				extension = fileName[(fileName.LastIndexOf('.') + 1)..].ToLowerInvariant();
@@ -123,8 +129,27 @@ namespace Greg.Xrm.Command.Model
 				this.output = output;
 			}
 
+			public async Task<List<WebResource>> GetByNameAsync(IOrganizationServiceAsync2 crm, string[] fileNames, bool fetchContent = false)
+			{
+				var query = new QueryExpression("webresource");
+				query.ColumnSet.AddColumns("name", "displayname", "webresourcetype", "description");
+				if (fetchContent)
+				{
+					query.ColumnSet.AddColumn("content");
+				}
 
-            public async Task<List<WebResource>> GetBySolutionAsync(IOrganizationServiceAsync2 crm, string solutionUniqueName, bool fetchContent = false)
+				query.Criteria.AddCondition("ismanaged", ConditionOperator.Equal, false);
+				query.Criteria.AddCondition("ishidden", ConditionOperator.Equal, false);
+				query.Criteria.AddCondition("iscustomizable", ConditionOperator.Equal, true);
+				query.Criteria.AddCondition("name", ConditionOperator.In, fileNames.Cast<object>().ToArray());
+				query.NoLock = true;
+
+				var result = await crm.RetrieveMultipleAsync(query);
+
+				return result.Entities.Select(e => new WebResource(e)).ToList();
+			}
+
+			public async Task<List<WebResource>> GetBySolutionAsync(IOrganizationServiceAsync2 crm, string solutionUniqueName, bool fetchContent = false)
 			{
 				this.output.Write($"Retrieving web resources from solution '{solutionUniqueName}'...");
 

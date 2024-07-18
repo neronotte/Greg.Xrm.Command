@@ -1,6 +1,10 @@
-﻿using Microsoft.PowerPlatform.Dataverse.Client;
+﻿using Greg.Xrm.Command.Parsing;
+using Microsoft.Crm.Sdk.Messages;
+using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
+using Microsoft.Xrm.Sdk.Messages;
 using Microsoft.Xrm.Sdk.Query;
+using Newtonsoft.Json;
 
 namespace Greg.Xrm.Command.Model
 {
@@ -20,6 +24,106 @@ namespace Greg.Xrm.Command.Model
 		public string? PublisherCustomizationPrefix => GetAliased<string>("publisher", "customizationprefix");
 		public string? PublisherUniqueName => GetAliased<string>("publisher", "uniquename");
 		public int? PublisherOptionSetPrefix => GetAliased<int>("publisher", "customizationoptionvalueprefix");
+
+
+
+		public async Task<UpsertSolutionComponentResult<Entity>> UpsertSolutionComponentsAsync(IOrganizationServiceAsync2 crm, IReadOnlyCollection<Entity> componentList, ComponentType componentType)
+		{
+			return await UpsertSolutionComponentsAsync(crm, componentList, x => x.Id, componentType);
+		}
+
+		public async Task<UpsertSolutionComponentResult<EntityWrapper>> UpsertSolutionComponentsAsync(IOrganizationServiceAsync2 crm, IReadOnlyCollection<EntityWrapper> componentList, ComponentType componentType)
+		{
+			return await UpsertSolutionComponentsAsync(crm, componentList, x => x.Id, componentType);
+		}
+
+
+		private async Task<UpsertSolutionComponentResult<T>> UpsertSolutionComponentsAsync<T>(IOrganizationServiceAsync2 crm, IReadOnlyCollection<T> componentList, Func<T, Guid> idAccessor, ComponentType componentType)
+		{
+			var componentIds = componentList.Select(idAccessor).Cast<object>().ToArray();
+
+			var query = new QueryExpression("solutioncomponent");
+			query.ColumnSet.AddColumns("objectid", "componenttype");
+			query.Criteria.AddCondition("solutionid", ConditionOperator.Equal, Id);
+			query.Criteria.AddCondition("objectid", ConditionOperator.In, componentIds);
+			query.NoLock = true;
+
+			var existingComponents = await crm.RetrieveMultipleAsync(query);
+
+			var existingComponentsById = existingComponents.Entities.ToDictionary(x => x.GetAttributeValue<Guid>("objectid"));
+
+			var componentsToAdd = new List<T>();
+			var componentsAdded = new List<T>();
+			var componentsAlreadyThere = new List<T>();
+			var componentsWithErrors = new List<ComponentWithError<T>>();
+
+			foreach (var component in componentList)
+			{
+				var componentId = idAccessor(component);
+
+				if (existingComponentsById.ContainsKey(componentId))
+				{
+					componentsAlreadyThere.Add(component);
+					continue;
+				}
+
+				componentsToAdd.Add(component);
+			}
+
+
+
+			var executeMultipleRequest = new ExecuteMultipleRequest
+			{
+				Requests = new OrganizationRequestCollection(),
+				Settings = new ExecuteMultipleSettings
+				{
+					ContinueOnError = true,
+					ReturnResponses = true
+				}
+			};
+			componentsToAdd.ForEach(component =>
+			{
+				var addRequest = new AddSolutionComponentRequest
+				{
+					ComponentType = (int)componentType,
+					SolutionUniqueName = this.uniquename,
+					ComponentId = idAccessor(component)
+				};
+
+				executeMultipleRequest.Requests.Add(addRequest);
+			});
+
+			var response = (ExecuteMultipleResponse)(await crm.ExecuteAsync(executeMultipleRequest));
+
+			foreach (var childResponse in response.Responses)
+			{
+				var request = (AddSolutionComponentRequest)executeMultipleRequest.Requests[childResponse.RequestIndex];
+				var webResourceId = request.ComponentId;
+				var webResource = componentsToAdd.Find(w => idAccessor(w) == webResourceId);
+
+#pragma warning disable CS8604 // Possible null reference argument.
+				if (childResponse.Fault != null)
+				{
+					componentsWithErrors.Add(new ComponentWithError<T>(webResource, childResponse.Fault));
+				}
+				else
+				{
+					componentsAdded.Add(webResource);
+				}
+#pragma warning restore CS8604 // Possible null reference argument.
+			}
+
+			return new UpsertSolutionComponentResult<T>(componentsAdded, componentsAlreadyThere, componentsWithErrors);
+		}
+
+
+
+
+		public record UpsertSolutionComponentResult<T>(IReadOnlyCollection<T> ComponentsAdded, IReadOnlyCollection<T> ComponentsAlreadyThere, IReadOnlyCollection<ComponentWithError<T>> ComponentsWithErrors);
+
+		public record ComponentWithError<T>(T Component, OrganizationServiceFault Fault);
+
+
 
 
 		public class Repository : ISolutionRepository 
