@@ -13,6 +13,7 @@ using Greg.Xrm.Command.Services.Settings;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OfficeOpenXml;
+using System.Diagnostics;
 
 ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
 
@@ -82,8 +83,11 @@ using (var scope = container.BeginLifetimeScope("activation"))
 #if DEBUG
 	finally
 	{
-		Console.WriteLine("Press any key to exit...");
-		Console.ReadKey();
+		if (Debugger.IsAttached)
+		{
+			Console.WriteLine("Press any key to exit...");
+			Console.ReadKey();
+		}
 	}
 #endif
 	return result;
