@@ -3,11 +3,10 @@ using Microsoft.Crm.Sdk.Messages;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
 using System.ServiceModel;
-using System.Xml.Linq;
 
 namespace Greg.Xrm.Command.Services.Connection
 {
-	public class OrganizationServiceRepository : IOrganizationServiceRepository
+    public class OrganizationServiceRepository : IOrganizationServiceRepository
 	{
 		private readonly ISettingsRepository settings;
 
@@ -41,11 +40,61 @@ namespace Greg.Xrm.Command.Services.Connection
 		}
 
 
+		private static byte[] GetAesKey() => Convert.FromBase64String(Properties.Resources.AesKey);
+
+		private static byte[] GetAesIV() => Convert.FromBase64String(Properties.Resources.AesIV);
+
+		private ConnectionSetting? cache = null;
+
+		private async Task<ConnectionSetting?> GetConnectionSettingAsync()
+		{
+			if (this.cache != null) return this.cache;
+
+			var connectionSettings = await this.settings.GetAsync<ConnectionSetting>("connections");
+
+			if (connectionSettings != null && !connectionSettings.IsSecured.GetValueOrDefault())
+			{
+				connectionSettings.SecureSettings(GetAesKey(), GetAesIV());
+				await this.settings.SetAsync("connections", connectionSettings);
+			}
+			cache = connectionSettings;
+			return connectionSettings;
+		}
+
+		public async Task<string?> GetEnvironmentFromConnectioStringAsync(string connectionName)
+		{
+			var connectionStrings = await GetConnectionSettingAsync();
+			if (connectionStrings == null) return null;
+
+			if (!connectionStrings.TryGetConnectionString(connectionName, GetAesKey(), GetAesIV(), out var connectionString))
+				return null;
+
+			if (string.IsNullOrWhiteSpace(connectionString)) 
+				return null;
+
+			var parts = connectionString.Split(';').ToList();
+
+			var environmentToken = parts.Find(p => p.StartsWith("Url", StringComparison.OrdinalIgnoreCase))
+									?? parts.Find(p => p.StartsWith("ServiceUri", StringComparison.OrdinalIgnoreCase))
+									?? parts.Find(p => p.StartsWith("Service Uri", StringComparison.OrdinalIgnoreCase))
+									?? parts.Find(p => p.StartsWith("Server", StringComparison.OrdinalIgnoreCase));
+
+			if (string.IsNullOrWhiteSpace(environmentToken)) 
+				return null;
+
+			var startIndex = environmentToken.IndexOf('=') + 1;
+			if (startIndex < 0) 
+				return null;
+			
+			var value = environmentToken[startIndex..]?.Trim();
+			return value;
+		}
+
 
 
 		public async Task<ConnectionSetting> GetAllConnectionDefinitionsAsync()
 		{
-			var connectionStrings = await this.settings.GetAsync<ConnectionSetting>("connections");
+			var connectionStrings = await GetConnectionSettingAsync();
 			return connectionStrings ?? new ConnectionSetting();
 		}
 
@@ -53,10 +102,10 @@ namespace Greg.Xrm.Command.Services.Connection
 
 		public async Task<IOrganizationServiceAsync2> GetCurrentConnectionAsync()
 		{
-			var connectionStrings = await this.settings.GetAsync<ConnectionSetting>("connections") 
+			var connectionStrings = await GetConnectionSettingAsync()
 				?? throw new CommandException(CommandException.ConnectionNotSet, "Dataverse connection has not been set yet.");
 			
-			if (!connectionStrings.TryGetCurrentConnectionString(out var connectionString))
+			if (!connectionStrings.TryGetCurrentConnectionString(GetAesKey(), GetAesIV(), out var connectionString))
 				throw new CommandException(CommandException.ConnectionNotSet, "Dataverse connection has not been set yet.");
 
 			return new ServiceClient(connectionString + ";TokenCacheStorePath=" + GetTokenCachePath());
@@ -65,10 +114,10 @@ namespace Greg.Xrm.Command.Services.Connection
 
 		public async Task<IOrganizationServiceAsync2> GetConnectionByName(string connectionName)
 		{
-			var connectionStrings = await this.settings.GetAsync<ConnectionSetting>("connections")
+			var connectionStrings = await GetConnectionSettingAsync()
 				?? throw new CommandException(CommandException.ConnectionNotSet, "Dataverse connection has not been set yet.");
 
-			if (!connectionStrings.ConnectionStrings.TryGetValue(connectionName, out var connectionString))
+			if (!connectionStrings.TryGetConnectionString(connectionName, GetAesKey(), GetAesIV(), out var connectionString))
 				throw new CommandException(CommandException.ConnectionNotSet, "Dataverse connection has not been set yet.");
 
 			return new ServiceClient(connectionString + ";TokenCacheStorePath=" + GetTokenCachePath());
@@ -83,10 +132,10 @@ namespace Greg.Xrm.Command.Services.Connection
 				await crm.ExecuteAsync(new WhoAmIRequest());
 
 
-				var connectionStrings = await this.settings.GetAsync<ConnectionSetting>("connections");
+				var connectionStrings = await GetConnectionSettingAsync();
 				connectionStrings ??= new ConnectionSetting();
 
-				connectionStrings.ConnectionStrings[name] = connectionString;
+				connectionStrings.UpsertConnectionString(name, connectionString, GetAesKey(), GetAesIV());
 				connectionStrings.CurrentConnectionStringKey = name;
 
 				await this.settings.SetAsync("connections", connectionStrings);
@@ -99,70 +148,42 @@ namespace Greg.Xrm.Command.Services.Connection
 
 		public async Task RenameConnectionAsync(string oldName, string newName)
 		{
-			var connectionStrings = await this.settings.GetAsync<ConnectionSetting>("connections");
-			if (connectionStrings == null)
-			{
-				throw new CommandException(CommandException.ConnectionNotSet, "No connections set, nothing to update");
-			}
-
-
-			if (!connectionStrings.ConnectionStrings.ContainsKey(oldName))
+			var connectionStrings = await GetConnectionSettingAsync() 
+				?? throw new CommandException(CommandException.ConnectionNotSet, "No connections set, nothing to update");
+			if (!connectionStrings.Exists(oldName))
 			{
 				throw new CommandException(CommandException.CommandInvalidArgumentValue, "Invalid connection name: " + oldName);
 			}
 
-			if (connectionStrings.ConnectionStrings.ContainsKey(newName))
+			if (connectionStrings.Exists(newName))
 			{
 				throw new CommandException(CommandException.CommandInvalidArgumentValue, $"The new connection name '{newName}' is already in use!");
 			}
 
-			connectionStrings.ConnectionStrings[newName] = connectionStrings.ConnectionStrings[oldName];
-			connectionStrings.ConnectionStrings.Remove(oldName);
-
-			if (connectionStrings.DefaultSolutions.ContainsKey(oldName))
-			{
-				connectionStrings.DefaultSolutions[newName] = connectionStrings.DefaultSolutions[oldName];
-				connectionStrings.DefaultSolutions.Remove(oldName);
-			}
-
-			if (connectionStrings.CurrentConnectionStringKey == oldName)
-			{
-				connectionStrings.CurrentConnectionStringKey = newName;
-			}
+			connectionStrings.Rename(oldName, newName);
 
 			await this.settings.SetAsync("connections", connectionStrings);
 		}
 
 		public async Task DeleteConnectionAsync(string name)
 		{
-			var connectionStrings = await this.settings.GetAsync<ConnectionSetting>("connections");
-			if (connectionStrings == null)
-			{
-				throw new CommandException(CommandException.ConnectionNotSet, "No connections set, nothing to update");
-			}
-
-
-			if (!connectionStrings.ConnectionStrings.ContainsKey(name))
+			var connectionStrings = await this.settings.GetAsync<ConnectionSetting>("connections")
+				?? throw new CommandException(CommandException.ConnectionNotSet, "No connections set, nothing to update");
+			if (!connectionStrings.Exists(name))
 			{
 				throw new CommandException(CommandException.CommandInvalidArgumentValue, "Invalid connection name: " + name);
 			}
 
-			connectionStrings.ConnectionStrings.Remove(name);
-			connectionStrings.DefaultSolutions.Remove(name);
-			if (connectionStrings.CurrentConnectionStringKey == name)
-			{
-				connectionStrings.CurrentConnectionStringKey = null;
-			}
+			connectionStrings.Remove(name);
 
 			await this.settings.SetAsync("connections", connectionStrings);
 		}
 
 		public async Task SetDefaultAsync(string name)
 		{
-			var connectionStrings = await this.settings.GetAsync<ConnectionSetting>("connections");
-			if (connectionStrings == null)
-				throw new CommandException(CommandException.ConnectionInvalid, "No connection has been set yet.");
-
+			var connectionStrings = await GetConnectionSettingAsync() 
+				?? throw new CommandException(CommandException.ConnectionInvalid, "No connection has been set yet.");
+			
 			if (!connectionStrings.Exists(name))
 				throw new CommandException(CommandException.ConnectionInvalid, "Invalid connection name: " + name);
 
@@ -175,10 +196,8 @@ namespace Greg.Xrm.Command.Services.Connection
 
 		public async Task SetDefaultSolutionAsync(string uniqueName)
 		{
-			var connectionStrings = await this.settings.GetAsync<ConnectionSetting>("connections");
-			if (connectionStrings == null)
-				throw new CommandException(CommandException.ConnectionInvalid, "No connection has been set yet.");
-
+			var connectionStrings = await GetConnectionSettingAsync() 
+				?? throw new CommandException(CommandException.ConnectionInvalid, "No connection has been set yet.");
 			if (connectionStrings.CurrentConnectionStringKey == null)
 				throw new CommandException(CommandException.ConnectionInvalid, "No connection has been set yet.");
 
@@ -188,10 +207,8 @@ namespace Greg.Xrm.Command.Services.Connection
 
 		public async Task<string?> GetCurrentDefaultSolutionAsync()
 		{
-			var connectionStrings = await this.settings.GetAsync<ConnectionSetting>("connections");
-			if (connectionStrings == null)
-				throw new CommandException(CommandException.ConnectionInvalid, "No connection has been set yet.");
-
+			var connectionStrings = await GetConnectionSettingAsync() 
+				?? throw new CommandException(CommandException.ConnectionInvalid, "No connection has been set yet.");
 			if (connectionStrings.CurrentConnectionStringKey == null)
 				throw new CommandException(CommandException.ConnectionInvalid, "No connection has been set yet.");
 

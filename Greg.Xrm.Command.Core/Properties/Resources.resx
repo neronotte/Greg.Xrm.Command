@@ -117,6 +117,12 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="AesIV" xml:space="preserve">
+    <value>4NLREgp6cRtYBv26AN8nLA==</value>
+  </data>
+  <data name="AesKey" xml:space="preserve">
+    <value>ptkJgAWEPctqlBQauyGg9VumFeG/j0Bwn/16X7AN6mQ=</value>
+  </data>
   <data name="TemplateJsForm" xml:space="preserve">
     <value>class Form {
 	formType = {

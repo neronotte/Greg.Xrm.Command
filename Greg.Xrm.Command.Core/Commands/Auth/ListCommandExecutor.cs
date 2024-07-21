@@ -18,18 +18,18 @@ namespace Greg.Xrm.Command.Commands.Auth
 		{
 			var connections = await organizationServiceRepository.GetAllConnectionDefinitionsAsync();
 
-			if (connections.ConnectionStrings.Count == 0)
+			if (connections.Count == 0)
 			{
 				return CommandResult.Fail("No authentication profiles found.");
 			}
 
 			output.WriteLine("The following authentication profiles are stored on this computer:");
 
-			var padding = connections.ConnectionStrings.Max(_ => _.Key.Length) + 4;
+			var padding = connections.ConnectionStringKeys.Max(x => x.Length) + 4;
 
-			foreach (var item in connections.ConnectionStrings.OrderBy(x =>x.Key))
+			foreach (var item in connections.ConnectionStringKeys)
 			{
-				var name = item.Key;
+				var name = item;
 				if (name.Equals(connections.CurrentConnectionStringKey, StringComparison.InvariantCultureIgnoreCase))
 				{
 					name += "*";
@@ -38,7 +38,10 @@ namespace Greg.Xrm.Command.Commands.Auth
 
 				output.Write("  ");
 				output.Write(name);
-				output.WriteLine(item.Value);
+
+
+				var environmentName = await organizationServiceRepository.GetEnvironmentFromConnectioStringAsync(item);
+				output.WriteLine(environmentName);
 			}
 
 			return CommandResult.Success();
