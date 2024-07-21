@@ -154,7 +154,7 @@ namespace Greg.Xrm.Command
 		{
 			if (!args.Contains("--noprompt"))
 			{
-				this.output.Write(">>> Greg.Xrm.Command <<<", ConsoleColor.Green).WriteLine(" - Dataverse command tool", ConsoleColor.DarkGray);
+				this.output.Write(">>> Greg PowerPlatform CLI Extended (PACX) <<<", ConsoleColor.Green).WriteLine(" - Dataverse command tool", ConsoleColor.DarkGray);
 				this.output.Write("Version ")
 					.Write(GetType().Assembly.GetName()?.Version?.ToString() ?? "[unable to get version from assembly]")
 					.WriteLine();

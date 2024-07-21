@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Security.Cryptography;
 
 namespace Greg.Xrm.Command
 {
@@ -16,6 +12,20 @@ namespace Greg.Xrm.Command
 			Assert.AreEqual("asdasdasd", "asdasdasd".SplitNameInPartsByCapitalLetters());
 			Assert.AreEqual("asdas dasd", "asdas dasd".SplitNameInPartsByCapitalLetters());
 			Assert.AreEqual("asdas da Sd", "asdas daSd".SplitNameInPartsByCapitalLetters());
+		}
+
+
+		[TestMethod]
+		public void GenerateKeyIv()
+		{
+			var key = RandomNumberGenerator.GetBytes(32);
+			var keyString = Convert.ToBase64String(key);
+
+			var iv = RandomNumberGenerator.GetBytes(16);
+			var ivString = Convert.ToBase64String(iv);
+
+			Assert.IsNotNull(keyString);
+			Assert.IsNotNull(ivString);
 		}
 	}
 }

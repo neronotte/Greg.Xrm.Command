@@ -61,6 +61,24 @@ namespace Greg.Xrm.Command.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to 4NLREgp6cRtYBv26AN8nLA==.
+        /// </summary>
+        internal static string AesIV {
+            get {
+                return ResourceManager.GetString("AesIV", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ptkJgAWEPctqlBQauyGg9VumFeG/j0Bwn/16X7AN6mQ=.
+        /// </summary>
+        internal static string AesKey {
+            get {
+                return ResourceManager.GetString("AesKey", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to class Form {
         ///	formType = {
         ///		Create: 1,
