@@ -7,14 +7,14 @@ using Greg.Xrm.Command.Model;
 
 namespace Greg.Xrm.Command.Commands.WebResources
 {
-    public class CreateJsCommandExecutor : ICommandExecutor<CreateJsCommand>
+    public class JsCreateCommandExecutor : ICommandExecutor<JsCreateCommand>
 	{
 		private readonly IOutput output;
 		private readonly IOrganizationServiceRepository organizationServiceRepository;
 		private readonly ISolutionRepository solutionRepository;
 		private readonly IJsTemplateManager jsTemplateManager;
 
-		public CreateJsCommandExecutor(
+		public JsCreateCommandExecutor(
 			IOutput output,
 			IOrganizationServiceRepository organizationServiceRepository,
 			ISolutionRepository solutionRepository,
@@ -26,7 +26,7 @@ namespace Greg.Xrm.Command.Commands.WebResources
 			this.jsTemplateManager = jsTemplateManager ?? throw new ArgumentNullException(nameof(jsTemplateManager));
 		}
 
-        public async Task<CommandResult> ExecuteAsync(CreateJsCommand command, CancellationToken cancellationToken)
+        public async Task<CommandResult> ExecuteAsync(JsCreateCommand command, CancellationToken cancellationToken)
 		{
 			// devo navigare l'albero delle cartelle per trovare la cartella radice del mio pacchetto di webresource
 			// (è la cartella che contiene il file .wr.pacx). 
@@ -88,7 +88,7 @@ namespace Greg.Xrm.Command.Commands.WebResources
 
 
 
-		private async Task<CommandResult> CreateFileAsync(CreateJsCommand command, IOrganizationServiceAsync2 crm, DirectoryInfo directory, CancellationToken cancellationToken)
+		private async Task<CommandResult> CreateFileAsync(JsCreateCommand command, IOrganizationServiceAsync2 crm, DirectoryInfo directory, CancellationToken cancellationToken)
 		{
 			if (command.Type == JavascriptWebResourceType.Form && string.IsNullOrWhiteSpace(command.TableName))
 			{
@@ -146,7 +146,7 @@ namespace Greg.Xrm.Command.Commands.WebResources
 
 
 
-		private static string CreateFileName(CreateJsCommand command)
+		private static string CreateFileName(JsCreateCommand command)
 		{
 			if (command.Type == JavascriptWebResourceType.Form)
 			{
