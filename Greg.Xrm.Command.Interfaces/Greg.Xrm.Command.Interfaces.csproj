@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <RootNamespace>Greg.Xrm.Command</RootNamespace>
@@ -21,9 +21,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="net7.0\**" />
-    <EmbeddedResource Remove="net7.0\**" />
-    <None Remove="net7.0\**" />
+    <Compile Remove="net8.0\**" />
+    <EmbeddedResource Remove="net8.0\**" />
+    <None Remove="net8.0\**" />
   </ItemGroup>
 
   <ItemGroup>
