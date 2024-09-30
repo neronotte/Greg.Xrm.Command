@@ -92,7 +92,7 @@ jobs:
     - name: Install .NET Core
       uses: actions/setup-dotnet@v3
       with:
-        dotnet-version: 7.0.x
+        dotnet-version: 8.0.x
 
     # Restore nuget dependencies
     - name: Restore Dependencies
@@ -107,7 +107,7 @@ jobs:
         
     - name: Update Wiki content
       run: |
-        .\Greg.Xrm.Command\bin\Release\net7.0\pacx.exe --export ${{ github.workspace }}/wiki
+        .\Greg.Xrm.Command\bin\Release\net8.0\pacx.exe --export ${{ github.workspace }}/wiki
 
     - name: Push documentation to wiki
       uses: actions4gh/deploy-wiki@v1
