@@ -116,7 +116,7 @@ jobs:
         path: ${{ github.workspace }}/wiki
         
     - name: Upload NuGet Package as artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: nuget-package
         if-no-files-found: error
