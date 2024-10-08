@@ -1,10 +1,8 @@
 ﻿using System.Diagnostics;
-using System.Runtime.Serialization;
 
 namespace Greg.Xrm.Command
 {
-    [DebuggerDisplay("{Message}")]
-    [Serializable]
+	[DebuggerDisplay("{Message}")]
     public class CommandException : Exception
     {
         public CommandException(int errorCode, string message) : base(message)
@@ -17,18 +15,9 @@ namespace Greg.Xrm.Command
             ErrorCode = errorCode;
         }
 
-        protected CommandException(SerializationInfo info, StreamingContext context) : base(info, context)
-        {
-            ErrorCode = info.GetInt32(nameof(ErrorCode));
-        }
 
         public int ErrorCode { get; }
 
-        public override void GetObjectData(SerializationInfo info, StreamingContext context)
-        {
-            base.GetObjectData(info, context);
-            info.AddValue(nameof(ErrorCode), ErrorCode);
-        }
 
 
 
