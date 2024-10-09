@@ -1,11 +1,11 @@
-﻿//using Greg.Xrm.Command;
+﻿using Greg.Xrm.Command;
 
 namespace SamplePlugin
 {
-	//[Command("sample", "run", HelpText = "Sample plugin that does a simple echo")]
-	//public class SampleCommand
-	//{
-	//	[Option("echo", HelpText = "Echo message")]
-	//	public string? Echo { get; set; }
-	//}
+	[Command("sample", HelpText = "Sample plugin that does a simple echo")]
+	public class SampleCommand
+	{
+		[Option("echo", HelpText = "Echo message")]
+		public string? Echo { get; set; }
+	}
 }

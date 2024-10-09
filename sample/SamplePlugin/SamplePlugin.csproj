@@ -6,4 +6,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Greg.Xrm.Command.Interfaces" Version="1.1.1" />
+  </ItemGroup>
+
 </Project>
