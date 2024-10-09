@@ -103,7 +103,8 @@ jobs:
       run: |
         $version = Get-Content $env:GITHUB_WORKSPACE/version.txt
         dotnet build --configuration Release /p:Version=$version
-        dotnet pack --configuration Release /p:Version=$version --output ${{ env.NuGetDirectory }}
+        dotnet pack Greg.Xrm.Command\Greg.Xrm.Command.csproj --configuration Release /p:Version=$version --output ${{ env.NuGetDirectory }}
+        dotnet pack Greg.Xrm.Command.Interfaces\Greg.Xrm.Command.Interfaces.csproj --configuration Release --output ${{ env.NuGetDirectory }}
         
     - name: Update Wiki content
       run: |

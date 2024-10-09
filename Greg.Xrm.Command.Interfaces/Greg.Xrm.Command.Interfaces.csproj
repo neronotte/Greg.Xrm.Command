@@ -16,7 +16,7 @@
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<RepositoryUrl>https://github.com/neronotte/Greg.Xrm.Command</RepositoryUrl>
 		<PackageTags>pacx dataverse sdk pac cli</PackageTags>
-		<Version>1.1.1</Version>
+		<Version>1.2024.10.151</Version>
 		<PackageVersion>1.1.1</PackageVersion>
 	</PropertyGroup>
 
