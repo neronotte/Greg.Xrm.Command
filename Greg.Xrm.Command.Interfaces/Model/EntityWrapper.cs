@@ -380,6 +380,19 @@ namespace Greg.Xrm.Command.Model
 		}
 
 		/// <summary>
+		/// Deletes the current entity
+		/// </summary>
+		/// <param name="service">The organization service to be used to save or update the changes.</param>
+		public virtual async Task DeleteAsync(IOrganizationServiceAsync2 service)
+		{
+			if (IsNew)
+				return;
+
+			await service.DeleteAsync(this.EntityName, this.Id);
+			IsDeleted = true;
+		}
+
+		/// <summary>
 		/// Returns an entity reference to the current object
 		/// </summary>
 		/// <returns>
