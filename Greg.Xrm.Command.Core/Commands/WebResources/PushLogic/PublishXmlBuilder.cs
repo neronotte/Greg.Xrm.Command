@@ -6,10 +6,12 @@ namespace Greg.Xrm.Command.Commands.WebResources.PushLogic
     public class PublishXmlBuilder : IPublishXmlBuilder
 	{
 		private readonly List<Guid> webResourceList = new();
+		private readonly List<string> tableList = new();
 
 		public void Clear()
 		{
 			this.webResourceList.Clear();
+			this.tableList.Clear();
 		}
 
 		public void AddWebResource(Guid id)
@@ -19,10 +21,16 @@ namespace Greg.Xrm.Command.Commands.WebResources.PushLogic
 		}
 
 
+		public void AddTable(string tableName)
+		{
+			if (!this.tableList.Contains(tableName))
+				this.tableList.Add(tableName);
+		}
+
 
 		public PublishXmlRequest? Build()
 		{
-			if (this.webResourceList.Count == 0)
+			if (this.webResourceList.Count == 0 && this.tableList.Count == 0)
 				return null;
 
 
@@ -41,6 +49,18 @@ namespace Greg.Xrm.Command.Commands.WebResources.PushLogic
 				}
 
 				publishXml.AppendLine("  </webresources>");
+			}
+			if (this.tableList.Count > 0)
+			{
+				publishXml.AppendLine();
+				publishXml.AppendLine("  <entities>");
+
+				foreach (var id in tableList)
+				{
+					publishXml.Append("    <entity>").Append(id).Append("</entity>").AppendLine();
+				}
+
+				publishXml.AppendLine("  </entities>");
 			}
 
 			publishXml.Append("</importexportxml>"); 

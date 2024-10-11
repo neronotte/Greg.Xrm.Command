@@ -1,5 +1,6 @@
 ﻿using Autofac;
 using Greg.Xrm.Command.Commands.Column.Builders;
+using Greg.Xrm.Command.Commands.Forms.Model;
 using Greg.Xrm.Command.Commands.Table.Builders;
 using Greg.Xrm.Command.Commands.Table.ExportMetadata;
 using Greg.Xrm.Command.Commands.WebResources.ApplyIconsRules;
@@ -38,6 +39,9 @@ namespace Greg.Xrm.Command
 			builder.RegisterType<FolderResolver>().As<IFolderResolver>();
 			builder.RegisterType<WebResourceFilesResolver>().As<IWebResourceFilesResolver>();
 			builder.RegisterType<PublishXmlBuilder>().As<IPublishXmlBuilder>();
+
+
+			builder.RegisterType<Form.Repository>().As<IFormRepository>();
 		}
 	}
 }

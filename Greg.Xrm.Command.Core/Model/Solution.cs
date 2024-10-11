@@ -1,4 +1,6 @@
-﻿using Greg.Xrm.Command.Parsing;
+﻿using Greg.Xrm.Command.Commands.WebResources.PushLogic;
+using Greg.Xrm.Command.Parsing;
+using Greg.Xrm.Command.Services.Output;
 using Microsoft.Crm.Sdk.Messages;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
@@ -19,6 +21,8 @@ namespace Greg.Xrm.Command.Model
 		public string version => Get<string>();
 
 		public bool ismanaged => Get<bool>();
+
+		public EntityReference publisherid => Get<EntityReference>();
 
 
 		public string? PublisherCustomizationPrefix => GetAliased<string>("publisher", "customizationprefix");
@@ -129,6 +133,28 @@ namespace Greg.Xrm.Command.Model
 		public class Repository : ISolutionRepository 
 		{
 			private readonly Dictionary<string, Solution> cache = new();
+			private readonly IOutput output;
+
+			public Repository(IOutput output)
+            {
+				this.output = output ?? throw new ArgumentNullException(nameof(output));
+			}
+
+
+            public async Task<ITemporarySolution> CreateTemporarySolutionAsync(IOrganizationServiceAsync2 crm, EntityReference publisherRef)
+			{
+				var solutionName = $"pacx_temp_{DateTime.Now.Ticks}";
+
+				var solution = new Entity("solution");
+				solution["friendlyname"] = solutionName;
+				solution["uniquename"] = solutionName;
+				solution["publisherid"] = publisherRef;
+				solution["version"] = "0.0.0.1";
+				solution["ismanaged"] = false;
+				solution.Id = await crm.CreateAsync(solution);
+
+				return new TemporarySolution(crm, this.output, new Solution(solution));
+			}
 
 			public async Task<Solution?> GetByUniqueNameAsync(IOrganizationServiceAsync2 crm, string uniqueName)
 			{
@@ -139,7 +165,7 @@ namespace Greg.Xrm.Command.Model
 
 
 				var query = new QueryExpression("solution");
-				query.ColumnSet.AddColumns("ismanaged", "uniquename", "version");
+				query.ColumnSet.AddColumns("ismanaged", "uniquename", "version", "publisherid");
 				query.Criteria.AddCondition("uniquename", ConditionOperator.Equal, uniqueName);
 				var link = query.AddLink("publisher", "publisherid", "publisherid");
 				link.Columns.AddColumns("customizationprefix", "uniquename", "customizationoptionvalueprefix");

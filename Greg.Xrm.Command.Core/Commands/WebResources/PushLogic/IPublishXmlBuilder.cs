@@ -7,6 +7,7 @@ namespace Greg.Xrm.Command.Commands.WebResources.PushLogic
 		void Clear();
 
 		void AddWebResource(Guid id);
+		void AddTable(string tableName);
 
 		PublishXmlRequest? Build();
 	}
