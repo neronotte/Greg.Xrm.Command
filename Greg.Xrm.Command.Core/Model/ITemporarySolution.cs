@@ -31,7 +31,7 @@
 		/// Downloads the solution as a zip file.
 		/// </summary>
 		/// <returns></returns>
-		Task<byte[]> DownloadAsync();
+		Task<SolutionZipArchive> DownloadAsync();
 
 		/// <summary>
 		/// Uploads a new version of a given solution.

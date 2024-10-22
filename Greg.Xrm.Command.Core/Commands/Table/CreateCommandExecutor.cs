@@ -18,11 +18,11 @@ namespace Greg.Xrm.Command.Commands.Table
 
 		public CreateCommandExecutor(
 			IOutput output,
-			IOrganizationServiceRepository organizationServiceFactory,
+			IOrganizationServiceRepository organizationServiceRepository,
 			IPluralizationFactory pluralizationFactory)
 		{
 			this.output = output;
-			organizationServiceRepository = organizationServiceFactory;
+			this.organizationServiceRepository = organizationServiceRepository;
 			this.pluralizationFactory = pluralizationFactory;
 		}
 
@@ -306,7 +306,7 @@ namespace Greg.Xrm.Command.Commands.Table
 			if (command.PrimaryAttributeRequiredLevel != null)
 				return new AttributeRequiredLevelManagedProperty(command.PrimaryAttributeRequiredLevel.Value);
 
-			if (command.PrimaryAttributeAutoNumber != null)
+			if (!string.IsNullOrWhiteSpace(command.PrimaryAttributeAutoNumber))
 				return new AttributeRequiredLevelManagedProperty(AttributeRequiredLevel.None);
 
 			return new AttributeRequiredLevelManagedProperty(AttributeRequiredLevel.ApplicationRequired);

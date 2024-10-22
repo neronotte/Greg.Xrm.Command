@@ -89,6 +89,11 @@ namespace Greg.Xrm.Command.Commands.WebResources
 				return CommandResult.Fail($"Error while identifying the list of files to push: {ex.Message}");
 			}
 
+			if (files.Count == 0)
+			{
+				this.output.Write($"Found ").Write(files.Count, ConsoleColor.Yellow).WriteLine(" webresources to push. Nothing to do here.");
+				return CommandResult.Success();
+			}
 
 			if (command.Verbose || command.NoAction)
 			{

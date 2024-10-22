@@ -46,7 +46,7 @@ namespace Greg.Xrm.Command.Model
 		}
 
 
-		public async Task<byte[]> DownloadAsync()
+		public async Task<SolutionZipArchive> DownloadAsync()
 		{
 			if (solution.IsDeleted)
 				throw new InvalidOperationException("Operation cannot be performed, the solution is deleted!");
@@ -65,7 +65,7 @@ namespace Greg.Xrm.Command.Model
 				var response = (ExportSolutionResponse)await crm.ExecuteAsync(request);
 				sw.Stop();
 				output.WriteLine("DONE in " + sw.Elapsed, ConsoleColor.Green);
-				return response.ExportSolutionFile;
+				return new SolutionZipArchive( response.ExportSolutionFile);
 			}
 			catch
 			{

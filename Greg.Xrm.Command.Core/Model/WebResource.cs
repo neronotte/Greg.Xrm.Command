@@ -131,6 +131,9 @@ namespace Greg.Xrm.Command.Model
 
 			public async Task<List<WebResource>> GetByNameAsync(IOrganizationServiceAsync2 crm, string[] fileNames, bool fetchContent = false)
 			{
+				if (fileNames.Length == 0)
+					return [];
+
 				var query = new QueryExpression("webresource");
 				query.ColumnSet.AddColumns("name", "displayname", "webresourcetype", "description");
 				if (fetchContent)

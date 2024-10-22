@@ -68,65 +68,27 @@ namespace Greg.Xrm.Command.Commands.Forms
 					await solution.AddComponentAsync(form.Id, ComponentType.SystemForm);
 
 					// now I need to download the solution, extract the customizations.xml file, modify it, and re-upload it
-					var solutionBytes = await solution.DownloadAsync();
-
-
-					if (!string.IsNullOrWhiteSpace(command.TempDir) && Directory.Exists(command.TempDir))
+					using (var solutionContent = await solution.DownloadAsync())
 					{
-						var fileName = Path.Combine(command.TempDir, $"{solution}_original.zip");
-						await File.WriteAllBytesAsync(fileName, solutionBytes, cancellationToken);
-					}
-
-					var hasChanges = false;
-					using (var archiveStream = new MemoryStream())
-					{
-						await archiveStream.WriteAsync(solutionBytes, 0, solutionBytes.Length, cancellationToken);
-
-
-						using (var archive = new ZipArchive(archiveStream, ZipArchiveMode.Update, true))
-						{
-							var entry = archive.GetEntry("customizations.xml");
-							if (entry == null)
-							{
-								return CommandResult.Fail("The temporary solution does not contains any <customizations.xml>");
-							}
-
-							XDocument doc;
-							using (var entryStream = entry.Open())
-							{
-								doc = XDocument.Load(entryStream);
-
-								var element = doc.XPathSelectElement("./ImportExportXml/Entities/Entity/FormXml/forms/systemform/form");
-
-								hasChanges = SetTabNames(element) || hasChanges;
-								hasChanges = SetSectionNames(element) || hasChanges;
-								hasChanges = RemoveOwnerFromFirstTab(element) || hasChanges;
-								hasChanges = CreateAdminTab(element, table, languageCode) || hasChanges;
-							}
-							entry.Delete();
-
-							entry = archive.CreateEntry("customizations.xml");
-							using (var entryStream = entry.Open())
-							{
-								doc.Save(entryStream);
-							}
-						}
-
 						if (!string.IsNullOrWhiteSpace(command.TempDir) && Directory.Exists(command.TempDir))
 						{
-							var fileName = Path.Combine(command.TempDir, $"{solution}_updated.zip");
-							using (var fileStream = new FileStream(fileName, FileMode.Create))
-							{
-								archiveStream.Seek(0, SeekOrigin.Begin);
-								await archiveStream.CopyToAsync(fileStream, cancellationToken);
-							}
+							var fileName = Path.Combine(command.TempDir, $"{solution}_original.zip");
+							await solutionContent.SaveToAsync(fileName);
 						}
 
-						
+						var hasChanges = solutionContent.UpdateEntryXml("customizations.xml", doc =>
+						{
+							var element = doc.XPathSelectElement("./ImportExportXml/Entities/Entity/FormXml/forms/systemform/form");
 
-						archiveStream.Seek(0, SeekOrigin.Begin);
-						var newZipBytes = archiveStream.ToArray();
+							var hasChanges = SetTabNames(element);
+							hasChanges = SetSectionNames(element) || hasChanges;
+							hasChanges = RemoveOwnerFromFirstTab(element) || hasChanges;
+							hasChanges = CreateAdminTab(element, table, languageCode) || hasChanges;
 
+							return hasChanges;
+						});
+
+						var newZipBytes = solutionContent.ToArray();
 						if (hasChanges)
 						{
 							await solution.UploadAndPublishAsync(newZipBytes, command.TableName);
