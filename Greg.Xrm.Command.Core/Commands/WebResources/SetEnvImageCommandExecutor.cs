@@ -1,4 +1,5 @@
-﻿using Greg.Xrm.Command.Services.Connection;
+﻿using Greg.Xrm.Command.Model;
+using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
 using Microsoft.Crm.Sdk.Messages;
 using Microsoft.Xrm.Sdk;
@@ -9,7 +10,8 @@ namespace Greg.Xrm.Command.Commands.WebResources
 {
 	public class SetEnvImageCommandExecutor(
 		IOutput output,
-		IOrganizationServiceRepository organizationServiceRepository) : ICommandExecutor<SetEnvImageCommand>
+		IOrganizationServiceRepository organizationServiceRepository,
+		IWebResourceRepository webResourceRepository) : ICommandExecutor<SetEnvImageCommand>
 	{
 
 
@@ -21,29 +23,32 @@ namespace Greg.Xrm.Command.Commands.WebResources
 
 
 			output.Write($"Retrieving the webresource called <{command.WebResourceUniqueName}>...");
-			EntityReference logoRef;
+			WebResource logo;
 			try
 			{
-				var query = new QueryExpression("webresource");
-				query.Criteria.AddCondition("name", ConditionOperator.Equal, command.WebResourceUniqueName);
-				query.TopCount = 1;
+				var webResourceList = await webResourceRepository.GetByNameAsync(crm, new[] { command.WebResourceUniqueName }, false);
 
-				var result = await crm.RetrieveMultipleAsync(query);
-
-				var webResource = result.Entities.FirstOrDefault();
-				if (webResource == null)
+				if (webResourceList.Count == 0)
 				{
 					output.WriteLine("FAILED", ConsoleColor.Red);
 					return CommandResult.Fail("The webresource with the specified name does not exists");
 				}
 
-				logoRef = webResource.ToEntityReference();
+				logo = webResourceList[0];
 				output.WriteLine("DONE", ConsoleColor.Green);
 			}
 			catch (FaultException<OrganizationServiceFault> ex)
 			{
 				output.WriteLine("FAILED", ConsoleColor.Red);
 				return CommandResult.Fail(ex.Message, ex);
+			}
+
+
+			if (logo.webresourcetype?.Value != (int)WebResourceType.ImagePng &&
+				logo.webresourcetype?.Value != (int)WebResourceType.ImageGif &&
+				logo.webresourcetype?.Value != (int)WebResourceType.ImageJpg)
+			{
+				return CommandResult.Fail($"The webresource type {logo.GetFormattedType()} is not supported for the logo");
 			}
 
 
@@ -78,7 +83,7 @@ namespace Greg.Xrm.Command.Commands.WebResources
 
 				output.WriteLine("DONE", ConsoleColor.Green);
 			}
-			catch(FaultException<OrganizationServiceFault> ex)
+			catch (FaultException<OrganizationServiceFault> ex)
 			{
 				output.WriteLine("FAILED", ConsoleColor.Red);
 				return CommandResult.Fail(ex.Message, ex);
@@ -89,7 +94,7 @@ namespace Greg.Xrm.Command.Commands.WebResources
 			output.Write("Setting the logo...");
 			try
 			{
-				theme["logoid"] = logoRef;
+				theme["logoid"] = logo.ToEntityReference();
 
 				if (theme.Id == Guid.Empty)
 				{

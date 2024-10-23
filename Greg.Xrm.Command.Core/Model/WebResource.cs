@@ -49,6 +49,9 @@ namespace Greg.Xrm.Command.Model
 		}
 
 
+		public string? GetFormattedType() => GetFormatted(nameof(webresourcetype));
+
+
 		public async Task<string> GetContentAsync(IOrganizationServiceAsync2 crm)
 		{
 			if (this.IsNew)
