@@ -46,8 +46,8 @@ namespace Greg.Xrm.Command.Commands.Table
 		[Option("audit", "a", DefaultValue = true, HelpText = "Indicates whether audit is enabled or not.")]
 		public bool IsAuditEnabled { get; set; } = true;
 
-		[Option("connection", "conn", DefaultValue = true, HelpText = "Indicates whether the current table can partecipate in connection relationships or not.")]
-		public bool IsConnectionsEnabled { get; set; } = true;
+		[Option("connection", "conn", DefaultValue = false, HelpText = "Indicates whether the current table can partecipate in connection relationships or not.")]
+		public bool IsConnectionsEnabled { get; set; } = false;
 
 		[Option("primaryAttributeName", "pan", HelpText = "The display name of the primary attribute for the table. If not specified, is used **Name**, unless it is required to be an autonumber. In that case, **Code** is used.")]
 		public string? PrimaryAttributeDisplayName { get; set; }

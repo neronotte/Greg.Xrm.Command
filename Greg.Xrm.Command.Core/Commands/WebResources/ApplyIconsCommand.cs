@@ -5,7 +5,9 @@ namespace Greg.Xrm.Command.Commands.WebResources
 {
 	[Command("webresources", "applyIcons", HelpText = "(Preview) Applies icons to custom tables, starting from a given solution")]
 	[Alias("wr", "apply", "icons")]
+	[Alias("wr", "applyIcons")]
 	[Alias("wr", "apply-icons")]
+	[Alias("wr", "iconize")]
 	public class ApplyIconsCommand : ICanProvideUsageExample
 	{
 		[Option("table-solution", "ts", HelpText = "The name of the solution that contains the tables to update with icons. If not specified, the default solution is considered.")]

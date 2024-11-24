@@ -32,7 +32,6 @@ namespace Greg.Xrm.Command.Commands.Table
 			var crm = await this.organizationServiceRepository.GetCurrentConnectionAsync();
 			this.output.WriteLine("Done", ConsoleColor.Green);
 
-
 			try
 			{
 				var defaultLanguageCode = await crm.GetDefaultLanguageCodeAsync();

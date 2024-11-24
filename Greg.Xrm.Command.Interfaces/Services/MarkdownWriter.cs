@@ -83,7 +83,13 @@ namespace Greg.Xrm.Command.Services
 			return this;
 		}
 
-		public MarkdownWriter WriteTable<TRow>(IReadOnlyList<TRow> collection, Func<string[]> rowHeaders, Func<TRow, string[]> rowData)
+
+		public MarkdownWriter WriteTable<TRow>(IReadOnlyList<TRow> collection, string[] rowHeaders, Func<TRow, string?[]> rowData)
+		{
+			return WriteTable(collection, () => rowHeaders, rowData);
+		}
+
+		public MarkdownWriter WriteTable<TRow>(IReadOnlyList<TRow> collection, Func<string[]> rowHeaders, Func<TRow, string?[]> rowData)
 		{
 			var headers = rowHeaders();
 			var rows = collection.Select(rowData).ToList();
@@ -91,14 +97,14 @@ namespace Greg.Xrm.Command.Services
 			var columnWidths = new int[headers.Length];
 			for (var i = 0; i < headers.Length; i++)
 			{
-				columnWidths[i] = Math.Max(headers[i].Length, rows.Max(_ => _[i].Length));
+				columnWidths[i] = Math.Max(headers[i].Length, rows.Max(row => row[i]?.Length ?? 0));
 			}
 
-			var header = "| " + string.Join(" | ", headers.Select((_, i) => _.PadRight(columnWidths[i]))) + " |";
-			var separator = "|-" + string.Join("-|-", columnWidths.Select(_ => new string('-', _))) + "-|";
+			var header = "| " + string.Join(" | ", headers.Select((col, i) => col.PadRight(columnWidths[i]))) + " |";
+			var separator = "|-" + string.Join("-|-", columnWidths.Select(colWidth => new string('-', colWidth))) + "-|";
 			var body = string.Join(Environment.NewLine,
 				 rows.Select(
-					_ => "| " + string.Join(" | ", _.Select((__, i) => __.PadRight(columnWidths[i]))) + " |"
+					row => "| " + string.Join(" | ", row.Select((col, i) => col?.PadRight(columnWidths[i]))) + " |"
 				 )
 			);
 
