@@ -4,8 +4,8 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Greg.Xrm.Command.Commands.Relationship
 {
-	[Command("rel", "add", "poly", HelpText = "Adds a new parent to an existing many-to-one **polymorphic** relationship between Dataverse tables")]
-	[Alias("rel", "add", "poli")]
+	[Command("rel", "poly", "add", HelpText = "Adds a new parent to an existing many-to-one **polymorphic** relationship between Dataverse tables")]
+	[Alias("rel", "poli", "add")]
 	public class AddPolyCommand
 	{
 

@@ -5,7 +5,9 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Greg.Xrm.Command.Commands.Relationship
 {
-    [Command("rel", "create", "poly", HelpText = "Creates a new many-to-one **polymorphic** relationship between Dataverse tables")]
+    [Command("rel", "poly", "create", HelpText = "Creates a new many-to-one **polymorphic** relationship between Dataverse tables")]
+	[Alias("rel", "poli", "create")]
+	[Alias("rel", "create", "poly")]
 	[Alias("rel", "create", "poli")]
 	public class CreatePolyCommand : ICanProvideUsageExample
 	{
