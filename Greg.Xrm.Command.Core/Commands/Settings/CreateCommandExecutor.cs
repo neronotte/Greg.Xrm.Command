@@ -35,7 +35,7 @@ namespace Greg.Xrm.Command.Commands.Settings
 
 			this.output.Write($"Connecting to the current dataverse environment...");
 			var crm = await this.organizationServiceRepository.GetCurrentConnectionAsync();
-			this.output.WriteLine("DONE", ConsoleColor.Green);
+			this.output.WriteLine("Done", ConsoleColor.Green);
 
 			var (publisherPrefix, currentSolutionName, _) = await CheckSolutionAndReturnPublisherPrefixAsync(crm, command.SolutionName);
 			if (publisherPrefix == null) return CommandResult.Fail("No publisher prefix found");
@@ -80,7 +80,7 @@ namespace Greg.Xrm.Command.Commands.Settings
 
 				await setting.SaveOrUpdateAsync(crm);
 
-				this.output.WriteLine("DONE", ConsoleColor.Green);
+				this.output.WriteLine("Done", ConsoleColor.Green);
 
 				this.output.Write("Adding setting to the solution...");
 
@@ -93,7 +93,7 @@ namespace Greg.Xrm.Command.Commands.Settings
 
 				var response = (AddSolutionComponentResponse)(await crm.ExecuteAsync(request));
 
-				this.output.WriteLine("DONE", ConsoleColor.Green);
+				this.output.WriteLine("Done", ConsoleColor.Green);
 
 				var result = CommandResult.Success();
 				result["Setting Id"] = setting.Id;

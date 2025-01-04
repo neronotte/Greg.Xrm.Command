@@ -41,7 +41,7 @@ namespace Greg.Xrm.Command.Commands.Settings
 		{
 			this.output.Write($"Connecting to the current dataverse environment...");
 			var crm = await this.organizationServiceRepository.GetCurrentConnectionAsync();
-			this.output.WriteLine("DONE", ConsoleColor.Green);
+			this.output.WriteLine("Done", ConsoleColor.Green);
 
 			Guid? solutionId = null;
 			if (command.Origin == Origin.Solution)
@@ -281,7 +281,7 @@ namespace Greg.Xrm.Command.Commands.Settings
 				package.Workbook.Protection.LockStructure = true;
 				await package.SaveAsAsync(new FileInfo(command.OutputFileName));
 
-				this.output.WriteLine("DONE", ConsoleColor.Green);
+				this.output.WriteLine("Done", ConsoleColor.Green);
 			}
 			catch(Exception ex)
 			{

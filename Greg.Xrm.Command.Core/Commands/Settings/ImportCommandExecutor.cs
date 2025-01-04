@@ -34,7 +34,7 @@ namespace Greg.Xrm.Command.Commands.Settings
 			{
 				using var stream = file.OpenRead();
 				importStrategy = await this.importStrategyFactory.CreateAsync(stream, cancellationToken);
-				this.output.WriteLine("DONE", ConsoleColor.Green);
+				this.output.WriteLine("Done", ConsoleColor.Green);
 			}
 			catch(Exception ex)
 			{
@@ -50,7 +50,7 @@ namespace Greg.Xrm.Command.Commands.Settings
 			try
 			{
 				actions = await importStrategy.ImportAsync(cancellationToken);
-				this.output.WriteLine("DONE", ConsoleColor.Green);
+				this.output.WriteLine("Done", ConsoleColor.Green);
 			}
 			catch(Exception ex)
 			{

@@ -21,7 +21,7 @@ namespace Greg.Xrm.Command.Commands.WebResources
 			this.output.Write("Resetting default template...");
 			var global = command.Type == JavascriptWebResourceType.Ribbon && !command.ForTable;
 			await this.jsTemplateManager.ResetTemplateForAsync(command.Type, global);
-			this.output.WriteLine("DONE", ConsoleColor.Green);
+			this.output.WriteLine("Done", ConsoleColor.Green);
 
 			return CommandResult.Success();
 		}

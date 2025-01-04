@@ -42,7 +42,7 @@ namespace Greg.Xrm.Command.Commands.WebResources
 		{
 			this.output.Write($"Connecting to the current dataverse environment...");
 			var crm = await this.organizationServiceRepository.GetCurrentConnectionAsync();
-			this.output.WriteLine("DONE", ConsoleColor.Green);
+			this.output.WriteLine("Done", ConsoleColor.Green);
 
 			var tableSolutionName = command.TableSolutionName;
 			if (string.IsNullOrWhiteSpace(tableSolutionName))
@@ -140,7 +140,7 @@ namespace Greg.Xrm.Command.Commands.WebResources
 					};
 
 					await crm.ExecuteAsync(request);
-					this.output.WriteLine("DONE", ConsoleColor.Green);
+					this.output.WriteLine("Done", ConsoleColor.Green);
 
 					writer.WriteElementString("entity", table.LogicalName);
 					successCount++;
@@ -230,7 +230,7 @@ namespace Greg.Xrm.Command.Commands.WebResources
 
 				await crm.ExecuteAsync(request);
 
-				this.output.WriteLine("DONE", ConsoleColor.Green);
+				this.output.WriteLine("Done", ConsoleColor.Green);
 				return true;
 			}
 			catch (FaultException<OrganizationServiceFault> ex)
@@ -284,7 +284,7 @@ namespace Greg.Xrm.Command.Commands.WebResources
 					.ToList();
 
 
-				this.output.WriteLine("DONE", ConsoleColor.Green);
+				this.output.WriteLine("Done", ConsoleColor.Green);
 				this.output.WriteLine($"Found {tables.Count} custom tables without icons.", ConsoleColor.Yellow);
 
 				return tables;
@@ -311,7 +311,7 @@ namespace Greg.Xrm.Command.Commands.WebResources
 					.ToList();
 
 
-				this.output.WriteLine("DONE", ConsoleColor.Green);
+				this.output.WriteLine("Done", ConsoleColor.Green);
 				this.output.WriteLine($"Found {images.Count} SVG web resources.", ConsoleColor.Yellow);
 
 				return images;

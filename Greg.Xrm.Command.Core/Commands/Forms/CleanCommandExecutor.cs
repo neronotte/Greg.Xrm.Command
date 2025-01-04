@@ -5,8 +5,6 @@ using Greg.Xrm.Command.Services.Output;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk.Messages;
 using Microsoft.Xrm.Sdk.Metadata;
-using System.Diagnostics;
-using System.IO.Compression;
 using System.Xml.Linq;
 using System.Xml.XPath;
 
@@ -23,7 +21,7 @@ namespace Greg.Xrm.Command.Commands.Forms
 		{
 			output.Write($"Connecting to the current dataverse environment...");
 			var crm = await organizationServiceRepository.GetCurrentConnectionAsync();
-			output.WriteLine("DONE", ConsoleColor.Green);
+			output.WriteLine("Done", ConsoleColor.Green);
 
 
 
@@ -31,7 +29,7 @@ namespace Greg.Xrm.Command.Commands.Forms
 
 			output.Write($"Retrieving main form of table {command.TableName}...");
 			var formList = await formRepository.GetMainFormByTableNameAsync(crm, command.TableName);
-			output.WriteLine("DONE", ConsoleColor.Green);
+			output.WriteLine("Done", ConsoleColor.Green);
 
 			if (!TryGetForm(command.TableName, command.FormName, formList, out var form, out var result))
 			{
@@ -130,7 +128,7 @@ namespace Greg.Xrm.Command.Commands.Forms
 			}
 
 			var solution = await solutionRepository.CreateTemporarySolutionAsync(crm, currentSolution.publisherid);
-			output.WriteLine("DONE", ConsoleColor.Green);
+			output.WriteLine("Done", ConsoleColor.Green);
 
 
 			return (true, null, solution);
@@ -197,7 +195,7 @@ namespace Greg.Xrm.Command.Commands.Forms
 			};
 
 			var response = (RetrieveEntityResponse)await crm.ExecuteAsync(request);
-			output.WriteLine("DONE", ConsoleColor.Green);
+			output.WriteLine("Done", ConsoleColor.Green);
 
 			return response.EntityMetadata;
 		}
@@ -384,7 +382,7 @@ namespace Greg.Xrm.Command.Commands.Forms
 			var rowNode = ownerControlNode.Parent?.Parent; // here we are on the row node
 			rowNode?.Remove();
 
-			output.WriteLine("DONE", ConsoleColor.Green);
+			output.WriteLine("Done", ConsoleColor.Green);
 			return true;
 		}
 
@@ -587,7 +585,7 @@ namespace Greg.Xrm.Command.Commands.Forms
 			}
 
 			tabs.Add(adminTab);
-			output.WriteLine("DONE", ConsoleColor.Green);
+			output.WriteLine("Done", ConsoleColor.Green);
 			return true;
 		}
 	}

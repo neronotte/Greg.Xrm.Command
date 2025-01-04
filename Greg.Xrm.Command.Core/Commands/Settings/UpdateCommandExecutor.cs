@@ -28,7 +28,7 @@ namespace Greg.Xrm.Command.Commands.Settings
 		{
 			this.output.Write($"Connecting to the current dataverse environment...");
 			var crm = await this.organizationServiceRepository.GetCurrentConnectionAsync();
-			this.output.WriteLine("DONE", ConsoleColor.Green);
+			this.output.WriteLine("Done", ConsoleColor.Green);
 
 
 			var settingDefinition = await this.settingDefinitionRepository.GetByUniqueNameAsync(crm, command.Name);
@@ -72,7 +72,7 @@ namespace Greg.Xrm.Command.Commands.Settings
 
 				await settingDefinition.SaveOrUpdateAsync(crm);
 
-				this.output.WriteLine("DONE", ConsoleColor.Green);
+				this.output.WriteLine("Done", ConsoleColor.Green);
 
 				return CommandResult.Success();
 			}

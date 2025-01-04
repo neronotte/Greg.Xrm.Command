@@ -24,7 +24,7 @@ namespace Greg.Xrm.Command.Commands.WebResources
 			{
 				this.output.Write("Reading template contents...");
 				templateContent = await File.ReadAllTextAsync(command.FileName, cancellationToken);
-				this.output.WriteLine("DONE", ConsoleColor.Green);
+				this.output.WriteLine("Done", ConsoleColor.Green);
 			}
 			catch(Exception ex)
 			{
@@ -35,7 +35,7 @@ namespace Greg.Xrm.Command.Commands.WebResources
 			this.output.Write("Updating default template...");
 			var global = command.Type == JavascriptWebResourceType.Ribbon && !command.ForTable;
 			await this.jsTemplateManager.SetTemplateForAsync(command.Type, global, templateContent);
-			this.output.WriteLine("DONE", ConsoleColor.Green);
+			this.output.WriteLine("Done", ConsoleColor.Green);
 
 			return CommandResult.Success();
 		}

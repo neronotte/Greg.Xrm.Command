@@ -9,13 +9,12 @@ using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.Extensions.Logging;
 using Microsoft.Xrm.Sdk;
 using System.ComponentModel.DataAnnotations;
-using System.Diagnostics;
 using System.Reflection;
 using System.ServiceModel;
 
 namespace Greg.Xrm.Command
 {
-    public sealed class Bootstrapper
+	public sealed class Bootstrapper
 	{
 		private readonly ILogger log;
 		private readonly TelemetryClient client;
@@ -131,6 +130,8 @@ namespace Greg.Xrm.Command
 			}
 			catch (Exception ex)
 			{
+				var message = ex.Message;
+
 				op.Telemetry.Success = false;
 				op.Telemetry.ResponseCode = "500";
 				op.Telemetry.Properties.Add("Exception", ex.Message);
@@ -140,9 +141,10 @@ namespace Greg.Xrm.Command
 				{
 					op.Telemetry.Properties.Add("InnerException", ex.InnerException.Message);
 					op.Telemetry.Properties.Add("InnerExceptionType", ex.InnerException.GetType().FullName);
+					message += Environment.NewLine + " Inner exception: " + ex.InnerException.Message;
 				}
 
-				this.output.WriteLine(ex.Message, ConsoleColor.Red).WriteLine();
+				this.output.WriteLine(message, ConsoleColor.Red).WriteLine();
 				log.LogError(ex, "Unhandled error: {ErrorMessage}", ex.Message);
 
 				return -1;
