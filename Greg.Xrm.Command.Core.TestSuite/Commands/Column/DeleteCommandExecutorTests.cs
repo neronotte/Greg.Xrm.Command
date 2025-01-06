@@ -1,6 +1,7 @@
 ﻿using Greg.Xrm.Command.Model;
 using Greg.Xrm.Command.Services;
 using Greg.Xrm.Command.Services.Connection;
+using Greg.Xrm.Command.Services.Project;
 using Greg.Xrm.Command.Services.Settings;
 using Microsoft.Extensions.Logging;
 
@@ -16,11 +17,10 @@ namespace Greg.Xrm.Command.Commands.Column
 			var storage = new Storage();
 			var output = new OutputToMemory();
 			var settingsRepository = new SettingsRepository(storage);
-			var repository = new OrganizationServiceRepository(settingsRepository);
+			var pacxProjectRepository = new PacxProjectRepository(Mock.Of<ILogger<PacxProjectRepository>>());
+			var repository = new OrganizationServiceRepository(settingsRepository, pacxProjectRepository);
 
-			var logger = Mock.Of<ILogger<Dependency.Repository>>();
-
-			var dependencyRepository = new Dependency.Repository(logger);
+			var dependencyRepository = new Dependency.Repository(Mock.Of<ILogger<Dependency.Repository>>());
 			var workflowRepository = new Workflow.Repository();
 			var processTriggerRepository = new ProcessTrigger.Repository();
 			var savedQueryRepository = new SavedQuery.Repository();
@@ -45,7 +45,8 @@ namespace Greg.Xrm.Command.Commands.Column
 			var task = executor.ExecuteAsync(command, CancellationToken.None);
 
 			task.Wait();
-			Assert.IsFalse(task.IsFaulted, task.Exception?.Message);
+			Assert.IsNotNull(task);
+			Assert.IsFalse(task.IsFaulted, task.Exception!.Message);
 			
 			var result = task.Result;
 			Assert.IsNotNull(result);

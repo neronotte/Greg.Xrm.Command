@@ -298,7 +298,7 @@ namespace Greg.Xrm.Command.Commands.Forms
 				.Select(t => t.Attribute("name")?.Value)
 				.Where(x => !string.IsNullOrWhiteSpace(x))
 				.Distinct()
-				.Select(x => x.ToLowerInvariant())
+				.Select(x => x!.ToLowerInvariant())
 				.ToList();
 
 			var isFirstComment = true;

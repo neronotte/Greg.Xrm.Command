@@ -1,9 +1,9 @@
-﻿namespace Greg.Xrm.Command.Model
+﻿namespace Greg.Xrm.Command.Services.Project
 {
 	/// <summary>
 	/// Represents a pacx project 
 	/// </summary>
-    public class PacxProjectDefinition
+	public class PacxProjectDefinition : PacxProject
 	{
 		public string Version { get; set; } = "1.0";
 		public bool IsSuspended { get; set; } = false;

@@ -1,7 +1,9 @@
 ﻿using Greg.Xrm.Command.Commands.Table.ExportMetadata;
 using Greg.Xrm.Command.Services;
 using Greg.Xrm.Command.Services.Connection;
+using Greg.Xrm.Command.Services.Project;
 using Greg.Xrm.Command.Services.Settings;
+using Microsoft.Extensions.Logging;
 using OfficeOpenXml;
 using System.Diagnostics;
 
@@ -19,7 +21,8 @@ namespace Greg.Xrm.Command.Commands.Table
 			var storage = new Storage();
 			var output = new OutputToMemory();
 			var settingsRepository = new SettingsRepository(storage);
-			var repository = new OrganizationServiceRepository(settingsRepository);
+			var pacxProjectRepository = new PacxProjectRepository(Mock.Of<ILogger<PacxProjectRepository>>());
+			var repository = new OrganizationServiceRepository(settingsRepository, pacxProjectRepository);
 
 			var exportMetadataStrategyFactory = new ExportMetadataStrategyFactory(output);
 

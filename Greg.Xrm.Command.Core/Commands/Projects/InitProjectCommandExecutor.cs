@@ -1,6 +1,7 @@
 ﻿using Greg.Xrm.Command.Model;
 using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
+using Greg.Xrm.Command.Services.Project;
 using Newtonsoft.Json;
 
 namespace Greg.Xrm.Command.Commands.Projects
@@ -8,12 +9,12 @@ namespace Greg.Xrm.Command.Commands.Projects
     public class InitProjectCommandExecutor(
 		IOutput output,
 		IOrganizationServiceRepository organizationServiceRepository,
-		ISolutionRepository solutionRepository
+		ISolutionRepository solutionRepository,
+		IPacxProjectRepository pacxProjectRepository
 	) : ICommandExecutor<InitProjectCommand>
 	{
 		public async Task<CommandResult> ExecuteAsync(InitProjectCommand command, CancellationToken cancellationToken)
 		{
-
 			var connectionSettings = await organizationServiceRepository.GetAllConnectionDefinitionsAsync();
 			string? authProfileName = null;
 			if (string.IsNullOrWhiteSpace(command.AuthenticationProfileName))
@@ -76,10 +77,7 @@ namespace Greg.Xrm.Command.Commands.Projects
 					AuthProfileName = authProfileName,
 					SolutionName = solution.uniquename
 				};
-
-				var file = Path.Combine(Environment.CurrentDirectory, ".pacxproj");
-				var projectString = JsonConvert.SerializeObject(project, Formatting.Indented);
-				await File.WriteAllTextAsync(file, projectString, cancellationToken);
+				await pacxProjectRepository.SaveAsync(project, Environment.CurrentDirectory, cancellationToken);
 
 				return CommandResult.Success();
 			}

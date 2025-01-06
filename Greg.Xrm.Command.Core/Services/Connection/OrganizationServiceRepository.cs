@@ -1,4 +1,5 @@
-﻿using Greg.Xrm.Command.Services.Settings;
+﻿using Greg.Xrm.Command.Services.Project;
+using Greg.Xrm.Command.Services.Settings;
 using Microsoft.Crm.Sdk.Messages;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
@@ -6,15 +7,13 @@ using System.ServiceModel;
 
 namespace Greg.Xrm.Command.Services.Connection
 {
-	public class OrganizationServiceRepository : IOrganizationServiceRepository
+	public class OrganizationServiceRepository(
+		ISettingsRepository settings,
+		IPacxProjectRepository pacxProjectRepository
+		) : IOrganizationServiceRepository
 	{
-		private readonly ISettingsRepository settings;
-
-		public OrganizationServiceRepository(ISettingsRepository settings)
-		{
-			this.settings = settings ?? throw new ArgumentNullException(nameof(settings));
-		}
-
+		private readonly ISettingsRepository settings = settings ?? throw new ArgumentNullException(nameof(settings));
+		private readonly IPacxProjectRepository pacxProjectRepository = pacxProjectRepository ?? throw new ArgumentNullException(nameof(pacxProjectRepository));
 
 		public string GetTokenCachePath()
 		{
@@ -46,6 +45,11 @@ namespace Greg.Xrm.Command.Services.Connection
 
 		private ConnectionSetting? cache = null;
 
+
+
+
+
+
 		private async Task<ConnectionSetting?> GetConnectionSettingAsync()
 		{
 			if (this.cache != null) return this.cache;
@@ -61,6 +65,15 @@ namespace Greg.Xrm.Command.Services.Connection
 			return connectionSettings;
 		}
 
+
+
+
+
+		/// <summary>
+		/// Given the name of an authentication profile, it returns the environment name.
+		/// </summary>
+		/// <param name="connectionName">The name of the authentication profile.</param>
+		/// <returns></returns>
 		public async Task<string?> GetEnvironmentFromConnectioStringAsync(string connectionName)
 		{
 			var connectionStrings = await GetConnectionSettingAsync();
@@ -100,16 +113,34 @@ namespace Greg.Xrm.Command.Services.Connection
 
 
 
+
+
 		public async Task<IOrganizationServiceAsync2> GetCurrentConnectionAsync()
 		{
 			var connectionStrings = await GetConnectionSettingAsync()
 				?? throw new CommandException(CommandException.ConnectionNotSet, "Dataverse connection has not been set yet.");
 
-			if (!connectionStrings.TryGetCurrentConnectionString(GetAesKey(), GetAesIV(), out var connectionString))
-				throw new CommandException(CommandException.ConnectionNotSet, "Dataverse connection has not been set yet.");
+			string? connectionString;
+			bool found;
+			var project = await this.pacxProjectRepository.GetCurrentProjectAsync();
+			if (project != null && !project.IsSuspended)
+			{
+				found = connectionStrings.TryGetConnectionString(project.AuthProfileName, GetAesKey(), GetAesIV(), out connectionString);
+				if (!found)
+					throw new CommandException(CommandException.ConnectionNotSet, $"Unable to find an authentication profile called {project.AuthProfileName}.");
+			}
+			else
+			{
+				found = connectionStrings.TryGetCurrentConnectionString(GetAesKey(), GetAesIV(), out connectionString);
+				if (!found)
+					throw new CommandException(CommandException.ConnectionNotSet, "Dataverse connection has not been set yet.");
+			}
 
 			return new ServiceClient(this.GetFullConnectionString(connectionString));
 		}
+
+
+
 
 
 		public async Task<IOrganizationServiceAsync2> GetConnectionByName(string connectionName)
@@ -122,6 +153,8 @@ namespace Greg.Xrm.Command.Services.Connection
 
 			return new ServiceClient(this.GetFullConnectionString(connectionString));
 		}
+
+
 
 
 		public async Task SetConnectionAsync(string name, string connectionString)
@@ -146,6 +179,10 @@ namespace Greg.Xrm.Command.Services.Connection
 			}
 		}
 
+
+
+
+
 		public async Task RenameConnectionAsync(string oldName, string newName)
 		{
 			var connectionStrings = await GetConnectionSettingAsync()
@@ -165,6 +202,9 @@ namespace Greg.Xrm.Command.Services.Connection
 			await this.settings.SetAsync("connections", connectionStrings);
 		}
 
+
+
+
 		public async Task DeleteConnectionAsync(string name)
 		{
 			var connectionStrings = await this.settings.GetAsync<ConnectionSetting>("connections")
@@ -178,6 +218,9 @@ namespace Greg.Xrm.Command.Services.Connection
 
 			await this.settings.SetAsync("connections", connectionStrings);
 		}
+
+
+
 
 		public async Task SetDefaultAsync(string name)
 		{
@@ -194,6 +237,8 @@ namespace Greg.Xrm.Command.Services.Connection
 			await this.settings.SetAsync("connections", connectionStrings);
 		}
 
+
+
 		public async Task SetDefaultSolutionAsync(string uniqueName)
 		{
 			var connectionStrings = await GetConnectionSettingAsync()
@@ -207,8 +252,17 @@ namespace Greg.Xrm.Command.Services.Connection
 
 		public async Task<string?> GetCurrentDefaultSolutionAsync()
 		{
+			var project = await this.pacxProjectRepository.GetCurrentProjectAsync();
+			if (project != null && !project.IsSuspended)
+			{
+				return project.SolutionName;
+			}
+
+
 			var connectionStrings = await GetConnectionSettingAsync()
 				?? throw new CommandException(CommandException.ConnectionInvalid, "No connection has been set yet.");
+
+
 			if (connectionStrings.CurrentConnectionStringKey == null)
 				throw new CommandException(CommandException.ConnectionInvalid, "No connection has been set yet.");
 
@@ -227,7 +281,7 @@ namespace Greg.Xrm.Command.Services.Connection
 			if (connectionString.Contains("TokenCacheStorePath="))
 				return connectionString;
 
-			if (!connectionString.EndsWith(";", StringComparison.Ordinal))
+			if (!connectionString.EndsWith(';'))
 				connectionString += ";";
 
 			return connectionString + "TokenCacheStorePath=" + GetTokenCachePath();
