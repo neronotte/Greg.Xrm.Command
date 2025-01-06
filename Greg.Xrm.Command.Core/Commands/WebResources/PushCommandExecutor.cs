@@ -46,7 +46,7 @@ namespace Greg.Xrm.Command.Commands.WebResources
 		{
 			this.output.Write($"Connecting to the current dataverse environment...");
 			var crm = await this.organizationServiceRepository.GetCurrentConnectionAsync();
-			this.output.WriteLine("DONE", ConsoleColor.Green);
+			this.output.WriteLine("Done", ConsoleColor.Green);
 
 
 
@@ -65,7 +65,7 @@ namespace Greg.Xrm.Command.Commands.WebResources
 
 			this.output.Write("Retreving current solution publisher...");
 			var solution = await solutionRepository.GetByUniqueNameAsync(crm, currentSolutionName);
-			this.output.WriteLine("DONE", ConsoleColor.Green);
+			this.output.WriteLine("Done", ConsoleColor.Green);
 			if (solution == null)
 			{
 				return CommandResult.Fail($"Solution '{currentSolutionName}' not found.");
@@ -81,7 +81,7 @@ namespace Greg.Xrm.Command.Commands.WebResources
 			{
 				var folders = folderResolver.ResolveFrom(command.Folder, solution.PublisherCustomizationPrefix ?? string.Empty);
 				files = webResourceFilesResolver.ResolveFiles(folders);
-				this.output.WriteLine("DONE", ConsoleColor.Green);
+				this.output.WriteLine("Done", ConsoleColor.Green);
 			}
 			catch (Exception ex)
 			{
@@ -112,7 +112,7 @@ namespace Greg.Xrm.Command.Commands.WebResources
 			{
 				var fileNames = files.Select(f => f.RemotePath).ToArray();
 				currentWebResources = await this.webResourceRepository.GetByNameAsync(crm, fileNames, true);
-				this.output.WriteLine("DONE", ConsoleColor.Green);
+				this.output.WriteLine("Done", ConsoleColor.Green);
 			}
 			catch (Exception ex)
 			{
@@ -192,7 +192,7 @@ namespace Greg.Xrm.Command.Commands.WebResources
 							this.publishXmlBuilder.AddWebResource(webResource.Id);
 						}
 
-						this.output.WriteLine("DONE", ConsoleColor.Green);
+						this.output.WriteLine("Done", ConsoleColor.Green);
 						currentWebResources.Add(webResource);
 					}
 					else
@@ -206,7 +206,7 @@ namespace Greg.Xrm.Command.Commands.WebResources
 								await webResource.SaveOrUpdateAsync(crm);
 								this.publishXmlBuilder.AddWebResource(webResource.Id);
 							}
-							this.output.WriteLine("DONE", ConsoleColor.Green);
+							this.output.WriteLine("Done", ConsoleColor.Green);
 						}
 						else
 						{
@@ -236,7 +236,7 @@ namespace Greg.Xrm.Command.Commands.WebResources
 					await crm.ExecuteAsync(request);
 				}
 
-				this.output.WriteLine("DONE", ConsoleColor.Green);
+				this.output.WriteLine("Done", ConsoleColor.Green);
 				return CommandResult.Success();
 			}
 			catch (Exception ex)
@@ -259,7 +259,7 @@ namespace Greg.Xrm.Command.Commands.WebResources
 			{
 				this.output.Write("Adding webresources to solution...");
 				var result = await solution.UpsertSolutionComponentsAsync(crm, currentWebResources, ComponentType.WebResource);
-				this.output.WriteLine("DONE", ConsoleColor.Green);
+				this.output.WriteLine("Done", ConsoleColor.Green);
 
 				if (result.ComponentsWithErrors.Count == 0 && result.ComponentsAlreadyThere.Count == 0)
 				{

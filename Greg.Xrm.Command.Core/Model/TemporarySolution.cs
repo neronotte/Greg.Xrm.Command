@@ -36,7 +36,7 @@ namespace Greg.Xrm.Command.Model
 				};
 
 				await crm.ExecuteAsync(request);
-				output.WriteLine("DONE", ConsoleColor.Green);
+				output.WriteLine("Done", ConsoleColor.Green);
 			}
 			catch
 			{
@@ -124,7 +124,7 @@ namespace Greg.Xrm.Command.Model
 			{
 				output.Write("Deleting holding solution...");
 				await solution.DeleteAsync(crm);
-				output.WriteLine("DONE", ConsoleColor.Green);
+				output.WriteLine("Done", ConsoleColor.Green);
 			}
 			catch (Exception ex)
 			{
@@ -143,7 +143,7 @@ namespace Greg.Xrm.Command.Model
 			{
 				output.Write("Deleting holding solution...");
 				solution.Delete(crm);
-				output.WriteLine("DONE", ConsoleColor.Green);
+				output.WriteLine("Done", ConsoleColor.Green);
 			}
 			catch (Exception ex)
 			{

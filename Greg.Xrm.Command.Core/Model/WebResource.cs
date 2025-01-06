@@ -178,7 +178,7 @@ namespace Greg.Xrm.Command.Model
 				query.NoLock = true;
 
 				var result = await crm.RetrieveMultipleAsync(query);
-				this.output.WriteLine("DONE", ConsoleColor.Green) ;
+				this.output.WriteLine("Done", ConsoleColor.Green) ;
 
 				return result.Entities.Select(e => new WebResource(e)).ToList();
 			}

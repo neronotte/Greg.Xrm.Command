@@ -63,7 +63,7 @@ namespace Greg.Xrm.Command.Commands.Settings.Model
 				var response = await crm.RetrieveMultipleAsync(query);
 				var settings = response.Entities.Select(e => new AppSetting(e)).ToList();
 
-				this.output.WriteLine("DONE", ConsoleColor.Green);
+				this.output.WriteLine("Done", ConsoleColor.Green);
 
 				return settings;
 			}

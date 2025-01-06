@@ -71,13 +71,13 @@ namespace Greg.Xrm.Command.Commands.WebResources
 				this.output.Write("Creating the WebResources project file...");
 				var projectFilePath = Path.Combine(folder.FullName, ".wr.pacx");
 				File.Create(projectFilePath).Dispose();
-				this.output.WriteLine("DONE", ConsoleColor.Green);
+				this.output.WriteLine("Done", ConsoleColor.Green);
 
 
 
 				this.output.Write($"Creating subfolder <{publisherPrefix}_>...");
 				folder = folder.CreateSubdirectory(publisherPrefix + "_");
-				this.output.WriteLine("DONE", ConsoleColor.Green);
+				this.output.WriteLine("Done", ConsoleColor.Green);
 
 
 
@@ -87,7 +87,7 @@ namespace Greg.Xrm.Command.Commands.WebResources
 				{
 					this.output.Write($"Creating subfolder <{directoryName}>...");
 					folder.CreateSubdirectory(directoryName);
-					this.output.WriteLine("DONE", ConsoleColor.Green);
+					this.output.WriteLine("Done", ConsoleColor.Green);
 				}
 
 				this.output.WriteLine($"Web resources project initialized in <{folder.FullName}>");
@@ -159,7 +159,7 @@ namespace Greg.Xrm.Command.Commands.WebResources
 					await stream.WriteAsync(bytes, cancellationToken);
 					await stream.FlushAsync(cancellationToken);
 					stream.Close();
-					this.output.WriteLine("DONE", ConsoleColor.Green);
+					this.output.WriteLine("Done", ConsoleColor.Green);
 				}
 				catch (Exception ex)
 				{
@@ -178,7 +178,7 @@ namespace Greg.Xrm.Command.Commands.WebResources
 			this.output.Write("Creating the WebResources project file...");
 			var projectFilePath = Path.Combine(folder.FullName, ".wr.pacx");
 			File.Create(projectFilePath).Dispose();
-			this.output.WriteLine("DONE", ConsoleColor.Green);
+			this.output.WriteLine("Done", ConsoleColor.Green);
 
 			return CommandResult.Success();
 		}

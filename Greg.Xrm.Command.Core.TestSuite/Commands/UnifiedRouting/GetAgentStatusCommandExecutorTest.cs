@@ -1,33 +1,36 @@
-﻿
-using Greg.Xrm.Command.Commands.UnifiedRouting;
-using Greg.Xrm.Command.Services;
+﻿using Greg.Xrm.Command.Services;
 using Greg.Xrm.Command.Services.Connection;
+using Greg.Xrm.Command.Services.Project;
 using Greg.Xrm.Command.Services.Settings;
+using Microsoft.Extensions.Logging;
 
-namespace Greg.Xrm.Command.Commands.Table
+namespace Greg.Xrm.Command.Commands.UnifiedRouting
 {
 	[TestClass]
 	public class GetAgentStatusCommandExecutorTest
 	{
 		[TestMethod]
 		[TestCategory("Integration")]
-		public void TestQuery()
+		public async Task TestQuery()
 		{
 			var agentPrimaryEmail = "francesco.catino@avanade.com";
 			var storage = new Storage();
 			var output = new OutputToConsole();
 			var settingsRepository = new SettingsRepository(storage);
-			var repository = new OrganizationServiceRepository(settingsRepository);
+			var pacxProjectRepository = new PacxProjectRepository(Mock.Of<ILogger<PacxProjectRepository>>());
+			var repository = new OrganizationServiceRepository(settingsRepository, pacxProjectRepository);
 
 
 			var executor = new GetAgentStatusCommandExecutor(output, repository);
 
-			executor.ExecuteAsync(new GetAgentStatusCommand
+			var result = await executor.ExecuteAsync(new GetAgentStatusCommand
 			{
 				AgentPrimaryEmail = agentPrimaryEmail,
 				DateTimeFilter = "28/11/2023 11:00"
-			}, new CancellationToken()).Wait();
+			}, new CancellationToken());
 
+			Assert.IsNotNull(result);
+			Assert.IsTrue(result.IsSuccess, result.ErrorMessage);
 		}
 	}
 }

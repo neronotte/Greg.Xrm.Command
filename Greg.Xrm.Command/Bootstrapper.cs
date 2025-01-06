@@ -9,52 +9,29 @@ using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.Extensions.Logging;
 using Microsoft.Xrm.Sdk;
 using System.ComponentModel.DataAnnotations;
-using System.Diagnostics;
 using System.Reflection;
 using System.ServiceModel;
 
 namespace Greg.Xrm.Command
 {
-    public sealed class Bootstrapper
+	public sealed class Bootstrapper(
+		ILogger<Bootstrapper> logger,
+		TelemetryClient client,
+		IOutput output,
+		ICommandRegistry registry,
+		ICommandParser parser,
+		ICommandLineArguments args,
+		ICommandExecutorFactory commandExecutorFactory,
+		IHistoryTracker historyTracker)
 	{
-		private readonly ILogger log;
-		private readonly TelemetryClient client;
-		private readonly ICommandRegistry registry;
-		private readonly ICommandParser parser;
-		private readonly IOutput output;
-		private readonly ICommandLineArguments args;
-		private readonly ICommandExecutorFactory commandExecutorFactory;
-		private readonly IHistoryTracker historyTracker;
-
-		private static readonly Type[] commandsNotToTrack = new[]
-		{
+		private readonly ILogger log = logger;
+		private static readonly Type[] commandsNotToTrack =
+		[
 			typeof(HelpCommand),
 			typeof(GetCommand),
 			typeof(SetLengthCommand),
 			typeof(ClearCommand),
-		};
-
-
-
-		public Bootstrapper(
-			ILogger<Bootstrapper> logger,
-			TelemetryClient client,
-			IOutput output,
-			ICommandRegistry registry,
-			ICommandParser parser,
-			ICommandLineArguments args,
-			ICommandExecutorFactory commandExecutorFactory,
-			IHistoryTracker historyTracker)
-		{
-			this.log = logger;
-			this.client = client;
-			this.output = output;
-			this.registry = registry;
-			this.parser = parser;
-			this.args = args;
-			this.commandExecutorFactory = commandExecutorFactory;
-			this.historyTracker = historyTracker;
-		}
+		];
 
 		public async Task<int> StartAsync(CancellationToken cancellationToken)
 		{
@@ -63,10 +40,10 @@ namespace Greg.Xrm.Command
 
 			log.LogTrace("1. StartAsync has been called.");
 
-			this.registry.InitializeFromAssembly(typeof(HelpCommand).Assembly);
-			this.registry.ScanPluginsFolder(args);
+			registry.InitializeFromAssembly(typeof(HelpCommand).Assembly);
+			registry.ScanPluginsFolder(args);
 
-			var (command, runArgs) = this.parser.Parse(args);
+			var (command, runArgs) = parser.Parse(args);
 			if (command == null)
 			{
 				return -1;
@@ -79,12 +56,12 @@ namespace Greg.Xrm.Command
 
 			await TrackCommandIntoHistoryAsync(command);
 
-			using var op = this.client.StartOperation<RequestTelemetry>(string.Join(" ", runArgs.Verbs));
+			using var op = client.StartOperation<RequestTelemetry>(string.Join(" ", runArgs.Verbs));
 			op.Telemetry.Properties.Add("CommandType", command.GetType().FullName);
 
 			var result = await ExecuteCommand(command, op, cancellationToken);
 
-			await this.client.FlushAsync(cancellationToken);
+			await client.FlushAsync(cancellationToken);
 
 			return result;
 
@@ -131,6 +108,8 @@ namespace Greg.Xrm.Command
 			}
 			catch (Exception ex)
 			{
+				var message = ex.Message;
+
 				op.Telemetry.Success = false;
 				op.Telemetry.ResponseCode = "500";
 				op.Telemetry.Properties.Add("Exception", ex.Message);
@@ -140,9 +119,10 @@ namespace Greg.Xrm.Command
 				{
 					op.Telemetry.Properties.Add("InnerException", ex.InnerException.Message);
 					op.Telemetry.Properties.Add("InnerExceptionType", ex.InnerException.GetType().FullName);
+					message += Environment.NewLine + " Inner exception: " + ex.InnerException.Message;
 				}
 
-				this.output.WriteLine(ex.Message, ConsoleColor.Red).WriteLine();
+				output.WriteLine(message, ConsoleColor.Red).WriteLine();
 				log.LogError(ex, "Unhandled error: {ErrorMessage}", ex.Message);
 
 				return -1;
@@ -154,13 +134,13 @@ namespace Greg.Xrm.Command
 		{
 			if (!args.Contains("--noprompt"))
 			{
-				this.output.Write(">>> Greg PowerPlatform CLI Extended (PACX) <<<", ConsoleColor.Green).WriteLine(" - Dataverse command tool", ConsoleColor.DarkGray);
-				this.output.Write("Version ")
+				output.Write(">>> Greg PowerPlatform CLI Extended (PACX) <<<", ConsoleColor.Green).WriteLine(" - Dataverse command tool", ConsoleColor.DarkGray);
+				output.Write("Version ")
 					.Write(GetType().Assembly.GetName()?.Version?.ToString() ?? "[unable to get version from assembly]")
 					.WriteLine();
-				this.output.Write("Online documentation: ").WriteLine("https://github.com/neronotte/Greg.Xrm.Command/wiki");
-				this.output.Write("Feedback, Suggestions, Issues: ").WriteLine("https://github.com/neronotte/Greg.Xrm.Command/discussions");
-				this.output.WriteLine();
+				output.Write("Online documentation: ").WriteLine("https://github.com/neronotte/Greg.Xrm.Command/wiki");
+				output.Write("Feedback, Suggestions, Issues: ").WriteLine("https://github.com/neronotte/Greg.Xrm.Command/discussions");
+				output.WriteLine();
 			}
 			else
 			{
@@ -174,11 +154,11 @@ namespace Greg.Xrm.Command
 			var validationResults = new List<ValidationResult>();
 			if (!Validator.TryValidateObject(command, validationContext, validationResults, true))
 			{
-				this.output.WriteLine("Invalid command options:", ConsoleColor.Red).WriteLine();
+				output.WriteLine("Invalid command options:", ConsoleColor.Red).WriteLine();
 				foreach (var validationResult in validationResults)
 				{
-					this.output.Write("    ");
-					this.output.WriteLine(validationResult.ErrorMessage, ConsoleColor.Red);
+					output.Write("    ");
+					output.WriteLine(validationResult.ErrorMessage, ConsoleColor.Red);
 				}
 
 				log.LogError("Invalid command options");
@@ -196,7 +176,7 @@ namespace Greg.Xrm.Command
 			if (commandsNotToTrack.Contains(command.GetType()))
 				return;
 
-			await this.historyTracker.AddAsync(args.ToArray());
+			await historyTracker.AddAsync([.. args]);
 		}
 
 
@@ -209,7 +189,7 @@ namespace Greg.Xrm.Command
 			commandExecutor = commandExecutorFactory.CreateFor(command.GetType());
 			if (commandExecutor == null)
 			{
-				this.output.WriteLine("Internal error, see logs for more info.", ConsoleColor.Red).WriteLine();
+				output.WriteLine("Internal error, see logs for more info.", ConsoleColor.Red).WriteLine();
 				log.LogError("No command executor found for command {CommandType}.", command.GetType());
 
 				return false;
@@ -220,7 +200,7 @@ namespace Greg.Xrm.Command
 			method = specificCommandExecutorType.GetMethod("ExecuteAsync");
 			if (method == null)
 			{
-				this.output.WriteLine("Internal error, see logs for more info.", ConsoleColor.Red).WriteLine();
+				output.WriteLine("Internal error, see logs for more info.", ConsoleColor.Red).WriteLine();
 				log.LogError("No ExecuteAsync method found for command executor {CommandExecutorType}.", specificCommandExecutorType);
 
 				return false;
@@ -232,28 +212,28 @@ namespace Greg.Xrm.Command
 
 		public async Task<CommandResult?> ExecuteCommandAsync(object command, object commandExecutor, MethodInfo method, CancellationToken cancellationToken)
 		{
-			var task = (Task<CommandResult>?)method.Invoke(commandExecutor, new[] { command, cancellationToken });
+			var task = (Task<CommandResult>?)method.Invoke(commandExecutor, [command, cancellationToken]);
 			if (task == null)
 			{
-				this.output.WriteLine("Internal error, see logs for more info.", ConsoleColor.Red).WriteLine();
+				output.WriteLine("Internal error, see logs for more info.", ConsoleColor.Red).WriteLine();
 				log.LogError("Invalid result from command executor ExecuteAsync: {CommandType}.", command.GetType());
 
 				return null;
 			}
 
 			var result = await task;
-			this.output.WriteLine();
+			output.WriteLine();
 
 			if (task.IsFaulted)
 			{
-				this.output.WriteLine("Internal error, see logs for more info.", ConsoleColor.Red).WriteLine();
+				output.WriteLine("Internal error, see logs for more info.", ConsoleColor.Red).WriteLine();
 				log.LogError(task.Exception, "Error while executing command {CommandType}.", command.GetType());
 				return null;
 			}
 
 			if (task.IsCanceled)
 			{
-				this.output.WriteLine("Internal error, see logs for more info.", ConsoleColor.Red).WriteLine();
+				output.WriteLine("Internal error, see logs for more info.", ConsoleColor.Red).WriteLine();
 				log.LogError("Command {CommandType} has been cancelled.", command.GetType());
 				return null;
 			}
@@ -266,7 +246,7 @@ namespace Greg.Xrm.Command
 
 		private void PrintFailure(object command, CommandResult result)
 		{
-			this.output.Write(result.ErrorMessage, ConsoleColor.Red).WriteLine();
+			output.Write(result.ErrorMessage, ConsoleColor.Red).WriteLine();
 			log.LogError("Command {CommandType} has error", command.GetType());
 
 			var ex = result.Exception;
@@ -299,10 +279,10 @@ namespace Greg.Xrm.Command
 		private void PrintSuccess(CommandResult result)
 		{
 			var padding = result.Max(_ => _.Key.Length);
-			this.output.WriteLine("Result: ");
+			output.WriteLine("Result: ");
 			foreach (var kvp in result)
 			{
-				this.output.Write("  ").Write(kvp.Key.PadRight(padding)).Write(": ").WriteLine(kvp.Value, ConsoleColor.Yellow);
+				output.Write("  ").Write(kvp.Key.PadRight(padding)).Write(": ").WriteLine(kvp.Value, ConsoleColor.Yellow);
 			}
 		}
 	}

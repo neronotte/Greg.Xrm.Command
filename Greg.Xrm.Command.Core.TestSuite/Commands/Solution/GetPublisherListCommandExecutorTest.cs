@@ -1,6 +1,8 @@
 ﻿using Greg.Xrm.Command.Services;
 using Greg.Xrm.Command.Services.Connection;
+using Greg.Xrm.Command.Services.Project;
 using Greg.Xrm.Command.Services.Settings;
+using Microsoft.Extensions.Logging;
 
 namespace Greg.Xrm.Command.Commands.Solution
 {
@@ -9,21 +11,24 @@ namespace Greg.Xrm.Command.Commands.Solution
 	{
 		[TestMethod]
 		[TestCategory("Integration")]
-		public void TestQuery()
+		public async Task TestQuery()
 		{
 			var storage = new Storage();
 			var output = new OutputToConsole();
 			var settingsRepository = new SettingsRepository(storage);
-			var repository = new OrganizationServiceRepository(settingsRepository);
+			var pacxProjectRepository = new PacxProjectRepository(Mock.Of<ILogger<PacxProjectRepository>>());
+			var repository = new OrganizationServiceRepository(settingsRepository, pacxProjectRepository);
 
 
 			var executor = new GetPublisherListExecutor(output, repository);
 
-			executor.ExecuteAsync(new GetPublisherListCommand
+			var result = await executor.ExecuteAsync(new GetPublisherListCommand
 			{
 				Verbose = true
-			}, new CancellationToken()).Wait();
+			}, new CancellationToken());
 
+			Assert.IsNotNull(result);
+			Assert.IsTrue(result.IsSuccess, result.ErrorMessage);
 		}
 	}
 }

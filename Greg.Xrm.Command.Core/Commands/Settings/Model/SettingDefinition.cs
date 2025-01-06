@@ -150,7 +150,7 @@ namespace Greg.Xrm.Command.Commands.Settings.Model
 
 				var settings = result.Entities.Select(e => new SettingDefinition(e)).ToList();
 
-				this.output.WriteLine("DONE", ConsoleColor.Green);
+				this.output.WriteLine("Done", ConsoleColor.Green);
 				return settings;
 			}
 
@@ -169,7 +169,7 @@ namespace Greg.Xrm.Command.Commands.Settings.Model
 
 				var settings = result.Entities.Select(e => new SettingDefinition(e)).ToList();
 
-				this.output.WriteLine("DONE", ConsoleColor.Green);
+				this.output.WriteLine("Done", ConsoleColor.Green);
 				return settings.FirstOrDefault();
 			}
 		}

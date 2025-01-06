@@ -41,7 +41,7 @@ namespace Greg.Xrm.Command.Parsing
 
 		public void ScanPluginsFolder(ICommandLineArguments args)
 		{
-			var loaders = new List<(string, PluginLoader)>();
+			var loaders = new List<(string, PluginLoader, List<string>)>();
 
 			var indexOfPluginsArgument = args.IndexOf("--plugin");
 			if (indexOfPluginsArgument < 0)
@@ -78,7 +78,7 @@ namespace Greg.Xrm.Command.Parsing
 						var loader = PluginLoader.CreateFromAssemblyFile(assemblyFile.FullName,
 							config => config.PreferSharedTypes = true);
 
-						loaders.Add((pluginFolder.Name, loader));
+						loaders.Add((pluginFolder.Name, loader, []));
 					}
 					catch (Exception ex)
 					{
@@ -129,7 +129,7 @@ namespace Greg.Xrm.Command.Parsing
 					var loader = PluginLoader.CreateFromAssemblyFile(assemblyFile.FullName,
 						config => config.PreferSharedTypes = true);
 
-					loaders.Add((pluginName, loader));
+					loaders.Add((pluginName, loader, []));
 				}
 				catch (Exception ex)
 				{
@@ -147,7 +147,7 @@ namespace Greg.Xrm.Command.Parsing
 
 
 
-			foreach (var (pluginName, loader) in loaders)
+			foreach (var (pluginName, loader, otherAssemblies) in loaders)
 			{
 				this.log.LogDebug("Loading plugin {PluginName}...", pluginName);
 				try
@@ -157,6 +157,10 @@ namespace Greg.Xrm.Command.Parsing
 					{
 						log.LogWarning("Plugin {PluginName} does not contain a default assembly.", pluginName);
 						continue;
+					}
+					foreach (var otherAssembly in otherAssemblies)
+					{
+						loader.LoadAssemblyFromPath(otherAssembly);
 					}
 
 					var moduleList = ScanForModules(pluginAssembly);

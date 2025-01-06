@@ -1,6 +1,8 @@
 ﻿using Greg.Xrm.Command.Services;
 using Greg.Xrm.Command.Services.Connection;
+using Greg.Xrm.Command.Services.Project;
 using Greg.Xrm.Command.Services.Settings;
+using Microsoft.Extensions.Logging;
 
 namespace Greg.Xrm.Command.Commands.Relationship
 {
@@ -14,7 +16,8 @@ namespace Greg.Xrm.Command.Commands.Relationship
 			var storage = new Storage();
 			var output = new OutputToMemory();
 			var settingsRepository = new SettingsRepository(storage);
-			var repository = new OrganizationServiceRepository(settingsRepository);
+			var pacxProjectRepository = new PacxProjectRepository(Mock.Of<ILogger<PacxProjectRepository>>());
+			var repository = new OrganizationServiceRepository(settingsRepository, pacxProjectRepository);
 
 
 			var command = new CreatePolyCommand
@@ -34,7 +37,7 @@ namespace Greg.Xrm.Command.Commands.Relationship
 
 			task.Wait();
 
-			Assert.IsFalse(task.IsFaulted, task.Exception?.Message);
+			Assert.IsFalse(task.IsFaulted, task.Exception!.Message);
 
 			var result = task.Result;
 

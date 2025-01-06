@@ -19,7 +19,7 @@ namespace Greg.Xrm.Command.Commands.WebResources
 		{
 			output.Write($"Connecting to the current dataverse environment...");
 			var crm = await organizationServiceRepository.GetCurrentConnectionAsync();
-			output.WriteLine("DONE", ConsoleColor.Green);
+			output.WriteLine("Done", ConsoleColor.Green);
 
 
 			output.Write($"Retrieving the webresource called <{command.WebResourceUniqueName}>...");
@@ -35,7 +35,7 @@ namespace Greg.Xrm.Command.Commands.WebResources
 				}
 
 				logo = webResourceList[0];
-				output.WriteLine("DONE", ConsoleColor.Green);
+				output.WriteLine("Done", ConsoleColor.Green);
 			}
 			catch (FaultException<OrganizationServiceFault> ex)
 			{
@@ -81,7 +81,7 @@ namespace Greg.Xrm.Command.Commands.WebResources
 					theme["name"] = $"{oldName} - Copy";
 				}
 
-				output.WriteLine("DONE", ConsoleColor.Green);
+				output.WriteLine("Done", ConsoleColor.Green);
 			}
 			catch (FaultException<OrganizationServiceFault> ex)
 			{
@@ -104,7 +104,7 @@ namespace Greg.Xrm.Command.Commands.WebResources
 				{
 					await crm.UpdateAsync(theme);
 				}
-				output.WriteLine("DONE", ConsoleColor.Green);
+				output.WriteLine("Done", ConsoleColor.Green);
 			}
 			catch (FaultException<OrganizationServiceFault> ex)
 			{
@@ -124,7 +124,7 @@ namespace Greg.Xrm.Command.Commands.WebResources
 
 				await crm.ExecuteAsync(request);
 
-				output.WriteLine("DONE", ConsoleColor.Green);
+				output.WriteLine("Done", ConsoleColor.Green);
 			}
 			catch (FaultException<OrganizationServiceFault> ex)
 			{

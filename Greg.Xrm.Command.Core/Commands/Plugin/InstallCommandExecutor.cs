@@ -6,6 +6,7 @@ using NuGet.Packaging;
 using NuGet.Protocol;
 using NuGet.Protocol.Core.Types;
 using NuGet.Versioning;
+using OfficeOpenXml.Packaging;
 
 namespace Greg.Xrm.Command.Commands.Plugin
 {
@@ -28,6 +29,43 @@ namespace Greg.Xrm.Command.Commands.Plugin
 
 		public async Task<CommandResult> ExecuteAsync(InstallCommand command, CancellationToken cancellationToken)
 		{
+			Stream packageStream;
+			if (!string.IsNullOrWhiteSpace(command.Name))
+			{
+				var (result, stream) = await TryGetPackageFromNugetAsync(command, cancellationToken);
+				if (!result.IsSuccess) return result;
+				packageStream = stream!;
+			}
+			else
+			{
+				var (result, stream) = TryCreateStreamFromLocalFile(command);
+				if (!result.IsSuccess) return result;
+				packageStream = stream!;
+			}
+
+
+			using (packageStream)
+			using (var packageReader = new PackageArchiveReader(packageStream))
+			{
+				this.output.Write($"Reading package contents...");
+
+				var validFiles = await ExtractValidFilesFromPackage(packageReader, cancellationToken);
+
+				if (validFiles.Length == 0)
+				{
+					this.output.WriteLine("Failed", ConsoleColor.Red);
+					return CommandResult.Fail("No valid files found. A valid plugin package must contain files (dlls) under lib/net7.0/ or lib/net6.0/ folder.");
+				}
+
+				this.output.WriteLine("Done", ConsoleColor.Green);
+
+
+				return ExtractPlugin(packageReader, validFiles);
+			}
+		}
+
+		private async Task<(CommandResult, Stream?)> TryGetPackageFromNugetAsync(InstallCommand command, CancellationToken cancellationToken)
+		{
 			this.output.Write("Creating NuGet repository...");
 
 			var cache = new SourceCacheContext();
@@ -37,15 +75,12 @@ namespace Greg.Xrm.Command.Commands.Plugin
 			this.output.WriteLine("Done", ConsoleColor.Green);
 
 
-
-
-
 			this.output.Write("Searching for package version...");
 			var packageMetadata = (await packageMetadataResource.GetMetadataAsync(command.Name, false, true, cache, logger, cancellationToken))?.ToList() ?? new List<IPackageSearchMetadata>();
 			if (packageMetadata.Count == 0)
 			{
 				this.output.WriteLine("Failed.", ConsoleColor.Red);
-				return CommandResult.Fail($"Package <{command.Name}> not found on NuGet.");
+				return (CommandResult.Fail($"Package <{command.Name}> not found on NuGet."), null);
 			}
 
 			IPackageSearchMetadata? package;
@@ -58,7 +93,7 @@ namespace Greg.Xrm.Command.Commands.Plugin
 				if (package == null)
 				{
 					this.output.WriteLine("Failed.", ConsoleColor.Red);
-					return CommandResult.Fail($"Package <{command.Name}> doesn't have any version marked as \"release\", thus cannot be installed.");
+					return (CommandResult.Fail($"Package <{command.Name}> doesn't have any version marked as \"release\", thus cannot be installed."), null);
 				}
 			}
 			else
@@ -68,7 +103,7 @@ namespace Greg.Xrm.Command.Commands.Plugin
 				{
 					this.output.WriteLine("Failed.", ConsoleColor.Red);
 					var validVersions = string.Join(", ", packageMetadata.OrderByDescending(p => p.Identity.Version, VersionComparer.VersionRelease).Select(p => p.Identity.Version.Version.ToString()));
-					return CommandResult.Fail($"Version <{command.Version}> not found for package <{command.Name}>. Valid versions are: " + validVersions);
+					return (CommandResult.Fail($"Version <{command.Version}> not found for package <{command.Name}>. Valid versions are: " + validVersions),null);
 				}
 			}
 			this.output.WriteLine("Done", ConsoleColor.Green);
@@ -86,17 +121,15 @@ namespace Greg.Xrm.Command.Commands.Plugin
 			if (!isValid)
 			{
 				this.output.WriteLine("Failed", ConsoleColor.Red);
-				return CommandResult.Fail($"Package <{command.Name}> is not a valid PACX plugin. A valid PACX plugin must have a dependency on <Greg.Xrm.Command.Interfaces>.");
+				return (CommandResult.Fail($"Package <{command.Name}> is not a valid PACX plugin. A valid PACX plugin must have a dependency on <Greg.Xrm.Command.Interfaces>."), null);
 			}
 			this.output.WriteLine("Done", ConsoleColor.Green);
 
 
-
-
 			this.output.Write($"Downloading Package {package.Identity.Id} {package.Identity.Version}...");
 			var resource = await repository.GetResourceAsync<FindPackageByIdResource>();
-			using var packageStream = new MemoryStream();
 
+			var packageStream = new MemoryStream();
 			await resource.CopyNupkgToStreamAsync(
 				package.Identity.Id,
 				package.Identity.Version,
@@ -106,26 +139,23 @@ namespace Greg.Xrm.Command.Commands.Plugin
 				cancellationToken);
 			this.output.WriteLine("Done", ConsoleColor.Green);
 
+			return (CommandResult.Success(), packageStream);
+		}
 
-
-
-			using (var packageReader = new PackageArchiveReader(packageStream))
+		private static (CommandResult, Stream?) TryCreateStreamFromLocalFile(InstallCommand command)
+		{
+			var file = new FileInfo(command.FileName);
+			if (!file.Exists)
 			{
-				this.output.Write($"Reading package contents...");
-
-				var validFiles = await ExtractValidFilesFromPackage(packageReader, cancellationToken);
-
-				if (validFiles.Length == 0)
-				{
-					this.output.WriteLine("Failed", ConsoleColor.Red);
-					return CommandResult.Fail("No valid files found. A valid plugin package must contain files (dlls) under lib/net7.0/ or lib/net6.0/ folder.");
-				}
-
-				this.output.WriteLine("Done", ConsoleColor.Green);
-
-
-				return ExtractPlugin(package, packageReader, validFiles);
+				return (CommandResult.Fail($"The specified file <{command.FileName}> does not exist."), null);
 			}
+			if (!file.Extension.Equals(".nupkg", StringComparison.OrdinalIgnoreCase))
+			{
+				return (CommandResult.Fail($"The specified file <{command.FileName}> is not a valid NuGet package file."), null);
+			}
+
+			var packageStream = File.OpenRead(command.FileName);
+			return (CommandResult.Success(), packageStream);
 		}
 
 
@@ -136,21 +166,49 @@ namespace Greg.Xrm.Command.Commands.Plugin
 		{
 			var files = await packageReader.GetFilesAsync(cancellationToken);
 
-			var validFiles = files.Where(f => f.StartsWith("lib/net7.0/")).ToArray();
-			if (validFiles.Length == 0)
+			string[] filesExtractionOrder = ["lib/net8.0/", "lib/net7.0/", "lib/net6.0/"];
+			foreach (var folder in filesExtractionOrder)
 			{
-				validFiles = files.Where(f => f.StartsWith("lib/net6.0/")).ToArray();
+				var validFiles = files.Where(f => f.StartsWith(folder)).ToArray();
+				if (validFiles.Length > 0)
+				{
+					return validFiles;
+				}
 			}
-
-			return validFiles;
+			return [];
 		}
 
 
 
 
 
-		private CommandResult ExtractPlugin(IPackageSearchMetadata plugin, PackageArchiveReader packageReader, string[] validFiles)
+		private CommandResult ExtractPlugin(PackageArchiveReader packageReader, string[] validFiles)
 		{
+			var nuspecReader = packageReader.NuspecReader;
+			var packageId = nuspecReader.GetId();
+			var packageVersion = nuspecReader.GetVersion().ToFullString();
+			packageVersion = nuspecReader.GetVersion().ToString();
+
+
+
+
+			this.output.Write("Validating package...");
+			var dependencies = nuspecReader.GetDependencyGroups()?.ToArray()
+				.SelectMany(d => d.Packages)
+				.OrderBy(p => p.Id)
+				.ToList() ?? [];
+
+			var isValid = dependencies.Exists(d => d.Id == "Greg.Xrm.Command.Interfaces");
+			if (!isValid)
+			{
+				this.output.WriteLine("Failed", ConsoleColor.Red);
+				return CommandResult.Fail($"Package <{packageId}> is not a valid PACX plugin. A valid PACX plugin must have a dependency on <Greg.Xrm.Command.Interfaces>.");
+			}
+			this.output.WriteLine("Done", ConsoleColor.Green);
+
+
+
+
 			this.output.Write($"Installing plugin...");
 			var extractedFileList = new List<string>();
 			DirectoryInfo? currentPluginFolder = null;
@@ -159,7 +217,7 @@ namespace Greg.Xrm.Command.Commands.Plugin
 				var rootStorageFolder = storage.GetOrCreateStorageFolder();
 				var pluginStorageFolder = rootStorageFolder.CreateSubdirectory("Plugins");
 
-				currentPluginFolder = pluginStorageFolder.GetDirectories().FirstOrDefault(d => d.Name.Equals(plugin.Identity.Id, StringComparison.OrdinalIgnoreCase));
+				currentPluginFolder = pluginStorageFolder.GetDirectories().FirstOrDefault(d => d.Name.Equals(packageId, StringComparison.OrdinalIgnoreCase));
 				if (currentPluginFolder != null)
 				{
 					this.output.Write($"Deleting existing plugin folder...");
@@ -167,7 +225,7 @@ namespace Greg.Xrm.Command.Commands.Plugin
 					this.output.WriteLine("Done", ConsoleColor.Green);
 				}
 
-				currentPluginFolder = pluginStorageFolder.CreateSubdirectory(plugin.Identity.Id);
+				currentPluginFolder = pluginStorageFolder.CreateSubdirectory(packageId);
 
 				foreach (var file in validFiles)
 				{
@@ -177,7 +235,7 @@ namespace Greg.Xrm.Command.Commands.Plugin
 				}
 
 				var versionFile = Path.Combine(currentPluginFolder.FullName, ".version");
-				File.WriteAllText(versionFile, plugin.Identity.Version.ToString());
+				File.WriteAllText(versionFile, packageVersion);
 
 				this.output.WriteLine("Done", ConsoleColor.Green);
 

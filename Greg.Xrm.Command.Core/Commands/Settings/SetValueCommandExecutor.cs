@@ -23,7 +23,7 @@ namespace Greg.Xrm.Command.Commands.Settings
 
 			this.output.Write($"Connecting to the current dataverse environment...");
 			var crm = await this.organizationServiceRepository.GetCurrentConnectionAsync();
-			this.output.WriteLine("DONE", ConsoleColor.Green);
+			this.output.WriteLine("Done", ConsoleColor.Green);
 
 			var currentSolutionName = command.SolutionName;
 			if (string.IsNullOrWhiteSpace(currentSolutionName))
@@ -51,7 +51,7 @@ namespace Greg.Xrm.Command.Commands.Settings
 
 				await crm.ExecuteAsync(request);
 
-				this.output.WriteLine("DONE", ConsoleColor.Green);
+				this.output.WriteLine("Done", ConsoleColor.Green);
 
 				return CommandResult.Success();
 			}

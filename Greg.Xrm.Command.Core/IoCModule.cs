@@ -8,6 +8,7 @@ using Greg.Xrm.Command.Commands.WebResources.PushLogic;
 using Greg.Xrm.Command.Commands.WebResources.Templates;
 using Greg.Xrm.Command.Model;
 using Greg.Xrm.Command.Services;
+using Greg.Xrm.Command.Services.Project;
 
 namespace Greg.Xrm.Command
 {
