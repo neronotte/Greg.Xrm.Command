@@ -21,7 +21,7 @@ namespace Greg.Xrm.Command.Commands.Projects
 				.WriteLine("By default PACX commands execute in a global context.")
 				.WriteLine("The authentication profile to be used to connect to a Dataverse instance, or the solution to work with, are defined in a global PACX settings file.")
 				.WriteLine()
-				.WriteLine("This approach is mutuated from PAC CLI, and it's really helpful when scripting, because you can autenticate once, define once the solution to work with, and all the subsequent commands will hinherit that configuration.")
+				.WriteLine("It's the same approach used by PAC CLI, and it's really helpful when scripting, because you can autenticate once, define once the solution to work with, and all the subsequent commands will inherit that configuration.")
 				.WriteLine()
 				.WriteLine("Sometimes, however, it may became cumbersome when working on multiple projects, or when working with a segmented solution approach on a given project, because it requires you to switch configuration often.")
 				.WriteLine();
