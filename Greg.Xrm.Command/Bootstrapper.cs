@@ -247,12 +247,11 @@ namespace Greg.Xrm.Command
 		private void PrintFailure(object command, CommandResult result)
 		{
 			output.Write(result.ErrorMessage, ConsoleColor.Red).WriteLine();
-			log.LogError("Command {CommandType} has error", command.GetType());
-
+			
 			var ex = result.Exception;
 			if (ex == null) return;
 
-			log.LogError(ex, "Fault type: {FaultType}, {ErrorMessage}.", ex.GetType(), ex.Message);
+			log.LogError(ex, "Command {CommandType} has error, Fault type: {FaultType}, {ErrorMessage}.", command.GetType(), ex.GetType(), ex.Message);
 			if (ex.InnerException != null)
 			{
 				log.LogError(ex.InnerException, "Inner exception: {ErrorMessage}.", ex.InnerException.Message);

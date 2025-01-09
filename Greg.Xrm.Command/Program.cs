@@ -44,10 +44,12 @@ serviceCollection.AddApplicationInsightsTelemetryWorkerService(options =>
 {
 #if DEBUG
 	options.ConnectionString = Resources.ApplicationInsightsConnectionStringDev;
+	options.DeveloperMode = true;
 
 #elif RELEASE
 
 	options.ConnectionString = Resources.ApplicationInsightsConnectionStringProd;
+	options.DeveloperMode = true;
 #endif
 });
 
