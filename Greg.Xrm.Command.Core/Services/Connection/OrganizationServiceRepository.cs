@@ -108,7 +108,7 @@ namespace Greg.Xrm.Command.Services.Connection
 		public async Task<ConnectionSetting> GetAllConnectionDefinitionsAsync()
 		{
 			var connectionStrings = await GetConnectionSettingAsync();
-			return connectionStrings ?? new ConnectionSetting();
+			return connectionStrings ?? new ConnectionSetting() { IsSecured = true };
 		}
 
 
@@ -166,7 +166,7 @@ namespace Greg.Xrm.Command.Services.Connection
 
 
 				var connectionStrings = await GetConnectionSettingAsync();
-				connectionStrings ??= new ConnectionSetting();
+				connectionStrings ??= new ConnectionSetting() { IsSecured = true };
 
 				connectionStrings.UpsertConnectionString(name, connectionString, GetAesKey(), GetAesIV());
 				connectionStrings.CurrentConnectionStringKey = name;
