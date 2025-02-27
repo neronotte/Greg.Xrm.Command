@@ -14,7 +14,7 @@ namespace Greg.Xrm.Command.Commands.Views
 		[Option("table", "t", HelpText = "The name of the table that contains the view. Required only if the view name is not unique in the system.")]
 		public string? TableName { get; set; }
 
-		[Option("onto", "o", HelpText = "The name of the views that should be updated with the new layout. If not specified, all saved queries except for lookup views will be updated. If * is provided as value, all views will be updated (lookup views included).")]
+		[Option("onto", "o", HelpText = "The name of the views that should be updated with the new layout, separated by comma (,). If not specified, all saved queries except for lookup views will be updated. If * is provided as value, all views will be updated (lookup views included).")]
 		public string? Onto { get; set; }
 
 
