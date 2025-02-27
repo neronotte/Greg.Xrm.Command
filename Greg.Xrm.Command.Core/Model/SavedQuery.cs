@@ -8,6 +8,8 @@ namespace Greg.Xrm.Command.Model
 		{
 		}
 
+		public SavedQuery() : base("savedquery") { }
+
 
 		public class Repository : Repository<SavedQuery>, ISavedQueryRepository
 		{
