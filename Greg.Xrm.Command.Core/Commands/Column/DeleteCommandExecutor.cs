@@ -64,15 +64,12 @@ namespace Greg.Xrm.Command.Commands.Column
 				}
 				else if (dependencies.Count > 0)
 				{
-					this.output.WriteLine($"Column {command.TableName}.{command.SchemaName} has {dependencies.Count} dependencies.", ConsoleColor.Yellow);
-
 					dependencies.WriteTo(this.output);
-
 
 					if (!command.Force)
 					{
 						this.output.WriteLine($"Use the --force option to delete it anyway.", ConsoleColor.Yellow);
-						return CommandResult.Fail($"Column {command.TableName}.{command.SchemaName} has {dependencies.Count} dependencies.");
+						return CommandResult.Fail($"Column {command.TableName}.{command.SchemaName} has {dependencies.Count} dependencies, cannot be removed.");
 					}
 					else
 					{
