@@ -8,6 +8,7 @@ namespace Greg.Xrm.Command.Model
 		{
 		}
 
+		public UserQuery() : base("userquery") { }
 
 		public class Repository : TableView.Repository<UserQuery>, IUserQueryRepository
 		{

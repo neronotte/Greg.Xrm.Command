@@ -8,7 +8,6 @@ using Greg.Xrm.Command.Commands.WebResources.PushLogic;
 using Greg.Xrm.Command.Commands.WebResources.Templates;
 using Greg.Xrm.Command.Model;
 using Greg.Xrm.Command.Services;
-using Greg.Xrm.Command.Services.Project;
 
 namespace Greg.Xrm.Command
 {
@@ -36,6 +35,7 @@ namespace Greg.Xrm.Command
 			builder.RegisterType<Commands.Settings.Model.AppSetting.Repository>().As<Commands.Settings.Model.IAppSettingRepository>();
 			builder.RegisterType<Commands.Settings.Imports.ImportStrategyFactory>().As<Commands.Settings.Imports.IImportStrategyFactory>();
 			builder.RegisterType<Commands.Table.Migration.TableGraphBuilder>().AsSelf();
+			builder.RegisterType<Commands.Views.Model.ViewRetrieverService>().As<Commands.Views.Model.IViewRetrieverService>();
 
 			builder.RegisterType<FolderResolver>().As<IFolderResolver>();
 			builder.RegisterType<WebResourceFilesResolver>().As<IWebResourceFilesResolver>();
