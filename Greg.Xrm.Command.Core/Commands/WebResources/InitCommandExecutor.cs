@@ -3,6 +3,7 @@ using Greg.Xrm.Command.Services.Output;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Greg.Xrm.Command.Model;
 using Greg.Xrm.Command.Services;
+using Greg.Xrm.Command.Commands.WebResources.ProjectFile;
 
 namespace Greg.Xrm.Command.Commands.WebResources
 {
@@ -12,17 +13,20 @@ namespace Greg.Xrm.Command.Commands.WebResources
 		private readonly IOrganizationServiceRepository organizationServiceRepository;
 		private readonly ISolutionRepository solutionRepository;
 		private readonly IWebResourceRepository webResourceRepository;
+		private readonly IWebResourceProjectFileRepository webResourceProjectFileRepository;
 
 		public InitCommandExecutor(
 			IOutput output,
 			IOrganizationServiceRepository organizationServiceRepository,
 			ISolutionRepository solutionRepository,
-			IWebResourceRepository webResourceRepository)
+			IWebResourceRepository webResourceRepository,
+			IWebResourceProjectFileRepository webResourceProjectFileRepository)
 		{
 			this.output = output ?? throw new ArgumentNullException(nameof(output));
 			this.organizationServiceRepository = organizationServiceRepository ?? throw new ArgumentNullException(nameof(organizationServiceRepository));
 			this.solutionRepository = solutionRepository;
 			this.webResourceRepository = webResourceRepository ?? throw new ArgumentNullException(nameof(webResourceRepository));
+			this.webResourceProjectFileRepository = webResourceProjectFileRepository;
 		}
 
 
@@ -45,8 +49,6 @@ namespace Greg.Xrm.Command.Commands.WebResources
 				return CommandResult.Fail(errorMessage);
 			}
 
-
-
 			var currentSolutionName = command.SolutionName;
 			if (string.IsNullOrWhiteSpace(currentSolutionName))
 			{
@@ -67,37 +69,13 @@ namespace Greg.Xrm.Command.Commands.WebResources
 
 			try
 			{
-
-				this.output.Write("Creating the WebResources project file...");
-				var projectFilePath = Path.Combine(folder.FullName, ".wr.pacx");
-				File.Create(projectFilePath).Dispose();
-				this.output.WriteLine("Done", ConsoleColor.Green);
-
-
-
-				this.output.Write($"Creating subfolder <{publisherPrefix}_>...");
-				folder = folder.CreateSubdirectory(publisherPrefix + "_");
-				this.output.WriteLine("Done", ConsoleColor.Green);
-
-
-
-
-				var directoryNames = new string[] { "images", "scripts", "pages" };
-				foreach (var directoryName in directoryNames)
-				{
-					this.output.Write($"Creating subfolder <{directoryName}>...");
-					folder.CreateSubdirectory(directoryName);
-					this.output.WriteLine("Done", ConsoleColor.Green);
-				}
-
-				this.output.WriteLine($"Web resources project initialized in <{folder.FullName}>");
+				await this.webResourceProjectFileRepository.SaveAsync(folder, publisherPrefix);
 
 				return CommandResult.Success();
 			}
 			catch (Exception ex)
 			{
 				this.output.WriteLine("ERROR", ConsoleColor.Red);
-
 				return CommandResult.Fail(ex.Message);
 			}
 		}
