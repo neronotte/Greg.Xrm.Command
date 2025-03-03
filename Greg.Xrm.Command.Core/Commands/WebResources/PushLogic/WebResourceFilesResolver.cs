@@ -21,7 +21,7 @@ namespace Greg.Xrm.Command.Commands.WebResources.PushLogic
 					throw new ArgumentException($"You selected directly a {DataXmlToken} file, that should not be pushed into the Dataverse.", nameof(folders));
 				}
 
-				return new[] { CreateWebResourceFrom(folders.RequestedPath, folders.ProjectRootPath) };
+				return [CreateWebResourceFrom(folders.RequestedPath, folders.ProjectRootPath)];
 			}
 
 			if (IsWellDefinedFolder(folders.RequestedPath))
@@ -111,7 +111,7 @@ namespace Greg.Xrm.Command.Commands.WebResources.PushLogic
 			var directory = new DirectoryInfo(currentDirectory);
 			while (directory != null)
 			{
-				if (directory.GetFiles("*.wr.pacx").Any())
+				if (directory.GetFiles("*.wr.pacx").Length != 0)
 				{
 					return directory.FullName;
 				}
@@ -121,20 +121,5 @@ namespace Greg.Xrm.Command.Commands.WebResources.PushLogic
 
 			return null;
 		}
-	}
-
-
-	public class WebResourceFile
-	{
-        public WebResourceFile(string localPath, string rootFolder, WebResourceType type)
-		{
-			this.LocalPath = localPath;
-			this.RemotePath = localPath.Substring(rootFolder.Length).TrimStart(Path.DirectorySeparatorChar).Replace("\\", "/");
-			this.Type = type;
-		}
-
-        public string LocalPath { get; }
-		public string RemotePath { get; }
-		public WebResourceType Type { get; }
 	}
 }

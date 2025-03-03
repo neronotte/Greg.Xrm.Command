@@ -4,6 +4,7 @@ using Greg.Xrm.Command.Commands.Forms.Model;
 using Greg.Xrm.Command.Commands.Table.Builders;
 using Greg.Xrm.Command.Commands.Table.ExportMetadata;
 using Greg.Xrm.Command.Commands.WebResources.ApplyIconsRules;
+using Greg.Xrm.Command.Commands.WebResources.ProjectFile;
 using Greg.Xrm.Command.Commands.WebResources.PushLogic;
 using Greg.Xrm.Command.Commands.WebResources.Templates;
 using Greg.Xrm.Command.Model;
@@ -39,6 +40,7 @@ namespace Greg.Xrm.Command
 
 			builder.RegisterType<FolderResolver>().As<IFolderResolver>();
 			builder.RegisterType<WebResourceFilesResolver>().As<IWebResourceFilesResolver>();
+			builder.RegisterType<WebResourceProjectFileRepository>().As<IWebResourceProjectFileRepository>();
 			builder.RegisterType<PublishXmlBuilder>().As<IPublishXmlBuilder>();
 
 
