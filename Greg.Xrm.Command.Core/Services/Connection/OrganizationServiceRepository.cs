@@ -2,7 +2,9 @@
 using Greg.Xrm.Command.Services.Settings;
 using Microsoft.Crm.Sdk.Messages;
 using Microsoft.PowerPlatform.Dataverse.Client;
+using Microsoft.PowerPlatform.Dataverse.Client.Utils;
 using Microsoft.Xrm.Sdk;
+using System.Diagnostics;
 using System.ServiceModel;
 
 namespace Greg.Xrm.Command.Services.Connection
@@ -17,31 +19,15 @@ namespace Greg.Xrm.Command.Services.Connection
 
 		public string GetTokenCachePath()
 		{
-			var folderPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-			if (!Directory.Exists(folderPath))
-			{
-				Directory.CreateDirectory(folderPath);
-			}
-
-			folderPath = Path.Combine(folderPath, "Greg.Xrm.Command");
-			if (!Directory.Exists(folderPath))
-			{
-				Directory.CreateDirectory(folderPath);
-			}
-
-			folderPath = Path.Combine(folderPath, "tokenCache");
-			if (!Directory.Exists(folderPath))
-			{
-				Directory.CreateDirectory(folderPath);
-			}
-
-			return folderPath;
+			return TokenCache.GetTokenCachePath();
 		}
 
 
 		private static byte[] GetAesKey() => Convert.FromBase64String(Properties.Resources.AesKey);
 
 		private static byte[] GetAesIV() => Convert.FromBase64String(Properties.Resources.AesIV);
+
+
 
 		private ConnectionSetting? cache = null;
 
@@ -122,21 +108,24 @@ namespace Greg.Xrm.Command.Services.Connection
 
 			string? connectionString;
 			bool found;
+			string? connectionName;
 			var project = await this.pacxProjectRepository.GetCurrentProjectAsync();
 			if (project != null && !project.IsSuspended)
 			{
+				connectionName = project.AuthProfileName;
 				found = connectionStrings.TryGetConnectionString(project.AuthProfileName, GetAesKey(), GetAesIV(), out connectionString);
 				if (!found)
 					throw new CommandException(CommandException.ConnectionNotSet, $"Unable to find an authentication profile called {project.AuthProfileName}.");
 			}
 			else
 			{
+				connectionName = connectionStrings.CurrentConnectionStringKey;
 				found = connectionStrings.TryGetCurrentConnectionString(GetAesKey(), GetAesIV(), out connectionString);
 				if (!found)
 					throw new CommandException(CommandException.ConnectionNotSet, "Dataverse connection has not been set yet.");
 			}
 
-			return new ServiceClient(this.GetFullConnectionString(connectionString));
+			return await this.CreateServiceClientAsync(connectionName!, connectionString!);
 		}
 
 
@@ -151,7 +140,7 @@ namespace Greg.Xrm.Command.Services.Connection
 			if (!connectionStrings.TryGetConnectionString(connectionName, GetAesKey(), GetAesIV(), out var connectionString))
 				throw new CommandException(CommandException.ConnectionNotSet, "Dataverse connection has not been set yet.");
 
-			return new ServiceClient(this.GetFullConnectionString(connectionString));
+			return await this.CreateServiceClientAsync(connectionName, connectionString!);
 		}
 
 
@@ -159,9 +148,14 @@ namespace Greg.Xrm.Command.Services.Connection
 
 		public async Task SetConnectionAsync(string name, string connectionString)
 		{
+			if (string.IsNullOrWhiteSpace(name))
+				throw new ArgumentNullException(nameof(name), "The connection name is empty.");
+			if (string.IsNullOrWhiteSpace(connectionString))
+				throw new ArgumentNullException(nameof(connectionString), "The connection string is empty.");
+
 			try
 			{
-				var crm = new ServiceClient(this.GetFullConnectionString(connectionString));
+				var crm = await CreateServiceClientAsync(name, connectionString);
 				await crm.ExecuteAsync(new WhoAmIRequest());
 
 
@@ -178,10 +172,6 @@ namespace Greg.Xrm.Command.Services.Connection
 				throw new CommandException(CommandException.ConnectionInvalid, "Dataverse connection has not been set yet.", ex);
 			}
 		}
-
-
-
-
 
 		public async Task RenameConnectionAsync(string oldName, string newName)
 		{
@@ -215,6 +205,7 @@ namespace Greg.Xrm.Command.Services.Connection
 			}
 
 			connectionStrings.Remove(name);
+			await TokenCache.ClearAccessTokenAsync(name);
 
 			await this.settings.SetAsync("connections", connectionStrings);
 		}
@@ -285,6 +276,65 @@ namespace Greg.Xrm.Command.Services.Connection
 				connectionString += ";";
 
 			return connectionString + "TokenCacheStorePath=" + GetTokenCachePath();
+		}
+
+
+
+		/// <summary>
+		/// This method tries to create a service client
+		/// </summary>
+		/// <param name="connectionName"></param>
+		/// <param name="connectionString"></param>
+		/// <returns></returns>
+		private async Task<ServiceClient> CreateServiceClientAsync(string connectionName, string connectionString)
+		{
+			var accessToken = await TokenCache.TryGetAccessTokenAsync(connectionName);
+			if (accessToken == null)
+			{
+				return await CreateServiceClientFromConnectionString(connectionName, connectionString);
+			}
+
+
+			var crm = new ServiceClient(accessToken.ServiceUri, uri => Task.FromResult(accessToken.AccessToken));
+			if (!crm.IsReady)
+			{
+				return await CreateServiceClientFromConnectionString(connectionName, connectionString);
+			}
+
+			try
+			{
+				await crm.ExecuteAsync(new WhoAmIRequest());
+			}
+			catch (DataverseConnectionException)
+			{
+				return await CreateServiceClientFromConnectionString(connectionName, connectionString);
+			}
+			catch(System.ServiceModel.Security.MessageSecurityException)
+			{
+				return await CreateServiceClientFromConnectionString(connectionName, connectionString);
+			}
+			catch (Exception ex)
+			{
+				Debug.Print(ex.GetType().FullName);
+			}
+
+			return crm;
+		}
+
+
+		private async Task<ServiceClient> CreateServiceClientFromConnectionString(string connectionName, string connectionString)
+		{
+			var crm = new ServiceClient(this.GetFullConnectionString(connectionString));
+			if (crm.ActiveAuthenticationType == Microsoft.PowerPlatform.Dataverse.Client.AuthenticationType.OAuth
+				&& !string.IsNullOrWhiteSpace(crm.CurrentAccessToken))
+			{
+				await TokenCache.SaveAccessTokenAsync(connectionName, crm.ConnectedOrgUriActual, crm.CurrentAccessToken);
+			}
+			else
+			{
+				await TokenCache.ClearAccessTokenAsync(connectionName);
+			}
+			return crm;
 		}
 	}
 }
