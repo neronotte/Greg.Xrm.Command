@@ -144,6 +144,7 @@ namespace Greg.Xrm.Command.Model
 				var query = new QueryExpression(this.entityName);
 				query.ColumnSet.AddColumns(nameof(name), nameof(querytype), nameof(fetchxml), nameof(layoutxml), nameof(returnedtypecode));
 				query.Criteria.AddCondition(nameof(returnedtypecode), ConditionOperator.Equal, tableName);
+				query.Criteria.AddCondition(nameof(layoutxml), ConditionOperator.NotNull);
 				query.NoLock = true;
 
 				var result = await crm.RetrieveMultipleAsync(query);
