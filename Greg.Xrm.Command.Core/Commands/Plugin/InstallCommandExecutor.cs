@@ -17,6 +17,7 @@ namespace Greg.Xrm.Command.Commands.Plugin
         private readonly IOutput output;
         private readonly IStorage storage;
         private readonly Logger logger;
+        private static readonly string[] validFilesExtractionOrder = ["lib/net8.0/", "lib/net7.0/", "lib/net6.0/"];
 
         public InstallCommandExecutor(
             ILogger<InstallCommandExecutor> log,
@@ -166,16 +167,25 @@ namespace Greg.Xrm.Command.Commands.Plugin
             return (CommandResult.Success(), packageStream);
         }
 
+        private static string GetFileRelativePath(string fileName)
+        {
+            foreach (var folder in validFilesExtractionOrder)
+            {
+                var relativeFolder = Path.GetRelativePath(folder, fileName);
 
-
-
+                if (!relativeFolder.StartsWith(".."))
+                {
+                    return Path.GetDirectoryName(relativeFolder) ?? string.Empty;
+                }
+            }
+            return string.Empty;
+        }
 
         private static async Task<string[]> ExtractValidFilesFromPackage(PackageArchiveReader packageReader, CancellationToken cancellationToken)
         {
             var files = await packageReader.GetFilesAsync(cancellationToken);
 
-            string[] filesExtractionOrder = ["lib/net8.0/", "lib/net7.0/", "lib/net6.0/"];
-            foreach (var folder in filesExtractionOrder)
+            foreach (var folder in validFilesExtractionOrder)
             {
                 var validFiles = files.Where(f => f.StartsWith(folder)).ToArray();
                 if (validFiles.Length > 0)
@@ -185,9 +195,6 @@ namespace Greg.Xrm.Command.Commands.Plugin
             }
             return [];
         }
-
-
-
 
 
         private CommandResult ExtractPlugin(PackageArchiveReader packageReader, string[] validFiles)
@@ -237,7 +244,8 @@ namespace Greg.Xrm.Command.Commands.Plugin
 
                 foreach (var file in validFiles)
                 {
-                    var path = Path.Combine(currentPluginFolder.FullName, Path.GetFileName(file));
+                    var relativeFolder = GetFileRelativePath(file);
+                    var path = Path.Combine(currentPluginFolder.FullName, relativeFolder, Path.GetFileName(file));
                     packageReader.ExtractFile(file, path, logger);
                     extractedFileList.Add(path);
                 }
