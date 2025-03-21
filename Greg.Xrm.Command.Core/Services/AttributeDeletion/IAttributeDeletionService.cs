@@ -2,7 +2,7 @@
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk.Metadata;
 
-namespace Greg.Xrm.Command.Services
+namespace Greg.Xrm.Command.Services.AttributeDeletion
 {
     public interface IAttributeDeletionService
 	{
