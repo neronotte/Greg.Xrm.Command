@@ -1,5 +1,6 @@
 ﻿using Greg.Xrm.Command.Model;
 using Greg.Xrm.Command.Services;
+using Greg.Xrm.Command.Services.AttributeDeletion;
 using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Project;
 using Greg.Xrm.Command.Services.Settings;
@@ -25,12 +26,7 @@ namespace Greg.Xrm.Command.Commands.Column
 			var processTriggerRepository = new ProcessTrigger.Repository();
 			var savedQueryRepository = new SavedQuery.Repository();
 			var userQueryRepository = new UserQuery.Repository();
-			var attributeDeletionService = new AttributeDeletionService(
-				output, 
-				savedQueryRepository, 
-				userQueryRepository, 
-				workflowRepository, 
-				processTriggerRepository);
+			var attributeDeletionService = new AttributeDeletionService(output, []);
 
 			
 			var command = new DeleteCommand
