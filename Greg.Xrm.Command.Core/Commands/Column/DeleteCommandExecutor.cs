@@ -1,5 +1,5 @@
 ﻿using Greg.Xrm.Command.Model;
-using Greg.Xrm.Command.Services;
+using Greg.Xrm.Command.Services.AttributeDeletion;
 using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
 using Microsoft.PowerPlatform.Dataverse.Client;
@@ -10,31 +10,19 @@ using System.ServiceModel;
 
 namespace Greg.Xrm.Command.Commands.Column
 {
-    public class DeleteCommandExecutor : ICommandExecutor<DeleteCommand>
-	{
-		private readonly IOutput output;
-		private readonly IOrganizationServiceRepository organizationServiceRepository;
-		private readonly IDependencyRepository dependencyRepository;
-		private readonly IAttributeDeletionService attributeDeletionService;
-
-		public DeleteCommandExecutor(
+    public class DeleteCommandExecutor(
 			IOutput output,
 			IOrganizationServiceRepository organizationServiceRepository,
 			IDependencyRepository dependencyRepository,
 			IAttributeDeletionService attributeDeletionService)
-		{
-			this.output = output;
-			this.organizationServiceRepository = organizationServiceRepository;
-			this.dependencyRepository = dependencyRepository;
-			this.attributeDeletionService = attributeDeletionService;
-		}
-
+			: ICommandExecutor<DeleteCommand>
+	{
 
 		public async Task<CommandResult> ExecuteAsync(DeleteCommand command, CancellationToken cancellationToken)
 		{
-			this.output.Write($"Connecting to the current dataverse environment...");
-			var crm = await this.organizationServiceRepository.GetCurrentConnectionAsync();
-			this.output.WriteLine("Done", ConsoleColor.Green);
+			output.Write($"Connecting to the current dataverse environment...");
+			var crm = await organizationServiceRepository.GetCurrentConnectionAsync();
+			output.WriteLine("Done", ConsoleColor.Green);
 
 
 			var columnMetadata = await RetrieveColumnMetadataAsync(crm, command);
@@ -56,46 +44,46 @@ namespace Greg.Xrm.Command.Commands.Column
 
 			try
 			{
-				this.output.WriteLine();
+				output.WriteLine();
 
 				if (dependencies.Count == 0)
 				{
-					this.output.WriteLine("No dependency found.");
+					output.WriteLine("No dependency found.");
 				}
 				else if (dependencies.Count > 0)
 				{
-					dependencies.WriteTo(this.output);
+					dependencies.WriteTo(output);
 
 					if (!command.Force)
 					{
-						this.output.WriteLine($"Use the --force option to delete it anyway.", ConsoleColor.Yellow);
+						output.WriteLine($"Use the --force option to delete it anyway.", ConsoleColor.Yellow);
 						return CommandResult.Fail($"Column {command.TableName}.{command.SchemaName} has {dependencies.Count} dependencies, cannot be removed.");
 					}
 					else
 					{
 						// Force delete
-						await this.attributeDeletionService.DeleteAttributeAsync(crm, columnMetadata, dependencies);
+						await attributeDeletionService.DeleteAttributeAsync(crm, columnMetadata, dependencies);
 
 						// now re-check the dependencies to see if everything has been deleted
 						dependencies = await RetrieveDependenciesAsync(crm, command, columnMetadata);
 						if (dependencies is not null && dependencies.Count > 0)
 						{
-							this.output.WriteLine($"After dependency pruning, column {command.TableName}.{command.SchemaName} has still {dependencies.Count} dependencies.", ConsoleColor.Yellow);
+							output.WriteLine($"After dependency pruning, column {command.TableName}.{command.SchemaName} has still {dependencies.Count} dependencies.", ConsoleColor.Yellow);
 
-							dependencies.WriteTo(this.output);
+							dependencies.WriteTo(output);
 
-							this.output.WriteLine($"These dependencies cannot be removed via pacx, you need to remove it manually to delete the column.", ConsoleColor.Yellow);
+							output.WriteLine($"These dependencies cannot be removed via pacx, you need to remove it manually to delete the column.", ConsoleColor.Yellow);
 							return CommandResult.Fail($"Column {command.TableName}.{command.SchemaName} has {dependencies.Count} dependencies.");
 						}
 						else
 						{
-							this.output.WriteLine($"After dependency pruning, column {command.TableName}.{command.SchemaName} has no more dependencies, and can be deleted.");
+							output.WriteLine($"After dependency pruning, column {command.TableName}.{command.SchemaName} has no more dependencies, and can be deleted.");
 						}
 					}
 				}
 
 
-				this.output.Write("Deleting column ")
+				output.Write("Deleting column ")
 					.Write(command.TableName, ConsoleColor.Yellow)
 					.Write(".", ConsoleColor.Yellow)
 					.Write(command.SchemaName, ConsoleColor.Yellow)
@@ -109,7 +97,7 @@ namespace Greg.Xrm.Command.Commands.Column
 				};
 				await crm.ExecuteAsync(request, cancellationToken);
 
-				this.output.WriteLine(" Done", ConsoleColor.Green);
+				output.WriteLine(" Done", ConsoleColor.Green);
 
 				return CommandResult.Success();
 			}
@@ -123,22 +111,22 @@ namespace Greg.Xrm.Command.Commands.Column
 		{
 			try
 			{
-				this.output.Write("Retrieving dependencies for column ")
+				output.Write("Retrieving dependencies for column ")
 					.Write(command.TableName, ConsoleColor.Yellow)
 					.Write(".", ConsoleColor.Yellow)
 					.Write(command.SchemaName, ConsoleColor.Yellow)
 					.Write("...");
 
 
-				var dependencyList = await this.dependencyRepository.GetDependenciesAsync(crm, ComponentType.Attribute, columnMetadata.MetadataId.GetValueOrDefault(), true);
+				var dependencyList = await dependencyRepository.GetDependenciesAsync(crm, ComponentType.Attribute, columnMetadata.MetadataId.GetValueOrDefault(), true);
 
-				this.output.WriteLine(" Done", ConsoleColor.Green);
+				output.WriteLine(" Done", ConsoleColor.Green);
 
 				return dependencyList;
 			}
 			catch (FaultException<OrganizationServiceFault> ex)
 			{
-				this.output.WriteLine(" Failed: " + ex.Message, ConsoleColor.Red);
+				output.WriteLine(" Failed: " + ex.Message, ConsoleColor.Red);
 				return null;
 			}
 		}
@@ -147,7 +135,7 @@ namespace Greg.Xrm.Command.Commands.Column
 		{
 			try
 			{
-				this.output.Write("Retrieving metadata for column ")
+				output.Write("Retrieving metadata for column ")
 					.Write(command.TableName, ConsoleColor.Yellow)
 					.Write(".", ConsoleColor.Yellow)
 					.Write(command.SchemaName, ConsoleColor.Yellow)
@@ -163,13 +151,13 @@ namespace Greg.Xrm.Command.Commands.Column
 
 				var response = (RetrieveAttributeResponse)await crm.ExecuteAsync(request);
 
-				this.output.WriteLine(" Done", ConsoleColor.Green);
+				output.WriteLine(" Done", ConsoleColor.Green);
 
 				return response.AttributeMetadata;
 			}
 			catch(FaultException<OrganizationServiceFault> ex)
 			{
-				this.output.WriteLine(" Failed: " + ex.Message, ConsoleColor.Red);
+				output.WriteLine(" Failed: " + ex.Message, ConsoleColor.Red);
 				return null;
 			}
 		}

@@ -8,7 +8,7 @@ using Greg.Xrm.Command.Commands.WebResources.ProjectFile;
 using Greg.Xrm.Command.Commands.WebResources.PushLogic;
 using Greg.Xrm.Command.Commands.WebResources.Templates;
 using Greg.Xrm.Command.Model;
-using Greg.Xrm.Command.Services;
+using Greg.Xrm.Command.Services.AttributeDeletion;
 
 namespace Greg.Xrm.Command
 {
@@ -20,7 +20,6 @@ namespace Greg.Xrm.Command
 
 			builder.RegisterType<AttributeMetadataBuilderFactory>().As<IAttributeMetadataBuilderFactory>();
 			builder.RegisterType<ExportMetadataStrategyFactory>().As<IExportMetadataStrategyFactory>();
-			builder.RegisterType<AttributeDeletionService>().As<IAttributeDeletionService>();
 			builder.RegisterType<Dependency.Repository>().As<IDependencyRepository>();
 			builder.RegisterType<Workflow.Repository>().As<IWorkflowRepository>();
 			builder.RegisterType<ProcessTrigger.Repository>().As<IProcessTriggerRepository>();
@@ -42,6 +41,17 @@ namespace Greg.Xrm.Command
 			builder.RegisterType<WebResourceFilesResolver>().As<IWebResourceFilesResolver>();
 			builder.RegisterType<WebResourceProjectFileRepository>().As<IWebResourceProjectFileRepository>();
 			builder.RegisterType<PublishXmlBuilder>().As<IPublishXmlBuilder>();
+
+
+			builder.RegisterType<Services.AttributeDeletion.AttributeDeletionService>().As<Services.AttributeDeletion.IAttributeDeletionService>();
+			builder.RegisterType<Services.AttributeDeletion.AttributeDeletionStrategyForCharts>().As<IAttributeDeletionStrategy>();
+			builder.RegisterType<Services.AttributeDeletion.AttributeDeletionStrategyForViews>().As<IAttributeDeletionStrategy>();
+			builder.RegisterType<Services.AttributeDeletion.AttributeDeletionStrategyForForms>().As<IAttributeDeletionStrategy>();
+			builder.RegisterType<Services.AttributeDeletion.AttributeDeletionStrategyForPluginSteps>().As<IAttributeDeletionStrategy>();
+			builder.RegisterType<Services.AttributeDeletion.AttributeDeletionStrategyForPluginStepImages>().As<IAttributeDeletionStrategy>();
+			builder.RegisterType<Services.AttributeDeletion.AttributeDeletionStrategyForRelationships>().As<IAttributeDeletionStrategy>();
+			builder.RegisterType<Services.AttributeDeletion.AttributeDeletionStrategyForMappings>().As<IAttributeDeletionStrategy>();
+			builder.RegisterType<Services.AttributeDeletion.AttributeDeletionStrategyForWorkflows>().As<IAttributeDeletionStrategy>();
 
 
 			builder.RegisterType<Form.Repository>().As<IFormRepository>();

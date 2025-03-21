@@ -39,6 +39,6 @@
 		/// <param name="zipFile">The zip file to upload</param>
 		/// <param name="tableName">The name of the table to which the form belongs</param>
 		/// <returns></returns>
-		Task UploadAndPublishAsync(byte[] zipFile, string tableName);
+		Task UploadAndPublishAsync(byte[] zipFile, params string[] tableNames);
 	}
 }
