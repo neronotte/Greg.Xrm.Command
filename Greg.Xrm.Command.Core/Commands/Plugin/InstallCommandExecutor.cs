@@ -206,7 +206,7 @@ namespace Greg.Xrm.Command.Commands.Plugin
 
             var packageMetadataResource = await repository.GetResourceAsync<PackageMetadataResource>();
 
-            var packageMetadata = (await packageMetadataResource.GetMetadataAsync(packageId, true, true, cacheContext, logger, cancellationToken))?.ToList() ?? [];
+            var packageMetadata = (await packageMetadataResource.GetMetadataAsync(packageId, false, true, cacheContext, logger, cancellationToken))?.ToList() ?? [];
             if (packageMetadata.Count == 0)
             {
                 output.WriteLine($"Package <{packageId}> not found on NuGet.", ConsoleColor.Red);
