@@ -63,7 +63,7 @@ namespace Greg.Xrm.Command.Commands.Plugin
 
         private static string GetFileRelativePath(string fileName, NuGetFramework? nuGetFramework)
         {
-            string frameworkFolder =  (fileName.StartsWith("lib/") && nuGetFramework != null) ? $"lib/{nuGetFramework.GetShortFolderName()}" : ".";
+            string frameworkFolder =  (fileName.StartsWith("lib/") && nuGetFramework != null) ? $"lib/{nuGetFramework.GetShortFolderName()}/" : ".";
 
             var relativeFolder = Path.GetRelativePath(frameworkFolder, fileName);
 
@@ -79,7 +79,7 @@ namespace Greg.Xrm.Command.Commands.Plugin
         {
             var files = await packageReader.GetFilesAsync(cancellationToken);
             var validFiles = files.Where(f => 
-                (bestSupportedFramework != null && f.StartsWith($"lib/{bestSupportedFramework.GetShortFolderName()}"))
+                (bestSupportedFramework != null && f.StartsWith($"lib/{bestSupportedFramework.GetShortFolderName()}/"))
                 || f.StartsWith("runtimes/")
             ).ToArray();
             return validFiles;
