@@ -200,7 +200,7 @@ namespace Greg.Xrm.Command.Commands.Plugin
 
             return true;
         }
-        private async Task<(bool, PackageIdentity? packageIdentity)> ValidatePackage(SourceRepository repository, string packageId, string packageVersion, SourceCacheContext cacheContext, CancellationToken cancellationToken)
+        private async Task<(bool, PackageIdentity? packageIdentity, bool)> ValidatePackage(SourceRepository repository, string packageId, string packageVersion, SourceCacheContext cacheContext, CancellationToken cancellationToken)
         {
             output.Write("Searching for package version...");
 
@@ -210,7 +210,7 @@ namespace Greg.Xrm.Command.Commands.Plugin
             if (packageMetadata.Count == 0)
             {
                 output.WriteLine($"Package <{packageId}> not found on NuGet.", ConsoleColor.Red);
-                return (false, null);
+                return (false, null, false);
             }
 
             IPackageSearchMetadata? package;
@@ -223,18 +223,25 @@ namespace Greg.Xrm.Command.Commands.Plugin
                 if (package == null)
                 {
                     output.WriteLine($"Package <{packageId}> doesn't have any version marked as \"release\", thus cannot be installed.", ConsoleColor.Red);
-                    return (false, null);
+                    return (false, null, false);
                 }
             }
             else
             {
-                package = packageMetadata.Find(p => string.Equals(p.Identity.Version.Version.ToString(), packageVersion, StringComparison.OrdinalIgnoreCase));
+                var canParseVersion = NuGetVersion.TryParse(packageVersion, out SemanticVersion? parsedVersion);
+                if (!canParseVersion)
+                {
+                    output.WriteLine($"Invalid version <{packageVersion}> for package <{packageId}>.", ConsoleColor.Red);
+                    return (false, null, false);
+                }
+                package = packageMetadata.Find(p =>p.Identity.Version.Equals(parsedVersion, VersionComparison.Version));
+
                 if (package == null)
                 {
                     var validVersions = string.Join(", ", packageMetadata.OrderByDescending(p => p.Identity.Version, VersionComparer.VersionRelease).Select(p => p.Identity.Version.Version.ToString()));
                     output.WriteLine($"Version <{packageVersion}> not found for package <{packageId}>. Valid versions are: " + validVersions, ConsoleColor.Red);
 
-                    return (false, null);
+                    return (false, null, false);
                 }
             }
 
@@ -246,7 +253,7 @@ namespace Greg.Xrm.Command.Commands.Plugin
                 .ToList();
 
             var isValid = dependencies.Exists(d => d.Id == "Greg.Xrm.Command.Interfaces");
-            return (isValid, package.Identity);
+            return (isValid, package.Identity, dependencies.Count > 1);
         }
 
         private async Task<bool> ExtractPackageStream(Stream? packageStream,string packageId, string path, CancellationToken cancellationToken)
@@ -349,36 +356,39 @@ namespace Greg.Xrm.Command.Commands.Plugin
 
             var repository = Repository.Factory.GetCoreV3(source);
 
-            var (isValid, targetPackage) = await ValidatePackage(repository, command.Name, command.Version, cacheContext, cancellationToken);
+            var (isValid, targetPackage, hasOtherDependencies) = await ValidatePackage(repository, command.Name, command.Version, cacheContext, cancellationToken);
             if (!isValid || targetPackage == null)
             {
                 return CommandResult.Fail($"Package <{command.Name}> is not a valid PACX plugin. A valid PACX plugin must have a dependency on <Greg.Xrm.Command.Interfaces>.");
             }
 
-            var dependencyInfoResource = await repository.GetResourceAsync<DependencyInfoResource>();
-            var (foundCore, corePackage) = await GetCorePackageIdentity(repository, cacheContext, cancellationToken);
-            if (!foundCore || corePackage == null)
+            var packagesToInstall = new Dictionary<string, NuGetVersion>() { { targetPackage.Id, targetPackage.Version } };
+            if (hasOtherDependencies)
             {
-                return CommandResult.Fail("Failed to get core package identity");
+                var dependencyInfoResource = await repository.GetResourceAsync<DependencyInfoResource>();
+                var (foundCore, corePackage) = await GetCorePackageIdentity(repository, cacheContext, cancellationToken);
+                if (!foundCore || corePackage == null)
+                {
+                    return CommandResult.Fail("Failed to get core package identity");
+                }
+
+                output.Write("Getting package dependencies...");
+
+                packagesToInstall = await DependencyUtility.GetDeltaForPackage(
+                   corePackage,
+                   targetPackage,
+                   dependencyInfoResource,
+                   NuGetFramework.Parse(AppContext.TargetFrameworkName!), cacheContext, logger, cancellationToken);
+
+                output.WriteLine("Done", ConsoleColor.Green);
             }
-
-            output.Write("Getting package dependencies...");
-
-            var deltaDependencies = await DependencyUtility.GetDeltaForPackage(
-               corePackage,
-               targetPackage,
-               dependencyInfoResource,
-               NuGetFramework.Parse(AppContext.TargetFrameworkName), cacheContext, logger, cancellationToken);
-
-
-            output.WriteLine("Done", ConsoleColor.Green);
 
             PrepareDestinationFolder(targetPackage.Id);
 
             bool result = true;
-            foreach (var dependency in deltaDependencies)
+            foreach (var currentPackage in packagesToInstall)
             {
-                result &= await DownloadPackage(new PackageIdentity(dependency.Key, dependency.Value), targetPackage.Id, repository, new SourceCacheContext(), CancellationToken.None);
+                result &= await DownloadPackage(new PackageIdentity(currentPackage.Key, currentPackage.Value), targetPackage.Id, repository, new SourceCacheContext(), CancellationToken.None);
             }            
 
             if (!result)
