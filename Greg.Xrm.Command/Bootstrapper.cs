@@ -33,8 +33,11 @@ namespace Greg.Xrm.Command
 			typeof(ClearCommand),
 		];
 
+		private AutoUpdater updater = new AutoUpdater(logger, output);
+
 		public async Task<int> StartAsync(CancellationToken cancellationToken)
 		{
+			await this.updater.CheckForUpdates();
 			ShowTitleBanner();
 
 
@@ -63,8 +66,8 @@ namespace Greg.Xrm.Command
 
 			await client.FlushAsync(cancellationToken);
 
+			this.updater.LaunchUpdate();
 			return result;
-
 		}
 
 		private async Task<int> ExecuteCommand(object command, IOperationHolder<RequestTelemetry> op, CancellationToken cancellationToken)
@@ -130,14 +133,23 @@ namespace Greg.Xrm.Command
 		}
 
 
+
+
 		private void ShowTitleBanner()
 		{
 			if (!args.Contains("--noprompt"))
 			{
 				output.Write(">>> Greg PowerPlatform CLI Extended (PACX) <<<", ConsoleColor.Green).WriteLine(" - Dataverse command tool", ConsoleColor.DarkGray);
 				output.Write("Version ")
-					.Write(GetType().Assembly.GetName()?.Version?.ToString() ?? "[unable to get version from assembly]")
-					.WriteLine();
+					.Write(this.updater.CurrentVersion);
+
+				if (this.updater.UpdateRequired)
+				{
+					output.Write(" - New version available (will be installed on exit): ", ConsoleColor.Yellow)
+						.Write(this.updater.NextVersion, ConsoleColor.Yellow);
+				}
+
+				output.WriteLine();
 				output.Write("Online documentation: ").WriteLine("https://github.com/neronotte/Greg.Xrm.Command/wiki");
 				output.Write("Feedback, Suggestions, Issues: ").WriteLine("https://github.com/neronotte/Greg.Xrm.Command/discussions");
 				output.WriteLine();
