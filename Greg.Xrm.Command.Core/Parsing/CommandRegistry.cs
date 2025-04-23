@@ -175,6 +175,7 @@ namespace Greg.Xrm.Command.Parsing
 				}
 				catch (Exception ex)
 				{
+					output.WriteLine($"Error while loading plugin {pluginName}: {ex.Message} ({ex.GetType().Name})", ConsoleColor.Red);
 					log.LogError(ex, "Error while loading plugin {PluginName}: {Message}", pluginName, ex.Message);
 				}
 			}
