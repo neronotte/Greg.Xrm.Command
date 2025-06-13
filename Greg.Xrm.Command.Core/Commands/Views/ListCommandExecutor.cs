@@ -46,18 +46,17 @@ namespace Greg.Xrm.Command.Commands.Views
 				return CommandResult.Success();
 			}
 
-			viewList = viewList
+			viewList = [.. viewList
 				.OrderBy(x => x.GetType().Name)
 				.ThenBy(x => x.querytype)
-				.ThenBy(x => x.name)
-				.ToList();
+				.ThenBy(x => x.name)];
 
 			output.WriteLine();
 			output.WriteTable(viewList, () => ["Ownership", "Name", "View Type"],
 			row => {
 
 				var ownership = row.GetType() == typeof(SavedQuery) ? "Saved" : "User";
-				var name = row.name;
+				var name = row.name ?? string.Empty;
 				var type = row.GetQueryTypeLabel();
 
 				return [ownership, name, type];

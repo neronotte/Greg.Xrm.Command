@@ -66,7 +66,7 @@ namespace Greg.Xrm.Command.Commands.Views
 			{
 				output.Write("Replicating layout, please wait...");
 
-				var operationResult = await Replicator.PropagateLayoutAsync(crm, (SavedQuery)view, otherViews, true, true);
+				var operationResult = await Replicator.PropagateLayoutAsync(crm, (SavedQuery)view, otherViews, true, true, true);
 
 
 				if (operationResult.Count > 0)
@@ -80,12 +80,18 @@ namespace Greg.Xrm.Command.Commands.Views
 				{
 					output.WriteLine("Done", ConsoleColor.Green);
 				}
+
+				if (operationResult.Count == otherViews.Count)
+				{
+					return CommandResult.Fail($"Unable to replicate the selected view layout");
+				}
 			}
 			catch(Exception ex)
 			{
 				output.WriteLine("Error", ConsoleColor.Red);
 				return CommandResult.Fail($"An error occurred while replicating the layout: {ex.Message}", ex);
 			}
+
 
 			try
 			{

@@ -6,148 +6,157 @@ using System.Xml;
 
 namespace Greg.Xrm.Command.Commands.Views.Model
 {
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
 	/// <summary>
 	/// The code of the class is extracted directly from XrmToolbox's ViewLayoutReplicator tool.
 	/// Thanks to Tanguy Touzard for the original code.
 	/// </summary>
 	public static class Replicator
 	{
+
 		public static async Task<List<Tuple<string, string>>> PropagateLayoutAsync(
 			IOrganizationServiceAsync2 crm,
 			SavedQuery sourceView,
 			IReadOnlyList<SavedQuery> targetViews,
-			bool includeLayout,
-			bool includeSorting)
+			  bool includeLayout = true,
+			  bool includeSorting = true,
+			  bool includeComponents = true)
 		{
 			var tupleList = new List<Tuple<string, string>>();
-			var empty = string.Empty;
+			string empty = string.Empty;
 
-
-			var sourceLayoutXml = new XmlDocument();
-			sourceLayoutXml.LoadXml(sourceView.layoutxml!);
-			var sourceCellList = sourceLayoutXml.SelectNodes("grid/row/cell") ?? XmlNodeListEmpty.Instance;
-
-
-
-			var sourceFetchXml = new XmlDocument();
-			sourceFetchXml.LoadXml(sourceView.fetchxml!);
-			var sourceAttributeList = sourceFetchXml.SelectNodes("fetch/entity/attribute") ?? XmlNodeListEmpty.Instance;
-
-
-			foreach (var targetView in targetViews.Where(x => x.Id != sourceView.Id))
+			foreach (var targetView in targetViews)
 			{
-				var targetLayoytXml = new XmlDocument();
-				targetLayoytXml.LoadXml(targetView.layoutxml!);
-
-
-				var source = new List<string>();
-				if (includeLayout)
+				if (targetView.Id == sourceView.Id)
 				{
-					var attribute = targetLayoytXml.SelectSingleNode("grid/row")?.Attributes?["multiobjectidfield"];
-					if (attribute != null)
-						empty = attribute.Value;
-
-					// remove all the <cells> node from the target view layout xml.
-					for (int count = targetLayoytXml.SelectSingleNode("grid/row")?.ChildNodes.Count ?? 0; count > 0; --count)
-					{
-						var childNode = targetLayoytXml.SelectSingleNode("grid/row")?.ChildNodes[count - 1];
-						targetLayoytXml.SelectSingleNode("grid/row")?.RemoveChild(childNode);
-					}
-
-
-
-					foreach (XmlNode xmlNode in sourceCellList)
-					{
-						if (!xmlNode.Attributes["name"].Value.Contains(".") || targetView.querytype != SavedQueryQueryType.SubGrid)
-						{
-							source.Add(xmlNode.Attributes["name"].Value);
-
-							var newChild = targetLayoytXml.ImportNode(xmlNode.Clone(), true);
-							targetLayoytXml.SelectSingleNode("grid/row").AppendChild(newChild);
-						}
-					}
-					targetView.layoutxml = targetLayoytXml.OuterXml;
+					continue;
 				}
 
 
+				var xmlDocument1 = new XmlDocument();
+				xmlDocument1.LoadXml(targetView.layoutxml!);
+				
+				var xmlDocument2 = new XmlDocument();
+				xmlDocument2.LoadXml(sourceView.layoutxml!);
 
-
-
-
+				var xmlNodeList1 = xmlDocument2.SelectNodes("grid/row/cell");
+				var source = new List<string>();
+				if (includeLayout)
+				{
+					var attribute = xmlDocument1.SelectSingleNode("grid/row")?.Attributes["multiobjectidfield"];
+					if (attribute != null)
+						empty = attribute.Value;
+					for (int count = xmlDocument1.SelectSingleNode("grid/row").ChildNodes.Count; count > 0; --count)
+					{
+						var childNode = xmlDocument1.SelectSingleNode("grid/row")?.ChildNodes[count - 1];
+						if (childNode != null)
+							xmlDocument1.SelectSingleNode("grid/row").RemoveChild(childNode);
+					}
+					foreach (XmlNode xmlNode in xmlNodeList1)
+					{
+						if (!xmlNode.Attributes["name"].Value.Contains('.') || targetView.querytype != SavedQueryQueryType.SubGrid)
+						{
+							source.Add(xmlNode.Attributes["name"].Value);
+							XmlNode newChild = xmlDocument1.ImportNode(xmlNode.Clone(), true);
+							xmlDocument1.SelectSingleNode("grid/row").AppendChild(newChild);
+						}
+					}
+					targetView.layoutxml = xmlDocument1.OuterXml;
+				}
+				if (includeComponents && targetView.querytype != SavedQueryQueryType.AdvancedSearch && targetView.querytype != SavedQueryQueryType.LookupView && targetView.querytype != SavedQueryQueryType.QuickFindSearch)
+				{
+					var xmlNode1 = xmlDocument1.SelectSingleNode("grid");
+					var oldChild = xmlNode1.SelectSingleNode("controlDescriptions");
+					if (oldChild != null)
+						xmlNode1.RemoveChild(oldChild);
+					var xmlNode2 = xmlDocument2.SelectSingleNode("grid/controlDescriptions");
+					if (xmlNode2 != null)
+					{
+						XmlNode newChild = xmlDocument1.ImportNode(xmlNode2.Clone(), true);
+						xmlNode1.AppendChild(newChild);
+					}
+					targetView.layoutxml = xmlDocument1.OuterXml;
+				}
 
 
 				if (!string.IsNullOrEmpty(targetView.fetchxml))
 				{
-					var targetFetchXml = new XmlDocument();
-					targetFetchXml.LoadXml(targetView.fetchxml);
+					var xmlDocument3 = new XmlDocument();
+					xmlDocument3.LoadXml(targetView.fetchxml);
+
+					var xmlDocument4 = new XmlDocument();
+					xmlDocument4.LoadXml(sourceView.fetchxml!);
+					
+					var xmlNodeList2 = xmlDocument4.SelectNodes("fetch/entity/attribute");
 					if (includeLayout)
 					{
-						foreach (XmlNode node in sourceAttributeList)
+						foreach (XmlNode node in xmlNodeList2)
 						{
-							if (targetFetchXml.SelectSingleNode("fetch/entity/attribute[@name='" + node.Attributes["name"].Value + "']") == null)
+							if (xmlDocument3.SelectSingleNode("fetch/entity/attribute[@name='" + node.Attributes["name"].Value + "']") == null)
 							{
-								XmlNode newChild = targetFetchXml.ImportNode(node, true);
-								targetFetchXml.SelectSingleNode("fetch/entity").AppendChild(newChild);
+								XmlNode newChild = xmlDocument3.ImportNode(node, true);
+								xmlDocument3.SelectSingleNode("fetch/entity").AppendChild(newChild);
 							}
 						}
-						foreach (XmlNode xmlNode in sourceCellList)
+						foreach (XmlNode xmlNode in xmlNodeList1)
 						{
 							string str = xmlNode.Attributes["name"].Value;
-							if (!str.Contains(".") && targetFetchXml.SelectSingleNode("fetch/entity/attribute[@name='" + str + "']") == null)
+							if (!str.Contains('.') && xmlDocument3.SelectSingleNode("fetch/entity/attribute[@name='" + str + "']") == null)
 							{
-								XmlElement element = targetFetchXml.CreateElement("attribute");
+								XmlElement element = xmlDocument3.CreateElement("attribute");
 								element.SetAttribute("name", str);
-								targetFetchXml.SelectSingleNode("fetch/entity").AppendChild((XmlNode)element);
+								xmlDocument3.SelectSingleNode("fetch/entity").AppendChild((XmlNode)element);
 							}
 						}
 						if (!string.IsNullOrEmpty(sourceView.fetchxml))
 						{
-							foreach (XmlNode selectNode in sourceFetchXml.SelectNodes("fetch/entity/link-entity"))
+							foreach (XmlNode selectNode in xmlDocument4.SelectNodes("fetch/entity/link-entity"))
 							{
 								string alias = selectNode.Attributes["alias"].Value;
-								if (source.FirstOrDefault(c => c.StartsWith(alias + ".")) != null)
+								if (source.FirstOrDefault<string>((Func<string, bool>)(c => c.StartsWith(alias + "."))) != null)
 								{
-									if (targetFetchXml.SelectSingleNode("fetch/entity/link-entity[@alias=\"" + alias + "\"]") == null)
+									if (xmlDocument3.SelectSingleNode("fetch/entity/link-entity[@alias=\"" + alias + "\"]") == null)
 									{
-										XmlNode newChild = targetFetchXml.ImportNode(selectNode.Clone(), true);
-										XmlAttribute attribute1 = newChild.Attributes["link-type"];
+										XmlNode newChild = xmlDocument3.ImportNode(selectNode.Clone(), true);
+										var attribute1 = newChild.Attributes["link-type"];
 										if (attribute1 == null)
 										{
-											XmlAttribute attribute2 = targetFetchXml.CreateAttribute("link-type");
+											var attribute2 = xmlDocument3.CreateAttribute("link-type");
 											attribute2.Value = "outer";
 											newChild.Attributes.Append(attribute2);
 										}
 										else
 											attribute1.Value = "outer";
-										targetFetchXml.SelectSingleNode("fetch/entity").AppendChild(newChild);
+										xmlDocument3.SelectSingleNode("fetch/entity").AppendChild(newChild);
 									}
-									XmlNode xmlNode = targetFetchXml.SelectSingleNode("fetch/entity/link-entity[@alias=\"" + alias + "\"]");
+									var xmlNode = xmlDocument3.SelectSingleNode("fetch/entity/link-entity[@alias=\"" + alias + "\"]");
 									for (int count = xmlNode.ChildNodes.Count; count > 0; --count)
 									{
 										if (xmlNode.ChildNodes[count - 1].Name == "attribute")
 										{
-											XmlNode childNode = xmlNode.ChildNodes[count - 1];
-											xmlNode.RemoveChild(childNode);
+											var childNode = xmlNode.ChildNodes[count - 1];
+											if (childNode != null) xmlNode.RemoveChild(childNode);
 										}
 									}
 									foreach (XmlNode childNode in selectNode.ChildNodes)
 									{
 										if (childNode.Name == "attribute" && xmlNode.SelectSingleNode("attribute[@name='" + childNode.Attributes["name"].Value + "']") == null)
 										{
-											XmlNode newChild = targetFetchXml.ImportNode(childNode.Clone(), true);
+											var newChild = xmlDocument3.ImportNode(childNode.Clone(), true);
 											xmlNode.AppendChild(newChild);
 										}
 									}
 								}
 							}
 						}
-						List<string> stringList = new List<string>();
-						foreach (XmlNode selectNode1 in targetFetchXml.SelectNodes("//attribute"))
+
+						var stringList = new List<string>();
+						foreach (XmlNode selectNode1 in xmlDocument3.SelectNodes("//attribute"))
 						{
-							if (!(selectNode1.Attributes["name"].Value == empty))
+							if (selectNode1.Attributes["name"].Value != empty)
 							{
 								bool flag = false;
-								foreach (XmlNode selectNode2 in sourceLayoutXml.SelectNodes("grid/row/cell"))
+								foreach (XmlNode selectNode2 in xmlDocument2.SelectNodes("grid/row/cell"))
 								{
 									if (selectNode1.ParentNode.Name == "link-entity")
 									{
@@ -176,41 +185,44 @@ namespace Greg.Xrm.Command.Commands.Views.Model
 						}
 						foreach (string str in stringList)
 						{
-							if (str.Contains("."))
+							if (str.Contains('.'))
 							{
-								XmlNode oldChild = targetFetchXml.SelectSingleNode("fetch/entity/link-entity[@alias='" + str.Split('.')[0] + "']/attribute[@name='" + str.Split('.')[1] + "']");
-								targetFetchXml.SelectSingleNode("fetch/entity/link-entity[@alias='" + oldChild.ParentNode.Attributes["alias"].Value + "']").RemoveChild(oldChild);
+								var oldChild = xmlDocument3.SelectSingleNode("fetch/entity/link-entity[@alias='" + str.Split('.')[0] + "']/attribute[@name='" + str.Split('.')[1] + "']");
+								xmlDocument3.SelectSingleNode("fetch/entity/link-entity[@alias='" + oldChild.ParentNode.Attributes["alias"].Value + "']").RemoveChild(oldChild);
 							}
 							else
 							{
-								XmlNode oldChild = targetFetchXml.SelectSingleNode("fetch/entity/attribute[@name='" + str + "']");
-								targetFetchXml.SelectSingleNode("fetch/entity").RemoveChild(oldChild);
+								var oldChild = xmlDocument3.SelectSingleNode("fetch/entity/attribute[@name='" + str + "']");
+								if (oldChild != null)
+									xmlDocument3.SelectSingleNode("fetch/entity").RemoveChild(oldChild);
 							}
 						}
-						foreach (XmlNode selectNode in targetFetchXml.SelectNodes("fetch/entity/link-entity"))
+						foreach (XmlNode selectNode in xmlDocument3.SelectNodes("fetch/entity/link-entity"))
 						{
 							if (selectNode != null && selectNode.ChildNodes.Count == 0)
-								targetFetchXml.SelectSingleNode("fetch/entity").RemoveChild(selectNode);
+								xmlDocument3.SelectSingleNode("fetch/entity").RemoveChild(selectNode);
 						}
 					}
+
+
 					if (includeSorting)
 					{
-						var xmlNodeList3 = sourceFetchXml.SelectNodes("fetch/entity/order") ?? XmlNodeListEmpty.Instance;
-						var xmlNodeList4 = targetFetchXml.SelectNodes("fetch/entity/order") ?? XmlNodeListEmpty.Instance;
+						var xmlNodeList3 = xmlDocument4.SelectNodes("fetch/entity/order");
+						var xmlNodeList4 = xmlDocument3.SelectNodes("fetch/entity/order");
 						for (int count = xmlNodeList4.Count; count > 0; --count)
 						{
 							var oldChild = xmlNodeList4[count - 1];
-							xmlNodeList4[count - 1].ParentNode.RemoveChild(oldChild);
+							if (oldChild != null)
+								xmlNodeList4[count - 1].ParentNode.RemoveChild(oldChild);
 						}
 						foreach (XmlNode node in xmlNodeList3)
 						{
-							var newChild = targetFetchXml.ImportNode(node, true);
-							targetFetchXml.SelectSingleNode("fetch/entity").AppendChild(newChild);
+							XmlNode newChild = xmlDocument3.ImportNode(node, true);
+							xmlDocument3.SelectSingleNode("fetch/entity").AppendChild(newChild);
 						}
 					}
-					targetView.fetchxml = targetFetchXml.OuterXml;
+					targetView.fetchxml = xmlDocument3.OuterXml;
 				}
-
 
 
 				try
@@ -225,4 +237,5 @@ namespace Greg.Xrm.Command.Commands.Views.Model
 			return tupleList;
 		}
 	}
+#pragma warning restore CS8602 // Dereference of a possibly null reference.
 }
