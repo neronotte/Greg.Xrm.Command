@@ -144,7 +144,6 @@ namespace Greg.Xrm.Command.Model
 					query.ColumnSet.AddColumn("content");
 				}
 
-				query.Criteria.AddCondition("ismanaged", ConditionOperator.Equal, false);
 				query.Criteria.AddCondition("ishidden", ConditionOperator.Equal, false);
 				query.Criteria.AddCondition("iscustomizable", ConditionOperator.Equal, true);
 				query.Criteria.AddCondition("name", ConditionOperator.In, fileNames.Cast<object>().ToArray());
