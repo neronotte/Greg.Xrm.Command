@@ -3,5 +3,6 @@
 	public interface IComponentResolverFactory
 	{
 		IComponentResolver? GetComponentResolverFor(ComponentType componentType);
+		IComponentResolver? GetComponentResolverFor(int componentType);
 	}
 }

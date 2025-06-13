@@ -26,6 +26,7 @@ namespace Greg.Xrm.Command
 			builder.RegisterType<AttributeMetadataScriptBuilderFactory>().As<IAttributeMetadataScriptBuilderFactory>();
 			builder.RegisterType<WebResource.Repository>().As<IWebResourceRepository>();
 			builder.RegisterType<Solution.Repository>().As<ISolutionRepository>();
+			builder.RegisterType<SolutionComponent.Repository>().As<ISolutionComponentRepository>();
 			builder.RegisterType<JsTemplateManager>().As<IJsTemplateManager>();
 			builder.RegisterType<IconFinder>().As<IIconFinder>();
 			builder.RegisterType<SavedQuery.Repository>().As<ISavedQueryRepository>();
@@ -53,6 +54,7 @@ namespace Greg.Xrm.Command
 			builder.RegisterType<Services.AttributeDeletion.AttributeDeletionStrategyForMappings>().As<IAttributeDeletionStrategy>();
 			builder.RegisterType<Services.AttributeDeletion.AttributeDeletionStrategyForWorkflows>().As<IAttributeDeletionStrategy>();
 
+			builder.RegisterType<Services.ComponentResolution.ComponentResolverEngine>().As<Services.ComponentResolution.IComponentResolverEngine>();
 
 			builder.RegisterType<Form.Repository>().As<IFormRepository>();
 		}
