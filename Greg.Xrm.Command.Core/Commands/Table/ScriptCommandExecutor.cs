@@ -58,8 +58,15 @@ namespace Greg.Xrm.Command.Commands.Table
 									&& !x.LogicalName.ToLower().Contains("_base"))
 								.ToList();
 
-				customAttributes.ForEach(x => resultScript.Append(GenerateColumnScript(x)));
+				var columnScriptList = customAttributes
+                    .Select(GenerateColumnScript)
+                    .OrderBy(x => x)
+                    .ToList();
+
+                resultScript.AppendLine(string.Join(Environment.NewLine, columnScriptList));
+				
                 text = resultScript.ToString();
+
                 output.WriteLine(text);
             }
             catch (FaultException<OrganizationServiceFault> ex)
@@ -142,11 +149,8 @@ namespace Greg.Xrm.Command.Commands.Table
 
             var builder = attributeMetadataScriptBuilderFactory.CreateFor(attributeMetadata.AttributeType.Value);
 
-            var sb = new StringBuilder();
-            sb.Append(builder.GetColumnScript(attributeMetadata));
-            sb.AppendLine("");
-
-            return sb.ToString();
+            var script = builder.GetColumnScript(attributeMetadata);
+            return script;
         }
     }
 }
