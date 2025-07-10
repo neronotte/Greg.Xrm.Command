@@ -1,4 +1,5 @@
 ﻿using Greg.Xrm.Command.Parsing;
+using System.ComponentModel.DataAnnotations;
 
 namespace Greg.Xrm.Command.Commands.Table
 {
@@ -6,7 +7,8 @@ namespace Greg.Xrm.Command.Commands.Table
     [Alias("script", "table")]
     public class ScriptCommand
     {
-        [Option("schemaName", "sn")]
+        [Option("schemaName", "sn", HelpText ="The schema name of the table to generate scripts for. ")]
+        [Required]
         public string? SchemaName { get; set; }
 
         [Option("output", "o", "The name of the folder that will contain the file with the exported metadata. (default: current folder)")]
