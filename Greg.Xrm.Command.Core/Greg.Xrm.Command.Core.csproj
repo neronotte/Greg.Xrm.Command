@@ -33,6 +33,7 @@
     <PackageReference Include="Microsoft.PowerPlatform.Dataverse.Client" Version="1.2.2" />
     <PackageReference Include="Nuget.Protocol" Version="6.12.1" />
     <PackageReference Include="Pluralize.NET" Version="1.0.2" />
+    <PackageReference Include="System.IO.Packaging" Version="9.0.7" />
   </ItemGroup>
 
   <ItemGroup>

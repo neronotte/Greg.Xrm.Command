@@ -24,5 +24,8 @@ namespace Greg.Xrm.Command.Commands.Solution
 
 		[Option("publisherOptionSetPrefix", "pop", HelpText = "The option set prefix of the publisher to create (5 digit number).")]
 		public int? PublisherOptionSetPrefix { get; set; }
+
+		[Option("applicationRibbons", "ar", HelpText = "Once the solution has been created, adds the application ribbons", DefaultValue = false)]
+		public bool AddApplicationRibbons { get; set; }
     }
 }

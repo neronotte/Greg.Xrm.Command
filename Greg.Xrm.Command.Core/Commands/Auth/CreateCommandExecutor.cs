@@ -4,18 +4,11 @@ using Microsoft.PowerPlatform.Dataverse.Client.Utils;
 
 namespace Greg.Xrm.Command.Commands.Auth
 {
-    public class CreateCommandExecutor : ICommandExecutor<CreateCommand>
+    public class CreateCommandExecutor(
+			IOrganizationServiceRepository organizationServiceRepository,
+			IOutput output) : ICommandExecutor<CreateCommand>
 	{
-		private readonly IOrganizationServiceRepository organizationServiceRepository;
-		private readonly IOutput output;
-
-		public CreateCommandExecutor(
-			IOrganizationServiceRepository organizationServiceRepository, 
-			IOutput output)
-        {
-			this.organizationServiceRepository = organizationServiceRepository;
-			this.output = output;
-		}
+		private const string CONNECTION_STRING_TEMPLATE = "AuthType=OAuth;Url={0};RedirectUri=http://localhost;LoginPrompt=Auto";
 
         public async Task<CommandResult> ExecuteAsync(CreateCommand command, CancellationToken cancellationToken)
 		{
@@ -23,14 +16,19 @@ namespace Greg.Xrm.Command.Commands.Auth
 			{
 				throw new CommandException(CommandException.CommandRequiredArgumentNotProvided, "You must specify the name to be given to the authentication profile");
 			}
-			if (string.IsNullOrWhiteSpace(command.ConnectionString))
+
+
+			var connectionString = command.ConnectionString;
+
+
+			if (string.IsNullOrWhiteSpace(connectionString))
 			{
-				throw new CommandException(CommandException.CommandRequiredArgumentNotProvided, "You must specify the connectionString to be given to the authentication profile");
+				connectionString = CONNECTION_STRING_TEMPLATE.Replace("{0}", command.EnvironmentUrl?.TrimEnd('/'));
 			}
 
 			try
 			{
-				await organizationServiceRepository.SetConnectionAsync(command.Name, command.ConnectionString);
+				await organizationServiceRepository.SetConnectionAsync(command.Name, connectionString);
 				return CommandResult.Success();
 			}
 			catch(DataverseConnectionException ex)
