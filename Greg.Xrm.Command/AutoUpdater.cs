@@ -8,7 +8,6 @@ namespace Greg.Xrm.Command
     public class AutoUpdater(ILogger log, IOutput output)
     {
 		private const string ToolName = "Greg.Xrm.Command";
-		private const string NugetUrl = $"https://api.nuget.org/v3-flatcontainer/{ToolName}/index.json";
 		private const int WaitForExit = 20;
 
 
@@ -24,11 +23,13 @@ namespace Greg.Xrm.Command
 			this.NextVersion = null;
 			this.UpdateRequired = false;
 
-			#if RELEASE
+#if RELEASE
 			try
             {
+				var nugetUrl = $"https://api.nuget.org/v3-flatcontainer/{ToolName.ToLowerInvariant()}/index.json";
+
 				using var client = new HttpClient();
-				var response = await client.GetStringAsync(NugetUrl);
+				var response = await client.GetStringAsync(nugetUrl);
 				using var doc = JsonDocument.Parse(response);
 				var versions = doc.RootElement.GetProperty("versions").EnumerateArray();
 				var latestVersion = versions.Last().GetString();
@@ -51,7 +52,7 @@ namespace Greg.Xrm.Command
 				this.UpdateRequired = false;
 			}
 
-			#endif
+#endif
 
 			return this.UpdateRequired;
 		}
