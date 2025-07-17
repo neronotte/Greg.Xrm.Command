@@ -3,9 +3,7 @@ using Greg.Xrm.Command.Services.Output;
 using Microsoft.Crm.Sdk.Messages;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
-using Microsoft.Xrm.Sdk.Organization;
 using Microsoft.Xrm.Sdk.Query;
-using System.Security.Policy;
 using System.ServiceModel;
 
 namespace Greg.Xrm.Command.Commands.Solution
@@ -72,6 +70,13 @@ namespace Greg.Xrm.Command.Commands.Solution
 					.Write("  Solution ID: ")
 					.WriteLine(solution.Id, ConsoleColor.Yellow);
 
+
+				
+				if (command.AddApplicationRibbons)
+				{
+					await AddApplicationRibbons(solution, crm);
+				}
+
 				return new CreateCommandResult(solution.Id, publisherRef.Id);
 			}
 			catch (FaultException<OrganizationServiceFault> ex)
@@ -79,6 +84,49 @@ namespace Greg.Xrm.Command.Commands.Solution
 				return CommandResult.Fail(ex.Message, ex);
 			}
 
+		}
+
+		/// <summary>
+		/// https://learn.microsoft.com/en-us/dotnet/api/microsoft.crm.sdk.messages.addsolutioncomponentrequest?view=dataverse-sdk-latest
+		/// 
+		/// When you use AddSolutionComponentRequest to add application ribbons to your solution, 
+		/// you must make sure to include the RibbonCustomization solution component that is associated with the active solution. 
+		/// Use the Active Solution.SolutionId (FD140AAE-4DF4-11DD-BD17-0019B9312238) in the query 
+		/// you use to retrieve the RibbonCustomization record.
+		/// </summary>
+		/// <param name="solution"></param>
+		/// <param name="crm"></param>
+		/// <returns></returns>
+		private async Task AddApplicationRibbons(Entity solution, IOrganizationServiceAsync2 crm)
+		{
+			this.output.Write("Adding Application Ribbons...");
+			try
+			{
+				Guid activeSolutionId = new("FD140AAE-4DF4-11DD-BD17-0019B9312238");
+
+				var query = new QueryExpression("ribboncustomization");
+				query.ColumnSet.AddColumn("ribboncustomizationid");
+				query.Criteria.AddCondition("entity", ConditionOperator.Null);
+				query.Criteria.AddCondition("solutionid", ConditionOperator.Equal, activeSolutionId);
+
+				var result = await crm.RetrieveMultipleAsync(query);
+				var ribboncustomization = result.Entities[0];
+
+				var request = new AddSolutionComponentRequest
+				{
+					SolutionUniqueName = solution["uniquename"].ToString(),
+					ComponentType = (int)ComponentType.RibbonCustomization,
+					ComponentId = ribboncustomization.Id
+				};
+
+				await crm.ExecuteAsync(request);
+				this.output.WriteLine("Done", ConsoleColor.Green);
+			}
+			catch(FaultException<OrganizationServiceFault> ex)
+			{
+				this.output.WriteLine("Failed", ConsoleColor.Red);
+				throw;
+			}
 		}
 
 		private async Task<EntityReference> GetOrCreatePublisherAsync(IOrganizationServiceAsync2 crm, CreateCommand command)
