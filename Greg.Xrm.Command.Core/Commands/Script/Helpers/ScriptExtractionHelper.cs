@@ -15,15 +15,17 @@ namespace Greg.Xrm.Command.Commands.Script.Helpers
             ScriptMetadataExtractor metadataExtractor,
             List<string> prefixes,
             Func<Task<List<EntityMetadata>>> getEntities,
+            Func<List<string>, Task<List<Models.OptionSetMetadata>>> getOptionsets,
             string outputDir,
             string pacxScriptName,
-            string optionSetCsvName,
+            string stateFieldCsvName,
             Func<List<EntityMetadata>, Task<List<RelationshipMetadata>>> getRelationships,
-            Func<List<string>, Task<List<OptionSetMetadata>>> getOptionSets,
+            Func<List<Models.OptionSetMetadata>, string, Task> generateStateFieldCsv,
             Func<List<EntityMetadata>, List<RelationshipMetadata>, string, string> generatePacxScript,
-            bool exportOptionSets = true)
+            bool exportStateFields = true,
+            int step = 1)
         {
-            output.WriteLine("Step 1: Extracting entity metadata...");
+            output.WriteLine($"Step {step++}: Extracting entity metadata...");
             var entities = await getEntities();
             output.WriteLine($"Entities found: {entities.Count}");
             foreach (var entity in entities)
@@ -32,7 +34,7 @@ namespace Greg.Xrm.Command.Commands.Script.Helpers
             }
             output.WriteLine();
 
-            output.WriteLine("Step 2: Extracting relationship metadata...");
+            output.WriteLine($"Step {step++}: Extracting relationship metadata...");
             var relationships = await getRelationships(entities);
             output.WriteLine($"Relationships found: {relationships.Count}");
             foreach (var rel in relationships.OrderBy(r => r.Name))
@@ -44,30 +46,22 @@ namespace Greg.Xrm.Command.Commands.Script.Helpers
             }
             output.WriteLine();
 
-            List<OptionSetMetadata> optionSets = null;
-            if (exportOptionSets)
-            {
-                output.WriteLine("Step 3: Extracting OptionSet metadata...");
-                optionSets = await getOptionSets(prefixes);
-                output.WriteLine($"OptionSet options found: {optionSets.Count}");
-                output.WriteLine();
-            }
-
             Directory.CreateDirectory(outputDir);
 
-            output.WriteLine("Step 4: Generating PACX script...");
+            output.WriteLine($"Step {step++}: Generating PACX script...");
             var pacxScriptPath = Path.Combine(outputDir, pacxScriptName);
             var script = generatePacxScript(entities, relationships, prefixes.FirstOrDefault() ?? "");
             await File.WriteAllTextAsync(pacxScriptPath, script);
             output.WriteLine($"PACX script generated: {pacxScriptPath}");
 
             string csvPath = null;
-            if (exportOptionSets && optionSets != null)
+            if (exportStateFields)
             {
-                output.WriteLine("Step 5: Generating OptionSet CSV...");
-                csvPath = Path.Combine(outputDir, optionSetCsvName);
-                metadataExtractor.GenerateOptionSetCsv(optionSets, csvPath);
-                output.WriteLine($"OptionSet CSV generated: {csvPath}");
+                output.WriteLine($"Step {step++}: Generating State Field CSV...");
+                csvPath = Path.Combine(outputDir, stateFieldCsvName);
+                var options = await getOptionsets(prefixes);
+                await generateStateFieldCsv(options, csvPath);
+                output.WriteLine($"State Field CSV generated: {csvPath}");
                 output.WriteLine();
             }
 
@@ -75,13 +69,13 @@ namespace Greg.Xrm.Command.Commands.Script.Helpers
             output.WriteLine("=================================");
             output.WriteLine($"Entities processed: {entities.Count}");
             output.WriteLine($"Relationships found: {relationships.Count}");
-            if (exportOptionSets && optionSets != null)
-                output.WriteLine($"OptionSet options exported: {optionSets.Count}");
+            if (exportStateFields)
+                output.WriteLine($"State fields exported (statecode/statuscode): see {csvPath}");
             output.WriteLine();
             output.WriteLine("Output files:");
             output.WriteLine($"  - PACX Script: {pacxScriptPath}");
-            if (exportOptionSets && optionSets != null)
-                output.WriteLine($"  - OptionSet CSV: {csvPath}");
+            if (exportStateFields)
+                output.WriteLine($"  - State Field CSV: {csvPath}");
             return CommandResult.Success();
         }
     }

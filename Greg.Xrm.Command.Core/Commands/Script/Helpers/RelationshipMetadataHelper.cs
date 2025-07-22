@@ -11,6 +11,7 @@ namespace Greg.Xrm.Command.Commands.Script.Helpers
         {
             var includedNames = includedEntities?.Select(e => e.SchemaName).ToHashSet();
             var customNames = includedEntities?.Where(e => e.IsCustomEntity).Select(e => e.SchemaName).ToHashSet() ?? new HashSet<string>();
+            var singleTable = includedEntities?.Count == 1;
             var relationships = new List<Models.RelationshipMetadata>();
             var nnSet = new HashSet<string>();
             foreach (var entityMetadata in entityMetadataList)
@@ -19,28 +20,29 @@ namespace Greg.Xrm.Command.Commands.Script.Helpers
                 {
                     bool isCustomParent = rel.ReferencedEntity != null && customNames.Contains(rel.ReferencedEntity);
                     bool isCustomChild = rel.ReferencingEntity != null && customNames.Contains(rel.ReferencingEntity);
-                    if (isCustomParent || isCustomChild)
+                    if (includedNames == null || includedNames.Count == 0 || 
+                       (!singleTable && includedNames.Contains(rel.ReferencingEntity) && includedNames.Contains(rel.ReferencedEntity)) ||
+                       (singleTable && (includedNames.Contains(rel.ReferencingEntity) || includedNames.Contains(rel.ReferencedEntity))))
                     {
-                        if ((includedNames == null || includedNames.Contains(rel.ReferencingEntity) || includedNames.Contains(rel.ReferencedEntity)) &&
-                            prefixes.Any(pre => rel.ReferencingAttribute.StartsWith(pre)))
+                        relationships.Add(new Models.RelationshipMetadata
                         {
-                            relationships.Add(new Models.RelationshipMetadata
-                            {
-                                Name = rel.SchemaName,
-                                Type = Models.RelationshipType.OneToMany,
-                                ParentEntity = rel.ReferencedEntity,
-                                ChildEntity = rel.ReferencingEntity,
-                                LookupField = rel.ReferencingAttribute
-                            });
-                        }
+                            Name = rel.SchemaName,
+                            Type = Models.RelationshipType.OneToMany,
+                            ParentEntity = rel.ReferencedEntity,
+                            ChildEntity = rel.ReferencingEntity,
+                            LookupField = rel.ReferencingAttribute,
+                            IsCustomRelationship = (isCustomParent || isCustomChild) &&
+                                prefixes.Any(pre => rel.ReferencingAttribute.StartsWith(pre))
+                        });
                     }
                 }
                 foreach (var rel in entityMetadata.ManyToManyRelationships ?? System.Array.Empty<ManyToManyRelationshipMetadata>())
                 {
-                    // Generate nn if at least one of the two entities is custom (IsCustomEntity)
                     bool isCustom1 = includedEntities?.Any(e => e.SchemaName == rel.Entity1LogicalName && e.IsCustomEntity) == true;
                     bool isCustom2 = includedEntities?.Any(e => e.SchemaName == rel.Entity2LogicalName && e.IsCustomEntity) == true;
-                    if ((isCustom1 || isCustom2) && nnSet.Add(rel.SchemaName))
+                    if (includedNames == null || includedNames.Count == 0 ||
+                        (!singleTable && includedNames.Contains(rel.Entity1LogicalName) && includedNames.Contains(rel.Entity2LogicalName)) ||
+                        (singleTable && (includedNames.Contains(rel.Entity1LogicalName) || includedNames.Contains(rel.Entity2LogicalName))))
                     {
                         relationships.Add(new Models.RelationshipMetadata
                         {
@@ -48,7 +50,8 @@ namespace Greg.Xrm.Command.Commands.Script.Helpers
                             Type = Models.RelationshipType.ManyToMany,
                             FirstEntity = rel.Entity1LogicalName,
                             SecondEntity = rel.Entity2LogicalName,
-                            IntersectEntity = rel.IntersectEntityName
+                            IntersectEntity = rel.IntersectEntityName,
+                            IsCustomRelationship = (isCustom1 || isCustom2) && nnSet.Add(rel.SchemaName)
                         });
                     }
                 }

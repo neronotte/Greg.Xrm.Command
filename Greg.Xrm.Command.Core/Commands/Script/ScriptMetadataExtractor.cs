@@ -97,7 +97,7 @@ namespace Greg.Xrm.Command.Commands.Script
             return RelationshipMetadataHelper.ExtractRelationships(response.EntityMetadata, prefixes, includedEntities);
         }
 
-        public async Task<List<Models.OptionSetMetadata>> GetOptionSetsAsync(List<string> prefixes)
+        public async Task<List<Models.OptionSetMetadata>> GetOptionSetsAsync(List<string> entityFilter = null)
         {
             var crm = await organizationServiceRepository.GetCurrentConnectionAsync();
             var globalRequest = new RetrieveAllOptionSetsRequest();
@@ -109,12 +109,18 @@ namespace Greg.Xrm.Command.Commands.Script
             };
             var entityResponse = (RetrieveAllEntitiesResponse)await crm.ExecuteAsync(entityRequest);
             var globalOptionSets = globalResponse.OptionSetMetadata.OfType<OptionSetMetadata>();
-            return OptionSetMetadataHelper.ExtractOptionSets(entityResponse.EntityMetadata, globalOptionSets, prefixes);
+            var result = OptionSetMetadataHelper.ExtractOptionSets(entityResponse.EntityMetadata, globalOptionSets);
+            if (entityFilter != null)
+            {
+                return result.Where(os => entityFilter.Contains(os.EntityName)).ToList();
+            }
+            return result;
         }
 
-        public void GenerateOptionSetCsv(List<Models.OptionSetMetadata> optionSets, string outputFilePath)
+        public Task GenerateStateFieldsCSV(List<Models.OptionSetMetadata> optionSets, string outputFilePath)
         {
             ScriptBuilderHelper.GenerateOptionSetCsv(optionSets, outputFilePath);
+            return Task.CompletedTask;
         }
 
         public string GeneratePacxScript(List<Models.EntityMetadata> entities, List<Models.RelationshipMetadata> relationships, string customPrefix)

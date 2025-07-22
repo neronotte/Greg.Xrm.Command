@@ -31,13 +31,14 @@ namespace Greg.Xrm.Command.Commands.Script
                 metadataExtractor,
                 prefixes,
                 () => metadataExtractor.GetEntitiesByPrefixAsync(prefixes),
+                (prefixes) => metadataExtractor.GetOptionSetsAsync(),
                 outputDir,
                 command.PacxScriptName,
-                command.OptionSetDefinitionName,
+                command.StateFieldsDefinitionName,
                 (entities) => metadataExtractor.GetRelationshipsAsync(prefixes, entities),
-                command.WithOptionsetDefinition ? (Func<List<string>, Task<List<Models.OptionSetMetadata>>>)(pfx => metadataExtractor.GetOptionSetsAsync(pfx)) : (pfx => Task.FromResult(new List<Models.OptionSetMetadata>())),
+                command.WithStateFieldsDefinition ? (Func<List<Models.OptionSetMetadata>, string, Task>)((optionSets, csvPath) => metadataExtractor.GenerateStateFieldsCSV(optionSets, csvPath)) : ((optionSets, csvPath) => Task.CompletedTask),
                 (entities, relationships, prefix) => metadataExtractor.GeneratePacxScript(entities, relationships, prefix),
-                command.WithOptionsetDefinition
+                command.WithStateFieldsDefinition
             );
         }
     }
@@ -57,18 +58,35 @@ namespace Greg.Xrm.Command.Commands.Script
         {
             var prefixes = command.CustomPrefixs?.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(p => p.Trim()).ToList() ?? new List<string>();
             var outputDir = string.IsNullOrWhiteSpace(command.OutputDir) ? Environment.CurrentDirectory : command.OutputDir;
+            var solutionNames = command.SolutionNames?.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()).ToList() ?? new List<string>();
+            if (solutionNames.Count == 0)
+            {
+                output.WriteLine("No solution names provided.", ConsoleColor.Red);
+                return CommandResult.Fail("No solution names provided.");
+            }
+            output.WriteLine("Step 1: Extracting solution entities...");
+            var allEntities = new List<Models.EntityMetadata>();
+            foreach (var solutionName in solutionNames)
+            {
+                var entities = await metadataExtractor.GetEntitiesBySolutionAsync(solutionName, prefixes);
+                allEntities.AddRange(entities);
+            }
+            // Remove duplicates by SchemaName
+            allEntities = allEntities.GroupBy(e => e.SchemaName).Select(g => g.First()).ToList();
             return await ScriptExtractionHelper.ExecuteScriptExtractionAsync(
                 output,
                 metadataExtractor,
                 prefixes,
-                () => metadataExtractor.GetEntitiesBySolutionAsync(command.SolutionName, prefixes),
+                () => Task.FromResult(allEntities),
+                (prefixes) => metadataExtractor.GetOptionSetsAsync(allEntities.Select(e => e.SchemaName).ToList()),
                 outputDir,
                 command.PacxScriptName,
-                command.OptionSetDefinitionName,
+                command.StateFieldsDefinitionName,
                 (entities) => metadataExtractor.GetRelationshipsAsync(prefixes, entities),
-                command.WithOptionsetDefinition ? (Func<List<string>, Task<List<Models.OptionSetMetadata>>>)(pfx => metadataExtractor.GetOptionSetsAsync(pfx)) : (pfx => Task.FromResult(new List<Models.OptionSetMetadata>())),
+                command.WithStateFieldsDefinition ? (Func<List<Models.OptionSetMetadata>, string, Task>)((optionSets, csvPath) => metadataExtractor.GenerateStateFieldsCSV(optionSets, csvPath)) : ((optionSets, csvPath) => Task.CompletedTask),
                 (entities, relationships, prefix) => metadataExtractor.GeneratePacxScript(entities, relationships, prefix),
-                command.WithOptionsetDefinition
+                command.WithStateFieldsDefinition,
+                2
             );
         }
     }
@@ -100,15 +118,14 @@ namespace Greg.Xrm.Command.Commands.Script
                 metadataExtractor,
                 prefixes,
                 () => Task.FromResult(new List<Models.EntityMetadata> { entity }),
+                (prefixes) => metadataExtractor.GetOptionSetsAsync(new List<string>() { command.TableName }),
                 outputDir,
                 command.PacxScriptName,
-                command.OptionSetDefinitionName,
+                command.StateFieldsDefinitionName,
                 (entities) => metadataExtractor.GetRelationshipsAsync(prefixes, entities),
-                command.WithOptionsetDefinition
-                    ? (Func<List<string>, Task<List<Models.OptionSetMetadata>>>)(pfx => metadataExtractor.GetOptionSetsAsync(pfx).ContinueWith(t => t.Result.Where(os => os.EntityName == command.TableName).ToList()))
-                    : (pfx => Task.FromResult(new List<Models.OptionSetMetadata>())),
+                command.WithStateFieldsDefinition ? (Func<List<Models.OptionSetMetadata>, string, Task>)((optionSets, csvPath) => metadataExtractor.GenerateStateFieldsCSV(optionSets, csvPath)) : ((optionSets, csvPath) => Task.CompletedTask),
                 (entities, relationships, prefix) => metadataExtractor.GeneratePacxScriptForTable(entity, prefix, relationships),
-                command.WithOptionsetDefinition
+                command.WithStateFieldsDefinition
             );
         }
     }

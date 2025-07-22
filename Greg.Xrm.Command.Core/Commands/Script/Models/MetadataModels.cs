@@ -11,6 +11,7 @@ namespace Greg.Xrm.Command.Commands.Script.Models
         public string? FirstEntity { get; set; }
         public string? SecondEntity { get; set; }
         public string? IntersectEntity { get; set; }
+        public bool IsCustomRelationship { get; set; } = false;
     }
 
     public enum RelationshipType

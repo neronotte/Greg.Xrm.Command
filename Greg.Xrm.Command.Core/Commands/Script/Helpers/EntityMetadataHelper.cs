@@ -7,7 +7,7 @@ namespace Greg.Xrm.Command.Commands.Script.Helpers
 {
     public static class EntityMetadataHelper
     {
-        private static Models.EntityMetadata BuildEntityMetadata(EntityMetadata e, List<AttributeMetadata> customFields, List<string> prefixes)
+        private static Models.EntityMetadata BuildEntityMetadata(EntityMetadata e, List<AttributeMetadata> fields, List<string> prefixes)
         {
             var entity = new Models.EntityMetadata
             {
@@ -27,7 +27,7 @@ namespace Greg.Xrm.Command.Commands.Script.Helpers
                 entity.PrimaryFieldAutoNumberFormat = strAttr.AutoNumberFormat;
                 entity.PrimaryFieldRequiredLevel = strAttr.RequiredLevel?.Value.ToString();
             }
-            foreach (var a in customFields)
+            foreach (var a in fields)
             {
                 var field = new Models.FieldMetadata
                 {
@@ -35,7 +35,7 @@ namespace Greg.Xrm.Command.Commands.Script.Helpers
                     DisplayName = a.DisplayName?.UserLocalizedLabel?.Label ?? a.LogicalName,
                     FieldType = FieldMetadataHelper.NormalizeFieldType(a.AttributeType?.ToString() ?? "String", a.AttributeTypeName?.Value),
                     RequiredLevel = a.RequiredLevel?.Value.ToString() ?? "None",
-                    IsCustomField = true,
+                    IsCustomField = prefixes.Any(pre => a.LogicalName.StartsWith(pre)),
                     IsLookup = a.AttributeType == AttributeTypeCode.Lookup || a.AttributeType == AttributeTypeCode.Owner
                 };
                 switch (a)
@@ -106,15 +106,11 @@ namespace Greg.Xrm.Command.Commands.Script.Helpers
             var entities = new List<Models.EntityMetadata>();
             foreach (var e in entityMetadataList)
             {
-                var customFields = (e.Attributes ?? Enumerable.Empty<AttributeMetadata>())
-                    .Where(a => a.IsCustomAttribute == true &&
-                        prefixes.Any(p => a.LogicalName.StartsWith(p)) &&
+                var fields = (e.Attributes ?? Enumerable.Empty<AttributeMetadata>())
+                    .Where(a => 
                         (a.AttributeType != AttributeTypeCode.Virtual || (a.AttributeType == AttributeTypeCode.Virtual && a.AttributeTypeName?.Value == "MultiSelectPicklistType"))
                 ).ToList();
-                if (e.IsCustomEntity == true || customFields.Any())
-                {
-                    entities.Add(BuildEntityMetadata(e, customFields, prefixes));
-                }
+                entities.Add(BuildEntityMetadata(e, fields, prefixes));
             }
             return entities;
         }
@@ -124,15 +120,11 @@ namespace Greg.Xrm.Command.Commands.Script.Helpers
             var entities = new List<Models.EntityMetadata>();
             foreach (var e in entityMetadataList.Where(e => entityIds.Contains(e.MetadataId.GetValueOrDefault())))
             {
-                var customFields = (e.Attributes ?? Enumerable.Empty<AttributeMetadata>())
-                    .Where(a => a.IsCustomAttribute == true &&
-                        prefixes.Any(p => a.LogicalName.StartsWith(p)) &&
+                var fields = (e.Attributes ?? Enumerable.Empty<AttributeMetadata>())
+                    .Where(a => 
                         (a.AttributeType != AttributeTypeCode.Virtual || (a.AttributeType == AttributeTypeCode.Virtual && a.AttributeTypeName?.Value == "MultiSelectPicklistType"))
                 ).ToList();
-                if (e.IsCustomEntity == true || customFields.Any())
-                {
-                    entities.Add(BuildEntityMetadata(e, customFields, prefixes));
-                }
+                entities.Add(BuildEntityMetadata(e, fields, prefixes));
             }
             return entities;
         }
@@ -141,12 +133,11 @@ namespace Greg.Xrm.Command.Commands.Script.Helpers
         {
             var e = entityMetadataList.FirstOrDefault(e => e.LogicalName == tableName);
             if (e == null) return null;
-            var customFields = (e.Attributes ?? Enumerable.Empty<AttributeMetadata>())
-                .Where(a => a.IsCustomAttribute == true &&
-                    prefixes.Any(p => a.LogicalName.StartsWith(p)) &&
+            var fields = (e.Attributes ?? Enumerable.Empty<AttributeMetadata>())
+                .Where(a => 
                     (a.AttributeType != AttributeTypeCode.Virtual || (a.AttributeType == AttributeTypeCode.Virtual && a.AttributeTypeName?.Value == "MultiSelectPicklistType"))
             ).ToList();
-            return BuildEntityMetadata(e, customFields, prefixes);
+            return BuildEntityMetadata(e, fields, prefixes);
         }
     }
 }
