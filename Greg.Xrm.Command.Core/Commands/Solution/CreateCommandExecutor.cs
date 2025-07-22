@@ -122,9 +122,10 @@ namespace Greg.Xrm.Command.Commands.Solution
 				await crm.ExecuteAsync(request);
 				this.output.WriteLine("Done", ConsoleColor.Green);
 			}
-			catch(FaultException<OrganizationServiceFault> ex)
+			catch (FaultException<OrganizationServiceFault> ex)
 			{
 				this.output.WriteLine("Failed", ConsoleColor.Red);
+				this.output.WriteLine(ex.Message, ConsoleColor.Red);
 				throw;
 			}
 		}

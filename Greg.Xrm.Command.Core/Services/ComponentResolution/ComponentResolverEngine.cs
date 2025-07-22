@@ -7,7 +7,7 @@ namespace Greg.Xrm.Command.Services.ComponentResolution
 	public class ComponentResolverEngine: IComponentResolverEngine
 	{
 		private readonly ILogger<ComponentResolverEngine> log;
-		private readonly Dictionary<int, Func<IComponentResolver>> resolverStrategyCache = new();
+		private readonly Dictionary<int, Func<IComponentResolver>> resolverStrategyCache = [];
 
 		public async Task ResolveAllAsync(IReadOnlyCollection<SolutionComponent> componentList, IOrganizationServiceAsync2 crm)
 		{
@@ -21,7 +21,7 @@ namespace Greg.Xrm.Command.Services.ComponentResolution
 				if (resolverStrategyCache.TryGetValue(group.Key, out var resolverFactory))
 				{
 					var resolver = resolverFactory();
-					await resolver.ResolveAsync(group.ToArray(), crm);
+					await resolver.ResolveAsync([.. group], crm);
 					continue;
 				}
 
@@ -35,12 +35,12 @@ namespace Greg.Xrm.Command.Services.ComponentResolution
 
 				if (string.IsNullOrWhiteSpace(sampleComponent.ComponentTypeName) && !string.IsNullOrEmpty(sampleComponent.SolutionComponentDefinitionPrimaryEntityName))
 				{
-					var resolver = ByQuery(sampleComponent.SolutionComponentDefinitionPrimaryEntityName, null);
-					await resolver.ResolveAsync(group.ToArray(), crm);
+					var resolver = ByQuery(sampleComponent.SolutionComponentDefinitionPrimaryEntityName);
+					await resolver.ResolveAsync([.. group], crm);
 				}
 			}
 
-			var entityAndAttributeResolver = new ResolverForEntitiesAndAttributes(log);
+			var entityAndAttributeResolver = new ResolverForEntitiesAndAttributes();
 			await entityAndAttributeResolver.ResolveAsync(componentList, crm);
 		}
 
@@ -165,7 +165,7 @@ namespace Greg.Xrm.Command.Services.ComponentResolution
 			resolverStrategyCache[(int)componentType] = factory;
 		}
 
-		private IComponentResolver ByQuery(string table, string nameColumn = "name", string tableIdColumn = null)
+		private ResolverByQuery ByQuery(string table, string nameColumn = "name", string? tableIdColumn = null)
 		{
 			return new ResolverByQuery(log, table, nameColumn, tableIdColumn);
 		}

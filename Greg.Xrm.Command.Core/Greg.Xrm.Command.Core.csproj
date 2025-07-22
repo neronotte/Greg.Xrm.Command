@@ -19,6 +19,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Commands\Table\Builders\**" />
+    <EmbeddedResource Remove="Commands\Table\Builders\**" />
+    <None Remove="Commands\Table\Builders\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Include="..\logo_80.png">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
@@ -27,6 +33,7 @@
 
   <ItemGroup>
     <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="10.0.0" />
+    <PackageReference Include="CsvHelper" Version="33.1.0" />
     <PackageReference Include="EPPlus" Version="7.5.2" />
     <PackageReference Include="McMaster.NETCore.Plugins" Version="1.4.0" />
     <PackageReference Include="Microsoft.ApplicationInsights" Version="2.22.0" />

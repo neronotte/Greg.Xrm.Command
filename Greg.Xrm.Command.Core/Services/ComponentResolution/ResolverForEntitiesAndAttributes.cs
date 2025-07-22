@@ -9,13 +9,6 @@ namespace Greg.Xrm.Command.Services.ComponentResolution
 {
 	public class ResolverForEntitiesAndAttributes : IComponentResolver
 	{
-		private readonly ILogger log;
-
-		public ResolverForEntitiesAndAttributes(ILogger log)
-		{
-			this.log = log;
-		}
-
 		public async Task ResolveAsync(IReadOnlyCollection<SolutionComponent> componentList, IOrganizationServiceAsync2 crm)
 		{
 			var entityGroup = componentList.Where(_ => _.componenttype.Value == (int)ComponentType.Entity).ToList();
@@ -70,7 +63,7 @@ namespace Greg.Xrm.Command.Services.ComponentResolution
 						attributeIdList.Remove(attributeId);
 
 						solutionComponent = attributeGroup.FirstOrDefault(_ => _.objectid == attributeId);
-						SetLabelFromAttributeMetadata(solutionComponent, entityMetadata, attributeMetadata);
+						SetLabelFromAttributeMetadata(solutionComponent!, entityMetadata, attributeMetadata);
 					}
 				}
 			}
@@ -82,6 +75,8 @@ namespace Greg.Xrm.Command.Services.ComponentResolution
 				.Replace("()", string.Empty)
 				.Trim();
 		}
+
+
 		private static void SetLabelFromAttributeMetadata(SolutionComponent solutionComponent, EntityMetadata entityMetadata, AttributeMetadata attributeMetadata)
 		{
 			if (solutionComponent == null) return;
