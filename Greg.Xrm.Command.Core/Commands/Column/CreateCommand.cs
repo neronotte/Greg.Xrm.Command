@@ -1,4 +1,5 @@
 ﻿using Greg.Xrm.Command.Parsing;
+using Greg.Xrm.Command.Services;
 using Microsoft.Xrm.Sdk.Metadata;
 using System.ComponentModel.DataAnnotations;
 
@@ -6,7 +7,7 @@ namespace Greg.Xrm.Command.Commands.Column
 {
     [Command("column", "create", HelpText = "Creates a new column on a given Dataverse table")]
     [Alias("create", "column")]
-    public class CreateCommand
+    public class CreateCommand : ICanProvideUsageExample
     {
         [Option("table", "t", HelpText = "The name of the entity for which you want to create an attribute")]
         [Required]
@@ -49,7 +50,7 @@ namespace Greg.Xrm.Command.Commands.Column
         [Option("audit", "a", HelpText = "Indicates whether the attribute is enabled for auditing (default: true).")]
         public bool IsAuditEnabled { get; set; } = true;
 
-        [Option("options", "o", HelpText = "The list of options for the attribute, as a single string separated by comma (,) or semicolon (;) or pipe (|).\nValues will be automatically generated")]
+        [Option("options", "o", HelpText = "The list of options for the attribute, as a single string separated by comma (,) or semicolon (;) or pipe.\nYou can pass also values separating using syntax \"label1=value1,label2=value2\"\nIf not provided, values will be automatically generated")]
         public string? Options { get; internal set; }
 
         [Option("globalOptionSetName", "gon", HelpText = "For Picklist type columns that must be tied to a global option set,\nprovides the name of the global option set.")]
@@ -85,7 +86,106 @@ namespace Greg.Xrm.Command.Commands.Column
 
         [Option("falseLabel", "fl", HelpText = "For  Boolean type columns that represents the Label to be associated to the \"False\" value.", DefaultValue = "False")]
         public string? FalseLabel { get; set; } = "False";
-    }
+
+		public void WriteUsageExamples(MarkdownWriter writer)
+		{
+			writer.WriteParagraph("> This section is a work in progress");
+
+			writer.WriteLine("This command allows you to create a new column on a given Dataverse table. You can specify various attributes of the column, such as its name, type, format, and other properties, and the command will automatically infer the remaining ones basing on the conventions described in the table below.");
+			writer.WriteParagraph("The following sections describe how to generate each specific type of column.");
+
+
+
+			WriteUsageString(writer);
+            WriteUsageMemo(writer);
+            WriteUsageBoolean(writer);
+
+		}
+
+		private static void WriteUsageString(MarkdownWriter writer)
+		{
+			writer.WriteTitle3("Text (String) column");
+			writer.WriteParagraph("It's the type of column created by default if you simply type");
+
+			writer.WriteCodeBlock("pacx column create -t tableName -n columnName", "Powershell");
+
+			writer.WriteLine("The system will automatically generate a column of type text with the following features:").WriteLine();
+			writer.WriteList(
+				"**Display Name**: columnName"
+				, "**Schema Name**: publisherprefix_columnName (all lowercase without special chars or spaces)"
+				, "**Type**: String"
+				, "**Format**: Text"
+				, "**Max Length**: 100"
+				, "**Required**: None"
+				, "**Audit Enabled**: true");
+
+			writer.WriteParagraph("You can manually set all other arguments in the following way:");
+
+			writer.WriteCodeBlock(@"# Specify a different format (supported values are: Email, Text, TextArea, Url, TickerSymbol, Phone, Json, RichText)
+pacx column create -t tableName -n columnName --stringFormat Email
+
+# Specify a different max length (default is 100)
+pacx column create -t tableName -n columnName --len 200
+
+# Create a required field (supported values are: None, ApplicationRequired, Recommended)
+pacx column create -t tableName -n columnName -r ApplicationRequired
+
+# Disable auditing for this column
+pacx column create -t tableName -n columnName --audit false
+
+# Create a column with a description
+pacx column create -t tableName -n columnName -d ""This is a description of the column""
+
+# Create a column of type TextArea or RichText, required
+pacx column create -t tableName -n columnName --stringFormat TextArea --len 2000 -r ApplicationRequired 
+pacx column create -t tableName -n columnName --stringFormat RichText --len 2000 -r ApplicationRequired 
+
+# Create a column of type Json
+pacx column create -t tableName -n columnName --stringFormat Json --len 4000", "Powershell");
+		}
+
+		private static void WriteUsageMemo(MarkdownWriter writer)
+		{
+			writer.WriteTitle3("Multiline String (Memo) column");
+			writer.WriteParagraph("It's a different type of String column, that by default accepts more than one line of text");
+
+			writer.WriteCodeBlock("pacx column create --type Memo -t tableName -n columnName", "Powershell");
+
+			writer.WriteLine("The system will automatically generate a column of type Memo with the following features:").WriteLine();
+			writer.WriteList(
+				"**Display Name**: columnName"
+				, "**Schema Name**: publisherprefix_columnName (all lowercase without special chars or spaces)"
+				, "**Type**: Memo"
+				, "**Format**: Text"
+				, "**Max Length**: 2000"
+				, "**Required**: None"
+				, "**Audit Enabled**: true");
+
+			writer.WriteParagraph("You can manually set all other arguments in the following way:");
+
+			writer.WriteCodeBlock(@"# Specify a different format (Email, Json, RichText, Text, TextArea)
+pacx column create --type Memo -t tableName -n columnName --memoFormat RichText
+
+# Specify a different max length (default is 2000)
+pacx column create --type Memo -t tableName -n columnName --len 200
+
+# Create a required field (supported values are: None, ApplicationRequired, Recommended)
+pacx column create --type Memo -t tableName -n columnName -r ApplicationRequired", "Powershell");
+		}
+
+		private static void WriteUsageBoolean(MarkdownWriter writer)
+		{
+			writer.WriteTitle3("True/False (Boolean) column");
+
+			writer.WriteCodeBlock(@"# Creates a simple true/false column
+pacx column create --type Boolean -t tableName -n columnName
+
+# Change the labels for True and False values
+pacx column create --type Boolean -t tableName -n columnName --trueValue Yes --falseValue No");
+		}
+
+
+	}
 
     public enum DateTimeBehavior1
     {
