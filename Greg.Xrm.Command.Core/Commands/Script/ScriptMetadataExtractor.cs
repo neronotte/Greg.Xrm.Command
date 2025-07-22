@@ -19,20 +19,34 @@ namespace Greg.Xrm.Command.Commands.Script
     public class ScriptMetadataExtractor
     {
         private readonly IOrganizationServiceRepository organizationServiceRepository;
+        private RetrieveAllEntitiesResponse? cachedAllEntitiesResponse;
+        private Task<RetrieveAllEntitiesResponse>? cachedAllEntitiesTask;
+
         public ScriptMetadataExtractor(IOrganizationServiceRepository organizationServiceRepository)
         {
             this.organizationServiceRepository = organizationServiceRepository;
         }
 
-        public async Task<List<Models.EntityMetadata>> GetEntitiesByPrefixAsync(List<string> prefixes)
+        private async Task<RetrieveAllEntitiesResponse> GetAllEntitiesResponseAsync()
         {
+            if (cachedAllEntitiesResponse != null)
+                return cachedAllEntitiesResponse;
+            if (cachedAllEntitiesTask != null)
+                return await cachedAllEntitiesTask;
             var crm = await organizationServiceRepository.GetCurrentConnectionAsync();
             var request = new RetrieveAllEntitiesRequest
             {
-                EntityFilters = EntityFilters.Entity | EntityFilters.Attributes | EntityFilters.Relationships,
+                EntityFilters = EntityFilters.All,
                 RetrieveAsIfPublished = false
             };
-            var response = (RetrieveAllEntitiesResponse)await crm.ExecuteAsync(request);
+            cachedAllEntitiesTask = crm.ExecuteAsync(request).ContinueWith(t => (RetrieveAllEntitiesResponse)t.Result);
+            cachedAllEntitiesResponse = await cachedAllEntitiesTask;
+            return cachedAllEntitiesResponse;
+        }
+
+        public async Task<List<Models.EntityMetadata>> GetEntitiesByPrefixAsync(List<string> prefixes)
+        {
+            var response = await GetAllEntitiesResponseAsync();
             return EntityMetadataHelper.ExtractEntitiesByPrefix(response.EntityMetadata, prefixes);
         }
 
@@ -48,13 +62,7 @@ namespace Greg.Xrm.Command.Commands.Script
             query.Criteria.AddCondition("componenttype", ConditionOperator.Equal, 1); // 1 = Entity
             var solutionComponents = await crm.RetrieveMultipleAsync(query);
             var entityIds = solutionComponents.Entities.Select(e => (Guid)e["objectid"]).ToList();
-
-            var request = new RetrieveAllEntitiesRequest
-            {
-                EntityFilters = EntityFilters.Entity | EntityFilters.Attributes | EntityFilters.Relationships,
-                RetrieveAsIfPublished = false
-            };
-            var response = (RetrieveAllEntitiesResponse)await crm.ExecuteAsync(request);
+            var response = await GetAllEntitiesResponseAsync();
             return EntityMetadataHelper.ExtractEntitiesBySolution(response.EntityMetadata, entityIds, prefixes);
         }
 
@@ -74,26 +82,15 @@ namespace Greg.Xrm.Command.Commands.Script
 
         public async Task<Models.EntityMetadata?> GetTableAsync(string tableName, List<string> prefixes)
         {
-            var crm = await organizationServiceRepository.GetCurrentConnectionAsync();
-            var request = new RetrieveEntityRequest
-            {
-                LogicalName = tableName,
-                EntityFilters = EntityFilters.All
-            };
-            var response = (RetrieveEntityResponse)await crm.ExecuteAsync(request);
-            var e = response.EntityMetadata;
-            return EntityMetadataHelper.ExtractEntityByName(new List<EntityMetadata>() { response.EntityMetadata }, tableName, prefixes);
+            var response = await GetAllEntitiesResponseAsync();
+            var e = response.EntityMetadata.FirstOrDefault(x => x.LogicalName == tableName);
+            if (e == null) return null;
+            return EntityMetadataHelper.ExtractEntityByName(new List<EntityMetadata>() { e }, tableName, prefixes);
         }
 
         public async Task<List<Models.RelationshipMetadata>> GetRelationshipsAsync(List<string> prefixes, List<Models.EntityMetadata> includedEntities = null)
         {
-            var crm = await organizationServiceRepository.GetCurrentConnectionAsync();
-            var request = new RetrieveAllEntitiesRequest
-            {
-                EntityFilters = EntityFilters.Relationships,
-                RetrieveAsIfPublished = false
-            };
-            var response = (RetrieveAllEntitiesResponse)await crm.ExecuteAsync(request);
+            var response = await GetAllEntitiesResponseAsync();
             return RelationshipMetadataHelper.ExtractRelationships(response.EntityMetadata, prefixes, includedEntities);
         }
 
@@ -102,14 +99,9 @@ namespace Greg.Xrm.Command.Commands.Script
             var crm = await organizationServiceRepository.GetCurrentConnectionAsync();
             var globalRequest = new RetrieveAllOptionSetsRequest();
             var globalResponse = (RetrieveAllOptionSetsResponse)await crm.ExecuteAsync(globalRequest);
-            var entityRequest = new RetrieveAllEntitiesRequest
-            {
-                EntityFilters = EntityFilters.Attributes,
-                RetrieveAsIfPublished = false
-            };
-            var entityResponse = (RetrieveAllEntitiesResponse)await crm.ExecuteAsync(entityRequest);
+            var response = await GetAllEntitiesResponseAsync();
             var globalOptionSets = globalResponse.OptionSetMetadata.OfType<OptionSetMetadata>();
-            var result = OptionSetMetadataHelper.ExtractOptionSets(entityResponse.EntityMetadata, globalOptionSets);
+            var result = OptionSetMetadataHelper.ExtractOptionSets(response.EntityMetadata, globalOptionSets);
             if (entityFilter != null)
             {
                 return result.Where(os => entityFilter.Contains(os.EntityName)).ToList();
