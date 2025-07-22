@@ -250,7 +250,7 @@ namespace Greg.Xrm.Command.Commands.Script.Service
                 .Where(r => r.Type == Models.RelationshipType.ManyToMany && !string.IsNullOrEmpty(r.IntersectEntity))
                 .Select(r => r.IntersectEntity!));
             script.AppendLine("# =====================================================");
-            script.AppendLine("# DATAMODEL CREATION SCRIPT - COMPLETE VERSION");
+            script.AppendLine("# DATAMODEL CREATION SCRIPT");
             script.AppendLine("# =====================================================");
             script.AppendLine($"# Custom Prefix: {string.Join(", ", prefixes)}");
             script.AppendLine();
@@ -288,47 +288,6 @@ namespace Greg.Xrm.Command.Commands.Script.Service
             {
                 script.AppendLine();
                 script.AppendLine("# ===================== STANDARD ENTITIES/RELATIONSHIPS =====================");
-                script.Append(commentedSection.ToString());
-            }
-            return script.ToString();
-        }
-
-        public string GeneratePacxScriptForTable(Models.EntityMetadata entity, List<string> prefixes, List<Models.RelationshipMetadata>? relationships = null)
-        {
-            var script = new StringBuilder();
-            var commentedSection = new StringBuilder();
-            // If the table is an intersect entity used in an nn relationship, do not generate the table
-            if (relationships != null)
-            {
-                var nnIntersectEntities = new HashSet<string>(
-                    relationships.Where(r => r.Type == Models.RelationshipType.ManyToMany && !string.IsNullOrEmpty(r.IntersectEntity))
-                                 .Select(r => r.IntersectEntity!)
-                );
-                if (nnIntersectEntities.Contains(entity.SchemaName))
-                    return string.Empty;
-            }
-            script.AppendLine($"# PACX Script for table: {entity.SchemaName} with prefix: {string.Join(", ", prefixes)}");
-            AppendTableCreate(script, entity);
-            script.AppendLine();
-            AppendCustomColumns(script, entity);
-            AppendStandardColumns(commentedSection, entity);
-            // RELATIONSHIPS
-            if (relationships != null)
-            {
-                script.AppendLine();
-                script.AppendLine("# RELATIONSHIPS");
-                var allEntityNames = new HashSet<string> { entity.SchemaName };
-                var customEntityNames = new HashSet<string>();
-                if (entity.IsCustomEntity)
-                    customEntityNames.Add(entity.SchemaName);
-                AppendRelationships(script, relationships, prefixes, customEntityNames, allEntityNames, entity.SchemaName);
-                AppendStandardRelationships(commentedSection, relationships, prefixes, customEntityNames, allEntityNames, entity.SchemaName);
-            }
-            // Add commented section at the end for standard elements
-            if (commentedSection.Length > 0)
-            {
-                script.AppendLine();
-                script.AppendLine("# ===================== STANDARD COLUMNS/RELATIONSHIPS =====================");
                 script.Append(commentedSection.ToString());
             }
             return script.ToString();

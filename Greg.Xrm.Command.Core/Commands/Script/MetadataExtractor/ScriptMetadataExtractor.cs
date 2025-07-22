@@ -124,10 +124,5 @@ namespace Greg.Xrm.Command.Commands.Script.MetadataExtractor
         {
             return scriptBuilder.GeneratePacxScript(entities, relationships, prefixes);
         }
-
-        public string GeneratePacxScriptForTable(Models.EntityMetadata entity, List<string> prefixes, List<Models.RelationshipMetadata>? relationships = null)
-        {
-            return scriptBuilder.GeneratePacxScriptForTable(entity, prefixes, relationships);
-        }
     }
 }
