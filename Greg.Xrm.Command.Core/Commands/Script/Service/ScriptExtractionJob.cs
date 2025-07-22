@@ -1,8 +1,4 @@
 using Greg.Xrm.Command.Services.Output;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Collections.Generic;
 using Greg.Xrm.Command.Commands.Script.MetadataExtractor;
 using Greg.Xrm.Command.Commands.Script.Models;
 

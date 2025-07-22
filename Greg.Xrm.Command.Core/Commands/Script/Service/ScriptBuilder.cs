@@ -1,10 +1,7 @@
 using CsvHelper;
 using CsvHelper.Configuration;
 using System.Globalization;
-using System.IO;
 using System.Text;
-using System.Linq;
-using System.Collections.Generic;
 using Greg.Xrm.Command.Commands.Script.Models;
 
 namespace Greg.Xrm.Command.Commands.Script.Service

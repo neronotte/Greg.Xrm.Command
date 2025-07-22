@@ -1,12 +1,5 @@
 using Greg.Xrm.Command.Services.Output;
-using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Commands.Script.MetadataExtractor;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using System;
-using System.IO;
 using Greg.Xrm.Command.Commands.Script.Models;
 
 namespace Greg.Xrm.Command.Commands.Script.Service

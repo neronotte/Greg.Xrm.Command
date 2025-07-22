@@ -1,16 +1,8 @@
 using Microsoft.PowerPlatform.Dataverse.Client;
-using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Messages;
 using Microsoft.Xrm.Sdk.Metadata;
 using Microsoft.Xrm.Sdk.Query;
 using Greg.Xrm.Command.Services.Connection;
-using System.Text;
-using System.Linq;
-using System.Globalization;
-using System.IO;
-using CsvHelper;
-using CsvHelper.Configuration;
-using System.Collections.Generic;
 using Greg.Xrm.Command.Commands.Script.Service;
 using Greg.Xrm.Command.Commands.Script.Models;
 

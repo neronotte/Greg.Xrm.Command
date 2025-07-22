@@ -1,5 +1,4 @@
 using Microsoft.Xrm.Sdk.Metadata;
-using System.Collections.Generic;
 
 namespace Greg.Xrm.Command.Commands.Script.Models
 {

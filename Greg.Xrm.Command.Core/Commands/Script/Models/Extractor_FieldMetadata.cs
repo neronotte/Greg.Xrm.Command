@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace Greg.Xrm.Command.Commands.Script.Models
 {
     public class Extractor_FieldMetadata
