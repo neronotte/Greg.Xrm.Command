@@ -28,7 +28,9 @@ namespace Greg.Xrm.Command.Commands.Script
             writer.WriteParagraph("This command generates PACX scripts for all entities with the specified custom prefixes.");
             writer.WriteParagraph("If requested, the generated CSV file will contain only the statecode and statuscode fields for each entity, for documentation purposes.");
             writer.WriteParagraph("Example usage:");
-            writer.WriteCodeBlock("pacx script all --customPrefixs \"custom_\" --output \"C:/output\" --pacxScriptName \"myscript.ps1\" --stateFieldsDefinitionName \"state-fields.csv\" --withStateFieldsDefinition true", "PowerShell");
+            writer.WriteCodeBlock(
+                "pacx script all --customPrefixs \"custom_\" --output \"C:/output\" --scriptFileName \"myscript.ps1\" --stateFileName \"state-fields.csv\" --includeStateFields",
+                "PowerShell");
         }
     }
 }
