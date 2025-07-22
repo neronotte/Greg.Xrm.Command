@@ -24,8 +24,8 @@ namespace Greg.Xrm.Command.Commands.Script
                 command.PacxScriptName,
                 command.StateFieldsDefinitionName,
                 (entities) => metadataExtractor.GetRelationshipsAsync(prefixes, entities),
-                command.WithStateFieldsDefinition ? ((optionSets, csvPath) => ScriptMetadataExtractor.GenerateStateFieldsCSV(optionSets, csvPath)) : ((optionSets, csvPath) => Task.CompletedTask),
-                (entities, relationships, prefix) => ScriptMetadataExtractor.GeneratePacxScript(entities, relationships, prefix),
+                command.WithStateFieldsDefinition ? ((optionSets, csvPath) => metadataExtractor.GenerateStateFieldsCSV(optionSets, csvPath)) : ((optionSets, csvPath) => Task.CompletedTask),
+                (entities, relationships, prefix) => metadataExtractor.GeneratePacxScript(entities, relationships, prefix),
                 command.WithStateFieldsDefinition
             );
         }
