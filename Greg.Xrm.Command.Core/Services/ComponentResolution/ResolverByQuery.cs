@@ -14,9 +14,9 @@ namespace Greg.Xrm.Command.Services.ComponentResolution
 		private readonly ILogger log;
 		private readonly string table;
 		private string nameColumn;
-		private string tableIdColumn;
+		private string? tableIdColumn;
 
-		public ResolverByQuery(ILogger log, string table, string nameColumn, string tableIdColumn = null)
+		public ResolverByQuery(ILogger log, string table, string nameColumn, string? tableIdColumn = null)
 		{
 			this.log = log;
 			this.table = table;

@@ -15,7 +15,7 @@ namespace Greg.Xrm.Command.Model
 		}
 
 
-		public string ComponentTypeName => this.GetFormatted(nameof(componenttype));
+		public string ComponentTypeName => this.GetFormatted(nameof(componenttype)) ?? string.Empty;
 
 #pragma warning disable IDE1006 // Naming Styles
 		public OptionSetValue componenttype => this.Get<OptionSetValue>();
@@ -28,8 +28,8 @@ namespace Greg.Xrm.Command.Model
 
 #pragma warning restore IDE1006 // Naming Styles
 
-		public string SolutionComponentDefinitionName => this.GetAliased<string>("scd", "name");
-		public string SolutionComponentDefinitionPrimaryEntityName => this.GetAliased<string>("scd", "primaryentityname");
+		public string SolutionComponentDefinitionName => this.GetAliased<string>("scd", "name") ?? string.Empty;
+		public string SolutionComponentDefinitionPrimaryEntityName => this.GetAliased<string>("scd", "primaryentityname") ?? string.Empty;
 		public int SolutionComponentDefinitionObjectTypeCode => this.GetAliased<int>("scd", "objecttypecode");
 
 

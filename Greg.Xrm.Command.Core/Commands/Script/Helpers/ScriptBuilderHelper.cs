@@ -116,7 +116,7 @@ namespace Greg.Xrm.Command.Commands.Script.Helpers
             script.AppendLine();
         }
 
-        private static void AppendRelationships(StringBuilder script, IEnumerable<Models.RelationshipMetadata> relationships, string customPrefix, HashSet<string> customEntityNames, HashSet<string> allEntityNames, string? entityNameFilter = null)
+        private static void AppendRelationships(StringBuilder script, IEnumerable<Models.RelationshipMetadata> relationships, string customPrefix, string? entityNameFilter = null)
         {
             var customPrefixes = customPrefix.Split(',').Select(p => p.Trim()).ToList();
             var rels = relationships.Where(r => r.IsCustomRelationship).OrderBy(r => r.Name);
@@ -207,7 +207,7 @@ namespace Greg.Xrm.Command.Commands.Script.Helpers
             }
         }
 
-        private static void AppendStandardRelationships(StringBuilder commentedSection, IEnumerable<Models.RelationshipMetadata> relationships, string customPrefix, HashSet<string> customEntityNames, HashSet<string> allEntityNames, string? entityNameFilter = null)
+        private static void AppendStandardRelationships(StringBuilder commentedSection, IEnumerable<Models.RelationshipMetadata> relationships, string customPrefix, string? entityNameFilter = null)
         {
             var customPrefixes = customPrefix.Split(',').Select(p => p.Trim()).ToList();
             var rels = relationships.Where(r => !r.IsCustomRelationship).OrderBy(r => r.Name);
@@ -231,7 +231,7 @@ namespace Greg.Xrm.Command.Commands.Script.Helpers
             }
             // Header and print nn
             commentedSection.AppendLine("# --- N:N RELATIONSHIPS (STANDARD) ---");
-            foreach (var rel in rels.DistinctBy(r => r.IntersectEntity).Where(r => r.Type == Models.RelationshipType.ManyToMany && !customPrefixes.Any(pre => r.FirstEntity.StartsWith(pre)) && !customPrefixes.Any(pre => r.SecondEntity.StartsWith(pre))))
+            foreach (var rel in rels.DistinctBy(r => r.IntersectEntity).Where(r => r.Type == Models.RelationshipType.ManyToMany && !customPrefixes.Any(pre => r.FirstEntity!.StartsWith(pre)) && !customPrefixes.Any(pre => r.SecondEntity!.StartsWith(pre))))
             {
                 commentedSection.AppendLine($"# pacx rel create nn --table1 \"{rel.FirstEntity}\" --table2 \"{rel.SecondEntity}\" --explicit --schemaName \"{rel.IntersectEntity}\"");
             }
@@ -243,9 +243,8 @@ namespace Greg.Xrm.Command.Commands.Script.Helpers
             var commentedSection = new StringBuilder();
             var customEntities = entities.Where(e => e.IsCustomEntity).OrderBy(e => e.SchemaName).ToList();
             var standardEntities = entities.Where(e => !e.IsCustomEntity).OrderBy(e => e.SchemaName).ToList();
-            var allEntityNames = new HashSet<string>(entities.Select(e => e.SchemaName));
-            var customEntityNames = new HashSet<string>(customEntities.Select(e => e.SchemaName));
-            var standardEntityNames = new HashSet<string>(standardEntities.Select(e => e.SchemaName));
+
+
             // Intersect entities used in nn relationships
             var nnIntersectEntities = new HashSet<string>(relationships
                 .Where(r => r.Type == Models.RelationshipType.ManyToMany && !string.IsNullOrEmpty(r.IntersectEntity))
@@ -281,8 +280,8 @@ namespace Greg.Xrm.Command.Commands.Script.Helpers
             }
             script.AppendLine();
             script.AppendLine("# 3. CREATE ALL RELATIONSHIPS");
-            AppendRelationships(script, relationships, customPrefix, customEntityNames, allEntityNames);
-            AppendStandardRelationships(commentedSection, relationships, customPrefix, customEntityNames, allEntityNames);
+            AppendRelationships(script, relationships, customPrefix);
+            AppendStandardRelationships(commentedSection, relationships, customPrefix);
 
             // Add commented section at the end for strandard elements
             if (commentedSection.Length > 0)
@@ -318,12 +317,12 @@ namespace Greg.Xrm.Command.Commands.Script.Helpers
             {
                 script.AppendLine();
                 script.AppendLine("# RELATIONSHIPS");
-                var allEntityNames = new HashSet<string> { entity.SchemaName };
+
                 var customEntityNames = new HashSet<string>();
                 if (entity.IsCustomEntity)
                     customEntityNames.Add(entity.SchemaName);
-                AppendRelationships(script, relationships, customPrefix, customEntityNames, allEntityNames, entity.SchemaName);
-                AppendStandardRelationships(commentedSection, relationships, customPrefix, customEntityNames, allEntityNames, entity.SchemaName);
+                AppendRelationships(script, relationships, customPrefix, entity.SchemaName);
+                AppendStandardRelationships(commentedSection, relationships, customPrefix, entity.SchemaName);
             }
             // Add commented section at the end for standard elements
             if (commentedSection.Length > 0)

@@ -54,7 +54,7 @@ namespace Greg.Xrm.Command.Commands.Script.Helpers
             await File.WriteAllTextAsync(pacxScriptPath, script);
             output.WriteLine($"PACX script generated: {pacxScriptPath}");
 
-            string csvPath = null;
+            string? csvPath = null;
             if (exportStateFields)
             {
                 output.WriteLine($"Step {step++}: Generating State Field CSV...");

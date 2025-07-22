@@ -1,17 +1,8 @@
 using Microsoft.PowerPlatform.Dataverse.Client;
-using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Messages;
 using Microsoft.Xrm.Sdk.Metadata;
 using Microsoft.Xrm.Sdk.Query;
 using Greg.Xrm.Command.Services.Connection;
-using System.Text;
-using System.Linq;
-using System.Globalization;
-using System.IO;
-using CsvHelper;
-using CsvHelper.Configuration;
-using Models = Greg.Xrm.Command.Commands.Script.Models;
-using System.Collections.Generic;
 using Greg.Xrm.Command.Commands.Script.Helpers;
 
 namespace Greg.Xrm.Command.Commands.Script
@@ -76,7 +67,7 @@ namespace Greg.Xrm.Command.Commands.Script
             query.Criteria.AddCondition("uniquename", ConditionOperator.Equal, solutionName);
             var solutions = await crm.RetrieveMultipleAsync(query);
             var solution = solutions.Entities.FirstOrDefault();
-            if (solution == null) throw new Exception($"Solution not found: {solutionName}");
+            if (solution == null) throw new CommandException(CommandException.CommandInvalidArgumentValue, $"Solution not found: {solutionName}");
             return (Guid)solution["solutionid"];
         }
 
@@ -88,13 +79,13 @@ namespace Greg.Xrm.Command.Commands.Script
             return EntityMetadataHelper.ExtractEntityByName(new List<EntityMetadata>() { e }, tableName, prefixes);
         }
 
-        public async Task<List<Models.RelationshipMetadata>> GetRelationshipsAsync(List<string> prefixes, List<Models.EntityMetadata> includedEntities = null)
+        public async Task<List<Models.RelationshipMetadata>> GetRelationshipsAsync(List<string> prefixes, List<Models.EntityMetadata> includedEntities)
         {
             var response = await GetAllEntitiesResponseAsync();
             return RelationshipMetadataHelper.ExtractRelationships(response.EntityMetadata, prefixes, includedEntities);
         }
 
-        public async Task<List<Models.OptionSetMetadata>> GetOptionSetsAsync(List<string> entityFilter = null)
+        public async Task<List<Models.OptionSetMetadata>> GetOptionSetsAsync(List<string>? entityFilter= null)
         {
             var crm = await organizationServiceRepository.GetCurrentConnectionAsync();
             var globalRequest = new RetrieveAllOptionSetsRequest();
@@ -109,18 +100,18 @@ namespace Greg.Xrm.Command.Commands.Script
             return result;
         }
 
-        public Task GenerateStateFieldsCSV(List<Models.OptionSetMetadata> optionSets, string outputFilePath)
+        public static Task GenerateStateFieldsCSV(List<Models.OptionSetMetadata> optionSets, string outputFilePath)
         {
             ScriptBuilderHelper.GenerateOptionSetCsv(optionSets, outputFilePath);
             return Task.CompletedTask;
         }
 
-        public string GeneratePacxScript(List<Models.EntityMetadata> entities, List<Models.RelationshipMetadata> relationships, string customPrefix)
+        public static string GeneratePacxScript(List<Models.EntityMetadata> entities, List<Models.RelationshipMetadata> relationships, string customPrefix)
         {
             return ScriptBuilderHelper.GeneratePacxScript(entities, relationships, customPrefix);
         }
 
-        public string GeneratePacxScriptForTable(Models.EntityMetadata entity, string customPrefix, List<Models.RelationshipMetadata>? relationships = null)
+        public static string GeneratePacxScriptForTable(Models.EntityMetadata entity, string customPrefix, List<Models.RelationshipMetadata>? relationships = null)
         {
             return ScriptBuilderHelper.GeneratePacxScriptForTable(entity, customPrefix, relationships);
         }

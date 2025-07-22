@@ -42,12 +42,12 @@ namespace Greg.Xrm.Command.Commands.Script.Helpers
                 {
                     case StringAttributeMetadata str:
                         field.MaxLength = str.MaxLength;
-                        field.Format = str.Format?.ToString();
+                        field.Format = str.Format?.ToString() ?? string.Empty;
                         field.AutoNumberFormat = str.AutoNumberFormat;
                         break;
                     case MemoAttributeMetadata memo:
                         field.MaxLength = memo.MaxLength;
-                        field.Format = memo.Format?.ToString();
+                        field.Format = memo.Format?.ToString() ?? string.Empty;
                         break;
                     case IntegerAttributeMetadata integer:
                         field.MinValue = integer.MinValue;
@@ -60,8 +60,8 @@ namespace Greg.Xrm.Command.Commands.Script.Helpers
                         field.Precision = dec.Precision;
                         break;
                     case MoneyAttributeMetadata money:
-                        field.MinValue = (double?)money.MinValue;
-                        field.MaxValue = (double?)money.MaxValue;
+                        field.MinValue = money.MinValue;
+                        field.MaxValue = money.MaxValue;
                         field.Precision = money.Precision;
                         field.PrecisionSource = money.PrecisionSource;
                         break;
