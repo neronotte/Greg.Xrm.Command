@@ -67,6 +67,9 @@ namespace Greg.Xrm.Command.Commands.Column.Builders
                 if (optionArray.Count(x => x.HasValue) != optionArray.Length)
 					throw new CommandException(CommandException.CommandInvalidArgumentValue, $"If you specify the value for one option, it must be specified for all options.");
 
+                if (optionArray.Any(x => x.HasValue) && optionArray.Select(x => x.Value).Distinct().Count() != optionArray.Length)
+                    throw new CommandException(CommandException.CommandInvalidArgumentValue, $"The values of the options must be unique.");
+
 
 				for (int i = 0; i < optionArray.Length; i++)
                 {
@@ -108,10 +111,10 @@ namespace Greg.Xrm.Command.Commands.Column.Builders
 			{
 				var parts = text.Trim().Split("=:".ToCharArray()).Select(x => x.Trim()).ToArray();
 				if (parts.Length == 0)
-					throw new ArgumentException($"The option '{text}' is not valid. It must be in the format 'label=value' or just 'label'.", nameof(text));
+					throw new ArgumentException($"The option '{text}' is not valid. It must be in the format 'label:value' or just 'label'.", nameof(text));
 
 				if (parts.Length > 2)
-					throw new ArgumentException($"The option '{text}' is not valid. It must be in the format 'label=value' or just 'label'.", nameof(text));
+					throw new ArgumentException($"The option '{text}' is not valid. It must be in the format 'label:value' or just 'label'.", nameof(text));
 
 
 				this.Label = parts[0];

@@ -26,7 +26,7 @@ namespace Greg.Xrm.Command.Commands.Column
         [Option("description", "d", HelpText = "The description of the attribute.")]
         public string? Description { get; set; }
 
-        [Option("type", "at", HelpText = "The type of the attribute.\nCurrently supported values: Integer, Money, Picklist, String, DateTime, Memo, Boolean, Decimal.\n[default: String]", SuppressValuesHelp = true)]
+        [Option("type", "at", HelpText = "The type of the attribute.\nCurrently supported values: Integer, Money, Picklist, String, DateTime, Memo, Boolean, Decimal, Double.\n[default: String]", SuppressValuesHelp = true)]
         public AttributeTypeCode AttributeType { get; set; } = AttributeTypeCode.String;
 
         [Option("stringFormat", "sf", HelpText = "The format of the string attribute (default: Text).")]
@@ -50,7 +50,7 @@ namespace Greg.Xrm.Command.Commands.Column
         [Option("audit", "a", HelpText = "Indicates whether the attribute is enabled for auditing (default: true).")]
         public bool IsAuditEnabled { get; set; } = true;
 
-        [Option("options", "o", HelpText = "The list of options for the attribute, as a single string separated by comma (,) or semicolon (;) or pipe.\nYou can pass also values separating using syntax \"label1=value1,label2=value2\"\nIf not provided, values will be automatically generated")]
+        [Option("options", "o", HelpText = "The list of options for the attribute, as a single string separated by comma (,) or semicolon (;) or pipe.\nYou can pass also values separating using syntax \"label1:value1,label2:value2\"\nIf not provided, values will be automatically generated")]
         public string? Options { get; internal set; }
 
         [Option("globalOptionSetName", "gon", HelpText = "For Picklist type columns that must be tied to a global option set,\nprovides the name of the global option set.")]
@@ -94,12 +94,15 @@ namespace Greg.Xrm.Command.Commands.Column
 			writer.WriteLine("This command allows you to create a new column on a given Dataverse table. You can specify various attributes of the column, such as its name, type, format, and other properties, and the command will automatically infer the remaining ones basing on the conventions described in the table below.");
 			writer.WriteParagraph("The following sections describe how to generate each specific type of column.");
 
-
-
 			WriteUsageString(writer);
             WriteUsageMemo(writer);
             WriteUsageBoolean(writer);
-
+            WriteUsageInteger(writer);
+            WriteUsageMoney(writer);
+            WriteUsageDecimal(writer);
+            WriteUsagePicklist(writer);
+            WriteUsageDateTime(writer);
+            WriteUsageLookup(writer);
 		}
 
 		private static void WriteUsageString(MarkdownWriter writer)
@@ -142,7 +145,28 @@ pacx column create -t tableName -n columnName --stringFormat RichText --len 2000
 
 # Create a column of type Json
 pacx column create -t tableName -n columnName --stringFormat Json --len 4000", "Powershell");
+
+
+            writer.WriteParagraph("If you want to create an autonumber field, you can use the `--autoNumber` option. The format must be specified in the form of a string, using [the same syntax as the one used in the maker portal](https://learn.microsoft.com/en-us/dynamics365/customerengagement/on-premises/developer/create-auto-number-attributes?view=op-9-1#autonumberformat-options). For example, you can use `{SEQNUM(5)}` to create a 5-digit autonumber field.");
+
+			writer.WriteCodeBlock(@"# Example value: XX-00001
+pacx column create -t tableName -n columnName --autonumber ""XX-{SEQNUM(5)}""
+
+# Example value: 123456-#-R3V
+pacx column create -t tableName -n columnName --autonumber ""{SEQNUM:6}-#-{RANDSTRING:3}""
+
+# Example value: CAS-002000-S1P0H0-20170913091544
+pacx column create -t tableName -n columnName --autonumber ""CAS-{SEQNUM:6}-{RANDSTRING:6}-{DATETIMEUTC:yyyyMMddhhmmss}""
+
+# Example value: CAS-002000-201709-Z8M2Z6-110901
+pacx column create -t tableName -n columnName --autonumber ""CAS-{SEQNUM:6}-{DATETIMEUTC:yyyyMM}-{RANDSTRING:6}-{DATETIMEUTC:hhmmss}""
+", "Powershell");
 		}
+
+
+
+
+
 
 		private static void WriteUsageMemo(MarkdownWriter writer)
 		{
@@ -173,6 +197,11 @@ pacx column create --type Memo -t tableName -n columnName --len 200
 pacx column create --type Memo -t tableName -n columnName -r ApplicationRequired", "Powershell");
 		}
 
+
+
+
+
+
 		private static void WriteUsageBoolean(MarkdownWriter writer)
 		{
 			writer.WriteTitle3("True/False (Boolean) column");
@@ -181,10 +210,137 @@ pacx column create --type Memo -t tableName -n columnName -r ApplicationRequired
 pacx column create --type Boolean -t tableName -n columnName
 
 # Change the labels for True and False values
-pacx column create --type Boolean -t tableName -n columnName --trueValue Yes --falseValue No");
+pacx column create --type Boolean -t tableName -n columnName --trueLabel Yes --falseLabel No", "Powershell");
 		}
 
 
+
+
+
+
+		private static void WriteUsageInteger(MarkdownWriter writer)
+		{
+			writer.WriteTitle3("Whole Number (Integer) column");
+
+			writer.WriteCodeBlock(@"# Creates a simple integer column
+pacx column create --type Integer -t tableName -n columnName
+
+# Set minimum and maximum values
+pacx column create --type Integer -t tableName -n columnName --min 0 --max 100
+
+# Specify integer format (None, Duration, TimeZone, Language, Locale)
+pacx column create --type Integer -t tableName -n columnName --intFormat Duration", "Powershell");
+		}
+
+
+
+
+
+
+		private static void WriteUsageMoney(MarkdownWriter writer)
+		{
+			writer.WriteTitle3("Currency (Money) column");
+
+			writer.WriteCodeBlock(@"# Creates a simple money column with precision 2
+pacx column create --type Money -t tableName -n columnName
+
+# Set precision and precision source
+pacx column create --type Money -t tableName -n columnName --precision 4 --precisionSource 0
+
+# Set minimum and maximum values
+pacx column create --type Money -t tableName -n columnName --min 0 --max 1000000", "Powershell");
+		}
+
+
+
+
+
+
+		private static void WriteUsageDecimal(MarkdownWriter writer)
+		{
+			writer.WriteTitle3("Decimal/Double Number column");
+
+            writer.WriteLine("This type of column is used for storing decimal numbers with a specified precision and range.");
+			writer.WriteLine("If you specify \"Decimal\" as the type, the system will automatically generate a column that in the maker UI is shown as DataType=Decimal.");
+			writer.WriteLine("If you specify \"Double\" as the type, the system will automatically generate a column that in the maker UI is shown as DataType=Float.");
+            writer.WriteLine();
+
+			writer.WriteCodeBlock(@"# Creates a simple decimal column with precision 2
+pacx column create --type Decimal -t tableName -n columnName
+pacx column create --type Double -t tableName -n columnName
+
+# Set precision and min/max values
+pacx column create --type Decimal -t tableName -n columnName --precision 4 --min 0 --max 999.99
+pacx column create --type Double -t tableName -n columnName --precision 4 --min 0 --max 999.99", "Powershell");
+		}
+
+
+
+
+
+
+		private static void WriteUsagePicklist(MarkdownWriter writer)
+		{
+			writer.WriteTitle3("Choice (Picklist) column")
+                .WriteLine("This type of column is used for storing a single choice from a predefined list of options. You can create a simple picklist with options, or use an existing global option set.")
+                .WriteLine("If you want to create a local option set column you can:")
+                .WriteLine();
+
+            writer.WriteList(
+                "Specify only the options labels, separated by commas, semicolons or pipes (|). The system will automatically generate the values for you.",
+                "Specify the options as \"label1:value1,label2:value2\" to create a picklist with custom values."
+            );
+
+            writer.WriteParagraph("As of now, you cannot specify a color for the picklist options.");
+
+            writer.WriteParagraph("Please note that if you specify the values, values must be specified for all options, and they must be unique. If you don't specify the values, the system will generate them automatically starting from the Publisher OptionSetPrefix + 0000.");
+
+			writer.WriteParagraph("If you want to create a multi-select picklist, you can use the `--multiselect` option. If you want to use an existing global option set, you can use the `--globalOptionSetName` option.");
+
+			writer.WriteCodeBlock(@"# Creates a simple picklist with options
+pacx column create --type Picklist -t tableName -n columnName --options ""Option 1,Option 2,Option 3""
+
+# Create picklist with custom values
+pacx column create --type Picklist -t tableName -n columnName --options ""Red:100000000,Green:100000001,Blue:100000002""
+
+# Create multi-select picklist
+pacx column create --type Picklist -t tableName -n columnName --options ""Tag1,Tag2,Tag3"" --multiselect
+
+# Use existing global option set
+pacx column create --type Picklist -t tableName -n columnName --globalOptionSetName existing_global_optionset", "Powershell");
+		}
+
+
+
+
+
+
+		private static void WriteUsageDateTime(MarkdownWriter writer)
+		{
+			writer.WriteTitle3("DateTime column");
+
+			writer.WriteCodeBlock(@"# Creates a simple date and time column
+pacx column create --type DateTime -t tableName -n columnName
+
+# Create date-only column
+pacx column create --type DateTime -t tableName -n columnName --dateTimeBehavior DateOnly --dateTimeFormat DateOnly
+pacx column create --type DateTime -t tableName -n columnName -dtb DateOnly -dtf DateOnly
+
+# Create time-zone independent datetime
+pacx column create --type DateTime -t tableName -n columnName --dateTimeBehavior TimeZoneIndependent
+
+# Create user local datetime with date and time format
+pacx column create --type DateTime -t tableName -n columnName --dateTimeBehavior UserLocal --dateTimeFormat DateAndTime", "Powershell");
+		}
+
+
+
+		private static void WriteUsageLookup(MarkdownWriter writer)
+		{
+			writer.WriteTitle3("Lookup column");
+
+            writer.WriteParagraph("**Lookup column creation is not supported**. You should use `pacx rel create n1` command to generate a relationship, and the lookup column will be created automatically.");
+		}
 	}
 
     public enum DateTimeBehavior1

@@ -11,6 +11,7 @@ namespace Greg.Xrm.Command.Commands.Column.Builders
             cache.Add(AttributeTypeCode.String, () => new AttributeMetadataBuilderString());
             cache.Add(AttributeTypeCode.Integer, () => new AttributeMetadataBuilderInteger());
 			cache.Add(AttributeTypeCode.Decimal, () => new AttributeMetadataBuilderDecimal());
+			cache.Add(AttributeTypeCode.Double, () => new AttributeMetadataBuilderDouble());
 			cache.Add(AttributeTypeCode.Boolean, () => new AttributeMetadataBuilderBoolean());
 			cache.Add(AttributeTypeCode.Picklist, () => new AttributeMetadataBuilderPicklist());
 			cache.Add(AttributeTypeCode.Money, () => new AttributeMetadataBuilderMoney());
