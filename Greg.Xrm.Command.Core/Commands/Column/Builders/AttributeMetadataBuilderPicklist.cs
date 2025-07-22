@@ -1,4 +1,5 @@
-﻿using Microsoft.PowerPlatform.Dataverse.Client;
+﻿using Greg.Xrm.Command.Services.OptionSet;
+using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Messages;
 using Microsoft.Xrm.Sdk.Metadata;
@@ -6,7 +7,7 @@ using System.ServiceModel;
 
 namespace Greg.Xrm.Command.Commands.Column.Builders
 {
-    public class AttributeMetadataBuilderPicklist : AttributeMetadataBuilderBase
+    public class AttributeMetadataBuilderPicklist(IOptionSetParser optionSetParser) : AttributeMetadataBuilderBase
     {
         public override async Task<AttributeMetadata> CreateFromAsync(
             IOrganizationServiceAsync2 crm,
@@ -56,20 +57,8 @@ namespace Greg.Xrm.Command.Commands.Column.Builders
                 if (string.IsNullOrWhiteSpace(optionString))
                     throw new CommandException(CommandException.CommandRequiredArgumentNotProvided, $"The options are required for columns of type Picklist");
 
-                var optionArray = optionString.Split(",;|".ToCharArray(), StringSplitOptions.RemoveEmptyEntries)
-                    .Select( x => x.Trim())
-                    .Where(x => !string.IsNullOrWhiteSpace(x))
-                    .ToArray();
-                if (optionArray.Length == 0)
-                    throw new CommandException(CommandException.CommandRequiredArgumentNotProvided, $"The options are required for columns of type Picklist");
-
-                for (int i = 0; i < optionArray.Length; i++)
-                {
-                    var optionName = optionArray[i];
-                    var optionValue = customizationOptionValuePrefix * 10000 + i;
-
-                    optionSet.Options.Add(new OptionMetadata(new Label(optionName, languageCode), optionValue));
-                }
+                var options = optionSetParser.Parse(optionString, null, customizationOptionValuePrefix, languageCode);
+                optionSet.Options.AddRange(options);
             }
 
             attribute.DefaultFormValue = null;
@@ -94,5 +83,5 @@ namespace Greg.Xrm.Command.Commands.Column.Builders
 
             return newSchemaName;
         }
-    }
+	}
 }

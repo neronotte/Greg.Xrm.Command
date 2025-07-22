@@ -1,4 +1,5 @@
-﻿using Microsoft.Xrm.Sdk.Metadata;
+﻿using Greg.Xrm.Command.Services.OptionSet;
+using Microsoft.Xrm.Sdk.Metadata;
 
 namespace Greg.Xrm.Command.Commands.Column.Builders
 {
@@ -6,13 +7,14 @@ namespace Greg.Xrm.Command.Commands.Column.Builders
     {
         private readonly Dictionary<AttributeTypeCode, Func<IAttributeMetadataBuilder>> cache = new();
 
-        public AttributeMetadataBuilderFactory()
+        public AttributeMetadataBuilderFactory(IOptionSetParser optionSetParser)
         {
             cache.Add(AttributeTypeCode.String, () => new AttributeMetadataBuilderString());
             cache.Add(AttributeTypeCode.Integer, () => new AttributeMetadataBuilderInteger());
 			cache.Add(AttributeTypeCode.Decimal, () => new AttributeMetadataBuilderDecimal());
+			cache.Add(AttributeTypeCode.Double, () => new AttributeMetadataBuilderDouble());
 			cache.Add(AttributeTypeCode.Boolean, () => new AttributeMetadataBuilderBoolean());
-			cache.Add(AttributeTypeCode.Picklist, () => new AttributeMetadataBuilderPicklist());
+			cache.Add(AttributeTypeCode.Picklist, () => new AttributeMetadataBuilderPicklist(optionSetParser));
 			cache.Add(AttributeTypeCode.Money, () => new AttributeMetadataBuilderMoney());
 			cache.Add(AttributeTypeCode.Memo, () => new AttributeMetadataBuilderMemo());
             cache.Add(AttributeTypeCode.DateTime, () => new AttributeMetadataBuilderDateTime());

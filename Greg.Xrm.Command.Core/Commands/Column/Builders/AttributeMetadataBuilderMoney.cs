@@ -15,9 +15,9 @@ namespace Greg.Xrm.Command.Commands.Column.Builders
             attribute.MinValue = GetDoubleValue(command.MinValue, Limit.Min); 
             attribute.MaxValue = GetDoubleValue(command.MaxValue, Limit.Max);
 
-            attribute.Precision = command.Precision; //1;
-            attribute.PrecisionSource = command.PrecisionSource; // default 2;
-            attribute.ImeMode = command.ImeMode; // ImeMode.Disabled;
+            attribute.Precision = command.Precision; //1
+            attribute.PrecisionSource = command.PrecisionSource; // default 2
+            attribute.ImeMode = command.ImeMode; // ImeMode.Disabled
 
             if (attribute.PrecisionSource == 0 && attribute.Precision is null)
             { 

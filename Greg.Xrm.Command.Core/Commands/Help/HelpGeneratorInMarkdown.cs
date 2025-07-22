@@ -150,6 +150,7 @@ namespace Greg.Xrm.Command.Commands.Help
 						writer.Write(assemblyName).Write(" ").Write(alias.ExpandedVerbs).WriteLine();
 					}
 					writer.WriteCodeBlockEnd();
+					writer.WriteLine();
 				}
 
 				if (typeof(ICanProvideUsageExample).IsAssignableFrom(command.CommandType))
