@@ -116,9 +116,8 @@ namespace Greg.Xrm.Command.Commands.Script.Helpers
             script.AppendLine();
         }
 
-        private static void AppendRelationships(StringBuilder script, IEnumerable<Models.RelationshipMetadata> relationships, string customPrefix, HashSet<string> customEntityNames, HashSet<string> allEntityNames, string? entityNameFilter = null)
+        private static void AppendRelationships(StringBuilder script, IEnumerable<Models.RelationshipMetadata> relationships, List<string> customPrefixes, HashSet<string> customEntityNames, HashSet<string> allEntityNames, string? entityNameFilter = null)
         {
-            var customPrefixes = customPrefix.Split(',').Select(p => p.Trim()).ToList();
             var rels = relationships.Where(r => r.IsCustomRelationship).OrderBy(r => r.Name);
             if (!string.IsNullOrEmpty(entityNameFilter))
             {
@@ -207,9 +206,8 @@ namespace Greg.Xrm.Command.Commands.Script.Helpers
             }
         }
 
-        private static void AppendStandardRelationships(StringBuilder commentedSection, IEnumerable<Models.RelationshipMetadata> relationships, string customPrefix, HashSet<string> customEntityNames, HashSet<string> allEntityNames, string? entityNameFilter = null)
+        private static void AppendStandardRelationships(StringBuilder commentedSection, IEnumerable<Models.RelationshipMetadata> relationships, List<string> customPrefixes, HashSet<string> customEntityNames, HashSet<string> allEntityNames, string? entityNameFilter = null)
         {
-            var customPrefixes = customPrefix.Split(',').Select(p => p.Trim()).ToList();
             var rels = relationships.Where(r => !r.IsCustomRelationship).OrderBy(r => r.Name);
             if (!string.IsNullOrEmpty(entityNameFilter))
             {
@@ -237,7 +235,7 @@ namespace Greg.Xrm.Command.Commands.Script.Helpers
             }
         }
 
-        public static string GeneratePacxScript(List<Models.EntityMetadata> entities, List<Models.RelationshipMetadata> relationships, string customPrefix)
+        public static string GeneratePacxScript(List<Models.EntityMetadata> entities, List<Models.RelationshipMetadata> relationships, List<string> prefixes)
         {
             var script = new StringBuilder();
             var commentedSection = new StringBuilder();
@@ -253,7 +251,7 @@ namespace Greg.Xrm.Command.Commands.Script.Helpers
             script.AppendLine("# =====================================================");
             script.AppendLine("# DATAMODEL CREATION SCRIPT - COMPLETE VERSION");
             script.AppendLine("# =====================================================");
-            script.AppendLine($"# Custom Prefix: {customPrefix}");
+            script.AppendLine($"# Custom Prefix: {string.Join(", ", prefixes)}");
             script.AppendLine();
             script.AppendLine("# 1. CREATE ALL TABLES");
             foreach (var entity in customEntities)
@@ -281,8 +279,8 @@ namespace Greg.Xrm.Command.Commands.Script.Helpers
             }
             script.AppendLine();
             script.AppendLine("# 3. CREATE ALL RELATIONSHIPS");
-            AppendRelationships(script, relationships, customPrefix, customEntityNames, allEntityNames);
-            AppendStandardRelationships(commentedSection, relationships, customPrefix, customEntityNames, allEntityNames);
+            AppendRelationships(script, relationships, prefixes, customEntityNames, allEntityNames);
+            AppendStandardRelationships(commentedSection, relationships, prefixes, customEntityNames, allEntityNames);
 
             // Add commented section at the end for strandard elements
             if (commentedSection.Length > 0)
@@ -294,7 +292,7 @@ namespace Greg.Xrm.Command.Commands.Script.Helpers
             return script.ToString();
         }
 
-        public static string GeneratePacxScriptForTable(Models.EntityMetadata entity, string customPrefix, List<Models.RelationshipMetadata>? relationships = null)
+        public static string GeneratePacxScriptForTable(Models.EntityMetadata entity, List<string> prefixes, List<Models.RelationshipMetadata>? relationships = null)
         {
             var script = new StringBuilder();
             var commentedSection = new StringBuilder();
@@ -308,7 +306,7 @@ namespace Greg.Xrm.Command.Commands.Script.Helpers
                 if (nnIntersectEntities.Contains(entity.SchemaName))
                     return string.Empty;
             }
-            script.AppendLine($"# PACX Script for table: {entity.SchemaName} with prefix: {customPrefix}");
+            script.AppendLine($"# PACX Script for table: {entity.SchemaName} with prefix: {string.Join(", ", prefixes)}");
             AppendTableCreate(script, entity);
             script.AppendLine();
             AppendCustomColumns(script, entity);
@@ -322,8 +320,8 @@ namespace Greg.Xrm.Command.Commands.Script.Helpers
                 var customEntityNames = new HashSet<string>();
                 if (entity.IsCustomEntity)
                     customEntityNames.Add(entity.SchemaName);
-                AppendRelationships(script, relationships, customPrefix, customEntityNames, allEntityNames, entity.SchemaName);
-                AppendStandardRelationships(commentedSection, relationships, customPrefix, customEntityNames, allEntityNames, entity.SchemaName);
+                AppendRelationships(script, relationships, prefixes, customEntityNames, allEntityNames, entity.SchemaName);
+                AppendStandardRelationships(commentedSection, relationships, prefixes, customEntityNames, allEntityNames, entity.SchemaName);
             }
             // Add commented section at the end for standard elements
             if (commentedSection.Length > 0)

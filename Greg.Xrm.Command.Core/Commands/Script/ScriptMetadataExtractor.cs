@@ -115,14 +115,14 @@ namespace Greg.Xrm.Command.Commands.Script
             return Task.CompletedTask;
         }
 
-        public string GeneratePacxScript(List<Models.EntityMetadata> entities, List<Models.RelationshipMetadata> relationships, string customPrefix)
+        public string GeneratePacxScript(List<Models.EntityMetadata> entities, List<Models.RelationshipMetadata> relationships, List<string> prefixes)
         {
-            return ScriptBuilderHelper.GeneratePacxScript(entities, relationships, customPrefix);
+            return ScriptBuilderHelper.GeneratePacxScript(entities, relationships, prefixes);
         }
 
-        public string GeneratePacxScriptForTable(Models.EntityMetadata entity, string customPrefix, List<Models.RelationshipMetadata>? relationships = null)
+        public string GeneratePacxScriptForTable(Models.EntityMetadata entity, List<string> prefixes, List<Models.RelationshipMetadata>? relationships = null)
         {
-            return ScriptBuilderHelper.GeneratePacxScriptForTable(entity, customPrefix, relationships);
+            return ScriptBuilderHelper.GeneratePacxScriptForTable(entity, prefixes, relationships);
         }
     }
 }

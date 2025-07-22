@@ -21,7 +21,7 @@ namespace Greg.Xrm.Command.Commands.Script.Helpers
             string stateFieldCsvName,
             Func<List<EntityMetadata>, Task<List<RelationshipMetadata>>> getRelationships,
             Func<List<Models.OptionSetMetadata>, string, Task> generateStateFieldCsv,
-            Func<List<EntityMetadata>, List<RelationshipMetadata>, string, string> generatePacxScript,
+            Func<List<EntityMetadata>, List<RelationshipMetadata>, List<string>, string> generatePacxScript,
             bool exportStateFields = true,
             int step = 1)
         {
@@ -50,7 +50,7 @@ namespace Greg.Xrm.Command.Commands.Script.Helpers
 
             output.WriteLine($"Step {step++}: Generating PACX script...");
             var pacxScriptPath = Path.Combine(outputDir, pacxScriptName);
-            var script = generatePacxScript(entities, relationships, prefixes.FirstOrDefault() ?? "");
+            var script = generatePacxScript(entities, relationships, prefixes);
             await File.WriteAllTextAsync(pacxScriptPath, script);
             output.WriteLine($"PACX script generated: {pacxScriptPath}");
 
