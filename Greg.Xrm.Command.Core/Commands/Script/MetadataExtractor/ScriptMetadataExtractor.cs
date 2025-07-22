@@ -22,11 +22,10 @@ namespace Greg.Xrm.Command.Commands.Script.MetadataExtractor
         private RetrieveAllEntitiesResponse? cachedAllEntitiesResponse;
         private Task<RetrieveAllEntitiesResponse>? cachedAllEntitiesTask;
 
-        private readonly EntityMetadataExtractor entityMetadataHelper = new EntityMetadataExtractor();
-        private readonly FieldMetadataHelper fieldMetadataHelper = new FieldMetadataHelper();
-        private readonly OptionSetMetadataExtractor optionSetMetadataHelper = new OptionSetMetadataExtractor();
-        private readonly RelationshipMetadataExtractor relationshipMetadataHelper = new RelationshipMetadataExtractor();
-        private readonly ScriptBuilder scriptBuilderHelper = new ScriptBuilder();
+        private readonly EntityMetadataExtractor entityMetadataExtractor = new EntityMetadataExtractor();
+        private readonly OptionSetMetadataExtractor optionSetMetadataExtractor = new OptionSetMetadataExtractor();
+        private readonly RelationshipMetadataExtractor relationshipMetadataExtractor = new RelationshipMetadataExtractor();
+        private readonly ScriptBuilder scriptBuilder = new ScriptBuilder();
 
         public ScriptMetadataExtractor(IOrganizationServiceRepository organizationServiceRepository)
         {
@@ -53,7 +52,7 @@ namespace Greg.Xrm.Command.Commands.Script.MetadataExtractor
         public async Task<List<Models.EntityMetadata>> GetEntitiesByPrefixAsync(List<string> prefixes)
         {
             var response = await GetAllEntitiesResponseAsync();
-            return entityMetadataHelper.ExtractEntitiesByPrefix(response.EntityMetadata, prefixes);
+            return entityMetadataExtractor.ExtractEntitiesByPrefix(response.EntityMetadata, prefixes);
         }
 
         public async Task<List<Models.EntityMetadata>> GetEntitiesBySolutionAsync(string solutionName, List<string> prefixes)
@@ -69,7 +68,7 @@ namespace Greg.Xrm.Command.Commands.Script.MetadataExtractor
             var solutionComponents = await crm.RetrieveMultipleAsync(query);
             var entityIds = solutionComponents.Entities.Select(e => (Guid)e["objectid"]).ToList();
             var response = await GetAllEntitiesResponseAsync();
-            return entityMetadataHelper.ExtractEntitiesBySolution(response.EntityMetadata, entityIds, prefixes);
+            return entityMetadataExtractor.ExtractEntitiesBySolution(response.EntityMetadata, entityIds, prefixes);
         }
 
         private async Task<Guid> GetSolutionIdAsync(IOrganizationServiceAsync2 crm, string solutionName)
@@ -91,13 +90,13 @@ namespace Greg.Xrm.Command.Commands.Script.MetadataExtractor
             var response = await GetAllEntitiesResponseAsync();
             var e = response.EntityMetadata.FirstOrDefault(x => x.LogicalName == tableName);
             if (e == null) return null;
-            return entityMetadataHelper.ExtractEntityByName(new List<EntityMetadata>() { e }, tableName, prefixes);
+            return entityMetadataExtractor.ExtractEntityByName(new List<EntityMetadata>() { e }, tableName, prefixes);
         }
 
         public async Task<List<Models.RelationshipMetadata>> GetRelationshipsAsync(List<string> prefixes, List<Models.EntityMetadata> includedEntities = null)
         {
             var response = await GetAllEntitiesResponseAsync();
-            return relationshipMetadataHelper.ExtractRelationships(response.EntityMetadata, prefixes, includedEntities);
+            return relationshipMetadataExtractor.ExtractRelationships(response.EntityMetadata, prefixes, includedEntities);
         }
 
         public async Task<List<Models.OptionSetMetadata>> GetOptionSetsAsync(List<string> entityFilter = null)
@@ -107,7 +106,7 @@ namespace Greg.Xrm.Command.Commands.Script.MetadataExtractor
             var globalResponse = (RetrieveAllOptionSetsResponse)await crm.ExecuteAsync(globalRequest);
             var response = await GetAllEntitiesResponseAsync();
             var globalOptionSets = globalResponse.OptionSetMetadata.OfType<OptionSetMetadata>();
-            var result = optionSetMetadataHelper.ExtractOptionSets(response.EntityMetadata, globalOptionSets);
+            var result = optionSetMetadataExtractor.ExtractOptionSets(response.EntityMetadata, globalOptionSets);
             if (entityFilter != null)
             {
                 return result.Where(os => entityFilter.Contains(os.EntityName)).ToList();
@@ -117,18 +116,18 @@ namespace Greg.Xrm.Command.Commands.Script.MetadataExtractor
 
         public Task GenerateStateFieldsCSV(List<Models.OptionSetMetadata> optionSets, string outputFilePath)
         {
-            scriptBuilderHelper.GenerateOptionSetCsv(optionSets, outputFilePath);
+            scriptBuilder.GenerateOptionSetCsv(optionSets, outputFilePath);
             return Task.CompletedTask;
         }
 
         public string GeneratePacxScript(List<Models.EntityMetadata> entities, List<Models.RelationshipMetadata> relationships, List<string> prefixes)
         {
-            return scriptBuilderHelper.GeneratePacxScript(entities, relationships, prefixes);
+            return scriptBuilder.GeneratePacxScript(entities, relationships, prefixes);
         }
 
         public string GeneratePacxScriptForTable(Models.EntityMetadata entity, List<string> prefixes, List<Models.RelationshipMetadata>? relationships = null)
         {
-            return scriptBuilderHelper.GeneratePacxScriptForTable(entity, prefixes, relationships);
+            return scriptBuilder.GeneratePacxScriptForTable(entity, prefixes, relationships);
         }
     }
 }

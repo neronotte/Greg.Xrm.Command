@@ -7,6 +7,26 @@ namespace Greg.Xrm.Command.Commands.Script.MetadataExtractor
 {
     public class EntityMetadataExtractor
     {
+        private string NormalizeFieldType(string type, string? typeName)
+        {
+            var normalized = type.Replace("Type", "");
+            switch (normalized.ToLower())
+            {
+                case "string": return "String";
+                case "memo": return "Memo";
+                case "integer": return "Integer";
+                case "decimal": return "Decimal";
+                case "double": return "Decimal";
+                case "money": return "Money";
+                case "boolean": return "Boolean";
+                case "datetime": return "DateTime";
+                case "lookup": return "Lookup";
+                case "picklist": return "Picklist";
+                case "multiselectpicklist": return "Picklist";
+                default: return normalized;
+            }
+        }
+
         private Models.EntityMetadata BuildEntityMetadata(EntityMetadata e, List<AttributeMetadata> fields, List<string> prefixes)
         {
             var entity = new Models.EntityMetadata
@@ -33,7 +53,7 @@ namespace Greg.Xrm.Command.Commands.Script.MetadataExtractor
                 {
                     LogicalName = a.LogicalName,
                     DisplayName = a.DisplayName?.UserLocalizedLabel?.Label ?? a.LogicalName,
-                    FieldType = new FieldMetadataHelper().NormalizeFieldType(a.AttributeType?.ToString() ?? "String", a.AttributeTypeName?.Value),
+                    FieldType = NormalizeFieldType(a.AttributeType?.ToString() ?? "String", a.AttributeTypeName?.Value),
                     RequiredLevel = a.RequiredLevel?.Value.ToString() ?? "None",
                     IsCustomField = prefixes.Any(pre => a.LogicalName.StartsWith(pre)),
                     IsLookup = a.AttributeType == AttributeTypeCode.Lookup || a.AttributeType == AttributeTypeCode.Owner
