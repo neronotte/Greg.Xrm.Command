@@ -3,11 +3,11 @@ using Models = Greg.Xrm.Command.Commands.Script.Models;
 using System.Linq;
 using System.Collections.Generic;
 
-namespace Greg.Xrm.Command.Commands.Script.Helpers
+namespace Greg.Xrm.Command.Commands.Script.MetadataExtractor
 {
-    public static class EntityMetadataHelper
+    public class EntityMetadataExtractor
     {
-        private static Models.EntityMetadata BuildEntityMetadata(EntityMetadata e, List<AttributeMetadata> fields, List<string> prefixes)
+        private Models.EntityMetadata BuildEntityMetadata(EntityMetadata e, List<AttributeMetadata> fields, List<string> prefixes)
         {
             var entity = new Models.EntityMetadata
             {
@@ -33,7 +33,7 @@ namespace Greg.Xrm.Command.Commands.Script.Helpers
                 {
                     LogicalName = a.LogicalName,
                     DisplayName = a.DisplayName?.UserLocalizedLabel?.Label ?? a.LogicalName,
-                    FieldType = FieldMetadataHelper.NormalizeFieldType(a.AttributeType?.ToString() ?? "String", a.AttributeTypeName?.Value),
+                    FieldType = new FieldMetadataHelper().NormalizeFieldType(a.AttributeType?.ToString() ?? "String", a.AttributeTypeName?.Value),
                     RequiredLevel = a.RequiredLevel?.Value.ToString() ?? "None",
                     IsCustomField = prefixes.Any(pre => a.LogicalName.StartsWith(pre)),
                     IsLookup = a.AttributeType == AttributeTypeCode.Lookup || a.AttributeType == AttributeTypeCode.Owner
@@ -101,7 +101,7 @@ namespace Greg.Xrm.Command.Commands.Script.Helpers
             return entity;
         }
 
-        public static List<Models.EntityMetadata> ExtractEntitiesByPrefix(IEnumerable<EntityMetadata> entityMetadataList, List<string> prefixes)
+        public List<Models.EntityMetadata> ExtractEntitiesByPrefix(IEnumerable<EntityMetadata> entityMetadataList, List<string> prefixes)
         {
             var entities = new List<Models.EntityMetadata>();
             foreach (var e in entityMetadataList)
@@ -115,7 +115,7 @@ namespace Greg.Xrm.Command.Commands.Script.Helpers
             return entities;
         }
 
-        public static List<Models.EntityMetadata> ExtractEntitiesBySolution(IEnumerable<EntityMetadata> entityMetadataList, List<Guid> entityIds, List<string> prefixes)
+        public List<Models.EntityMetadata> ExtractEntitiesBySolution(IEnumerable<EntityMetadata> entityMetadataList, List<Guid> entityIds, List<string> prefixes)
         {
             var entities = new List<Models.EntityMetadata>();
             foreach (var e in entityMetadataList.Where(e => entityIds.Contains(e.MetadataId.GetValueOrDefault())))
@@ -129,7 +129,7 @@ namespace Greg.Xrm.Command.Commands.Script.Helpers
             return entities;
         }
 
-        public static Models.EntityMetadata? ExtractEntityByName(IEnumerable<EntityMetadata> entityMetadataList, string tableName, List<string> prefixes)
+        public Models.EntityMetadata? ExtractEntityByName(IEnumerable<EntityMetadata> entityMetadataList, string tableName, List<string> prefixes)
         {
             var e = entityMetadataList.FirstOrDefault(e => e.LogicalName == tableName);
             if (e == null) return null;

@@ -3,11 +3,11 @@ using Models = Greg.Xrm.Command.Commands.Script.Models;
 using System.Linq;
 using System.Collections.Generic;
 
-namespace Greg.Xrm.Command.Commands.Script.Helpers
+namespace Greg.Xrm.Command.Commands.Script.MetadataExtractor
 {
-    public static class OptionSetMetadataHelper
+    public class OptionSetMetadataExtractor
     {
-        public static List<Models.OptionSetMetadata> ExtractOptionSets(IEnumerable<EntityMetadata> entityMetadataList, IEnumerable<OptionSetMetadata> globalOptionSets)
+        public List<Models.OptionSetMetadata> ExtractOptionSets(IEnumerable<EntityMetadata> entityMetadataList, IEnumerable<OptionSetMetadata> globalOptionSets)
         {
             var optionSets = new List<Models.OptionSetMetadata>();
             foreach (var entityMetadata in entityMetadataList)

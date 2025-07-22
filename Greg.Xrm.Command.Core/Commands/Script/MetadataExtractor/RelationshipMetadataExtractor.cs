@@ -1,10 +1,12 @@
 using Microsoft.Xrm.Sdk.Metadata;
+using System.Collections.Generic;
+using System.Linq;
 
-namespace Greg.Xrm.Command.Commands.Script.Helpers
+namespace Greg.Xrm.Command.Commands.Script.MetadataExtractor
 {
-    public static class RelationshipMetadataHelper
+    public class RelationshipMetadataExtractor
     {
-        public static List<Models.RelationshipMetadata> ExtractRelationships(IEnumerable<EntityMetadata> entityMetadataList, List<string> prefixes, List<Models.EntityMetadata> includedEntities)
+        public List<Models.RelationshipMetadata> ExtractRelationships(IEnumerable<EntityMetadata> entityMetadataList, List<string> prefixes, List<Models.EntityMetadata> includedEntities)
         {
             var includedNames = includedEntities?.Select(e => e.SchemaName).ToHashSet();
             var customNames = includedEntities?.Where(e => e.IsCustomEntity).Select(e => e.SchemaName).ToHashSet() ?? new HashSet<string>();

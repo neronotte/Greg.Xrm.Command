@@ -1,8 +1,8 @@
-namespace Greg.Xrm.Command.Commands.Script.Helpers
+namespace Greg.Xrm.Command.Commands.Script.MetadataExtractor
 {
-    public static class FieldMetadataHelper
+    public class FieldMetadataHelper
     {
-        public static string NormalizeFieldType(string type, string? typeName)
+        public string NormalizeFieldType(string type, string? typeName)
         {
             var normalized = type.Replace("Type", "");
             switch (normalized.ToLower())
