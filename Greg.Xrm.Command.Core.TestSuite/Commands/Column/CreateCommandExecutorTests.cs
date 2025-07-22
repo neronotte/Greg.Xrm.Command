@@ -1,6 +1,7 @@
 ﻿using Greg.Xrm.Command.Commands.Column.Builders;
 using Greg.Xrm.Command.Services;
 using Greg.Xrm.Command.Services.Connection;
+using Greg.Xrm.Command.Services.OptionSet;
 using Greg.Xrm.Command.Services.Project;
 using Greg.Xrm.Command.Services.Settings;
 using Microsoft.Extensions.Logging;
@@ -20,8 +21,9 @@ namespace Greg.Xrm.Command.Commands.Column
 			var settingsRepository = new SettingsRepository(storage);
 			var pacxProjectRepository = new PacxProjectRepository(Mock.Of<ILogger<PacxProjectRepository>>());
 			var repository = new OrganizationServiceRepository(settingsRepository, pacxProjectRepository);
+			var parser = new OptionSetParser();
 
-			var attributeMetadataBuilderFactory = new AttributeMetadataBuilderFactory();
+			var attributeMetadataBuilderFactory = new AttributeMetadataBuilderFactory(parser);
 
 			var command = new CreateCommand
 			{
