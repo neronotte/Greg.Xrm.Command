@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using Greg.Xrm.Command.Commands.Script.MetadataExtractor;
+using Greg.Xrm.Command.Commands.Script.Models;
 
 namespace Greg.Xrm.Command.Commands.Script.Service
 {
@@ -16,7 +17,7 @@ namespace Greg.Xrm.Command.Commands.Script.Service
         private readonly string pacxScriptName;
         private readonly string stateFieldsDefinitionName;
         private readonly bool exportStateFields;
-        private readonly List<Models.EntityMetadata>? preloadedEntities;
+        private readonly List<Extractor_EntityMetadata>? preloadedEntities;
 
         public ScriptExtractionJob(
             IOutput output,
@@ -26,7 +27,7 @@ namespace Greg.Xrm.Command.Commands.Script.Service
             string pacxScriptName,
             string stateFieldsDefinitionName,
             bool exportStateFields,
-            List<Models.EntityMetadata>? preloadedEntities = null)
+            List<Extractor_EntityMetadata>? preloadedEntities = null)
         {
             this.output = output;
             this.metadataExtractor = metadataExtractor;
@@ -40,7 +41,7 @@ namespace Greg.Xrm.Command.Commands.Script.Service
 
         public async Task<CommandResult> RunAsync()
         {
-            List<Models.EntityMetadata> entities;
+            List<Extractor_EntityMetadata> entities;
             if (preloadedEntities != null)
             {
                 entities = preloadedEntities;
@@ -62,7 +63,7 @@ namespace Greg.Xrm.Command.Commands.Script.Service
             output.WriteLine($"Relationships found: {relationships.Count}");
             foreach (var rel in relationships.OrderBy(r => r.Name))
             {
-                if (rel.Type == Models.RelationshipType.OneToMany)
+                if (rel.Type == Extractor_RelationshipType.OneToMany)
                     output.WriteLine($"  - {rel.Name}: {rel.ParentEntity} -> {rel.ChildEntity} ({rel.LookupField})");
                 else
                     output.WriteLine($"  - {rel.Name}: {rel.FirstEntity} <-> {rel.SecondEntity}");

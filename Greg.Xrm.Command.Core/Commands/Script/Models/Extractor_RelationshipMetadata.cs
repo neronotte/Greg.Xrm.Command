@@ -1,9 +1,9 @@
 namespace Greg.Xrm.Command.Commands.Script.Models
 {
-    public class RelationshipMetadata
+    public class Extractor_RelationshipMetadata
     {
         public string Name { get; set; } = string.Empty;
-        public RelationshipType Type { get; set; }
+        public Extractor_RelationshipType Type { get; set; }
         public string? ChildEntity { get; set; }
         public string? ParentEntity { get; set; }
         public string? LookupField { get; set; }

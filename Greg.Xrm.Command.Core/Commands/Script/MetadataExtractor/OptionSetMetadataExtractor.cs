@@ -1,15 +1,15 @@
 using Microsoft.Xrm.Sdk.Metadata;
-using Models = Greg.Xrm.Command.Commands.Script.Models;
 using System.Linq;
 using System.Collections.Generic;
+using Greg.Xrm.Command.Commands.Script.Models;
 
 namespace Greg.Xrm.Command.Commands.Script.MetadataExtractor
 {
     public class OptionSetMetadataExtractor
     {
-        public List<Models.OptionSetMetadata> ExtractOptionSets(IEnumerable<EntityMetadata> entityMetadataList, IEnumerable<OptionSetMetadata> globalOptionSets)
+        public List<Extractor_OptionSetMetadata> ExtractOptionSets(IEnumerable<EntityMetadata> entityMetadataList, IEnumerable<OptionSetMetadata> globalOptionSets)
         {
-            var optionSets = new List<Models.OptionSetMetadata>();
+            var optionSets = new List<Extractor_OptionSetMetadata>();
             foreach (var entityMetadata in entityMetadataList)
             {
                 foreach (var attribute in entityMetadata.Attributes ?? new AttributeMetadata[0])
@@ -24,14 +24,14 @@ namespace Greg.Xrm.Command.Commands.Script.MetadataExtractor
                             {
                                 foreach (var option in globalOptionSet.Options)
                                 {
-                                    optionSets.Add(new Models.OptionSetMetadata
+                                    optionSets.Add(new Extractor_OptionSetMetadata
                                     {
                                         EntityName = entityMetadata.LogicalName,
                                         FieldName = picklistAttr.LogicalName,
                                         OptionSetName = globalOptionSet.Name,
                                         OptionValue = option.Value ?? 0,
                                         OptionLabel = option.Label?.UserLocalizedLabel?.Label ?? "",
-                                        SourceType = Models.OptionSetSourceType.Global
+                                        SourceType = Extractor_OptionSetSourceType.Global
                                     });
                                 }
                             }
@@ -40,14 +40,14 @@ namespace Greg.Xrm.Command.Commands.Script.MetadataExtractor
                         {
                             foreach (var option in picklistAttr.OptionSet.Options)
                             {
-                                optionSets.Add(new Models.OptionSetMetadata
+                                optionSets.Add(new Extractor_OptionSetMetadata
                                 {
                                     EntityName = entityMetadata.LogicalName,
                                     FieldName = picklistAttr.LogicalName,
                                     OptionSetName = "",
                                     OptionValue = option.Value ?? 0,
                                     OptionLabel = option.Label?.UserLocalizedLabel?.Label ?? "",
-                                    SourceType = Models.OptionSetSourceType.Local
+                                    SourceType = Extractor_OptionSetSourceType.Local
                                 });
                             }
                         }
@@ -58,14 +58,14 @@ namespace Greg.Xrm.Command.Commands.Script.MetadataExtractor
                         {
                             foreach (var option in stateAttr.OptionSet.Options)
                             {
-                                optionSets.Add(new Models.OptionSetMetadata
+                                optionSets.Add(new Extractor_OptionSetMetadata
                                 {
                                     EntityName = entityMetadata.LogicalName,
                                     FieldName = stateAttr.LogicalName,
                                     OptionSetName = "",
                                     OptionValue = option.Value ?? 0,
                                     OptionLabel = option.Label?.UserLocalizedLabel?.Label ?? "",
-                                    SourceType = Models.OptionSetSourceType.State
+                                    SourceType = Extractor_OptionSetSourceType.State
                                 });
                             }
                         }
@@ -76,14 +76,14 @@ namespace Greg.Xrm.Command.Commands.Script.MetadataExtractor
                         {
                             foreach (var option in statusAttr.OptionSet.Options)
                             {
-                                optionSets.Add(new Models.OptionSetMetadata
+                                optionSets.Add(new Extractor_OptionSetMetadata
                                 {
                                     EntityName = entityMetadata.LogicalName,
                                     FieldName = statusAttr.LogicalName,
                                     OptionSetName = "",
                                     OptionValue = option.Value ?? 0,
                                     OptionLabel = option.Label?.UserLocalizedLabel?.Label ?? "",
-                                    SourceType = Models.OptionSetSourceType.State
+                                    SourceType = Extractor_OptionSetSourceType.State
                                 });
                             }
                         }

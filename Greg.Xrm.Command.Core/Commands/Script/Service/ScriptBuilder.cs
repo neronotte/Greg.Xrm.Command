@@ -4,14 +4,14 @@ using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Linq;
-using Models = Greg.Xrm.Command.Commands.Script.Models;
 using System.Collections.Generic;
+using Greg.Xrm.Command.Commands.Script.Models;
 
 namespace Greg.Xrm.Command.Commands.Script.Service
 {
     public class ScriptBuilder
     {
-        public void GenerateOptionSetCsv(List<Models.OptionSetMetadata> optionSets, string outputFilePath)
+        public void GenerateOptionSetCsv(List<Extractor_OptionSetMetadata> optionSets, string outputFilePath)
         {
             var config = new CsvConfiguration(CultureInfo.InvariantCulture)
             {
@@ -45,7 +45,7 @@ namespace Greg.Xrm.Command.Commands.Script.Service
         }
 
         // Tutti i metodi privati statici diventano privati di istanza
-        private void AppendCustomColumns(StringBuilder script, Models.EntityMetadata entity)
+        private void AppendCustomColumns(StringBuilder script, Extractor_EntityMetadata entity)
         {
             var lookupNames = entity.Fields.Where(f => f.IsCustomField && f.IsLookup).Select(f => f.LogicalName).ToHashSet();
             var customFields = entity.Fields
@@ -99,7 +99,7 @@ namespace Greg.Xrm.Command.Commands.Script.Service
             }
         }
 
-        private void AppendTableCreate(StringBuilder script, Models.EntityMetadata entity)
+        private void AppendTableCreate(StringBuilder script, Extractor_EntityMetadata entity)
         {
             script.Append($"pacx table create --name \"{entity.DisplayName}\" --plural \"{entity.PluralName}\" --schemaName \"{entity.SchemaName}\"");
             if (!string.IsNullOrEmpty(entity.PrimaryFieldName))
@@ -117,19 +117,19 @@ namespace Greg.Xrm.Command.Commands.Script.Service
             script.AppendLine();
         }
 
-        private void AppendRelationships(StringBuilder script, IEnumerable<Models.RelationshipMetadata> relationships, List<string> customPrefixes, HashSet<string> customEntityNames, HashSet<string> allEntityNames, string? entityNameFilter = null)
+        private void AppendRelationships(StringBuilder script, IEnumerable<Extractor_RelationshipMetadata> relationships, List<string> customPrefixes, HashSet<string> customEntityNames, HashSet<string> allEntityNames, string? entityNameFilter = null)
         {
             var rels = relationships.Where(r => r.IsCustomRelationship).OrderBy(r => r.Name);
             if (!string.IsNullOrEmpty(entityNameFilter))
             {
                 rels = rels.Where(r =>
-                    r.Type == Models.RelationshipType.OneToMany && (r.ParentEntity == entityNameFilter || r.ChildEntity == entityNameFilter) ||
-                    r.Type == Models.RelationshipType.ManyToMany && (r.FirstEntity == entityNameFilter || r.SecondEntity == entityNameFilter)
+                    r.Type == Extractor_RelationshipType.OneToMany && (r.ParentEntity == entityNameFilter || r.ChildEntity == entityNameFilter) ||
+                    r.Type == Extractor_RelationshipType.ManyToMany && (r.FirstEntity == entityNameFilter || r.SecondEntity == entityNameFilter)
                 ).OrderBy(r => r.Name);
             }
             // Header and print n1
             script.AppendLine("# --- N:1 RELATIONSHIPS ---");
-            foreach (var rel in rels.DistinctBy(r => r.Name).Where(r => r.Type == Models.RelationshipType.OneToMany))
+            foreach (var rel in rels.DistinctBy(r => r.Name).Where(r => r.Type == Extractor_RelationshipType.OneToMany))
             {
                 bool isCustomLookup = rel.LookupField != null && customPrefixes.Any(p => rel.LookupField.StartsWith(p));
                 if (isCustomLookup)
@@ -139,13 +139,13 @@ namespace Greg.Xrm.Command.Commands.Script.Service
             }
             // Header and print nn
             script.AppendLine("# --- N:N RELATIONSHIPS ---");
-            foreach (var rel in rels.DistinctBy(r => r.IntersectEntity).Where(r => r.Type == Models.RelationshipType.ManyToMany))
+            foreach (var rel in rels.DistinctBy(r => r.IntersectEntity).Where(r => r.Type == Extractor_RelationshipType.ManyToMany))
             {
                 script.AppendLine($"pacx rel create nn --table1 \"{rel.FirstEntity}\" --table2 \"{rel.SecondEntity}\" --explicit --schemaName \"{rel.IntersectEntity}\"");
             }
         }
 
-        private void AppendStandardTableCreate(StringBuilder commentedSection, Models.EntityMetadata entity)
+        private void AppendStandardTableCreate(StringBuilder commentedSection, Extractor_EntityMetadata entity)
         {
             var sb = new StringBuilder();
             AppendTableCreate(sb, entity);
@@ -153,7 +153,7 @@ namespace Greg.Xrm.Command.Commands.Script.Service
                 commentedSection.AppendLine("# " + line.TrimEnd());
         }
 
-        private void AppendStandardColumns(StringBuilder commentedSection, Models.EntityMetadata entity)
+        private void AppendStandardColumns(StringBuilder commentedSection, Extractor_EntityMetadata entity)
         {
             var lookupNames = entity.Fields.Where(f => f.IsLookup).Select(f => f.LogicalName).ToHashSet();
             var standardFields = entity.Fields
@@ -207,20 +207,20 @@ namespace Greg.Xrm.Command.Commands.Script.Service
             }
         }
 
-        private void AppendStandardRelationships(StringBuilder commentedSection, IEnumerable<Models.RelationshipMetadata> relationships, List<string> customPrefixes, HashSet<string> customEntityNames, HashSet<string> allEntityNames, string? entityNameFilter = null)
+        private void AppendStandardRelationships(StringBuilder commentedSection, IEnumerable<Extractor_RelationshipMetadata> relationships, List<string> customPrefixes, HashSet<string> customEntityNames, HashSet<string> allEntityNames, string? entityNameFilter = null)
         {
             var rels = relationships.Where(r => !r.IsCustomRelationship).OrderBy(r => r.Name);
             if (!string.IsNullOrEmpty(entityNameFilter))
             {
                 rels = rels.Where(r =>
-                    r.Type == Models.RelationshipType.OneToMany && (r.ParentEntity == entityNameFilter || r.ChildEntity == entityNameFilter) ||
-                    r.Type == Models.RelationshipType.ManyToMany && (r.FirstEntity == entityNameFilter || r.SecondEntity == entityNameFilter)
+                    r.Type == Extractor_RelationshipType.OneToMany && (r.ParentEntity == entityNameFilter || r.ChildEntity == entityNameFilter) ||
+                    r.Type == Extractor_RelationshipType.ManyToMany && (r.FirstEntity == entityNameFilter || r.SecondEntity == entityNameFilter)
                 ).OrderBy(r => r.Name);
             }
             // Header and print n1
             commentedSection.AppendLine();
             commentedSection.AppendLine("# --- N:1 RELATIONSHIPS (STANDARD) ---");
-            foreach (var rel in rels.DistinctBy(r => r.Name).Where(r => r.Type == Models.RelationshipType.OneToMany))
+            foreach (var rel in rels.DistinctBy(r => r.Name).Where(r => r.Type == Extractor_RelationshipType.OneToMany))
             {
                 bool isCustomLookup = rel.LookupField != null && customPrefixes.Any(p => rel.LookupField.StartsWith(p));
                 if (!isCustomLookup)
@@ -230,13 +230,13 @@ namespace Greg.Xrm.Command.Commands.Script.Service
             }
             // Header and print nn
             commentedSection.AppendLine("# --- N:N RELATIONSHIPS (STANDARD) ---");
-            foreach (var rel in rels.DistinctBy(r => r.IntersectEntity).Where(r => r.Type == Models.RelationshipType.ManyToMany && !customPrefixes.Any(pre => r.FirstEntity.StartsWith(pre)) && !customPrefixes.Any(pre => r.SecondEntity.StartsWith(pre))))
+            foreach (var rel in rels.DistinctBy(r => r.IntersectEntity).Where(r => r.Type == Extractor_RelationshipType.ManyToMany && !customPrefixes.Any(pre => r.FirstEntity.StartsWith(pre)) && !customPrefixes.Any(pre => r.SecondEntity.StartsWith(pre))))
             {
                 commentedSection.AppendLine($"# pacx rel create nn --table1 \"{rel.FirstEntity}\" --table2 \"{rel.SecondEntity}\" --explicit --schemaName \"{rel.IntersectEntity}\"");
             }
         }
 
-        public string GeneratePacxScript(List<Models.EntityMetadata> entities, List<Models.RelationshipMetadata> relationships, List<string> prefixes)
+        public string GeneratePacxScript(List<Extractor_EntityMetadata> entities, List<Extractor_RelationshipMetadata> relationships, List<string> prefixes)
         {
             var script = new StringBuilder();
             var commentedSection = new StringBuilder();
@@ -247,7 +247,7 @@ namespace Greg.Xrm.Command.Commands.Script.Service
             var standardEntityNames = new HashSet<string>(standardEntities.Select(e => e.SchemaName));
             // Intersect entities used in nn relationships
             var nnIntersectEntities = new HashSet<string>(relationships
-                .Where(r => r.Type == Models.RelationshipType.ManyToMany && !string.IsNullOrEmpty(r.IntersectEntity))
+                .Where(r => r.Type == Extractor_RelationshipType.ManyToMany && !string.IsNullOrEmpty(r.IntersectEntity))
                 .Select(r => r.IntersectEntity!));
             script.AppendLine("# =====================================================");
             script.AppendLine("# DATAMODEL CREATION SCRIPT");

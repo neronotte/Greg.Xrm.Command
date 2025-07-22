@@ -1,6 +1,6 @@
 namespace Greg.Xrm.Command.Commands.Script.Models
 {
-    public enum RelationshipType
+    public enum Extractor_RelationshipType
     {
         OneToMany,
         ManyToMany

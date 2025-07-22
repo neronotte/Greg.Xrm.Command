@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace Greg.Xrm.Command.Commands.Script.Models
 {
-    public class FieldMetadata
+    public class Extractor_FieldMetadata
     {
         public string LogicalName { get; set; } = string.Empty;
         public string DisplayName { get; set; } = string.Empty;
@@ -12,7 +12,7 @@ namespace Greg.Xrm.Command.Commands.Script.Models
         public string Format { get; set; } = string.Empty;
         public bool IsCustomField { get; set; }
         public bool IsLookup { get; set; }
-        public List<OptionSetOption> Options { get; set; } = new();
+        public List<Extractor_OptionSetOption> Options { get; set; } = new();
         public string? GlobalOptionSetName { get; set; }
         public double? MinValue { get; set; }
         public double? MaxValue { get; set; }

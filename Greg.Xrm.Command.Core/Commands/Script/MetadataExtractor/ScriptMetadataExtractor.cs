@@ -10,9 +10,9 @@ using System.Globalization;
 using System.IO;
 using CsvHelper;
 using CsvHelper.Configuration;
-using Models = Greg.Xrm.Command.Commands.Script.Models;
 using System.Collections.Generic;
 using Greg.Xrm.Command.Commands.Script.Service;
+using Greg.Xrm.Command.Commands.Script.Models;
 
 namespace Greg.Xrm.Command.Commands.Script.MetadataExtractor
 {
@@ -49,13 +49,13 @@ namespace Greg.Xrm.Command.Commands.Script.MetadataExtractor
             return cachedAllEntitiesResponse;
         }
 
-        public async Task<List<Models.EntityMetadata>> GetEntitiesByPrefixAsync(List<string> prefixes)
+        public async Task<List<Extractor_EntityMetadata>> GetEntitiesByPrefixAsync(List<string> prefixes)
         {
             var response = await GetAllEntitiesResponseAsync();
             return entityMetadataExtractor.ExtractEntitiesByPrefix(response.EntityMetadata, prefixes);
         }
 
-        public async Task<List<Models.EntityMetadata>> GetEntitiesBySolutionAsync(string solutionName, List<string> prefixes)
+        public async Task<List<Extractor_EntityMetadata>> GetEntitiesBySolutionAsync(string solutionName, List<string> prefixes)
         {
             var crm = await organizationServiceRepository.GetCurrentConnectionAsync();
             var query = new QueryExpression("solutioncomponent")
@@ -85,7 +85,7 @@ namespace Greg.Xrm.Command.Commands.Script.MetadataExtractor
             return (Guid)solution["solutionid"];
         }
 
-        public async Task<Models.EntityMetadata?> GetTableAsync(string tableName, List<string> prefixes)
+        public async Task<Extractor_EntityMetadata?> GetTableAsync(string tableName, List<string> prefixes)
         {
             var response = await GetAllEntitiesResponseAsync();
             var e = response.EntityMetadata.FirstOrDefault(x => x.LogicalName == tableName);
@@ -93,13 +93,13 @@ namespace Greg.Xrm.Command.Commands.Script.MetadataExtractor
             return entityMetadataExtractor.ExtractEntityByName(new List<EntityMetadata>() { e }, tableName, prefixes);
         }
 
-        public async Task<List<Models.RelationshipMetadata>> GetRelationshipsAsync(List<string> prefixes, List<Models.EntityMetadata> includedEntities = null)
+        public async Task<List<Extractor_RelationshipMetadata>> GetRelationshipsAsync(List<string> prefixes, List<Extractor_EntityMetadata> includedEntities = null)
         {
             var response = await GetAllEntitiesResponseAsync();
             return relationshipMetadataExtractor.ExtractRelationships(response.EntityMetadata, prefixes, includedEntities);
         }
 
-        public async Task<List<Models.OptionSetMetadata>> GetOptionSetsAsync(List<string> entityFilter = null)
+        public async Task<List<Extractor_OptionSetMetadata>> GetOptionSetsAsync(List<string> entityFilter = null)
         {
             var crm = await organizationServiceRepository.GetCurrentConnectionAsync();
             var globalRequest = new RetrieveAllOptionSetsRequest();
@@ -114,13 +114,13 @@ namespace Greg.Xrm.Command.Commands.Script.MetadataExtractor
             return result;
         }
 
-        public Task GenerateStateFieldsCSV(List<Models.OptionSetMetadata> optionSets, string outputFilePath)
+        public Task GenerateStateFieldsCSV(List<Extractor_OptionSetMetadata> optionSets, string outputFilePath)
         {
             scriptBuilder.GenerateOptionSetCsv(optionSets, outputFilePath);
             return Task.CompletedTask;
         }
 
-        public string GeneratePacxScript(List<Models.EntityMetadata> entities, List<Models.RelationshipMetadata> relationships, List<string> prefixes)
+        public string GeneratePacxScript(List<Extractor_EntityMetadata> entities, List<Extractor_RelationshipMetadata> relationships, List<string> prefixes)
         {
             return scriptBuilder.GeneratePacxScript(entities, relationships, prefixes);
         }

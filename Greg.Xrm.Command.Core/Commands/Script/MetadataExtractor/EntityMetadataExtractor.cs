@@ -1,7 +1,7 @@
 using Microsoft.Xrm.Sdk.Metadata;
-using Models = Greg.Xrm.Command.Commands.Script.Models;
 using System.Linq;
 using System.Collections.Generic;
+using Greg.Xrm.Command.Commands.Script.Models;
 
 namespace Greg.Xrm.Command.Commands.Script.MetadataExtractor
 {
@@ -27,15 +27,15 @@ namespace Greg.Xrm.Command.Commands.Script.MetadataExtractor
             }
         }
 
-        private Models.EntityMetadata BuildEntityMetadata(EntityMetadata e, List<AttributeMetadata> fields, List<string> prefixes)
+        private Extractor_EntityMetadata BuildEntityMetadata(EntityMetadata e, List<AttributeMetadata> fields, List<string> prefixes)
         {
-            var entity = new Models.EntityMetadata
+            var entity = new Extractor_EntityMetadata
             {
                 SchemaName = e.LogicalName,
                 DisplayName = e.DisplayName?.UserLocalizedLabel?.Label ?? e.LogicalName,
                 PluralName = e.DisplayCollectionName?.UserLocalizedLabel?.Label ?? e.LogicalName,
                 IsCustomEntity = prefixes.Any(pre => e.LogicalName.StartsWith(pre)),
-                Fields = new List<Models.FieldMetadata>()
+                Fields = new List<Extractor_FieldMetadata>()
             };
             var primaryField = e.Attributes?.FirstOrDefault(a => a.LogicalName == e.PrimaryNameAttribute);
             if (primaryField is StringAttributeMetadata strAttr)
@@ -49,7 +49,7 @@ namespace Greg.Xrm.Command.Commands.Script.MetadataExtractor
             }
             foreach (var a in fields)
             {
-                var field = new Models.FieldMetadata
+                var field = new Extractor_FieldMetadata
                 {
                     LogicalName = a.LogicalName,
                     DisplayName = a.DisplayName?.UserLocalizedLabel?.Label ?? a.LogicalName,
@@ -97,7 +97,7 @@ namespace Greg.Xrm.Command.Commands.Script.MetadataExtractor
                         field.GlobalOptionSetName = picklist.OptionSet?.IsGlobal == true ? picklist.OptionSet.Name : null;
                         if (picklist.OptionSet?.Options != null)
                         {
-                            field.Options = picklist.OptionSet.Options.Select(o => new Models.OptionSetOption
+                            field.Options = picklist.OptionSet.Options.Select(o => new Extractor_OptionSetOption
                             {
                                 Value = o.Value ?? 0,
                                 Label = o.Label?.UserLocalizedLabel?.Label ?? string.Empty
@@ -108,7 +108,7 @@ namespace Greg.Xrm.Command.Commands.Script.MetadataExtractor
                         field.GlobalOptionSetName = multi.OptionSet?.IsGlobal == true ? multi.OptionSet.Name : null;
                         if (multi.OptionSet?.Options != null)
                         {
-                            field.Options = multi.OptionSet.Options.Select(o => new Models.OptionSetOption
+                            field.Options = multi.OptionSet.Options.Select(o => new Extractor_OptionSetOption
                             {
                                 Value = o.Value ?? 0,
                                 Label = o.Label?.UserLocalizedLabel?.Label ?? string.Empty
@@ -121,9 +121,9 @@ namespace Greg.Xrm.Command.Commands.Script.MetadataExtractor
             return entity;
         }
 
-        public List<Models.EntityMetadata> ExtractEntitiesByPrefix(IEnumerable<EntityMetadata> entityMetadataList, List<string> prefixes)
+        public List<Extractor_EntityMetadata> ExtractEntitiesByPrefix(IEnumerable<EntityMetadata> entityMetadataList, List<string> prefixes)
         {
-            var entities = new List<Models.EntityMetadata>();
+            var entities = new List<Extractor_EntityMetadata>();
             foreach (var e in entityMetadataList)
             {
                 var fields = (e.Attributes ?? Enumerable.Empty<AttributeMetadata>())
@@ -135,9 +135,9 @@ namespace Greg.Xrm.Command.Commands.Script.MetadataExtractor
             return entities;
         }
 
-        public List<Models.EntityMetadata> ExtractEntitiesBySolution(IEnumerable<EntityMetadata> entityMetadataList, List<Guid> entityIds, List<string> prefixes)
+        public List<Extractor_EntityMetadata> ExtractEntitiesBySolution(IEnumerable<EntityMetadata> entityMetadataList, List<Guid> entityIds, List<string> prefixes)
         {
-            var entities = new List<Models.EntityMetadata>();
+            var entities = new List<Extractor_EntityMetadata>();
             foreach (var e in entityMetadataList.Where(e => entityIds.Contains(e.MetadataId.GetValueOrDefault())))
             {
                 var fields = (e.Attributes ?? Enumerable.Empty<AttributeMetadata>())
@@ -149,7 +149,7 @@ namespace Greg.Xrm.Command.Commands.Script.MetadataExtractor
             return entities;
         }
 
-        public Models.EntityMetadata? ExtractEntityByName(IEnumerable<EntityMetadata> entityMetadataList, string tableName, List<string> prefixes)
+        public Extractor_EntityMetadata? ExtractEntityByName(IEnumerable<EntityMetadata> entityMetadataList, string tableName, List<string> prefixes)
         {
             var e = entityMetadataList.FirstOrDefault(e => e.LogicalName == tableName);
             if (e == null) return null;

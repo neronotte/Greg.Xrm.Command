@@ -1,3 +1,4 @@
+using Greg.Xrm.Command.Commands.Script.Models;
 using Microsoft.Xrm.Sdk.Metadata;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,12 +7,12 @@ namespace Greg.Xrm.Command.Commands.Script.MetadataExtractor
 {
     public class RelationshipMetadataExtractor
     {
-        public List<Models.RelationshipMetadata> ExtractRelationships(IEnumerable<EntityMetadata> entityMetadataList, List<string> prefixes, List<Models.EntityMetadata> includedEntities)
+        public List<Extractor_RelationshipMetadata> ExtractRelationships(IEnumerable<EntityMetadata> entityMetadataList, List<string> prefixes, List<Extractor_EntityMetadata> includedEntities)
         {
             var includedNames = includedEntities?.Select(e => e.SchemaName).ToHashSet();
             var customNames = includedEntities?.Where(e => e.IsCustomEntity).Select(e => e.SchemaName).ToHashSet() ?? new HashSet<string>();
             var singleTable = includedEntities?.Count == 1;
-            var relationships = new List<Models.RelationshipMetadata>();
+            var relationships = new List<Extractor_RelationshipMetadata>();
             var nnSet = new HashSet<string>();
 
 
@@ -26,10 +27,10 @@ namespace Greg.Xrm.Command.Commands.Script.MetadataExtractor
                        (!singleTable && includedNames.Contains(rel.ReferencingEntity!) && includedNames.Contains(rel.ReferencedEntity!)) ||
                        (singleTable && (includedNames.Contains(rel.ReferencingEntity!) || includedNames.Contains(rel.ReferencedEntity!))))
                     {
-                        relationships.Add(new Models.RelationshipMetadata
+                        relationships.Add(new Extractor_RelationshipMetadata
                         {
                             Name = rel.SchemaName,
-                            Type = Models.RelationshipType.OneToMany,
+                            Type = Extractor_RelationshipType.OneToMany,
                             ParentEntity = rel.ReferencedEntity,
                             ChildEntity = rel.ReferencingEntity,
                             LookupField = rel.ReferencingAttribute,
@@ -49,10 +50,10 @@ namespace Greg.Xrm.Command.Commands.Script.MetadataExtractor
                         (!singleTable && includedNames.Contains(rel.Entity1LogicalName) && includedNames.Contains(rel.Entity2LogicalName)) ||
                         (singleTable && (includedNames.Contains(rel.Entity1LogicalName) || includedNames.Contains(rel.Entity2LogicalName))))
                     {
-                        relationships.Add(new Models.RelationshipMetadata
+                        relationships.Add(new Extractor_RelationshipMetadata
                         {
                             Name = rel.SchemaName,
-                            Type = Models.RelationshipType.ManyToMany,
+                            Type = Extractor_RelationshipType.ManyToMany,
                             FirstEntity = rel.Entity1LogicalName,
                             SecondEntity = rel.Entity2LogicalName,
                             IntersectEntity = rel.IntersectEntityName,

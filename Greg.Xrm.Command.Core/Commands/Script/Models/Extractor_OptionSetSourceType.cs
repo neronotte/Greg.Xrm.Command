@@ -1,6 +1,6 @@
 namespace Greg.Xrm.Command.Commands.Script.Models
 {
-    public enum OptionSetSourceType
+    public enum Extractor_OptionSetSourceType
     {
         Global,
         Local,

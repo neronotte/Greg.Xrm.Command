@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System;
 using System.IO;
+using Greg.Xrm.Command.Commands.Script.Models;
 
 namespace Greg.Xrm.Command.Commands.Script.Service
 {
@@ -54,7 +55,7 @@ namespace Greg.Xrm.Command.Commands.Script.Service
                 return CommandResult.Fail("No solution names provided.");
             }
             output.WriteLine("Step 1: Extracting solution entities...");
-            var allEntities = new List<Models.EntityMetadata>();
+            var allEntities = new List<Extractor_EntityMetadata>();
             foreach (var solutionName in solutionNames)
             {
                 var entities = await metadataExtractor.GetEntitiesBySolutionAsync(solutionName, prefixes);
@@ -95,7 +96,7 @@ namespace Greg.Xrm.Command.Commands.Script.Service
                 pacxScriptName,
                 stateFieldsDefinitionName,
                 exportStateFields,
-                new List<Models.EntityMetadata> { entity }
+                new List<Extractor_EntityMetadata> { entity }
             ).RunAsync();
         }
     }
