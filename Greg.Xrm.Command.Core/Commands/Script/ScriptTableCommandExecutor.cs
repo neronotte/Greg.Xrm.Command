@@ -7,7 +7,7 @@ namespace Greg.Xrm.Command.Commands.Script
     public class ScriptTableCommandExecutor : ICommandExecutor<ScriptTableCommand>
     {
         private readonly IScriptExtractionService extractionService;
-        public ScriptTableCommandExecutor(IOutput output, IOrganizationServiceRepository organizationServiceRepository, IScriptExtractionService extractionService)
+        public ScriptTableCommandExecutor(IScriptExtractionService extractionService)
         {
             this.extractionService = extractionService;
         }

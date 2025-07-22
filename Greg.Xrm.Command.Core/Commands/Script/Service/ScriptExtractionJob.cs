@@ -11,7 +11,7 @@ namespace Greg.Xrm.Command.Commands.Script.Service
     public class ScriptExtractionJob
     {
         private readonly IOutput output;
-        private readonly ScriptMetadataExtractor metadataExtractor;
+        private readonly IScriptMetadataExtractor metadataExtractor;
         private readonly List<string> prefixes;
         private readonly string outputDir;
         private readonly string pacxScriptName;
@@ -21,7 +21,7 @@ namespace Greg.Xrm.Command.Commands.Script.Service
 
         public ScriptExtractionJob(
             IOutput output,
-            ScriptMetadataExtractor metadataExtractor,
+            IScriptMetadataExtractor metadataExtractor,
             List<string> prefixes,
             string outputDir,
             string pacxScriptName,

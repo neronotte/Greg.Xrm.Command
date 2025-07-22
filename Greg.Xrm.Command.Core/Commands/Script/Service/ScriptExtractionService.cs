@@ -14,12 +14,12 @@ namespace Greg.Xrm.Command.Commands.Script.Service
     public class ScriptExtractionService : IScriptExtractionService
     {
         private readonly IOutput output;
-        private readonly ScriptMetadataExtractor metadataExtractor;
+        private readonly IScriptMetadataExtractor metadataExtractor;
 
-        public ScriptExtractionService(IOutput output, IOrganizationServiceRepository organizationServiceRepository)
+        public ScriptExtractionService(IOutput output, IScriptMetadataExtractor metadataExtractor)
         {
             this.output = output;
-            metadataExtractor = new ScriptMetadataExtractor(organizationServiceRepository);
+            this.metadataExtractor = metadataExtractor;
         }
 
         public async Task<CommandResult> ExtractAllAsync(ScriptAllCommand command, CancellationToken cancellationToken)

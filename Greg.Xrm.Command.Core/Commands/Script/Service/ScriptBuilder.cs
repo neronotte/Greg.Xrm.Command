@@ -9,42 +9,8 @@ using Greg.Xrm.Command.Commands.Script.Models;
 
 namespace Greg.Xrm.Command.Commands.Script.Service
 {
-    public class ScriptBuilder
+    public class ScriptBuilder : IScriptBuilder
     {
-        public void GenerateOptionSetCsv(List<Extractor_OptionSetMetadata> optionSets, string outputFilePath)
-        {
-            var config = new CsvConfiguration(CultureInfo.InvariantCulture)
-            {
-                HasHeaderRecord = true,
-                Delimiter = ",",
-                Quote = '"',
-                ShouldQuote = (args) => true
-            };
-            using var writer = new StreamWriter(outputFilePath);
-            using var csv = new CsvWriter(writer, config);
-            csv.WriteField("EntityName");
-            csv.WriteField("FieldName");
-            csv.WriteField("OptionValue");
-            csv.WriteField("OptionLabel");
-            csv.WriteField("SourceType");
-            csv.NextRecord();
-            var stateFields = optionSets
-                    .Where(f => f.FieldName == "statecode" || f.FieldName == "statuscode")
-                    .Select(f => f)
-                    .OrderBy(f => f.EntityName)
-                .ToList();
-            foreach (var item in stateFields)
-            {
-                csv.WriteField(item.EntityName);
-                csv.WriteField(item.FieldName);
-                csv.WriteField(item.OptionValue);
-                csv.WriteField(item.OptionLabel);
-                csv.WriteField(item.FieldName == "statecode" ? "State" : "Status");
-                csv.NextRecord();
-            }
-        }
-
-        // Tutti i metodi privati statici diventano privati di istanza
         private void AppendCustomColumns(StringBuilder script, Extractor_EntityMetadata entity)
         {
             var lookupNames = entity.Fields.Where(f => f.IsCustomField && f.IsLookup).Select(f => f.LogicalName).ToHashSet();
@@ -209,18 +175,24 @@ namespace Greg.Xrm.Command.Commands.Script.Service
 
         private void AppendStandardRelationships(StringBuilder commentedSection, IEnumerable<Extractor_RelationshipMetadata> relationships, List<string> customPrefixes, HashSet<string> customEntityNames, HashSet<string> allEntityNames, string? entityNameFilter = null)
         {
-            var rels = relationships.Where(r => !r.IsCustomRelationship).OrderBy(r => r.Name);
+            var rels = relationships
+                .Where(r => !r.IsCustomRelationship)
+                .OrderBy(r => r.Name);
             if (!string.IsNullOrEmpty(entityNameFilter))
             {
-                rels = rels.Where(r =>
-                    r.Type == Extractor_RelationshipType.OneToMany && (r.ParentEntity == entityNameFilter || r.ChildEntity == entityNameFilter) ||
-                    r.Type == Extractor_RelationshipType.ManyToMany && (r.FirstEntity == entityNameFilter || r.SecondEntity == entityNameFilter)
-                ).OrderBy(r => r.Name);
+                rels = rels
+                    .Where(r =>
+                        r.Type == Extractor_RelationshipType.OneToMany && (r.ParentEntity == entityNameFilter || r.ChildEntity == entityNameFilter) ||
+                        r.Type == Extractor_RelationshipType.ManyToMany && (r.FirstEntity == entityNameFilter || r.SecondEntity == entityNameFilter)
+                    )
+                    .OrderBy(r => r.Name);
             }
             // Header and print n1
             commentedSection.AppendLine();
             commentedSection.AppendLine("# --- N:1 RELATIONSHIPS (STANDARD) ---");
-            foreach (var rel in rels.DistinctBy(r => r.Name).Where(r => r.Type == Extractor_RelationshipType.OneToMany))
+            foreach (var rel in rels
+                .DistinctBy(r => r.Name)
+                .Where(r => r.Type == Extractor_RelationshipType.OneToMany))
             {
                 bool isCustomLookup = rel.LookupField != null && customPrefixes.Any(p => rel.LookupField.StartsWith(p));
                 if (!isCustomLookup)
@@ -230,9 +202,46 @@ namespace Greg.Xrm.Command.Commands.Script.Service
             }
             // Header and print nn
             commentedSection.AppendLine("# --- N:N RELATIONSHIPS (STANDARD) ---");
-            foreach (var rel in rels.DistinctBy(r => r.IntersectEntity).Where(r => r.Type == Extractor_RelationshipType.ManyToMany && !customPrefixes.Any(pre => r.FirstEntity.StartsWith(pre)) && !customPrefixes.Any(pre => r.SecondEntity.StartsWith(pre))))
+            foreach (var rel in rels
+                .DistinctBy(r => r.IntersectEntity)
+                .Where(r => r.Type == Extractor_RelationshipType.ManyToMany && 
+                        !customPrefixes.Any(pre => (r?.FirstEntity?.StartsWith(pre)).GetValueOrDefault()) && 
+                        !customPrefixes.Any(pre => (r?.SecondEntity?.StartsWith(pre)).GetValueOrDefault())))
             {
                 commentedSection.AppendLine($"# pacx rel create nn --table1 \"{rel.FirstEntity}\" --table2 \"{rel.SecondEntity}\" --explicit --schemaName \"{rel.IntersectEntity}\"");
+            }
+        }
+
+        public void GenerateOptionSetCsv(List<Extractor_OptionSetMetadata> optionSets, string outputFilePath)
+        {
+            var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+            {
+                HasHeaderRecord = true,
+                Delimiter = ",",
+                Quote = '"',
+                ShouldQuote = (args) => true
+            };
+            using var writer = new StreamWriter(outputFilePath);
+            using var csv = new CsvWriter(writer, config);
+            csv.WriteField("EntityName");
+            csv.WriteField("FieldName");
+            csv.WriteField("OptionValue");
+            csv.WriteField("OptionLabel");
+            csv.WriteField("SourceType");
+            csv.NextRecord();
+            var stateFields = optionSets
+                    .Where(f => f.FieldName == "statecode" || f.FieldName == "statuscode")
+                    .Select(f => f)
+                    .OrderBy(f => f.EntityName)
+                .ToList();
+            foreach (var item in stateFields)
+            {
+                csv.WriteField(item.EntityName);
+                csv.WriteField(item.FieldName);
+                csv.WriteField(item.OptionValue);
+                csv.WriteField(item.OptionLabel);
+                csv.WriteField(item.FieldName == "statecode" ? "State" : "Status");
+                csv.NextRecord();
             }
         }
 

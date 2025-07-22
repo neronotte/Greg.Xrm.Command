@@ -1,6 +1,7 @@
 ﻿using Autofac;
 using Greg.Xrm.Command.Commands.Column.Builders;
 using Greg.Xrm.Command.Commands.Forms.Model;
+using Greg.Xrm.Command.Commands.Script.MetadataExtractor;
 using Greg.Xrm.Command.Commands.Script.Service;
 using Greg.Xrm.Command.Commands.Table.ExportMetadata;
 using Greg.Xrm.Command.Commands.WebResources.ApplyIconsRules;
@@ -32,6 +33,8 @@ namespace Greg.Xrm.Command
 			builder.RegisterType<SavedQuery.Repository>().As<ISavedQueryRepository>();
 			builder.RegisterType<UserQuery.Repository>().As<IUserQueryRepository>();
 			builder.RegisterType<ScriptExtractionService>().As<IScriptExtractionService>();
+            builder.RegisterType<ScriptMetadataExtractor>().As<IScriptMetadataExtractor>();
+            builder.RegisterType<ScriptBuilder>().As<IScriptBuilder>();
             builder.RegisterType<Commands.Settings.Model.SettingDefinition.Repository>().As<Commands.Settings.Model.ISettingDefinitionRepository>();
 			builder.RegisterType<Commands.Settings.Model.OrganizationSetting.Repository>().As<Commands.Settings.Model.IOrganizationSettingRepository>();
 			builder.RegisterType<Commands.Settings.Model.AppSetting.Repository>().As<Commands.Settings.Model.IAppSettingRepository>();

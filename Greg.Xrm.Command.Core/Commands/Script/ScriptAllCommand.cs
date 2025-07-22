@@ -15,10 +15,10 @@ namespace Greg.Xrm.Command.Commands.Script
         public string OutputDir { get; set; } = string.Empty;
 
         [Option("scriptFileName", "script", HelpText = "Name for the generated PACX script file.", DefaultValue = "pacx_datamodel_script.ps1")]
-        public string? PacxScriptName { get; set; } = "pacx_datamodel_script.ps1";
+        public string PacxScriptName { get; set; } = "pacx_datamodel_script.ps1";
 
         [Option("stateFileName", "state", HelpText = "Name of the CSV file that will contain the state fields.", DefaultValue = "state-fields.csv")]
-        public string? StateFieldsDefinitionName { get; set; } = "state-fields.csv";
+        public string StateFieldsDefinitionName { get; set; } = "state-fields.csv";
 
         [Option("includeStateFields", "i", HelpText = "If true, exports the statecode and statuscode fields as CSV.")]
         public bool WithStateFieldsDefinition { get; set; } = false;

@@ -7,7 +7,7 @@ namespace Greg.Xrm.Command.Commands.Script
     public class ScriptSolutionCommandExecutor : ICommandExecutor<ScriptSolutionCommand>
     {
         private readonly IScriptExtractionService extractionService;
-        public ScriptSolutionCommandExecutor(IOutput output, IOrganizationServiceRepository organizationServiceRepository, IScriptExtractionService extractionService)
+        public ScriptSolutionCommandExecutor(IScriptExtractionService extractionService)
         {
             this.extractionService = extractionService;
         }
