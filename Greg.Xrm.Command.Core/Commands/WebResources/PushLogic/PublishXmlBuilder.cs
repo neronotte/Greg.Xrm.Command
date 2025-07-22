@@ -7,6 +7,7 @@ namespace Greg.Xrm.Command.Commands.WebResources.PushLogic
 	{
 		private readonly List<Guid> webResourceList = new();
 		private readonly List<string> tableList = new();
+		private readonly List<string> optionSetList = new();
 
 		public void Clear()
 		{
@@ -28,9 +29,16 @@ namespace Greg.Xrm.Command.Commands.WebResources.PushLogic
 		}
 
 
+		public void AddGlobalOptionSet(string name)
+		{
+			if (!this.optionSetList.Contains(name))
+				this.optionSetList.Add(name);
+		}
+
+
 		public PublishXmlRequest? Build()
 		{
-			if (this.webResourceList.Count == 0 && this.tableList.Count == 0)
+			if (this.webResourceList.Count == 0 && this.tableList.Count == 0 && this.optionSetList.Count == 0)
 				return null;
 
 
@@ -61,6 +69,18 @@ namespace Greg.Xrm.Command.Commands.WebResources.PushLogic
 				}
 
 				publishXml.AppendLine("  </entities>");
+			}
+			if (this.optionSetList.Count > 0)
+			{
+				publishXml.AppendLine();
+				publishXml.AppendLine("  <optionsets>");
+
+				foreach (var id in optionSetList)
+				{
+					publishXml.Append("    <optionset>").Append(id).Append("</optionset>").AppendLine();
+				}
+
+				publishXml.AppendLine("  </optionsets>");
 			}
 
 			publishXml.Append("</importexportxml>"); 

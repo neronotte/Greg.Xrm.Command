@@ -8,6 +8,7 @@ namespace Greg.Xrm.Command.Commands.WebResources.PushLogic
 
 		void AddWebResource(Guid id);
 		void AddTable(string tableName);
+		void AddGlobalOptionSet(string name);
 
 		PublishXmlRequest? Build();
 	}
