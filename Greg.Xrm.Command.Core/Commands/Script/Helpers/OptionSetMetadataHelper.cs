@@ -7,20 +7,13 @@ namespace Greg.Xrm.Command.Commands.Script.Helpers
 {
     public static class OptionSetMetadataHelper
     {
-        public static List<Models.OptionSetMetadata> ExtractOptionSets(IEnumerable<EntityMetadata> entityMetadataList, IEnumerable<OptionSetMetadata> globalOptionSets, List<string> prefixes)
+        public static List<Models.OptionSetMetadata> ExtractOptionSets(IEnumerable<EntityMetadata> entityMetadataList, IEnumerable<OptionSetMetadata> globalOptionSets)
         {
             var optionSets = new List<Models.OptionSetMetadata>();
             foreach (var entityMetadata in entityMetadataList)
             {
-                if (!prefixes.Any(prefix => entityMetadata.LogicalName.StartsWith(prefix)))
-                    continue;
                 foreach (var attribute in entityMetadata.Attributes ?? new AttributeMetadata[0])
                 {
-                    bool includeAttribute = prefixes.Any(prefix => attribute.LogicalName.StartsWith(prefix)) ||
-                                            attribute.LogicalName == "statecode" ||
-                                            attribute.LogicalName == "statuscode";
-                    if (!includeAttribute)
-                        continue;
                     if (attribute is PicklistAttributeMetadata picklistAttr)
                     {
                         if (picklistAttr.OptionSet?.IsGlobal == true)
