@@ -32,7 +32,9 @@ namespace Greg.Xrm.Command.Commands.Script
             writer.WriteParagraph("This command generates PACX scripts for all tables in one or more PowerApps solutions.");
             writer.WriteParagraph("If requested, the generated CSV file will contain only the statecode and statuscode fields for each entity, for documentation purposes.");
             writer.WriteParagraph("Example usage:");
-            writer.WriteCodeBlock("pacx script solution --solutionNames \"Solution1,Solution2\" --customPrefixs \"custom_\" --output \"C:/output\" --pacxScriptName \"myscript.ps1\" --stateFieldsDefinitionName \"state-fields.csv\" --withStateFieldsDefinition true", "PowerShell");
+            writer.WriteCodeBlock(
+                "pacx script solution --solutionNames \"Solution1,Solution2\" --customPrefixs \"custom_\" --output \"C:/output\" --scriptFileName \"myscript.ps1\" --stateFileName \"state-fields.csv\" --includeStateFields",
+                "PowerShell");
         }
     }
 }
