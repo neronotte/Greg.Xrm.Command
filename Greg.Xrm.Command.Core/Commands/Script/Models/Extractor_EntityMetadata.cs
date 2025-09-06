@@ -18,25 +18,25 @@ namespace Greg.Xrm.Command.Commands.Script.Models
         public string? PrimaryFieldAutoNumberFormat { get; set; }
         public string? PrimaryFieldRequiredLevel { get; set; }
 
-        private static string NormalizeFieldType(string type, string? typeName)
+        private static string NormalizeFieldType(string type)
         {
             var normalized = type.Replace("Type", "");
-            switch (normalized.ToLower())
-            {
-                case "string": return "String";
-                case "memo": return "Memo";
-                case "integer": return "Integer";
-                case "decimal": return "Decimal";
-                case "double": return "Decimal";
-                case "money": return "Money";
-                case "boolean": return "Boolean";
-                case "datetime": return "DateTime";
-                case "lookup": return "Lookup";
-                case "picklist": return "Picklist";
-                case "multiselectpicklist": return "Picklist";
-                default: return normalized;
-            }
-        }
+			return normalized.ToLower() switch
+			{
+				"string" => "String",
+				"memo" => "Memo",
+				"integer" => "Integer",
+				"decimal" => "Decimal",
+				"double" => "Decimal",
+				"money" => "Money",
+				"boolean" => "Boolean",
+				"datetime" => "DateTime",
+				"lookup" => "Lookup",
+				"picklist" => "Picklist",
+				"multiselectpicklist" => "Picklist",
+				_ => normalized,
+			};
+		}
 
         private static Extractor_EntityMetadata BuildEntityMetadata(EntityMetadata e, List<AttributeMetadata> fields, List<string> prefixes)
         {
@@ -64,7 +64,7 @@ namespace Greg.Xrm.Command.Commands.Script.Models
                 {
                     LogicalName = a.LogicalName,
                     DisplayName = a.DisplayName?.UserLocalizedLabel?.Label ?? a.LogicalName,
-                    FieldType = NormalizeFieldType(a.AttributeType?.ToString() ?? "String", a.AttributeTypeName?.Value),
+                    FieldType = NormalizeFieldType(a.AttributeType?.ToString() ?? "String"),
                     RequiredLevel = a.RequiredLevel?.Value.ToString() ?? "None",
                     IsCustomField = prefixes.Any(pre => a.LogicalName.StartsWith(pre)),
                     IsLookup = a.AttributeType == AttributeTypeCode.Lookup || a.AttributeType == AttributeTypeCode.Owner
@@ -104,20 +104,22 @@ namespace Greg.Xrm.Command.Commands.Script.Models
                         field.DateTimeBehavior = dt.DateTimeBehavior?.Value.ToString();
                         field.DateTimeFormat = dt.Format?.ToString();
                         break;
-                    case PicklistAttributeMetadata picklist:
-                        field.GlobalOptionSetName = picklist.OptionSet?.IsGlobal == true ? picklist.OptionSet.Name : null;
-                        if (picklist.OptionSet?.Options != null)
-                        {
-                            field.Options = picklist.OptionSet.Options.Select(o => new Extractor_OptionSetOption
-                            {
-                                Value = o.Value ?? 0,
-                                Label = o.Label?.UserLocalizedLabel?.Label ?? string.Empty
-                            }).ToList();
-                        }
-                        break;
-                    case MultiSelectPicklistAttributeMetadata multi:
+					case PicklistAttributeMetadata picklist:
+						field.GlobalOptionSetName = picklist.OptionSet?.IsGlobal == true ? picklist.OptionSet.Name : null;
+						field.DefaultValue = picklist.DefaultFormValue;
+						if (picklist.OptionSet?.Options != null)
+						{
+							field.Options = picklist.OptionSet.Options.Select(o => new Extractor_OptionSetOption
+							{
+								Value = o.Value ?? 0,
+								Label = o.Label?.UserLocalizedLabel?.Label ?? string.Empty
+							}).ToList();
+						}
+						break;
+					case MultiSelectPicklistAttributeMetadata multi:
                         field.GlobalOptionSetName = multi.OptionSet?.IsGlobal == true ? multi.OptionSet.Name : null;
-                        if (multi.OptionSet?.Options != null)
+						field.DefaultValue = multi.DefaultFormValue;
+						if (multi.OptionSet?.Options != null)
                         {
                             field.Options = multi.OptionSet.Options.Select(o => new Extractor_OptionSetOption
                             {
@@ -141,7 +143,7 @@ namespace Greg.Xrm.Command.Commands.Script.Models
                     .Where(a =>
                         (a.AttributeType != AttributeTypeCode.Virtual || (a.AttributeType == AttributeTypeCode.Virtual && a.AttributeTypeName?.Value == "MultiSelectPicklistType"))
                 ).ToList();
-                entities.Add(Extractor_EntityMetadata.BuildEntityMetadata(e, fields, prefixes));
+                entities.Add(BuildEntityMetadata(e, fields, prefixes));
             }
             return entities;
         }
@@ -155,7 +157,7 @@ namespace Greg.Xrm.Command.Commands.Script.Models
                     .Where(a =>
                         (a.AttributeType != AttributeTypeCode.Virtual || (a.AttributeType == AttributeTypeCode.Virtual && a.AttributeTypeName?.Value == "MultiSelectPicklistType"))
                 ).ToList();
-                entities.Add(Extractor_EntityMetadata.BuildEntityMetadata(e, fields, prefixes));
+                entities.Add(BuildEntityMetadata(e, fields, prefixes));
             }
             return entities;
         }
@@ -168,7 +170,7 @@ namespace Greg.Xrm.Command.Commands.Script.Models
                 .Where(a =>
                     (a.AttributeType != AttributeTypeCode.Virtual || (a.AttributeType == AttributeTypeCode.Virtual && a.AttributeTypeName?.Value == "MultiSelectPicklistType"))
             ).ToList();
-            return Extractor_EntityMetadata.BuildEntityMetadata(e, fields, prefixes);
+            return BuildEntityMetadata(e, fields, prefixes);
         }
     }
 }

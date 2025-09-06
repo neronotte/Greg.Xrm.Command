@@ -69,7 +69,7 @@ namespace Greg.Xrm.Command.Commands.Script.Service
 
         public async Task<CommandResult> ExtractTableAsync(ScriptTableCommand command, CancellationToken cancellationToken)
         {
-            var prefixes = command.CustomPrefixs?.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(p => p.Trim()).ToList() ?? new List<string>();
+            var prefixes = command.CustomPrefixs?.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(p => p.Trim()).ToList() ?? [];
             var outputDir = string.IsNullOrWhiteSpace(command.OutputDir) ? Environment.CurrentDirectory : command.OutputDir;
             var exportStateFields = command.WithStateFieldsDefinition;
             var pacxScriptName = command.PacxScriptName;
