@@ -8,7 +8,7 @@ namespace Greg.Xrm.Command.Commands.Script.Service
 {
     public class ScriptBuilder : IScriptBuilder
     {
-        private void AppendCustomColumns(StringBuilder script, Extractor_EntityMetadata entity)
+        private static void AppendCustomColumns(StringBuilder script, Extractor_EntityMetadata entity)
         {
             var lookupNames = entity.Fields.Where(f => f.IsCustomField && f.IsLookup).Select(f => f.LogicalName).ToHashSet();
             var customFields = entity.Fields
@@ -16,6 +16,7 @@ namespace Greg.Xrm.Command.Commands.Script.Service
                 .Where(f => !(f.LogicalName.EndsWith("name") && lookupNames.Contains(f.LogicalName.Substring(0, f.LogicalName.Length - 4))))
                 .OrderBy(f => f.LogicalName)
                 .ToList();
+
             if (customFields.Any())
             {
                 script.AppendLine();
@@ -50,9 +51,11 @@ namespace Greg.Xrm.Command.Commands.Script.Service
                         script.Append($" --trueLabel \"{field.TrueLabel}\"");
                     if (!string.IsNullOrEmpty(field.FalseLabel))
                         script.Append($" --falseLabel \"{field.FalseLabel}\"");
-                    if (!string.IsNullOrEmpty(field.GlobalOptionSetName))
-                        script.Append($" --globalOptionSetName \"{field.GlobalOptionSetName}\"");
-                    if (field.Options != null && field.Options.Any())
+					if (!string.IsNullOrEmpty(field.GlobalOptionSetName))
+						script.Append($" --globalOptionSetName \"{field.GlobalOptionSetName}\"");
+					if (field.DefaultValue != null)
+						script.Append($" --defaultValue {field.DefaultValue}");
+					if (field.Options != null && field.Options.Any())
                     {
                         var options = string.Join(",", field.Options.Select(o => $"{o.Label}:{o.Value}"));
                         script.Append($" --options \"{options}\"");
@@ -116,7 +119,7 @@ namespace Greg.Xrm.Command.Commands.Script.Service
                 commentedSection.AppendLine("# " + line.TrimEnd());
         }
 
-        private void AppendStandardColumns(StringBuilder commentedSection, Extractor_EntityMetadata entity)
+        private static void AppendStandardColumns(StringBuilder commentedSection, Extractor_EntityMetadata entity)
         {
             var lookupNames = entity.Fields.Where(f => f.IsLookup).Select(f => f.LogicalName).ToHashSet();
             var standardFields = entity.Fields
@@ -130,47 +133,49 @@ namespace Greg.Xrm.Command.Commands.Script.Service
                 commentedSection.AppendLine($"# ===== {entity.SchemaName.ToUpper()} STANDARD COLUMNS =====");
                 foreach (var field in standardFields)
                 {
-                    var sb = new StringBuilder();
-                    sb.Append($"pacx column create --table \"{entity.SchemaName}\" --name \"{field.DisplayName}\" --schemaName \"{field.LogicalName}\" --type \"{field.FieldType}\"");
+                    var script = new StringBuilder();
+                    script.Append($"pacx column create --table \"{entity.SchemaName}\" --name \"{field.DisplayName}\" --schemaName \"{field.LogicalName}\" --type \"{field.FieldType}\"");
                     if (field.MaxLength.HasValue)
-                        sb.Append($" --len {field.MaxLength.Value}");
+                        script.Append($" --len {field.MaxLength.Value}");
                     if (!string.IsNullOrEmpty(field.Format))
-                        sb.Append($" --stringFormat \"{field.Format}\"");
+                        script.Append($" --stringFormat \"{field.Format}\"");
                     if (!string.IsNullOrEmpty(field.AutoNumberFormat))
-                        sb.Append($" --autoNumber \"{field.AutoNumberFormat}\"");
+                        script.Append($" --autoNumber \"{field.AutoNumberFormat}\"");
                     if (!string.IsNullOrEmpty(field.IntegerFormat))
-                        sb.Append($" --intFormat \"{field.IntegerFormat}\"");
+                        script.Append($" --intFormat \"{field.IntegerFormat}\"");
                     if (!string.IsNullOrEmpty(field.RequiredLevel))
-                        sb.Append($" --requiredLevel \"{field.RequiredLevel}\"");
+                        script.Append($" --requiredLevel \"{field.RequiredLevel}\"");
                     if (field.MinValue.HasValue)
-                        sb.Append($" --min {field.MinValue.Value}");
+                        script.Append($" --min {field.MinValue.Value}");
                     if (field.MaxValue.HasValue)
-                        sb.Append($" --max {field.MaxValue.Value}");
+                        script.Append($" --max {field.MaxValue.Value}");
                     if (field.Precision.HasValue)
-                        sb.Append($" --precision {field.Precision.Value}");
+                        script.Append($" --precision {field.Precision.Value}");
                     if (field.PrecisionSource.HasValue)
-                        sb.Append($" --precisionSource {field.PrecisionSource.Value}");
+                        script.Append($" --precisionSource {field.PrecisionSource.Value}");
                     if (!string.IsNullOrEmpty(field.DateTimeBehavior))
-                        sb.Append($" --dateTimeBehavior \"{field.DateTimeBehavior}\"");
+                        script.Append($" --dateTimeBehavior \"{field.DateTimeBehavior}\"");
                     if (!string.IsNullOrEmpty(field.DateTimeFormat))
-                        sb.Append($" --dateTimeFormat \"{field.DateTimeFormat}\"");
+                        script.Append($" --dateTimeFormat \"{field.DateTimeFormat}\"");
                     if (!string.IsNullOrEmpty(field.TrueLabel))
-                        sb.Append($" --trueLabel \"{field.TrueLabel}\"");
+                        script.Append($" --trueLabel \"{field.TrueLabel}\"");
                     if (!string.IsNullOrEmpty(field.FalseLabel))
-                        sb.Append($" --falseLabel \"{field.FalseLabel}\"");
+                        script.Append($" --falseLabel \"{field.FalseLabel}\"");
                     if (!string.IsNullOrEmpty(field.GlobalOptionSetName))
-                        sb.Append($" --globalOptionSetName \"{field.GlobalOptionSetName}\"");
-                    if (field.Options != null && field.Options.Any())
+                        script.Append($" --globalOptionSetName \"{field.GlobalOptionSetName}\"");
+					if (field.DefaultValue != null)
+						script.Append($" --defaultValue {field.DefaultValue}");
+					if (field.Options != null && field.Options.Any())
                     {
                         var options = string.Join(",", field.Options.Select(o => $"{o.Label}:{o.Value}"));
-                        sb.Append($" --options \"{options}\"");
+                        script.Append($" --options \"{options}\"");
                     }
-                    commentedSection.AppendLine("# " + sb.ToString());
+                    commentedSection.AppendLine("# " + script.ToString());
                 }
             }
         }
 
-        private void AppendStandardRelationships(StringBuilder commentedSection, IEnumerable<Extractor_RelationshipMetadata> relationships, List<string> customPrefixes, HashSet<string> customEntityNames, HashSet<string> allEntityNames, string? entityNameFilter = null)
+        private static void AppendStandardRelationships(StringBuilder commentedSection, IEnumerable<Extractor_RelationshipMetadata> relationships, List<string> customPrefixes, HashSet<string> customEntityNames, HashSet<string> allEntityNames, string? entityNameFilter = null)
         {
             var rels = relationships
                 .Where(r => !r.IsCustomRelationship)
@@ -281,13 +286,13 @@ namespace Greg.Xrm.Command.Commands.Script.Service
             {
                 if (nnIntersectEntities.Contains(entity.SchemaName))
                     continue;
-                AppendCustomColumns(script, entity);
-                AppendStandardColumns(commentedSection, entity);
+				AppendCustomColumns(script, entity);
+				AppendStandardColumns(commentedSection, entity);
             }
             script.AppendLine();
             script.AppendLine("# 3. CREATE ALL RELATIONSHIPS");
             AppendRelationships(script, relationships, prefixes, customEntityNames, allEntityNames);
-            AppendStandardRelationships(commentedSection, relationships, prefixes, customEntityNames, allEntityNames);
+			AppendStandardRelationships(commentedSection, relationships, prefixes, customEntityNames, allEntityNames);
 
             // Add commented section at the end for strandard elements
             if (commentedSection.Length > 0)

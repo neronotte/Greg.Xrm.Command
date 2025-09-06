@@ -22,5 +22,7 @@ namespace Greg.Xrm.Command.Commands.Script.Models
         public string? FalseLabel { get; set; }
         public string? AutoNumberFormat { get; set; }
         public string? IntegerFormat { get; set; }
-    }
+
+        public int? DefaultValue { get; set; }
+	}
 }
