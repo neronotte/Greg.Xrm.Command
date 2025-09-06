@@ -23,7 +23,7 @@ namespace Greg.Xrm.Command.Commands.Column
 			var repository = new OrganizationServiceRepository(settingsRepository, pacxProjectRepository);
 			var parser = new OptionSetParser();
 
-			var attributeMetadataBuilderFactory = new AttributeMetadataBuilderFactory(parser);
+			var attributeMetadataBuilderFactory = new AttributeMetadataBuilderFactory(output, parser);
 
 			var command = new CreateCommand
 			{

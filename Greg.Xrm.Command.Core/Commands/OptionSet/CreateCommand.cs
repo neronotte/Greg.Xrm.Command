@@ -21,7 +21,6 @@ namespace Greg.Xrm.Command.Commands.OptionSet
 		[Option("colors", "c", HelpText = "The list of colors for each option, in exadecimal format, as a single string separated by comma (,).")]
 		public string? Colors { get; set; }
 
-
 		[Option("solution", "s", HelpText = "The name of the unmanaged solution to which you want to add this attribute.")]
 		public string? SolutionName { get; set; }
 	}

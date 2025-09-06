@@ -87,6 +87,10 @@ namespace Greg.Xrm.Command.Commands.Column
         [Option("falseLabel", "fl", HelpText = "For  Boolean type columns that represents the Label to be associated to the \"False\" value.", DefaultValue = "False")]
         public string? FalseLabel { get; set; } = "False";
 
+        [Option("defaultValue", "dv", HelpText = "For Picklist type columns indicates the default value for the column. You can provide the name or the value. If not provided, is automatically evaluated by the system.")]
+		public string? DefaultFormValue { get; set; }
+
+
 		public void WriteUsageExamples(MarkdownWriter writer)
 		{
 			writer.WriteParagraph("> This section is a work in progress");
@@ -308,6 +312,15 @@ pacx column create --type Picklist -t tableName -n columnName --options ""Tag1,T
 
 # Use existing global option set
 pacx column create --type Picklist -t tableName -n columnName --globalOptionSetName existing_global_optionset", "Powershell");
+		
+            writer.WriteParagraph("You can also specify a default value for the picklist using the `--defaultValue` option. You can provide either the label or the value of the option (labels are matched first).");
+
+            writer.WriteCodeBlock(@"# Create picklist with default value by label
+pacx column create --type Picklist -t tableName -n columnName --options ""Red:100000000,Green:100000001,Blue:100000002"" --defaultValue Green
+# Create picklist with default value by value
+pacx column create --type Picklist -t tableName -n columnName --options ""Red,Green,Blue"" --defaultValue 100000001 # Green
+pacx column create --type Picklist -t tableName -n columnName --options ""Red:100000000,Green:100000001,Blue:100000002"" --defaultValue 100000001
+", "Powershell");
 		}
 
 
