@@ -137,27 +137,28 @@ namespace Greg.Xrm.Command
 
 		private void ShowTitleBanner()
 		{
-			if (!args.Contains("--noprompt"))
-			{
-				output.Write(">>> Greg PowerPlatform CLI Extended (PACX) <<<", ConsoleColor.Green).WriteLine(" - Dataverse command tool", ConsoleColor.DarkGray);
-				output.Write("Version ")
-					.Write(this.updater.CurrentVersion);
-
-				if (this.updater.UpdateRequired)
-				{
-					output.Write(" - New version available (will be installed on exit): ", ConsoleColor.Yellow)
-						.Write(this.updater.NextVersion, ConsoleColor.Yellow);
-				}
-
-				output.WriteLine();
-				output.Write("Online documentation: ").WriteLine("https://github.com/neronotte/Greg.Xrm.Command/wiki");
-				output.Write("Feedback, Suggestions, Issues: ").WriteLine("https://github.com/neronotte/Greg.Xrm.Command/discussions");
-				output.WriteLine();
-			}
-			else
+			if (args.Contains("--noprompt") || args.Contains("--nologo"))
 			{
 				args.Remove("--noprompt");
+				args.Remove("--nologo");
+				return;
 			}
+
+
+			output.Write(">>> Greg PowerPlatform CLI Extended (PACX) <<<", ConsoleColor.Green).WriteLine(" - Dataverse command tool", ConsoleColor.DarkGray);
+			output.Write("Version ")
+				.Write(this.updater.CurrentVersion);
+
+			if (this.updater.UpdateRequired)
+			{
+				output.Write(" - New version available (will be installed on exit): ", ConsoleColor.Yellow)
+					.Write(this.updater.NextVersion, ConsoleColor.Yellow);
+			}
+
+			output.WriteLine();
+			output.Write("Online documentation: ").WriteLine("https://github.com/neronotte/Greg.Xrm.Command/wiki");
+			output.Write("Feedback, Suggestions, Issues: ").WriteLine("https://github.com/neronotte/Greg.Xrm.Command/discussions");
+			output.WriteLine();
 		}
 
 		private bool IsValidCommand(object command)
