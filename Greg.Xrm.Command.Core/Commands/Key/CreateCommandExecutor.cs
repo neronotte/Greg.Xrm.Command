@@ -144,6 +144,11 @@ namespace Greg.Xrm.Command.Commands.Key
 				return command.SchemaName;
 			}
 
+			if (displayName.StartsWith(publisherPrefix + "_", StringComparison.InvariantCultureIgnoreCase))
+			{
+				return displayName.OnlyLettersNumbersOrUnderscore();
+			}
+
 			return $"{publisherPrefix}_{displayName.OnlyLettersNumbersOrUnderscore()}";
 		}
 	}
