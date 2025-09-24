@@ -1,11 +1,14 @@
 ﻿using Greg.Xrm.Command.Commands.Column.Builders;
 using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
+using Microsoft.Extensions.Primitives;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Messages;
 using Microsoft.Xrm.Sdk.Query;
+using Newtonsoft.Json;
 using System.ServiceModel;
+using System.Text;
 
 namespace Greg.Xrm.Command.Commands.Column
 {
@@ -62,9 +65,47 @@ namespace Greg.Xrm.Command.Commands.Column
 
 				return new CreateCommandResult(response.AttributeId);
 			}
+			catch(FaultException<OrganizationServiceFault> ex)
+			{
+				var sb = new StringBuilder();
+				sb.Append("Exception of type FaultException<OrganizationServiceFault> occurred. ");
+				if (!string.IsNullOrWhiteSpace(ex.Message))
+				{
+					sb.AppendLine().Append("Message: ").Append(ex.Message).Append(". ");
+					sb.AppendLine().Append("Details: ").Append(JsonConvert.SerializeObject(ex)).Append(". ");
+				}
+				if (ex.InnerException != null)
+				{
+					sb.AppendLine()
+						.Append("Inner exception of type ")
+						.Append(ex.InnerException.GetType().FullName)
+						.Append(": ")
+						.Append(ex.InnerException.Message)
+						.Append(". ");
+				}
+
+				return CommandResult.Fail(sb.ToString(), ex);
+			}
 			catch (Exception ex)
 			{
-				return CommandResult.Fail(ex.Message, ex);
+				var sb = new StringBuilder();
+				sb.Append("Exception of type ").Append(ex.GetType().FullName).Append(" occurred. ");
+				if (!string.IsNullOrWhiteSpace(ex.Message))
+				{
+					sb.AppendLine().Append("Message: ").Append(ex.Message).Append(". ");
+				}
+				if (ex.InnerException != null)
+				{
+					sb.AppendLine()
+						.Append("Inner exception of type ")
+						.Append(ex.InnerException.GetType().FullName)
+						.Append(": ")
+						.Append(ex.InnerException.Message)
+						.Append(". ");
+				}
+
+
+				return CommandResult.Fail(sb.ToString(), ex);
 			}
 		}
 

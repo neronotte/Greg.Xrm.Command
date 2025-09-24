@@ -68,7 +68,7 @@ namespace Greg.Xrm.Command.Commands.Table
 		public int? PrimaryAttributeMaxLength { get; set; }
 
 
-		[Option("solution", "s", HelpText = "The name of the solution where the table will be created")]
+		[Option("solution", "s", HelpText = "The name of the solution where the table will be created. If not provided, the default solution will be used.")]
 		public string? SolutionName { get; set; }
 
 		public void WriteUsageExamples(MarkdownWriter writer)
