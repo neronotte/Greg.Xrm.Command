@@ -1,8 +1,7 @@
-﻿
-using Greg.Xrm.Command.Services;
+﻿using Greg.Xrm.Command.Services;
 using Greg.Xrm.Command.Services.Output;
 
-namespace Greg.Xrm.Command.Commands.Plugin
+namespace Greg.Xrm.Command.Commands.Tool
 {
 	public class ListCommandExecutor : ICommandExecutor<ListCommand>
 	{
@@ -17,7 +16,7 @@ namespace Greg.Xrm.Command.Commands.Plugin
 
 		public Task<CommandResult> ExecuteAsync(ListCommand command, CancellationToken cancellationToken)
 		{
-			var storageFolder = this.storage.GetOrCreateStorageFolder();
+			var storageFolder = storage.GetOrCreateStorageFolder();
 			var pluginsRootFolder = storageFolder.CreateSubdirectory("Plugins");
 
 			var subFolderList = pluginsRootFolder.GetDirectories().OrderBy(x => x.Name);
@@ -52,23 +51,23 @@ namespace Greg.Xrm.Command.Commands.Plugin
 
 			if (pluginInfoList.Count == 0)
 			{
-				this.output.WriteLine("No plugins found.", ConsoleColor.Yellow);
+				output.WriteLine("No plugins found.", ConsoleColor.Yellow);
 				return Task.FromResult(CommandResult.Success());
 			}
 
-			this.output.WriteLine("Installed plugins:");
+			output.WriteLine("Installed plugins:");
 			foreach (var pluginInfo in pluginInfoList)
 			{
-				this.output.Write($"- {pluginInfo.Name}").Write(" (", ConsoleColor.DarkGray) ;
+				output.Write($"- {pluginInfo.Name}").Write(" (", ConsoleColor.DarkGray) ;
 				if (string.IsNullOrWhiteSpace(pluginInfo.Version))
 				{
-					this.output.Write("local", ConsoleColor.DarkGray);
+					output.Write("local", ConsoleColor.DarkGray);
 				}
 				else
 				{
-					this.output.Write(pluginInfo.Version, ConsoleColor.DarkGray);
+					output.Write(pluginInfo.Version, ConsoleColor.DarkGray);
 				}
-				this.output.WriteLine(")", ConsoleColor.DarkGray);
+				output.WriteLine(")", ConsoleColor.DarkGray);
 			}
 			return Task.FromResult(CommandResult.Success());
 		}

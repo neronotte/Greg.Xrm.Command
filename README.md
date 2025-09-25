@@ -44,7 +44,7 @@ pacx --help
 You can extend PACX capabilities in 2 different ways:
 
 - 🌟 [Extending the PACX core features](https://github.com/neronotte/Greg.Xrm.Command/wiki/How-to-contribute)
-- 📦 [Creating your own Plugin](https://github.com/neronotte/Greg.Xrm.Command/wiki/Plugins-for-PACX): a plugin is a set of PACX commands packaged in a single dll file that can be deployed locally for single use scenarios, or can be made available to the community via NuGet. Follow the instructions provided by the wiki page linked above to learn how to build, package and deploy your PACX Plugins. **This is the preferred approach to add context specific commands**.
+- 📦 [Creating your own Tools](https://github.com/neronotte/Greg.Xrm.Command/wiki/Tools-for-PACX): a tool is a set of PACX commands packaged in a single dll file that can be deployed locally for single use scenarios, or can be made available to the community via NuGet. Follow the instructions provided by the wiki page linked above to learn how to build, package and deploy your PACX Tools. **This is the preferred approach to add context specific commands**.
 
 If you have created an interesting Plugin and you want to spread the word to the community, [🗣️ reach out to me](https://github.com/neronotte/Greg.Xrm.Command/discussions/new?category=show-and-tell) and I'll be glad to sponsor the tool in my pages!
 

@@ -1,14 +1,14 @@
 ﻿using Greg.Xrm.Command.Services;
 using System.ComponentModel.DataAnnotations;
 
-namespace Greg.Xrm.Command.Commands.Plugin
+namespace Greg.Xrm.Command.Commands.Tool
 {
-    [Command("plugin", "uninstall", HelpText = "Uninstalls a PACX plugin.")]
-	[Alias("plugin", "remove")]
-	[Alias("plugin", "delete")]
-	[Alias("uninstall", "plugin")]
-	[Alias("delete", "plugin")]
-	[Alias("remove", "plugin")]
+    [Command("tool", "uninstall", HelpText = "Uninstalls a PACX plugin.")]
+	[Alias("tool", "remove")]
+	[Alias("tool", "delete")]
+	[Alias("uninstall", "tool")]
+	[Alias("delete", "tool")]
+	[Alias("remove", "tool")]
 	public class UninstallCommand
 	{
 		[Option("name", "n", HelpText = "The unique name of the NuGet package containing the plugin to uninstall.")]
