@@ -2,11 +2,11 @@
 using Greg.Xrm.Command.Services;
 using System.ComponentModel.DataAnnotations;
 
-namespace Greg.Xrm.Command.Commands.Plugin
+namespace Greg.Xrm.Command.Commands.Tool
 {
-    [Command("plugin", "install", HelpText = "Installs or updates a PACX plugin.")]
-    [Alias("plugin", "add")]
-    [Alias("plugin", "get")]
+    [Command("tool", "install", HelpText = "Installs or updates a PACX plugin.")]
+    [Alias("tool", "add")]
+    [Alias("tool", "get")]
     public class InstallCommand : ICanProvideUsageExample, IValidatableObject
     {
         [Option("name", "n", HelpText = "To install from NuGet. The unique name of the NuGet package containing the plugin to install.")]

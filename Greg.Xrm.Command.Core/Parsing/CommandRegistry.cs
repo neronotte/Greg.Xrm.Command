@@ -43,14 +43,14 @@ namespace Greg.Xrm.Command.Parsing
 		{
 			var loaders = new List<(string, PluginLoader, List<string>)>();
 
-			var indexOfPluginsArgument = args.IndexOf("--plugin");
+			var indexOfPluginsArgument = args.IndexOf("--tool");
 			if (indexOfPluginsArgument < 0)
 			{
 				var storageFolder = this.storage.GetOrCreateStorageFolder();
 				var pluginStorageDirectory = storageFolder.GetDirectories("Plugins").FirstOrDefault();
 				if (pluginStorageDirectory == null)
 				{
-					this.log.LogInformation("No plugins folder found under <{StorageFolder}> No plugins will be loaded.", storageFolder.FullName);
+					this.log.LogInformation("No plugins folder found under <{StorageFolder}> No tools will be loaded.", storageFolder.FullName);
 					return;
 				}
 
@@ -94,8 +94,8 @@ namespace Greg.Xrm.Command.Parsing
 			{
 				if (args.Count <= indexOfPluginsArgument + 1)
 				{
-					this.output.WriteLine("Invalid syntax. --plugin argument must be followed by the plugin path.", ConsoleColor.Red);
-					this.log.LogWarning("Invalid syntax. --plugin argument must be followed by the plugin path.");
+					this.output.WriteLine("Invalid syntax. --tool argument must be followed by the tool path.", ConsoleColor.Red);
+					this.log.LogWarning("Invalid syntax. --tool argument must be followed by the tool path.");
 					return;
 				}
 
