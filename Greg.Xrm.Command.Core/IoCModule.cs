@@ -11,6 +11,7 @@ using Greg.Xrm.Command.Commands.WebResources.Templates;
 using Greg.Xrm.Command.Model;
 using Greg.Xrm.Command.Services.AttributeDeletion;
 using Greg.Xrm.Command.Services.OptionSet;
+using Greg.Xrm.Command.Services.Plugin;
 
 namespace Greg.Xrm.Command
 {
@@ -50,17 +51,21 @@ namespace Greg.Xrm.Command
 			builder.RegisterType<PublishXmlBuilder>().As<IPublishXmlBuilder>();
 
 
-			builder.RegisterType<Services.AttributeDeletion.AttributeDeletionService>().As<Services.AttributeDeletion.IAttributeDeletionService>();
-			builder.RegisterType<Services.AttributeDeletion.AttributeDeletionStrategyForCharts>().As<IAttributeDeletionStrategy>();
-			builder.RegisterType<Services.AttributeDeletion.AttributeDeletionStrategyForViews>().As<IAttributeDeletionStrategy>();
-			builder.RegisterType<Services.AttributeDeletion.AttributeDeletionStrategyForForms>().As<IAttributeDeletionStrategy>();
-			builder.RegisterType<Services.AttributeDeletion.AttributeDeletionStrategyForPluginSteps>().As<IAttributeDeletionStrategy>();
-			builder.RegisterType<Services.AttributeDeletion.AttributeDeletionStrategyForPluginStepImages>().As<IAttributeDeletionStrategy>();
-			builder.RegisterType<Services.AttributeDeletion.AttributeDeletionStrategyForRelationships>().As<IAttributeDeletionStrategy>();
-			builder.RegisterType<Services.AttributeDeletion.AttributeDeletionStrategyForMappings>().As<IAttributeDeletionStrategy>();
-			builder.RegisterType<Services.AttributeDeletion.AttributeDeletionStrategyForWorkflows>().As<IAttributeDeletionStrategy>();
+			builder.RegisterType<AttributeDeletionService>().As<IAttributeDeletionService>();
+			builder.RegisterType<AttributeDeletionStrategyForCharts>().As<IAttributeDeletionStrategy>();
+			builder.RegisterType<AttributeDeletionStrategyForViews>().As<IAttributeDeletionStrategy>();
+			builder.RegisterType<AttributeDeletionStrategyForForms>().As<IAttributeDeletionStrategy>();
+			builder.RegisterType<AttributeDeletionStrategyForPluginSteps>().As<IAttributeDeletionStrategy>();
+			builder.RegisterType<AttributeDeletionStrategyForPluginStepImages>().As<IAttributeDeletionStrategy>();
+			builder.RegisterType<AttributeDeletionStrategyForRelationships>().As<IAttributeDeletionStrategy>();
+			builder.RegisterType<AttributeDeletionStrategyForMappings>().As<IAttributeDeletionStrategy>();
+			builder.RegisterType<AttributeDeletionStrategyForWorkflows>().As<IAttributeDeletionStrategy>();
 
 			builder.RegisterType<Services.ComponentResolution.ComponentResolverEngine>().As<Services.ComponentResolution.IComponentResolverEngine>();
+
+			builder.RegisterType<PluginPackageReader>().As<IPluginPackageReader>();
+			builder.RegisterType<PluginPackage.Repository>().As<IPluginPackageRepository>();
+			builder.RegisterType<PluginAssembly.Repository>().As<IPluginAssemblyRepository>();
 
 			builder.RegisterType<Form.Repository>().As<IFormRepository>();
 		}

@@ -1,15 +1,16 @@
-﻿using Greg.Xrm.Command.Services.Connection;
+﻿using Greg.Xrm.Command.Model;
+using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Messages;
-using Microsoft.Xrm.Sdk.Query;
 using System.ServiceModel;
 
 namespace Greg.Xrm.Command.Commands.Key
 {
 	public class CreateCommandExecutor(
 		IOutput output,
-		IOrganizationServiceRepository organizationServiceRepository
+		IOrganizationServiceRepository organizationServiceRepository,
+		ISolutionRepository solutionRepository
 	)
 	: ICommandExecutor<CreateCommand>
 	{
@@ -37,32 +38,14 @@ namespace Greg.Xrm.Command.Commands.Key
 
 
 				output.WriteLine("Checking solution existence and retrieving publisher prefix");
-
-				var query = new QueryExpression("solution");
-				query.ColumnSet.AddColumns("ismanaged");
-				query.Criteria.AddCondition("uniquename", ConditionOperator.Equal, currentSolutionName);
-				var link = query.AddLink("publisher", "publisherid", "publisherid");
-				link.Columns.AddColumns("customizationprefix");
-				link.EntityAlias = "publisher";
-				query.NoLock = true;
-				query.TopCount = 1;
-
-				var solutionList = (await crm.RetrieveMultipleAsync(query)).Entities;
-				if (solutionList.Count == 0)
+				var solution = await solutionRepository.GetByUniqueNameAsync(crm, currentSolutionName);
+				if (solution == null)
 				{
 					return CommandResult.Fail("Invalid solution name: " + currentSolutionName);
 				}
-
-				var managed = solutionList[0].GetAttributeValue<bool>("ismanaged");
-				if (managed)
+				if (solution.ismanaged)
 				{
 					return CommandResult.Fail("The provided solution is managed. You must specify an unmanaged solution.");
-				}
-
-				var publisherPrefix = solutionList[0].GetAttributeValue<AliasedValue>("publisher.customizationprefix").Value as string;
-				if (string.IsNullOrWhiteSpace(publisherPrefix))
-				{
-					return CommandResult.Fail("Unable to retrieve the publisher prefix. Please report a bug to the project GitHub page.");
 				}
 
 
@@ -84,7 +67,7 @@ namespace Greg.Xrm.Command.Commands.Key
 
 				output.Write($"Evaluating key display and schema name...");
 				var keyDisplayName = GetKeyDisplayName(command);
-				var keySchemaName = GetKeySchemaName(command, publisherPrefix, keyDisplayName);
+				var keySchemaName = GetKeySchemaName(command, solution.PublisherCustomizationPrefix!, keyDisplayName);
 				output.WriteLine($"Done", ConsoleColor.Green);
 
 
