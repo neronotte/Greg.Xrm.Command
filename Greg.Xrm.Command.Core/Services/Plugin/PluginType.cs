@@ -81,6 +81,17 @@ namespace Greg.Xrm.Command.Services.Plugin
 				var result = await crm.RetrieveMultipleAsync(query, cancellationToken);
 				return result.Entities.Select(e => new PluginType(e)).ToArray();
 			}
+
+			public async Task<PluginType[]> FuzzySearchAsync(IOrganizationServiceAsync2 crm, string name, CancellationToken cancellationToken)
+			{
+				var query = new QueryExpression("plugintype");
+				query.ColumnSet.AddColumns("plugintypeid", "name", "typename", "culture", "friendlyname", "ismanaged", "isworkflowactivity", "plugintypeexportkey", "publickeytoken", "version", "pluginassemblyid");
+				query.Criteria.AddCondition("name", ConditionOperator.EndsWith, name);
+				query.NoLock = true;
+
+				var result = await crm.RetrieveMultipleAsync(query, cancellationToken);
+				return result.Entities.Select(e => new PluginType(e)).ToArray();
+			}
 		}
 	}
 }

@@ -1,6 +1,6 @@
 ﻿using Greg.Xrm.Command.Parsing;
 
-namespace Greg.Xrm.Command.Commands.Plugin
+namespace Greg.Xrm.Command.Commands.Tool
 {
     public class Help : NamespaceHelperBase
 	{

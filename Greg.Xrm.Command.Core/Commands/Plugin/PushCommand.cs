@@ -12,7 +12,7 @@ namespace Greg.Xrm.Command.Commands.Plugin
 		public string Path { get; set; } = string.Empty;
 
 
-		[Option("solution", "s", HelpText = "The name of the solution where package must be added (in case of creation). If not provided, the default solution will be used.")]
+		[Option("solution", "s", HelpText = "The name of the solution where package/assembly must be added (in case of creation). If not provided, the default solution will be used.")]
 		public string? SolutionName { get; set; }
 
 
