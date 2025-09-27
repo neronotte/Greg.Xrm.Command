@@ -66,6 +66,7 @@ namespace Greg.Xrm.Command
 			builder.RegisterType<PluginPackageReader>().As<IPluginPackageReader>();
 			builder.RegisterType<PluginPackage.Repository>().As<IPluginPackageRepository>();
 			builder.RegisterType<PluginAssembly.Repository>().As<IPluginAssemblyRepository>();
+			builder.RegisterType<PluginType.Repository>().As<IPluginTypeRepository>();
 
 			builder.RegisterType<Form.Repository>().As<IFormRepository>();
 		}

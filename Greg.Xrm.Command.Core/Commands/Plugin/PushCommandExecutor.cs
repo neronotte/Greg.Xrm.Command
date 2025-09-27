@@ -2,6 +2,7 @@
 using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
 using Greg.Xrm.Command.Services.Plugin;
+using Microsoft.Crm.Sdk.Messages;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
 using Newtonsoft.Json;
@@ -17,7 +18,8 @@ namespace Greg.Xrm.Command.Commands.Plugin
 		ISolutionRepository solutionRepository,
 		IPluginPackageReader pluginPackageReader,
 		IPluginPackageRepository pluginPackageRepository,
-		IPluginAssemblyRepository pluginAssemblyRepository
+		IPluginAssemblyRepository pluginAssemblyRepository,
+		IPluginTypeRepository pluginTypeRepository
 	) : ICommandExecutor<PushCommand>
 	{
 		public async Task<CommandResult> ExecuteAsync(PushCommand command, CancellationToken cancellationToken)
@@ -61,6 +63,7 @@ namespace Greg.Xrm.Command.Commands.Plugin
 			 *	a. Check if the assembly with the same name exists
 			 *		1. If exists, update it
 			 *		2. If not, create it
+			 *  b. Create or update the plugin types (you have to do it because, when you update an assembly, the plugin types are not created automatically. This happens automatically if you use plugin packages)
 			 */
 
 
@@ -165,6 +168,11 @@ namespace Greg.Xrm.Command.Commands.Plugin
 			}
 			else
 			{
+				if (pluginPackage.ismanaged)
+				{
+					return CommandResult.Fail($"The package {packageData.PackageId} is managed. You cannot update a managed package.");
+				}
+
 				output.Write($"Updating package {packageData.PackageId} ({packageData.PackageVersion})...");
 				pluginPackage.content = packageData.Content!;
 				pluginPackage.version = packageData.PackageVersion!;
@@ -194,61 +202,157 @@ namespace Greg.Xrm.Command.Commands.Plugin
 
 
 
+
+
+
+
 		private async Task<CommandResult> ManageAssemblyRegistrationAsync(PushCommand command, IOrganizationServiceAsync2 crm, Model.Solution solution, CancellationToken cancellationToken)
 		{
 			output.Write($"Reading plugin package from {command.Path}...");
-			var packageData = pluginPackageReader.ReadPackageFile(command.Path);
+			var packageData = pluginPackageReader.ReadAssemblyFile(command.Path);
 			if (packageData.HasError)
 			{
 				output.WriteLine("Failed", ConsoleColor.Red);
-				return CommandResult.Fail($"Failed to read plugin package from {command.Path}: {packageData.ErrorMessage}");
+				return CommandResult.Fail($"Failed to read plugin assembly from {command.Path}: {packageData.ErrorMessage}");
 			}
 			output.WriteLine("Done", ConsoleColor.Green);
 
+			var data = packageData.AssemblyProperties!;
 
-			var packageId = $"{solution.PublisherCustomizationPrefix}_{packageData.PackageId}";
 
-			output.Write($"Checking if package {packageData.PackageId} exists...");
-			var pluginPackage = await pluginAssemblyRepository.GetByIdAsync(crm, packageId, cancellationToken);
+
+
+			output.Write($"Checking if plugin assembly {data.Name} exists...");
+			var pluginAssembly = await pluginAssemblyRepository.GetByNameAsync(crm, data.Name, cancellationToken);
 			output.WriteLine("Done", ConsoleColor.Green);
 
-			if (pluginPackage == null)
+			bool isNew = true;
+			if (pluginAssembly == null)
 			{
-				output.Write($"Creating package {packageData.PackageId} ({packageData.PackageVersion})...");
-				pluginPackage = new PluginPackage
+				output.Write($"Creating assembly {data.Name} ({data.Version})...");
+				pluginAssembly = new PluginAssembly
 				{
-					name = packageId,
-					uniquename = packageId,
-					version = packageData.PackageVersion!,
+					name = data.Name,
+					version = data.Version.ToString(),
+					culture = data.Culture ?? string.Empty,
+					publickeytoken = data.PublicKeyToken,
+					ismanaged = false,
 					content = packageData.Content!,
 					solutionid = solution.ToEntityReference()
 				};
 			}
 			else
 			{
-				output.Write($"Updating package {packageData.PackageId} ({packageData.PackageVersion})...");
-				pluginPackage.content = packageData.Content!;
-				pluginPackage.version = packageData.PackageVersion!;
-			}
-			await pluginPackage.SaveOrUpdateAsync(crm);
-			output.WriteLine("Done", ConsoleColor.Green);
-
-
-			output.Write($"Retrieving assemblies associated with package {packageData.PackageId}...");
-			output.WriteLine("Done", ConsoleColor.Green);
-			var pluginAssemblyList = await pluginAssemblyRepository.GetByPackageIdAsync(crm, pluginPackage.Id, cancellationToken);
-			if (pluginAssemblyList.Length == 0)
-			{
-				output.WriteLine($"No assemblies found for package {packageData.PackageId}", ConsoleColor.Yellow);
-			}
-			else
-			{
-				output.WriteLine($"Assemblies associated with package {packageData.PackageId}:", ConsoleColor.Cyan);
-				foreach (var assembly in pluginAssemblyList)
+				if (pluginAssembly.packageid != null)
 				{
-					output.WriteLine($"- {assembly.name} (Version: {assembly.version}, Id: {assembly.Id})");
+					return CommandResult.Fail($"The assembly {data.Name} is associated with package {pluginAssembly.packageid.Name} (id:{pluginAssembly.packageid.Id}). You must update the package.");
+				}
+				if (pluginAssembly.ismanaged)
+				{
+					return CommandResult.Fail($"The assembly {data.Name} is managed. You cannot update a managed assembly.");
+				}
+
+				isNew = false;
+
+				output.Write($"Updating assembly {data.Name} ({data.Version})...");
+				pluginAssembly.content = packageData.Content!;
+				pluginAssembly.version = data.Version.ToString();
+			}
+
+			try
+			{
+				await pluginAssembly.SaveOrUpdateAsync(crm);
+				output.WriteLine("Done", ConsoleColor.Green);
+
+			}
+			catch(FaultException<OrganizationServiceFault> ex)
+			{
+				output.WriteLine("Failed", ConsoleColor.Red);
+				return CommandResult.Fail(ex.Message);
+			}
+
+
+
+
+			if (isNew)
+			{
+				try
+				{
+					output.Write($"Adding assembly {data.Name} ({data.Version}) to solution {solution.uniquename}...");
+
+					var request = new AddSolutionComponentRequest
+					{
+						SolutionUniqueName = solution.uniquename,
+						ComponentId = pluginAssembly.Id,
+						ComponentType = (int)ComponentType.PluginAssembly
+					};
+
+					await crm.ExecuteAsync(request);
+					output.WriteLine("Done", ConsoleColor.Green);
+
+				}
+				catch (FaultException<OrganizationServiceFault> ex)
+				{
+					output.WriteLine("Failed", ConsoleColor.Red);
+					return CommandResult.Fail(ex.Message);
 				}
 			}
+
+
+
+
+
+
+			// now I have to check the plugin types and, eventually, register them manually
+
+			PluginType[] existingTypes = []; 
+			if (!isNew)
+			{
+				output.Write($"Retrieving plugin types associated with assembly {data.Name}...");
+				existingTypes = await pluginTypeRepository.GetByAssemblyId(crm, pluginAssembly.Id, cancellationToken);
+				output.WriteLine("Done", ConsoleColor.Green);
+				output.WriteLine($"Found {existingTypes.Length} types.");
+			}
+
+			foreach (var name in packageData.PluginTypes)
+			{
+				var pluginType = existingTypes.FirstOrDefault(x => string.Equals(x.name, name, StringComparison.OrdinalIgnoreCase));
+				if (pluginType == null)
+				{
+					output.Write($"Creating plugin type {name}...");
+					pluginType = new PluginType
+					{
+						name = name,
+						typename = name,
+						culture = pluginAssembly.culture,
+						ismanaged = false,
+						isworkflowactivity = false,
+						//plugintypeexportkey = type.PluginTypeExportKey ?? string.Empty,
+						publickeytoken = pluginAssembly.publickeytoken,
+						version = pluginAssembly.version,
+						pluginassemblyid = pluginAssembly.ToEntityReference()
+					};
+				}
+				else
+				{
+					output.Write($"Updating plugin type {name}...");
+					pluginType.publickeytoken = pluginAssembly.publickeytoken;
+					pluginType.version = pluginAssembly.version;
+				}
+
+				try
+				{
+					await pluginType.SaveOrUpdateAsync(crm);
+					output.WriteLine("Done", ConsoleColor.Green);
+				}
+				catch (FaultException<OrganizationServiceFault> ex)
+				{
+					output.WriteLine("Failed", ConsoleColor.Red);
+				}
+			}
+
+
+
 
 			return CommandResult.Success();
 		}

@@ -3,6 +3,7 @@ using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;
 using System.ComponentModel;
+using System.IO.Packaging;
 
 namespace Greg.Xrm.Command.Services.Plugin
 {
@@ -55,15 +56,21 @@ namespace Greg.Xrm.Command.Services.Plugin
 			set => SetValue(value);
 		}
 
-		public string publickeytoken
+		public string? publickeytoken
 		{
 			get => Get<string>();
 			set => SetValue(value);
 		}
 
-		public string content
+		public string? content
 		{
 			get => Get<string>();
+			set => SetValue(value);
+		}
+
+		public EntityReference? solutionid
+		{
+			get => Get<EntityReference>();
 			set => SetValue(value);
 		}
 
@@ -77,10 +84,24 @@ namespace Greg.Xrm.Command.Services.Plugin
 
 		public class Repository : IPluginAssemblyRepository
 		{
+			public async Task<PluginAssembly?> GetByNameAsync(IOrganizationServiceAsync2 crm, string name, CancellationToken cancellationToken)
+			{
+				var query = new QueryExpression("pluginassembly");
+				query.ColumnSet.AddColumns("name", "version", "packageid", "sourcetype", "isolationmode", "culture", "publickeytoken", "ismanaged", "content", "solutionid");
+				query.Criteria.AddCondition("name", ConditionOperator.Equal, name);
+				query.TopCount = 1;
+				query.NoLock = true;
+
+				var result = await crm.RetrieveMultipleAsync(query, cancellationToken);
+				var assembly = result.Entities.Select(x => new PluginAssembly(x)).FirstOrDefault();
+				return assembly;
+			}
+
+
 			public async Task<PluginAssembly[]> GetByPackageIdAsync(IOrganizationServiceAsync2 crm, Guid packageId, CancellationToken cancellationToken)
 			{
 				var query = new QueryExpression("pluginassembly");
-				query.ColumnSet.AddColumns("name", "version", "packageid", "sourcetype", "isolationmode", "culture", "publickeytoken", "ismanaged", "content");
+				query.ColumnSet.AddColumns("name", "version", "packageid", "sourcetype", "isolationmode", "culture", "publickeytoken", "ismanaged", "content", "solutionid");
 				query.Criteria.AddCondition("packageid", ConditionOperator.Equal, packageId);
 				query.NoLock = true;
 

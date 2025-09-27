@@ -3,5 +3,7 @@
 	public interface IPluginPackageReader
 	{
 		PluginPackageReadResult ReadPackageFile(string filePath);
+
+		PluginAssemblyReadResult ReadAssemblyFile(string filePath);
 	}
 }

@@ -1,10 +1,14 @@
-﻿using System.IO.Packaging;
+﻿using Microsoft.Xrm.Sdk;
+using System.Globalization;
+using System.IO.Packaging;
+using System.Reflection;
 using System.Xml;
 
 namespace Greg.Xrm.Command.Services.Plugin
 {
 	public class PluginPackageReader : IPluginPackageReader
 	{
+
 		public PluginPackageReadResult ReadPackageFile(string filePath)
 		{
 			// Step 1: Validate input parameters
@@ -74,6 +78,96 @@ namespace Greg.Xrm.Command.Services.Plugin
 
 			// Step 10: Return successful result with extracted package information
 			return PluginPackageReadResult.Success(packageId, packageVersion, content);
+		}
+
+
+
+
+		public PluginAssemblyReadResult ReadAssemblyFile(string filePath)
+		{
+			// Step 1: Validate input parameters
+			if (string.IsNullOrWhiteSpace(filePath))
+			{
+				return PluginAssemblyReadResult.Error($"File name not provided");
+			}
+			if (!File.Exists(filePath))
+			{
+				return PluginAssemblyReadResult.Error($"File <{filePath}> does not exist");
+			}
+
+			AssemblyName? assemblyName;
+			string[] pluginTypes;
+
+			try
+			{
+#pragma warning disable S1075 // URIs should not be hardcoded
+				string frameworkPath = @"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.6.2";
+#pragma warning restore S1075 // URIs should not be hardcoded
+				if (!Directory.Exists(frameworkPath))
+				{
+					return PluginAssemblyReadResult.Error($"Cannot find .NET Framework 4.6.2. reference assemblies at <{frameworkPath}>.");
+				}
+
+				var currentAssemblyFile = new FileInfo(Assembly.GetExecutingAssembly().Location);
+
+				var sdkLibrary = Path.Combine(currentAssemblyFile.DirectoryName!, "Microsoft.Xrm.Sdk.dll");
+				if (!File.Exists(sdkLibrary))
+				{
+					return PluginAssemblyReadResult.Error($"Cannot find Microsoft.Xrm.Sdk.dll at <{sdkLibrary}>.");
+				}
+
+				var referenceAssemblies = new List<string> { filePath };
+				referenceAssemblies.AddRange(Directory.GetFiles(frameworkPath, "*.dll"));
+				referenceAssemblies.Add(sdkLibrary);
+
+				var resolver = new PathAssemblyResolver(referenceAssemblies);
+				using var mlc = new MetadataLoadContext(resolver, coreAssemblyName: "mscorlib");
+
+				var assembly = mlc.LoadFromAssemblyPath(filePath);
+				assemblyName = assembly.GetName();
+
+				var allTypes = assembly.GetTypes();
+
+				// Followed the guide at: https://learn.microsoft.com/en-us/dotnet/standard/assembly/inspect-contents-using-metadataloadcontext
+				var sdkAssembly = mlc.LoadFromAssemblyPath(sdkLibrary);
+				var pluginInterfaceType = sdkAssembly.GetType(typeof(IPlugin).FullName!)!;
+
+				pluginTypes = allTypes
+					.Where(t => t.IsClass && !t.IsAbstract && pluginInterfaceType.IsAssignableFrom(t))
+					.Select(x => x.FullName!)
+					.ToArray();
+			}
+			catch(Exception ex)
+			{
+				return PluginAssemblyReadResult.Error($"Error reading assembly file <{filePath}>: {ex.Message}");
+			}
+
+
+			var assemblyProperties = RetrieveAssemblyProperties(assemblyName);
+
+			// Step 9: Read the entire package file content and convert to Base64
+			// This allows the package content to be stored/transmitted as a string
+			using var fileStream = new FileStream(filePath, FileMode.Open);
+			using var destination = new MemoryStream();
+			fileStream.CopyTo(destination);
+			var content = Convert.ToBase64String(destination.ToArray());
+
+
+			return PluginAssemblyReadResult.Success(assemblyProperties, content, pluginTypes);
+		}
+
+
+		private static AssemblyProperties RetrieveAssemblyProperties(AssemblyName name)
+		{
+			ArgumentNullException.ThrowIfNull(name);
+
+			var culture = name.CultureInfo!.LCID != CultureInfo.InvariantCulture.LCID ? name.CultureInfo.Name : "neutral";
+
+			byte[] publicKeyToken = name.GetPublicKeyToken() ?? [];
+			var tokenString = publicKeyToken.Length == 0 ? null : string.Join(string.Empty, publicKeyToken.Select(b => b.ToString("X2")));
+
+
+			return new AssemblyProperties(name.Name!, name.Version!, culture, tokenString);
 		}
 	}
 }

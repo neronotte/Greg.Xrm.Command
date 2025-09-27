@@ -41,6 +41,7 @@
     <PackageReference Include="Nuget.Protocol" Version="6.12.1" />
     <PackageReference Include="Pluralize.NET" Version="1.0.2" />
     <PackageReference Include="System.IO.Packaging" Version="9.0.7" />
+    <PackageReference Include="System.Reflection.MetadataLoadContext" Version="9.0.9" />
   </ItemGroup>
 
   <ItemGroup>

@@ -39,6 +39,12 @@ namespace Greg.Xrm.Command.Services.Plugin
 			set => SetValue(value);
 		}
 
+		public bool ismanaged
+		{
+  			get => Get<bool>();
+			set => SetValue(value);
+		}
+
 		public EntityReference solutionid
 		{
 			get => Get<EntityReference>();
@@ -52,7 +58,7 @@ namespace Greg.Xrm.Command.Services.Plugin
 			public async Task<PluginPackage?> GetByIdAsync(IOrganizationServiceAsync2 crm, string packageId, CancellationToken cancellationToken)
 			{
 				var query = new QueryExpression("pluginpackage");
-				query.ColumnSet.AddColumns("pluginpackageid", "name", "uniquename", "version", "content", "solutionid");
+				query.ColumnSet.AddColumns("pluginpackageid", "name", "uniquename", "version", "content", "solutionid", "ismanaged");
 				query.Criteria.AddCondition("uniquename", ConditionOperator.Equal, packageId);
 				query.TopCount = 1;
 				query.NoLock = true;
