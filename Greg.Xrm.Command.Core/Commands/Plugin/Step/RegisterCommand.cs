@@ -64,7 +64,7 @@ namespace Greg.Xrm.Command.Commands.Plugin.Step
 		[Option("postImageName", "postimn", HelpText = "Name of the PreImage. If not specified, will be set automatically as <table name>_pre")]
 		public string? PostImageName { get; set; }
 
-		[Option("force", "f", HelpText = "Registers a new step even if a step with the same configuration (PluginType, Message and Table) already exists. If not specified, the current step will be updated.", DefaultValue = false)]]
+		[Option("force", "f", HelpText = "Registers a new step even if a step with the same configuration (PluginType, Message and Table) already exists. If not specified, the current step will be updated.", DefaultValue = false)]
 		public bool Force { get; set; } = false;
 
 

@@ -186,7 +186,18 @@ namespace Greg.Xrm.Command.Services.Plugin
 
 
 
-		private SdkMessageProcessingStep CreateSdkMessageProcessingStep(PluginType pluginType, SdkMessage sdkMessage, SdkMessageFilter? sdkMessageFilter, string[] filteringAttributes, Mode mode, Stage stage, Deployment deployment, int rank, string description, string unsecureConfig, string secureConfig)
+		private SdkMessageProcessingStep CreateSdkMessageProcessingStep(
+			PluginType pluginType, 
+			SdkMessage sdkMessage, 
+			SdkMessageFilter? sdkMessageFilter, 
+			string[] filteringAttributes, 
+			Mode mode, 
+			Stage stage, 
+			Deployment deployment, 
+			int rank, 
+			string? description, 
+			string? unsecureConfig, 
+			string? secureConfig)
 		{
 			if (pluginType == null)
 				throw new ArgumentNullException("pluginType");

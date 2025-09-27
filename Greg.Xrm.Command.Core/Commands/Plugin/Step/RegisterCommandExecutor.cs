@@ -137,7 +137,7 @@ namespace Greg.Xrm.Command.Commands.Plugin.Step
 			}
 
 
-			Entity? step = null;
+			SdkMessageProcessingStep? step = null;
 			try
 			{
 				output.WriteLine($"Registering plugin step...");

@@ -68,6 +68,8 @@ namespace Greg.Xrm.Command
 			builder.RegisterType<PluginAssembly.Repository>().As<IPluginAssemblyRepository>();
 			builder.RegisterType<PluginType.Repository>().As<IPluginTypeRepository>();
 			builder.RegisterType<SdkMessage.Repository>().As<ISdkMessageRepository>();
+			builder.RegisterType<SdkMessageProcessingStep.Repository>().As<ISdkMessageProcessingStepRepository>();
+			builder.RegisterType<SdkMessageProcessingStepImage.Repository>().As<ISdkMessageProcessingStepImageRepository>();
 
 			builder.RegisterType<Form.Repository>().As<IFormRepository>();
 		}
