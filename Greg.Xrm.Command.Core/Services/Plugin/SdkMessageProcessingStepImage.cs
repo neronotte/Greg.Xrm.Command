@@ -53,6 +53,20 @@ namespace Greg.Xrm.Command.Services.Plugin
 				var result = await crm.RetrieveMultipleAsync(query);
 				return result.Entities.Select(x => new SdkMessageProcessingStepImage(x)).ToArray();
 			}
+
+			public async Task<SdkMessageProcessingStepImage[]> GetByStepIdsAsync(IOrganizationServiceAsync2 crm, Guid[] stepIds)
+			{
+				if (stepIds.Length == 0)
+					return [];
+
+				var query = new QueryExpression("sdkmessageprocessingstepimage");
+				query.ColumnSet.AddColumns("sdkmessageprocessingstepid", "messagepropertyname", "name", "entityalias", "imagetype");
+				query.Criteria.AddCondition("sdkmessageprocessingstepid", ConditionOperator.In, stepIds.Cast<object>().ToArray());
+				query.NoLock = true;
+				
+				var result = await crm.RetrieveMultipleAsync(query);
+				return result.Entities.Select(x => new SdkMessageProcessingStepImage(x)).ToArray();
+			}
 		}
 	}
 }
