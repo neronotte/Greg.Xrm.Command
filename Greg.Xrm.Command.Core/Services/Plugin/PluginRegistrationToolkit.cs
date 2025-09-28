@@ -1,14 +1,15 @@
 ﻿using Greg.Xrm.Command.Services.Output;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
-using Microsoft.Xrm.Sdk.Query;
 
 namespace Greg.Xrm.Command.Services.Plugin
 {
 	/// <summary>
 	/// Simple toolkit to register plugins via code
 	/// </summary>
-	public partial class PluginRegistrationToolkit(IOrganizationServiceAsync2 crm, IOutput output)
+	public partial class PluginRegistrationToolkit(
+		IOrganizationServiceAsync2 crm, 
+		IOutput output)
 	{
 
 		private void Trace(string message, params object[] args)
@@ -62,8 +63,6 @@ namespace Greg.Xrm.Command.Services.Plugin
 				withPostImage);
 
 
-			// IF not, register plugin
-
 
 			this.Trace("Create SdkMessageProcessingStep...");
 			var sdkMessageProcessingStep = CreateSdkMessageProcessingStep(pluginType, sdkMessage, sdkMessageFilter, filteringAttributes, mode, stage, deployment, rank, description, unsecureConfig, secureConfig);
@@ -108,82 +107,6 @@ namespace Greg.Xrm.Command.Services.Plugin
 		}
 
 
-		/// <summary>
-		/// Unregisters a plugin step.
-		/// </summary>
-		/// <param name="plugin">The plugin type.</param>
-		/// <param name="messageName">The message to register for.</param>
-		/// <param name="targetEntityName">The entity which the plugin is attached.</param>
-		/// <param name="throwIfMoreThanOneFound"><c>True</c> to throw an exception if there is more than one plugin matching the specified criteria.</param>
-		/// <param name="throwIfNoneFound"><c>True</c> to throw an exception if there is no plugin matching the specified criteria.</param>
-		public void UnregisterPluginStep(
-			PluginType pluginType,
-			SdkMessage sdkMessage,
-			SdkMessageFilter? sdkMessageFilter,
-			bool throwIfMoreThanOneFound = false,
-			bool throwIfNoneFound = false)
-		{
-			this.Trace("*** UNREGISTER ***{0}Plugin: {1},{0}Message: {2},{0}EntityName: {3},{0}Throw if more than one found: {4},{0}Throw if none found: {5}",
-				Environment.NewLine,
-				pluginType.name!,
-				sdkMessage.name,
-				sdkMessageFilter?.primaryobjecttypecode ?? "any",
-				throwIfMoreThanOneFound,
-				throwIfNoneFound);
-
-
-			this.Trace("Retrieve SdkMessageProcessingStep...");
-			var sdkMessageProcessingStepList = this.RetrieveSdkMessageProcessingSteps(sdkMessage.name, sdkMessageFilter?.primaryobjecttypecode, pluginType);
-			this.Trace("Retrieve SdkMessageProcessingStep...COMPLETED");
-
-			if (throwIfMoreThanOneFound && sdkMessageProcessingStepList.Length > 1)
-			{
-				var message = string.Format("Found {0} plugins matching the specified criteria", sdkMessageProcessingStepList.Length);
-				this.Trace(message);
-				throw new InvalidOperationException(message);
-			}
-
-
-			if (throwIfNoneFound && sdkMessageProcessingStepList.Length == 0)
-			{
-				this.Trace("Found no plugins matching the specified criteria");
-				throw new InvalidOperationException("Found no plugins matching the specified criteria");
-			}
-
-			if (sdkMessageProcessingStepList.Length == 0)
-			{
-				// Nessun plugin, indietro.
-				this.Trace("Found no plugins matching the specified criteria. Moving forward...");
-				return;
-			}
-
-
-			this.Trace("Retrieve SdkMessageProcessingStepImage...");
-			var imageList = this.RetrieveSdmMessageProcessingStepImages(sdkMessageProcessingStepList);
-			this.Trace("Retrieve SdkMessageProcessingStepImage...COMPLETED");
-
-			if (imageList.Length == 0)
-			{
-				this.Trace("Found no images related to the current plugin.");
-			}
-
-			foreach (var entity in imageList)
-			{
-				this.Trace("Deleting image {0}", entity.Id);
-				crm.Delete(entity.LogicalName, entity.Id);
-				this.Trace("Deleting image {0}...COMPLETED", entity.Id);
-			}
-			foreach (var entity in sdkMessageProcessingStepList)
-			{
-				this.Trace("Deleting step {0}", entity.Id);
-				crm.Delete(entity.LogicalName, entity.Id);
-				this.Trace("Deleting step {0}...COMPLETED", entity.Id);
-			}
-		}
-
-
-
-
 
 
 		private SdkMessageProcessingStep CreateSdkMessageProcessingStep(
@@ -199,12 +122,9 @@ namespace Greg.Xrm.Command.Services.Plugin
 			string? unsecureConfig, 
 			string? secureConfig)
 		{
-			if (pluginType == null)
-				throw new ArgumentNullException("pluginType");
-			if (sdkMessageFilter == null)
-				throw new ArgumentNullException("sdkMessageFilter");
-			if (rank <= 0)
-				throw new ArgumentOutOfRangeException("rank");
+			ArgumentNullException.ThrowIfNull(pluginType);
+			ArgumentNullException.ThrowIfNull(sdkMessageFilter);
+			ArgumentOutOfRangeException.ThrowIfNegativeOrZero(rank);
 
 			var filter = sdkMessageFilter?.primaryobjecttypecode ?? "any Entity";
 
@@ -243,57 +163,22 @@ namespace Greg.Xrm.Command.Services.Plugin
 			return entity;
 		}
 
-		private Entity CreateImage(string targetEntityName, EntityReference sdkMessageProcessingStep, ImageType imageType, string? name)
+		private SdkMessageProcessingStepImage CreateImage(string targetEntityName, EntityReference sdkMessageProcessingStep, ImageType imageType, string? name)
 		{
-			name = name ?? targetEntityName + "_" + (imageType == ImageType.PreImage ? "pre" : "post");
+			name ??= targetEntityName + "_" + (imageType == ImageType.PreImage ? "pre" : "post");
 
-			var image = new Entity("sdkmessageprocessingstepimage");
-			image["sdkmessageprocessingstepid"] = sdkMessageProcessingStep;
-			image["messagepropertyname"] = "Target";
-			image["name"] = name;
-			image["entityalias"] = name;
-			image["imagetype"] = new OptionSetValue((int)imageType);
+			var image = new SdkMessageProcessingStepImage
+			{
+				sdkmessageprocessingstepid = sdkMessageProcessingStep,
+				messagepropertyname = "Target",
+				name = name,
+				entityalias = name,
+				imagetype = new OptionSetValue((int)imageType)
+			};
 
-			image.Id = crm.Create(image);
+			image.SaveOrUpdate(crm);
+
 			return image;
-		}
-
-
-
-		private Entity[] RetrieveSdkMessageProcessingSteps(string messageName, string? targetEntityName, PluginType pluginType)
-		{
-			var query = new QueryExpression("sdkmessageprocessingstep");
-
-			var linkPluginType = query.AddLink("plugintype", "plugintypeid", "plugintypeid");
-			linkPluginType.LinkCriteria.AddCondition("plugintypeid", ConditionOperator.Equal, pluginType.Id);
-
-			var linkMessage = query.AddLink("sdkmessage", "sdkmessageid", "sdkmessageid");
-			linkMessage.LinkCriteria.AddCondition("name", ConditionOperator.Equal, messageName);
-
-			var linkFilter = query.AddLink("sdkmessagefilter", "sdkmessagefilterid", "sdkmessagefilterid");
-			linkFilter.LinkCriteria.AddCondition("primaryobjecttypecode", ConditionOperator.Equal, targetEntityName);
-
-			var linkFilterMessage = linkFilter.AddLink("sdkmessage", "sdkmessageid", "sdkmessageid");
-			linkFilterMessage.LinkCriteria.AddCondition("name", ConditionOperator.Equal, messageName);
-
-			query.ColumnSet.AllColumns = false;
-
-			var sdkMessageProcessingStepList = crm.RetrieveMultiple(query);
-			return sdkMessageProcessingStepList.Entities.ToArray();
-		}
-
-		private Entity[] RetrieveSdmMessageProcessingStepImages(Entity[] sdkMessageProcessingStepList)
-		{
-			var stepIdList = sdkMessageProcessingStepList.Select(x => x.Id)
-														 .Cast<object>()
-														 .ToArray();
-
-			var query = new QueryExpression("sdkmessageprocessingstepimage");
-			query.Criteria.AddCondition("sdkmessageprocessingstepid", ConditionOperator.In, stepIdList);
-			query.ColumnSet.AllColumns = false;
-
-			var imageList = crm.RetrieveMultiple(query);
-			return imageList.Entities.ToArray();
 		}
 	}
 }

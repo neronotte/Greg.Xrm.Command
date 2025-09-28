@@ -74,13 +74,13 @@ namespace Greg.Xrm.Command.Commands.Plugin
 					return CommandResult.Fail($"File {command.Path} does not exist");
 				}
 				var fileInfo = new FileInfo(command.Path);
-				if (fileInfo.Extension.ToLower() == ".nupkg")
+				if (string.Equals(fileInfo.Extension, ".nupkg", StringComparison.OrdinalIgnoreCase))
 				{
 					var result = await ManagePackageRegistrationAsync(command, crm, solution, cancellationToken);
 					return result;
 				}
 
-				if (fileInfo.Extension.ToLower() == ".dll")
+				if (string.Equals(fileInfo.Extension, ".dll", StringComparison.OrdinalIgnoreCase))
 				{
 					var result = await ManageAssemblyRegistrationAsync(command, crm, solution, cancellationToken);
 					return result;
@@ -265,7 +265,7 @@ namespace Greg.Xrm.Command.Commands.Plugin
 				output.WriteLine("Done", ConsoleColor.Green);
 
 			}
-			catch(FaultException<OrganizationServiceFault> ex)
+			catch (FaultException<OrganizationServiceFault> ex)
 			{
 				output.WriteLine("Failed", ConsoleColor.Red);
 				return CommandResult.Fail(ex.Message);
@@ -305,7 +305,7 @@ namespace Greg.Xrm.Command.Commands.Plugin
 
 			// now I have to check the plugin types and, eventually, register them manually
 
-			PluginType[] existingTypes = []; 
+			PluginType[] existingTypes = [];
 			if (!isNew)
 			{
 				output.Write($"Retrieving plugin types associated with assembly {data.Name}...");
@@ -348,6 +348,7 @@ namespace Greg.Xrm.Command.Commands.Plugin
 				catch (FaultException<OrganizationServiceFault> ex)
 				{
 					output.WriteLine("Failed", ConsoleColor.Red);
+					output.WriteLine(ex.Message, ConsoleColor.Red);
 				}
 			}
 

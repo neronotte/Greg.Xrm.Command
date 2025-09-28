@@ -144,12 +144,15 @@ namespace Greg.Xrm.Command.Services.Plugin
 				return result.Entities.Select(x => new SdkMessageProcessingStep(x)).FirstOrDefault();
 			}
 
-			public async Task<SdkMessageProcessingStep[]> GetByKeyAsync(IOrganizationServiceAsync2 crm, PluginType pluginType, string messageName, string? primaryEntityName, PluginRegistrationToolkit.Stage stage)
+			public async Task<SdkMessageProcessingStep[]> GetByKeyAsync(IOrganizationServiceAsync2 crm, PluginType pluginType, string messageName, string? primaryEntityName, PluginRegistrationToolkit.Stage? stage)
 			{
 				var query = new QueryExpression("sdkmessageprocessingstep");
 				query.ColumnSet.AddColumns(columns);
 				query.Criteria.AddCondition("plugintypeid", ConditionOperator.Equal, pluginType.Id);
-				query.Criteria.AddCondition("stage", ConditionOperator.Equal, (int)stage);
+				if (stage.HasValue)
+				{
+					query.Criteria.AddCondition("stage", ConditionOperator.Equal, (int)stage.Value);
+				}
 
 				var linkMessage = query.AddLink("sdkmessage", "sdkmessageid", "sdkmessageid");
 				linkMessage.LinkCriteria.AddCondition("name", ConditionOperator.Equal, messageName);

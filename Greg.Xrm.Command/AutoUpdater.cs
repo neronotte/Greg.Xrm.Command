@@ -65,7 +65,7 @@ namespace Greg.Xrm.Command
 			try
 			{
 				output.WriteLine($"{ToolName} update requested");
-				var pid = Process.GetCurrentProcess().Id;
+				var pid = Environment.ProcessId;
 				var command = $@"Wait-Process -Id {pid} -Timeout {WaitForExit} -ErrorAction SilentlyContinue; dotnet tool update --global {ToolName}";
 				Process.Start(new ProcessStartInfo
 				{
