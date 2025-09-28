@@ -127,7 +127,7 @@ pacx plugin list --table account --all", "powershell");
 				"**Rank**: The execution order within the same stage (lower numbers execute first)",
 				"**Status**: Whether the step is Active or Inactive",
 				"**Images**: Pre/Post image configuration (\"pre\", \"post\", \"pre/post\", or empty)",
-				"**In Solution**: Only shown when using solution-based filtering - indicates if the step itself is a component of the specified solution (? or empty)");
+				"**In Solution**: Only shown when using solution-based filtering - indicates if the step itself is a component of the specified solution");
 			writer.WriteLine();
 
 			writer.WriteTitle3("Sorting Logic");
