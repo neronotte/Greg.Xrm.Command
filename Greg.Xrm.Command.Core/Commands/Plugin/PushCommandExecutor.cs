@@ -209,7 +209,7 @@ namespace Greg.Xrm.Command.Commands.Plugin
 		private async Task<CommandResult> ManageAssemblyRegistrationAsync(PushCommand command, IOrganizationServiceAsync2 crm, Model.Solution solution, CancellationToken cancellationToken)
 		{
 			output.Write($"Reading plugin package from {command.Path}...");
-			var packageData = pluginPackageReader.ReadAssemblyFile(command.Path);
+			var packageData = await pluginPackageReader.ReadAssemblyFileAsync(command.Path);
 			if (packageData.HasError)
 			{
 				output.WriteLine("Failed", ConsoleColor.Red);
