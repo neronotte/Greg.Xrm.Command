@@ -4,6 +4,6 @@
 	{
 		PluginPackageReadResult ReadPackageFile(string filePath);
 
-		PluginAssemblyReadResult ReadAssemblyFile(string filePath);
+		Task<PluginAssemblyReadResult> ReadAssemblyFileAsync(string filePath);
 	}
 }

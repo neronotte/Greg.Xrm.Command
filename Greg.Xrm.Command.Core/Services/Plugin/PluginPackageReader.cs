@@ -1,4 +1,5 @@
-﻿using Microsoft.Xrm.Sdk;
+﻿using Greg.Xrm.Command.Services.Settings;
+using Microsoft.Xrm.Sdk;
 using System.Globalization;
 using System.IO.Packaging;
 using System.Reflection;
@@ -6,8 +7,13 @@ using System.Xml;
 
 namespace Greg.Xrm.Command.Services.Plugin
 {
-	public class PluginPackageReader : IPluginPackageReader
+	public class PluginPackageReader(
+		ISettingsRepository settingsRepository
+	): IPluginPackageReader
 	{
+
+
+
 
 		public PluginPackageReadResult ReadPackageFile(string filePath)
 		{
@@ -83,7 +89,7 @@ namespace Greg.Xrm.Command.Services.Plugin
 
 
 
-		public PluginAssemblyReadResult ReadAssemblyFile(string filePath)
+		public async Task<PluginAssemblyReadResult> ReadAssemblyFileAsync(string filePath)
 		{
 			// Step 1: Validate input parameters
 			if (string.IsNullOrWhiteSpace(filePath))
@@ -100,9 +106,11 @@ namespace Greg.Xrm.Command.Services.Plugin
 
 			try
 			{
-#pragma warning disable S1075 // URIs should not be hardcoded
-				string frameworkPath = @"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.6.2";
-#pragma warning restore S1075 // URIs should not be hardcoded
+				var frameworkPath = await settingsRepository.GetAsync<string>(Constants.FrameworkPathKey);
+				if (string.IsNullOrWhiteSpace(frameworkPath))
+				{
+					frameworkPath = Constants.DefaultFrameworkPath;
+				}
 				if (!Directory.Exists(frameworkPath))
 				{
 					return PluginAssemblyReadResult.Error($"Cannot find .NET Framework 4.6.2. reference assemblies at <{frameworkPath}>.");
