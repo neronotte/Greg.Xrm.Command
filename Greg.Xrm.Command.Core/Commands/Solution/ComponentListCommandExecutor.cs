@@ -66,12 +66,6 @@ namespace Greg.Xrm.Command.Commands.Solution
 				output.Write($"Retrieving components for solution {currentSolutionName}...");
 
 				solutionComponents = await solutionComponentRepository.GetBySolutionIdAsync(crm, solution.Id);
-				if (solutionComponents.Count == 0)
-				{
-					output.WriteLine("Failed", ConsoleColor.Red);
-					return CommandResult.Fail($"Solution {currentSolutionName} not found.");
-				}
-
 				output.WriteLine("Done", ConsoleColor.Green);
 			}
 			catch (FaultException<OrganizationServiceFault> ex)
