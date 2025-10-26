@@ -10,7 +10,7 @@ namespace Greg.Xrm.Command.Commands.Plugin
 	public class UpdateFrameworkPathCommand : IValidatableObject, ICanProvideUsageExample
 	{
 
-		[Option("path", "p", HelpText = $"The full path to the .NET Framework 4.6.2 reference assemblies. Type DEFAULT if you want to restore the setting to its original value ({Services.Plugin.Constants.DefaultFrameworkPath}).")]
+		[Option("path", "p", HelpText = $"The full path to the .NET Framework 4.6.2 reference assemblies. Type DEFAULT if you want to restore the setting to its original value ({Constants.DefaultFrameworkPath}).")]
 		[Required]
 		public string NewPath { get; set; } = string.Empty;
 

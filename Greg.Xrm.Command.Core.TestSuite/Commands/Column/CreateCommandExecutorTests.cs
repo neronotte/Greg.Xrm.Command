@@ -5,7 +5,6 @@ using Greg.Xrm.Command.Services.OptionSet;
 using Greg.Xrm.Command.Services.Project;
 using Greg.Xrm.Command.Services.Settings;
 using Microsoft.Extensions.Logging;
-using Microsoft.Xrm.Sdk.Metadata;
 
 namespace Greg.Xrm.Command.Commands.Column
 {
@@ -28,7 +27,7 @@ namespace Greg.Xrm.Command.Commands.Column
 			var command = new CreateCommand
 			{
 				EntityName = "ava_pippo",
-				AttributeType = AttributeTypeCode.Picklist,
+				AttributeType = SupportedAttributeType.Picklist,
 				SchemaName = "ava_test",
 				DisplayName = "Test",
 				GlobalOptionSetName = "ava_riccardo", //"emailserverprofile_authenticationprotocol",
