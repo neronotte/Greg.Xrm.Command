@@ -1,4 +1,5 @@
-﻿using Greg.Xrm.Command.Services.Project;
+﻿using Greg.Xrm.Command.Services.Output;
+using Greg.Xrm.Command.Services.Project;
 using Greg.Xrm.Command.Services.Settings;
 using Microsoft.Crm.Sdk.Messages;
 using Microsoft.PowerPlatform.Dataverse.Client;
@@ -10,6 +11,7 @@ using System.ServiceModel;
 namespace Greg.Xrm.Command.Services.Connection
 {
 	public class OrganizationServiceRepository(
+		IOutput output,
 		ISettingsRepository settings,
 		IPacxProjectRepository pacxProjectRepository
 		) : IOrganizationServiceRepository
@@ -305,7 +307,7 @@ namespace Greg.Xrm.Command.Services.Connection
 			{
 				await crm.ExecuteAsync(new WhoAmIRequest());
 			}
-			catch (DataverseConnectionException)
+			catch (DataverseConnectionException ex)
 			{
 				return await CreateServiceClientFromConnectionString(connectionName, connectionString);
 			}
@@ -324,17 +326,30 @@ namespace Greg.Xrm.Command.Services.Connection
 
 		private async Task<ServiceClient> CreateServiceClientFromConnectionString(string connectionName, string connectionString)
 		{
-			var crm = new ServiceClient(this.GetFullConnectionString(connectionString));
-			if (crm.ActiveAuthenticationType == Microsoft.PowerPlatform.Dataverse.Client.AuthenticationType.OAuth
-				&& !string.IsNullOrWhiteSpace(crm.CurrentAccessToken))
+			try
 			{
-				await TokenCache.SaveAccessTokenAsync(connectionName, crm.ConnectedOrgUriActual, crm.CurrentAccessToken);
+				var crm = new ServiceClient(this.GetFullConnectionString(connectionString));
+				if (crm.ActiveAuthenticationType == Microsoft.PowerPlatform.Dataverse.Client.AuthenticationType.OAuth
+					&& !string.IsNullOrWhiteSpace(crm.CurrentAccessToken))
+				{
+					await TokenCache.SaveAccessTokenAsync(connectionName, crm.ConnectedOrgUriActual, crm.CurrentAccessToken);
+				}
+				else
+				{
+					await TokenCache.ClearAccessTokenAsync(connectionName);
+				}
+				return crm;
 			}
-			else
+			catch (DataverseConnectionException ex)
 			{
-				await TokenCache.ClearAccessTokenAsync(connectionName);
+				output.WriteLine($"Failed to create ServiceClient for connection '{connectionName}': {ex.Message}");
+				if (ex.InnerException != null)
+				{
+					output.WriteLine($"Inner exception: {ex.InnerException.Message}");
+				}
+				throw;
 			}
-			return crm;
+
 		}
 	}
 }
