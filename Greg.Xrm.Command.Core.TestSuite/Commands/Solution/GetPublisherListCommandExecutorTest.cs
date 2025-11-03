@@ -17,7 +17,7 @@ namespace Greg.Xrm.Command.Commands.Solution
 			var output = new OutputToConsole();
 			var settingsRepository = new SettingsRepository(storage);
 			var pacxProjectRepository = new PacxProjectRepository(Mock.Of<ILogger<PacxProjectRepository>>());
-			var repository = new OrganizationServiceRepository(settingsRepository, pacxProjectRepository);
+			var repository = new OrganizationServiceRepository(output, settingsRepository, pacxProjectRepository);
 
 
 			var executor = new GetPublisherListExecutor(output, repository);

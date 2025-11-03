@@ -6,6 +6,7 @@ using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.PowerPlatform.Dataverse.Client.Utils;
 using Microsoft.Xrm.Sdk;
 using System.Diagnostics;
+using System.Drawing.Text;
 using System.ServiceModel;
 
 namespace Greg.Xrm.Command.Services.Connection
@@ -324,8 +325,18 @@ namespace Greg.Xrm.Command.Services.Connection
 		}
 
 
+		private void RecourseInnerExceptions(Exception ex, int level)
+		{
+			if (ex?.InnerException != null && level <= 10)
+			{
+				output.WriteLine($"Inner exception ({level}): {ex.InnerException.Message}", ConsoleColor.Yellow);
+				RecourseInnerExceptions(ex.InnerException, level + 1);
+			}
+		}
+
 		private async Task<ServiceClient> CreateServiceClientFromConnectionString(string connectionName, string connectionString)
 		{
+
 			try
 			{
 				var crm = new ServiceClient(this.GetFullConnectionString(connectionString));
@@ -342,14 +353,10 @@ namespace Greg.Xrm.Command.Services.Connection
 			}
 			catch (DataverseConnectionException ex)
 			{
-				output.WriteLine($"Failed to create ServiceClient for connection '{connectionName}': {ex.Message}");
-				if (ex.InnerException != null)
-				{
-					output.WriteLine($"Inner exception: {ex.InnerException.Message}");
-				}
+				output.WriteLine($"Failed to create ServiceClient for connection '{connectionName}': {ex.Message}", ConsoleColor.Yellow);
+				RecourseInnerExceptions(ex, 1);
 				throw;
 			}
-
 		}
 	}
 }
