@@ -17,7 +17,7 @@ namespace Greg.Xrm.Command.Commands.Auth
 			var output = new OutputToMemory();
 			var settingsRepository = new SettingsRepository(storage);
 			var pacxProjectRepository = new PacxProjectRepository(Mock.Of<ILogger<PacxProjectRepository>>());
-			var repository = new OrganizationServiceRepository(settingsRepository, pacxProjectRepository);
+			var repository = new OrganizationServiceRepository(output, settingsRepository, pacxProjectRepository);
 			var executor = new CreateCommandExecutor(repository, output);
 
 			var command = new CreateCommand

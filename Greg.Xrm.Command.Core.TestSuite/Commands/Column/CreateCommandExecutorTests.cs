@@ -19,7 +19,7 @@ namespace Greg.Xrm.Command.Commands.Column
 			var output = new OutputToMemory();
 			var settingsRepository = new SettingsRepository(storage);
 			var pacxProjectRepository = new PacxProjectRepository(Mock.Of<ILogger<PacxProjectRepository>>());
-			var repository = new OrganizationServiceRepository(settingsRepository, pacxProjectRepository);
+			var repository = new OrganizationServiceRepository(output, settingsRepository, pacxProjectRepository);
 			var parser = new OptionSetParser();
 
 			var attributeMetadataBuilderFactory = new AttributeMetadataBuilderFactory(output, parser);
