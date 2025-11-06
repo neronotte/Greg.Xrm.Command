@@ -76,11 +76,11 @@ namespace Greg.Xrm.Command.Parsing
 
 				if (options.TryGetValue("--" + option.LongName, out var optionValue))
 				{
-					usedOptions.Add(option.LongName);
+					usedOptions.Add("--" + option.LongName);
 				}
 				else if (!string.IsNullOrWhiteSpace(option.ShortName) && options.TryGetValue("-" + option.ShortName, out optionValue))
 				{
-					usedOptions.Add(option.ShortName);
+					usedOptions.Add("-" + option.ShortName);
 				}
 				else if(optionDef.IsRequired)
 				{
@@ -106,7 +106,8 @@ namespace Greg.Xrm.Command.Parsing
 			if (usedOptions.Count != options.Count)
 			{
 				var unusedOptions = options.Keys.Except(usedOptions).ToList();
-				throw new DataException($"The following options are not valid: {string.Join(", ", unusedOptions)}");
+				var plural = unusedOptions.Count > 1 ? "s are" : " is";
+				throw new DataException($"The following option{plural} not valid: {string.Join(", ", unusedOptions)}");
 			}
 
 			return command;
@@ -182,7 +183,7 @@ namespace Greg.Xrm.Command.Parsing
 			if (propertyType.IsEnum)
 			{
 				if (!Enum.TryParse(propertyType, optionValue, true, out var enumValue))
-					throw new CommandException(CommandException.CommandInvalidArgumentType, $"Argument '{argumentName}' error: the value '{optionValue}' is not a valid {propertyType.FullName}.");
+					throw new CommandException(CommandException.CommandInvalidArgumentType, $"Argument '{argumentName}' error: the value '{optionValue}' is not a valid {propertyType.Name}.");
 
 				return enumValue;
 			}
@@ -195,7 +196,7 @@ namespace Greg.Xrm.Command.Parsing
 					return null;
 
 				if (!Enum.TryParse(undelyingType, optionValue, true, out var enumValue))
-					throw new CommandException(CommandException.CommandInvalidArgumentType, $"Argument '{argumentName}' error: the value '{optionValue}' is not a valid {propertyType.FullName}.");
+					throw new CommandException(CommandException.CommandInvalidArgumentType, $"Argument '{argumentName}' error: the value '{optionValue}' is not a valid {undelyingType.Name}.");
 
 				return enumValue;
 			}
@@ -204,7 +205,7 @@ namespace Greg.Xrm.Command.Parsing
 			{
 				if (!Guid.TryParse(optionValue, out Guid guidValue))
 				{
-					throw new CommandException(CommandException.CommandInvalidArgumentType, $"Argument '{argumentName}' error: the value '{optionValue}' is not a valid {propertyType.FullName}.");
+					throw new CommandException(CommandException.CommandInvalidArgumentType, $"Argument '{argumentName}' error: the value '{optionValue}' is not a valid {propertyType.Name}.");
 				}
 
 				return guidValue;
@@ -216,7 +217,7 @@ namespace Greg.Xrm.Command.Parsing
 
 				if (!Guid.TryParse(optionValue, out Guid guidValue))
 				{
-					throw new CommandException(CommandException.CommandInvalidArgumentType, $"Argument '{argumentName}' error: the value '{optionValue}' is not a valid {propertyType.FullName}.");
+					throw new CommandException(CommandException.CommandInvalidArgumentType, $"Argument '{argumentName}' error: the value '{optionValue}' is not a valid {propertyType.Name}.");
 				}
 
 				return guidValue;
@@ -231,11 +232,11 @@ namespace Greg.Xrm.Command.Parsing
 				if (actualValue != null)
 					return actualValue;
 
-				throw new CommandException(CommandException.CommandInvalidArgumentType, $"Argument '{argumentName}' error: the value '{optionValue}' is not a valid {propertyType.FullName}.");
+				throw new CommandException(CommandException.CommandInvalidArgumentType, $"Argument '{argumentName}' error: the value '{optionValue}' is not a valid {propertyType.Name}.");
 			}
 			catch (InvalidCastException)
 			{
-				throw new CommandException(CommandException.CommandInvalidArgumentType, $"Argument '{argumentName}' error: the value '{optionValue}' is not a valid {propertyType.FullName}.");
+				throw new CommandException(CommandException.CommandInvalidArgumentType, $"Argument '{argumentName}' error: the value '{optionValue}' is not a valid {propertyType.Name}.");
 			}
 		}
 
