@@ -101,11 +101,13 @@ namespace Greg.Xrm.Command.Model
 		{
 			private readonly string entityName;
 			private readonly Func<Entity, T> factoryMethod;
+			private readonly string[] otherColumns;
 
-			protected Repository(string entityName, Func<Entity, T> factoryMethod)
+			protected Repository(string entityName, Func<Entity, T> factoryMethod, params string[] otherColumns)
             {
 				this.entityName = entityName;
 				this.factoryMethod = factoryMethod;
+				this.otherColumns = otherColumns ?? [];
 			}
 
 
@@ -113,6 +115,10 @@ namespace Greg.Xrm.Command.Model
 			{
 				var query = new QueryExpression(this.entityName);
 				query.ColumnSet.AddColumns(nameof(name), nameof(querytype), nameof(fetchxml), nameof(layoutxml), nameof(returnedtypecode));
+				if (otherColumns.Length > 0)
+				{
+					query.ColumnSet.AddColumns(otherColumns);
+				}
 				query.Criteria.AddCondition(entityName + "id", ConditionOperator.In, ids.Cast<object>().ToArray());
 				query.NoLock = true;
 
@@ -125,6 +131,10 @@ namespace Greg.Xrm.Command.Model
 			{
 				var query = new QueryExpression(this.entityName);
 				query.ColumnSet.AddColumns(nameof(name), nameof(querytype), nameof(fetchxml), nameof(layoutxml), nameof(returnedtypecode));
+				if (otherColumns.Length > 0)
+				{
+					query.ColumnSet.AddColumns(otherColumns);
+				}
 
 				query.Criteria.FilterOperator = LogicalOperator.Or;
 				query.Criteria.AddCondition(nameof(fetchxml), ConditionOperator.Like, $"%<entity%name=\"{tableName}\">%name=\"{columnName}\"%</entity>%");
@@ -142,7 +152,11 @@ namespace Greg.Xrm.Command.Model
 			public async Task<IReadOnlyList<T>> GetByTableNameAsync(IOrganizationServiceAsync2 crm, string tableName)
 			{
 				var query = new QueryExpression(this.entityName);
-				query.ColumnSet.AddColumns(nameof(name), nameof(querytype), nameof(fetchxml), nameof(layoutxml), nameof(returnedtypecode));
+				query.ColumnSet.AddColumns(nameof(name), nameof(querytype), nameof(fetchxml), nameof(layoutxml), nameof(returnedtypecode)); 
+				if (otherColumns.Length > 0)
+				{
+					query.ColumnSet.AddColumns(otherColumns);
+				}
 				query.Criteria.AddCondition(nameof(returnedtypecode), ConditionOperator.Equal, tableName);
 				query.Criteria.AddCondition(nameof(layoutxml), ConditionOperator.NotNull);
 				query.NoLock = true;
@@ -156,6 +170,10 @@ namespace Greg.Xrm.Command.Model
 			{
 				var query = new QueryExpression(this.entityName);
 				query.ColumnSet.AddColumns(nameof(name), nameof(querytype), nameof(fetchxml), nameof(layoutxml), nameof(returnedtypecode));
+				if (otherColumns.Length > 0)
+				{
+					query.ColumnSet.AddColumns(otherColumns);
+				}
 				query.Criteria.AddCondition(nameof(name), ConditionOperator.Equal, viewName);
 				query.NoLock = true;
 
