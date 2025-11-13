@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Greg.Xrm.Command.Commands.Workflows
 {
-	[Command("workflow", "deactivate", "Deactivates one or more workflows (Power Automate Flow)")]
+	[Command("workflow", "deactivate", HelpText = "Deactivates one or more workflows (Power Automate Flow)")]
 	[Alias("flow", "deactivate")]
 	[Alias("flow", "stop")]
 	public class DeactivateCommand : ICanProvideUsageExample, IValidatableObject

@@ -4,7 +4,7 @@ using Greg.Xrm.Command.Services;
 
 namespace Greg.Xrm.Command.Commands.Workflows
 {
-	[Command("workflow", "list", "Returns a list of workflows (Power Automate Flow)")]
+	[Command("workflow", "list", HelpText = "Returns a list of workflows (Power Automate Flow)")]
 	[Alias("flow", "list")]
 	public class ListCommand : ICanProvideUsageExample
 	{
