@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Greg.Xrm.Command.Commands.Workflows
 {
-	[Command("workflow", "activate", "Activates one or more workflows (Power Automate Flow)")]
+	[Command("workflow", "activate", HelpText = "Activates one or more workflows (Power Automate Flow)")]
 	[Alias("flow", "activate")]
 	[Alias("flow", "start")]
 	public class ActivateCommand : ICanProvideUsageExample, IValidatableObject
