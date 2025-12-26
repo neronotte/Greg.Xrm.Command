@@ -15,9 +15,14 @@ namespace Greg.Xrm.Command.Commands.Auth
 		[Option("conn", "cs", HelpText = "The [connection string](https://learn.microsoft.com/en-us/power-apps/developer/data-platform/xrm-tooling/use-connection-strings-xrm-tooling-connect) that will be used to connect to the dataverse.")]
 		public string? ConnectionString { get; set; }
 
-
-		[Option("environment", "env", HelpText = "If you want to connect to your environment via OAuth, specify the environment URL here.")]
+		[Option("environment", "env", HelpText = "If you want to connect to your environment via OAuth or Client ID / Secret, specify the environment URL here.")]
 		public string? EnvironmentUrl { get; set; }
+
+		[Option("applicationId", "id", HelpText = "The Application ID (Client ID) to authenticate with when using Client ID/Secret.")]
+		public string? ApplicationId { get; set; }
+
+		[Option("clientSecret", "s", HelpText = "The Client Secret to authenticate with when using Client ID/Secret.")]
+		public string? ClientSecret { get; set; }
 
 
 		public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
@@ -30,6 +35,24 @@ namespace Greg.Xrm.Command.Commands.Auth
 			{
 				yield return new ValidationResult("You must specify either a connection string or an environment URL.", [nameof(ConnectionString), nameof(EnvironmentUrl)]);
 			}
+
+			if (!this.EnvironmentUrl.HasData() && (this.ApplicationId.HasData() || this.ClientSecret.HasData()))
+			{
+				yield return new ValidationResult("You can only specify Application ID and Client Secret when also specifying an Environment URL.", [nameof(EnvironmentUrl), nameof(ApplicationId), nameof(ClientSecret)]);
+			}
+
+			if (this.ApplicationId.HasData() && !this.ClientSecret.HasData())
+			{
+				yield return new ValidationResult("If you specify an Application ID, you must also provide a Client Secret.", [nameof(ApplicationId), nameof(ClientSecret)]);
+			}
+
+			if (!this.ApplicationId.HasData() && this.ClientSecret.HasData())
+			{
+				yield return new ValidationResult("If you specify a Client Secret, you must also provide an Application ID.", [nameof(ApplicationId), nameof(ClientSecret)]);
+			}
+
+
+
 
 			if (!string.IsNullOrWhiteSpace(EnvironmentUrl))
 			{
@@ -73,6 +96,14 @@ namespace Greg.Xrm.Command.Commands.Auth
 			writer.WriteLine();
 			writer.WriteCodeBlockStart("Powershell");
 			writer.WriteLine("auth create -n MyProfile -env \"https://contosotest.crm.dynamics.com\"");
+			writer.WriteCodeBlockEnd();
+			writer.WriteLine();
+
+			writer.WriteLine("### Client ID / Secret").WriteLine();
+			writer.WriteLine("This is the preferred method for non interactive authentications.");
+			writer.WriteLine();
+			writer.WriteCodeBlockStart("Powershell");
+			writer.WriteLine("auth create -n MyProfile -env \"https://contosotest.crm.dynamics.com\" -id \"1CF992AE-7203-4722-A53D-034D18C4593A\"  -cs \"REDACTED\"");
 			writer.WriteCodeBlockEnd();
 			writer.WriteLine();
 		}

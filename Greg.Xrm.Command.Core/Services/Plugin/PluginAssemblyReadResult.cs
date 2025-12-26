@@ -27,6 +27,6 @@
 		public AssemblyProperties? AssemblyProperties { get; init; }
 		public string? Content { get; init; }
 
-		public string[] PluginTypes { get; init; }
+		public required string[] PluginTypes { get; init; }
 	}
 }

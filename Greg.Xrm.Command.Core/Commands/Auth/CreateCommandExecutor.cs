@@ -8,9 +8,10 @@ namespace Greg.Xrm.Command.Commands.Auth
 			IOrganizationServiceRepository organizationServiceRepository,
 			IOutput output) : ICommandExecutor<CreateCommand>
 	{
-		private const string CONNECTION_STRING_TEMPLATE = "AuthType=OAuth;Url={0};RedirectUri=http://localhost;LoginPrompt=Auto";
+		private const string OAUTH_CONNECTION_STRING_TEMPLATE = "AuthType=OAuth;Url={0};RedirectUri=http://localhost;LoginPrompt=Auto";
+		private const string CLIENTID_CONNECTION_STRING_TEMPLATE = "AuthType=ClientSecret;Url={0};ClientId={1};ClientSecret={2}";
 
-        public async Task<CommandResult> ExecuteAsync(CreateCommand command, CancellationToken cancellationToken)
+		public async Task<CommandResult> ExecuteAsync(CreateCommand command, CancellationToken cancellationToken)
 		{
 			if (string.IsNullOrWhiteSpace(command.Name))
 			{
@@ -21,18 +22,31 @@ namespace Greg.Xrm.Command.Commands.Auth
 			var connectionString = command.ConnectionString;
 
 
-			if (string.IsNullOrWhiteSpace(connectionString))
+			if (!connectionString.HasData())
 			{
-				connectionString = CONNECTION_STRING_TEMPLATE.Replace("{0}", command.EnvironmentUrl?.TrimEnd('/'));
+				if (!command.ApplicationId.HasData())
+				{
+					connectionString = OAUTH_CONNECTION_STRING_TEMPLATE.Replace("{0}", command.EnvironmentUrl?.TrimEnd('/'));
+				}
+				else
+				{
+					connectionString = CLIENTID_CONNECTION_STRING_TEMPLATE
+						.Replace("{0}", command.EnvironmentUrl?.TrimEnd('/')?.Trim())
+						.Replace("{1}", command.ApplicationId?.Trim('{', ' ', '}'))
+						.Replace("{2}", command.ClientSecret?.Trim());
+				}
 			}
 
 			try
 			{
-				await organizationServiceRepository.SetConnectionAsync(command.Name, connectionString);
+				output.Write("Creating authentication profile...");
+				await organizationServiceRepository.SetConnectionAsync(command.Name, connectionString!);
+				output.WriteLine("Done.", ConsoleColor.Green);
 				return CommandResult.Success();
 			}
 			catch(DataverseConnectionException ex)
 			{
+				output.WriteLine("Failed", ConsoleColor.Red);
 				output.WriteLine(ex.Message, ConsoleColor.Red);
 				if (ex.InnerException != null)
 				{
