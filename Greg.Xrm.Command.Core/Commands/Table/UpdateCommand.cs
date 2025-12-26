@@ -2,6 +2,7 @@
 
 namespace Greg.Xrm.Command.Commands.Table
 {
+	[Command("table", "update", HelpText = "Updates the metadata of an existing table.")]
     public class UpdateCommand : IValidatableObject
 	{
 		[Option("schemaName", "sn", HelpText = "The schema name of the table to delete")]
