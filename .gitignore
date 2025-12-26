@@ -178,6 +178,7 @@ DocProject/Help/html
 
 # Click-Once directory
 publish/
+!Greg.Xrm.Command.Core/Commands/Publish
 
 # Publish Web Output
 *.[Pp]ublish.xml
