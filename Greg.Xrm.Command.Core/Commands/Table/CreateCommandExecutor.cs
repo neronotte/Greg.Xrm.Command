@@ -46,7 +46,6 @@ namespace Greg.Xrm.Command.Commands.Table
 					}
 				}
 
-
 				output.WriteLine("Checking solution existence and retrieving publisher prefix");
 
 				var query = new QueryExpression("solution");
@@ -94,7 +93,10 @@ namespace Greg.Xrm.Command.Commands.Table
 					IsConnectionsEnabled = new BooleanManagedProperty(command.IsConnectionsEnabled || command.IsActivity),
 					HasNotes = command.HasNotes || command.IsActivity,
 					HasFeedback = command.HasFeedback || command.IsActivity,
-					IsAuditEnabled = SetTableIsAuditEnabled(command)
+					IsAuditEnabled = SetTableIsAuditEnabled(command),
+					ChangeTrackingEnabled = command.ChangeTrackingEnabled,
+					IsQuickCreateEnabled = command.IsQuickCreateEnabled,
+					HasEmailAddresses = command.HasEmailAddresses
 				};
 
 

@@ -49,6 +49,15 @@ namespace Greg.Xrm.Command.Commands.Table
 		[Option("connection", "conn", DefaultValue = false, HelpText = "Indicates whether the current table can partecipate in connection relationships or not.")]
 		public bool IsConnectionsEnabled { get; set; } = false;
 
+		[Option("changeTracking", "ct", DefaultValue = null, HelpText = "Indicates whether change tracking is enabled or not.")]
+		public bool? ChangeTrackingEnabled { get; set; }
+
+		[Option("quickCreate", "qc", DefaultValue = false, HelpText = "Indicates whether quick create form is enabled or not.")]
+		public bool? IsQuickCreateEnabled { get; set; }
+
+		[Option("hasEmail", "email", DefaultValue = false, HelpText = "Rows in this table can have email addresses (for example, info@contoso.com.). If the table didn’t have an email column, one will be added. This option can only be set.")]
+		public bool? HasEmailAddresses { get; set; }
+
 		[Option("primaryAttributeName", "pan", HelpText = "The display name of the primary attribute for the table. If not specified, is used **Name**, unless it is required to be an autonumber. In that case, **Code** is used.")]
 		public string? PrimaryAttributeDisplayName { get; set; }
 
