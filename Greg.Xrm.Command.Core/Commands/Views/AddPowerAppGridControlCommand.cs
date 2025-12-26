@@ -2,7 +2,7 @@
 
 namespace Greg.Xrm.Command.Commands.Views
 {
-	[Command("view", "addPowerappGridControl", HelpText = "Adds a Power Apps grid control to a given view.")]
+	[Command("view", "addPowerappGridControl", HelpText = "(Preview) Adds a Power Apps grid control to a given view.")]
 	[Alias("view", "pappgrid" )]
 	public class AddPowerAppGridControlCommand
 	{

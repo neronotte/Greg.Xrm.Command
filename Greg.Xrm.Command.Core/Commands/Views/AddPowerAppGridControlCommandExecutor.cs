@@ -107,7 +107,7 @@ namespace Greg.Xrm.Command.Commands.Views
 			controlDescriptions = new XElement("controlDescriptions",
 				new XElement("controlDescription",
 					new XElement("customControl",
-						new XAttribute("id", "{E7A81278-8635-4D9E-8D4D-59480B391C5B}"),
+						new XAttribute("id", "{E7A81278-8635-4D9E-8D4D-59480B391C5B}"), //magic string: need to check if it is the same in all environments
 						new XElement("parameters")
 					),
 					Enumerable.Range(0, 3).Select(i => new XElement("customControl",
