@@ -10,7 +10,15 @@ namespace Greg.Xrm.Command
 {
 	public static class Extensions
 	{
-
+		/// <summary>
+		/// Shorthand for string.IsNullOrWhiteSpace (negated).
+		/// </summary>
+		/// <param name="text"></param>
+		/// <returns></returns>
+		public static bool HasData(this string? text)
+		{
+			return !string.IsNullOrWhiteSpace(text);
+		}
 
 		public static string SplitNameInPartsByCapitalLetters(this string? text)
 		{

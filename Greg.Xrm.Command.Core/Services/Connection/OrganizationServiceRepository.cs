@@ -308,7 +308,7 @@ namespace Greg.Xrm.Command.Services.Connection
 			{
 				await crm.ExecuteAsync(new WhoAmIRequest());
 			}
-			catch (DataverseConnectionException ex)
+			catch (DataverseConnectionException)
 			{
 				return await CreateServiceClientFromConnectionString(connectionName, connectionString);
 			}
