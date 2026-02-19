@@ -97,14 +97,14 @@ namespace Greg.Xrm.Command.Commands.Script.Service
                 bool isCustomLookup = rel.LookupField != null && customPrefixes.Any(p => rel.LookupField.StartsWith(p));
                 if (isCustomLookup)
                 {
-                    script.AppendLine($"pacx rel create n1 --child \"{rel.ChildEntity}\" --parent \"{rel.ParentEntity}\" --relName \"{rel.Name}\" --lookupSchemaName \"{rel.LookupField}\"");
+                    script.AppendLine($"pacx rel create n1 --child \"{rel.ChildEntity}\" --parent \"{rel.ParentEntity}\" --relName \"{rel.Name}\" --lookupSchemaName \"{rel.LookupField}\" --lookupDisplayName \"{rel.LookupDisplayName}\"");
                 }
             }
             // Header and print nn
             script.AppendLine("# --- N:N RELATIONSHIPS ---");
             foreach (var rel in rels.DistinctBy(r => r.IntersectEntity).Where(r => r.Type == Extractor_RelationshipType.ManyToMany))
             {
-                script.AppendLine($"pacx rel create nn --table1 \"{rel.FirstEntity}\" --table2 \"{rel.SecondEntity}\" --explicit --schemaName \"{rel.IntersectEntity}\"");
+                script.AppendLine($"pacx rel create nn --table1 \"{rel.FirstEntity}\" --table2 \"{rel.SecondEntity}\" --explicit --schemaName \"{rel.IntersectEntity}\" --lookupDisplayName \"{rel.LookupDisplayName}\"");
             }
         }
 
