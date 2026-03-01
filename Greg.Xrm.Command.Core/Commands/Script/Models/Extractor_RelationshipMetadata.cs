@@ -23,11 +23,14 @@ namespace Greg.Xrm.Command.Commands.Script.Models
             var relationships = new List<Extractor_RelationshipMetadata>();
             var nnSet = new HashSet<string>();
 
+            // Create a dictionary for faster entity lookup
+            var entityMetadataDict = entityMetadataList.ToDictionary(e => e.LogicalName, e => e);
+
             foreach (var entityMetadata in entityMetadataList)
             {
                 foreach (var rel in entityMetadata.OneToManyRelationships ?? [])
                 {
-                    bool isCustomParent = rel.ReferencedEntity != null && customNames.Contains(rel.ReferencedEntity);
+                    bool isCustomParent = rel.ReferencedEntity != null && (customNames.Contains(rel.ReferencedEntity));
                     bool isCustomChild = rel.ReferencingEntity != null && customNames.Contains(rel.ReferencingEntity);
                     if (includedNames != null && includedNames.Count != 0 &&
                        (singleTable || !includedNames.Contains(rel.ReferencingEntity!) || !includedNames.Contains(rel.ReferencedEntity!)) &&
@@ -35,6 +38,23 @@ namespace Greg.Xrm.Command.Commands.Script.Models
                     {
                         continue;
                     }
+
+                    // Get the DisplayName from the lookup attribute in the child entity
+                    string? lookupDisplayName = null;
+                    if (rel.ReferencingEntity != null && 
+                        rel.ReferencingAttribute != null && 
+                        entityMetadataDict.TryGetValue(rel.ReferencingEntity, out var childEntityMetadata))
+                    {
+                        var lookupAttribute = childEntityMetadata.Attributes?
+                            .FirstOrDefault(a => a.LogicalName == rel.ReferencingAttribute);
+                        
+                        if (lookupAttribute != null)
+                        {
+                            lookupDisplayName = lookupAttribute.DisplayName?.UserLocalizedLabel?.Label 
+                                ?? lookupAttribute.LogicalName;
+                        }
+                    }
+
                     relationships.Add(new Extractor_RelationshipMetadata
                     {
                         Name = rel.SchemaName,
@@ -42,7 +62,8 @@ namespace Greg.Xrm.Command.Commands.Script.Models
                         ParentEntity = rel.ReferencedEntity,
                         ChildEntity = rel.ReferencingEntity,
                         LookupField = rel.ReferencingAttribute,
-                        IsCustomRelationship = (isCustomParent || isCustomChild) &&
+                        LookupDisplayName = lookupDisplayName,
+                        IsCustomRelationship = (isCustomParent || isCustomChild) ||
                             prefixes.Any(pre => rel.ReferencingAttribute.StartsWith(pre))
                     });
                 }
