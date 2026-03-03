@@ -178,7 +178,6 @@ namespace Greg.Xrm.Command.Commands.Script.Service
         private static void AppendStandardRelationships(StringBuilder commentedSection, IEnumerable<Extractor_RelationshipMetadata> relationships, List<string> customPrefixes, HashSet<string> customEntityNames, HashSet<string> allEntityNames, string? entityNameFilter = null)
         {
             var rels = relationships
-                .Where(r => !r.IsCustomRelationship)
                 .OrderBy(r => r.Name);
             if (!string.IsNullOrEmpty(entityNameFilter))
             {
