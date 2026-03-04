@@ -63,8 +63,7 @@ namespace Greg.Xrm.Command.Commands.Script.Models
                         ChildEntity = rel.ReferencingEntity,
                         LookupField = rel.ReferencingAttribute,
                         LookupDisplayName = lookupDisplayName,
-                        IsCustomRelationship = (isCustomParent || isCustomChild) ||
-                            prefixes.Any(pre => rel.ReferencingAttribute.StartsWith(pre))
+                        IsCustomRelationship = prefixes.Any(pre => rel.SchemaName.StartsWith(pre))
                     });
                 }
 
