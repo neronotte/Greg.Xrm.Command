@@ -12,6 +12,7 @@ using Greg.Xrm.Command.Services.Project;
 using Greg.Xrm.Command.Services.Settings;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Spectre.Console;
 using System.Diagnostics;
 
 internal class Program
@@ -24,6 +25,7 @@ internal class Program
 		serviceCollection.AddSingleton<ICommandRegistry, CommandRegistry>();
 		serviceCollection.AddSingleton<ICommandParser, CommandParser>();
 		serviceCollection.RegisterCommandExecutors(typeof(CommandAttribute).Assembly);
+		serviceCollection.AddTransient<ICommandRunnerFactory, CommandRunnerFactory>();
 		serviceCollection.AddTransient<ICommandExecutorFactory, CommandExecutorFactory>();
 		serviceCollection.AddTransient<IPluralizationFactory, PluralizationFactory>();
 		serviceCollection.AddTransient<ISettingsRepository, SettingsRepository>();
@@ -32,6 +34,7 @@ internal class Program
 		serviceCollection.AddSingleton<IOutput, OutputToConsole>();
 		serviceCollection.AddTransient<IHistoryTracker, HistoryTracker>();
 		serviceCollection.AddTransient<Bootstrapper>();
+		serviceCollection.AddSingleton(AnsiConsole.Console);
 
 		serviceCollection.AddAutofac();
 		serviceCollection.AddLogging(logging =>
