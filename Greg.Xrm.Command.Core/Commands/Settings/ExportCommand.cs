@@ -34,7 +34,7 @@ namespace Greg.Xrm.Command.Commands.Settings
 		{
 			if (Format == Format.Excel && string.IsNullOrWhiteSpace(OutputFileName))
 			{
-				yield return new ValidationResult("When the format is Excel, the output file name must be specified.", new[] { nameof(OutputFileName) });
+				yield return new ValidationResult("When the format is Excel, the output file name must be specified.", [nameof(OutputFileName)]);
 			}
 		}
 

@@ -3,9 +3,6 @@ using Greg.Xrm.Command.Commands.History;
 using Greg.Xrm.Command.Parsing;
 using Greg.Xrm.Command.Services.CommandHistory;
 using Greg.Xrm.Command.Services.Output;
-using Microsoft.ApplicationInsights;
-using Microsoft.ApplicationInsights.DataContracts;
-using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.Extensions.Logging;
 using Microsoft.Xrm.Sdk;
 using System.ComponentModel.DataAnnotations;
@@ -16,7 +13,6 @@ namespace Greg.Xrm.Command
 {
 	public sealed class Bootstrapper(
 		ILogger<Bootstrapper> logger,
-		TelemetryClient client,
 		IOutput output,
 		ICommandRegistry registry,
 		ICommandParser parser,
@@ -33,7 +29,7 @@ namespace Greg.Xrm.Command
 			typeof(ClearCommand),
 		];
 
-		private AutoUpdater updater = new AutoUpdater(logger, output);
+		private readonly AutoUpdater updater = new(logger, output);
 
 		public async Task<int> StartAsync(CancellationToken cancellationToken)
 		{
@@ -59,37 +55,27 @@ namespace Greg.Xrm.Command
 
 			await TrackCommandIntoHistoryAsync(command);
 
-			using var op = client.StartOperation<RequestTelemetry>(string.Join(" ", runArgs.Verbs));
-			op.Telemetry.Properties.Add("CommandType", command.GetType().FullName);
+			var result = await ExecuteCommand(command, cancellationToken);
 
-			var result = await ExecuteCommand(command, op, cancellationToken);
-
-			await client.FlushAsync(cancellationToken);
 
 			this.updater.LaunchUpdate();
 			return result;
 		}
 
-		private async Task<int> ExecuteCommand(object command, IOperationHolder<RequestTelemetry> op, CancellationToken cancellationToken)
+		private async Task<int> ExecuteCommand(object command, CancellationToken cancellationToken)
 		{
 			try
 			{
 				if (!GetCommandExecutor(command, out MethodInfo? method, out object? commandExecutor) || method == null || commandExecutor == null)
 				{
-					op.Telemetry.Success = false;
-					op.Telemetry.ResponseCode = "404";
-					op.Telemetry.Properties.Add("Error", "Command executor not found.");
 					return -1;
 				}
 
 				var result = await ExecuteCommandAsync(command, commandExecutor, method, cancellationToken);
-				op.Telemetry.Success = result?.IsSuccess ?? false;
-				op.Telemetry.ResponseCode = result?.IsSuccess ?? false ? "200" : "500";
 
 				if (result == null)
 				{
 					log.LogInformation("Command {CommandType} has been executed. Result is null.", command.GetType());
-					op.Telemetry.Properties.Add("Error", $"Command {command.GetType()} has been executed. Result is null.");
 					return -1;
 				}
 
@@ -113,15 +99,8 @@ namespace Greg.Xrm.Command
 			{
 				var message = ex.Message;
 
-				op.Telemetry.Success = false;
-				op.Telemetry.ResponseCode = "500";
-				op.Telemetry.Properties.Add("Exception", ex.Message);
-				op.Telemetry.Properties.Add("ExceptionType", ex.GetType().FullName);
-
 				if (ex.InnerException != null)
 				{
-					op.Telemetry.Properties.Add("InnerException", ex.InnerException.Message);
-					op.Telemetry.Properties.Add("InnerExceptionType", ex.InnerException.GetType().FullName);
 					message += Environment.NewLine + " Inner exception: " + ex.InnerException.Message;
 				}
 

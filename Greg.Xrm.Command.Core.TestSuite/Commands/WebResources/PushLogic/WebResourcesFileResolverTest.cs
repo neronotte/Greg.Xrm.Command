@@ -15,12 +15,14 @@
 
 
 		[TestMethod]
-		[ExpectedException(typeof(ArgumentNullException))]
 		public void Resolve_WithNullPrefix_ThrowsException()
 		{
+			Assert.ThrowsExactly<ArgumentNullException>(() =>
+			{
 #pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
-			resolver.ResolveFiles(null);
+				resolver.ResolveFiles(null);
 #pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
+			});
 		}
 
 

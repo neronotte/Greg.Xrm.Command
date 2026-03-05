@@ -18,25 +18,22 @@ namespace Greg.Xrm.Command.Commands.WebResources.PushLogic
 
 
 		[TestMethod]
-		[ExpectedException(typeof(ArgumentNullException))]
 		public void Resolve_WithoutPublisher_ShouldThrowArgumentNullException()
 		{
-			this.resolver.ResolveFrom(null, string.Empty);
+			Assert.ThrowsExactly<ArgumentNullException>(() => this.resolver.ResolveFrom(null, string.Empty));
 		}
 
 		[TestMethod]
-		[ExpectedException(typeof(ArgumentException))]
 		public void Resolve_WithFullyQualifiedPath_WithoutProjectRoot_ShouldThrowArgumentNullException()
 		{
 			var path = @"c:\temp\folder";
-			this.resolver.ResolveFrom(path, "greg");
+			Assert.ThrowsExactly<ArgumentException>(() => this.resolver.ResolveFrom(path, "greg"));
 		}
 
 		[TestMethod]
-		[ExpectedException(typeof(ArgumentException))]
 		public void Resolve_WithDefaultPath_WithoutProjectRoot_ShouldThrowArgumentNullException()
 		{
-			this.resolver.ResolveFrom(null, "greg");
+			Assert.ThrowsExactly<ArgumentException>(() => this.resolver.ResolveFrom(null, "greg"));
 		}
 
 

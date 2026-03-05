@@ -19,7 +19,7 @@ namespace Greg.Xrm.Command.Properties {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "18.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class Resources {
@@ -57,24 +57,6 @@ namespace Greg.Xrm.Command.Properties {
             }
             set {
                 resourceCulture = value;
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to InstrumentationKey=d9c33cdc-130c-4d0d-aa17-582db4bfbd4a;IngestionEndpoint=https://westeurope-5.in.applicationinsights.azure.com/;LiveEndpoint=https://westeurope.livediagnostics.monitor.azure.com/;ApplicationId=482e0d34-9085-4cc7-83ec-5125b2f97452.
-        /// </summary>
-        internal static string ApplicationInsightsConnectionStringDev {
-            get {
-                return ResourceManager.GetString("ApplicationInsightsConnectionStringDev", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to InstrumentationKey=ed1b7029-1d8b-4487-8061-4140ba2153c0;IngestionEndpoint=https://westeurope-5.in.applicationinsights.azure.com/;LiveEndpoint=https://westeurope.livediagnostics.monitor.azure.com/;ApplicationId=88ae0138-e6f3-49c4-b549-bf6920c69266.
-        /// </summary>
-        internal static string ApplicationInsightsConnectionStringProd {
-            get {
-                return ResourceManager.GetString("ApplicationInsightsConnectionStringProd", resourceCulture);
             }
         }
     }

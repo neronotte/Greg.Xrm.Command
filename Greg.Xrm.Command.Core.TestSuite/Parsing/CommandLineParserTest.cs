@@ -22,8 +22,9 @@ namespace Greg.Xrm.Command.Parsing
 
             var command = parser.Parse("auth", "list");
 
-            Assert.IsNotNull(command);
-            Assert.AreEqual(typeof(ListCommand), command.GetType());
+			Assert.IsNotNull(command.Item1);
+			Assert.IsNotNull(command.Item2);
+			Assert.AreEqual(typeof(ListCommand), command.Item1.GetType());
         }
     }
 }

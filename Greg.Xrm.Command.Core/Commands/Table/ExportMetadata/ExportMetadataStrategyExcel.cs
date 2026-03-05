@@ -1,6 +1,6 @@
-﻿using Greg.Xrm.Command.Services.Output;
+﻿using ClosedXML.Excel;
+using Greg.Xrm.Command.Services.Output;
 using Microsoft.Xrm.Sdk.Metadata;
-using OfficeOpenXml;
 
 namespace Greg.Xrm.Command.Commands.Table.ExportMetadata
 {
@@ -26,14 +26,14 @@ namespace Greg.Xrm.Command.Commands.Table.ExportMetadata
 
             try
             {
-                using var package = new ExcelPackage();
+                using var package = new XLWorkbook();
 
                 foreach (var writer in this.sheetWriterList)
                 {
                     writer.Write(package, entityMetadata);
                 }
 
-                await package.SaveAsAsync(filePath);
+                package.SaveAs(filePath);
                 return filePath;
             }
             catch (Exception ex)

@@ -1,43 +1,29 @@
-﻿using Greg.Xrm.Command.Commands.Settings.Model;
+﻿using ClosedXML.Excel;
+using Greg.Xrm.Command.Commands.Settings.Model;
 using Greg.Xrm.Command.Model;
 using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
-using Microsoft.Xrm.Sdk;
 using Newtonsoft.Json;
-using OfficeOpenXml;
-using OfficeOpenXml.Style;
 using System.Diagnostics;
-using System.Drawing;
 
 namespace Greg.Xrm.Command.Commands.Settings
 {
-    public class ExportCommandExecutor : ICommandExecutor<ExportCommand>
-	{
-		private readonly IOutput output;
-		private readonly IOrganizationServiceRepository organizationServiceRepository;
-		private readonly ISolutionRepository solutionRepository;
-		private readonly ISettingDefinitionRepository settingRepository;
-		private readonly IOrganizationSettingRepository organizationSettingRepository;
-		private readonly IAppSettingRepository appSettingRepository;
-
-		public ExportCommandExecutor(
+    public class ExportCommandExecutor(
 			IOutput output,
 			IOrganizationServiceRepository organizationServiceRepository,
 			ISolutionRepository solutionRepository,
 			ISettingDefinitionRepository settingRepository,
 			IOrganizationSettingRepository organizationSettingRepository,
-			IAppSettingRepository appSettingRepository)
-        {
-			this.output = output ?? throw new ArgumentNullException(nameof(output));
-			this.organizationServiceRepository = organizationServiceRepository ?? throw new ArgumentNullException(nameof(organizationServiceRepository));
-			this.solutionRepository = solutionRepository ?? throw new ArgumentNullException(nameof(solutionRepository));
-			this.settingRepository = settingRepository ?? throw new ArgumentNullException(nameof(settingRepository));
-			this.organizationSettingRepository = organizationSettingRepository ?? throw new ArgumentNullException(nameof(organizationSettingRepository));
-			this.appSettingRepository = appSettingRepository ?? throw new ArgumentNullException(nameof(appSettingRepository));
-		}
+			IAppSettingRepository appSettingRepository) : ICommandExecutor<ExportCommand>
+	{
+		private readonly IOutput output = output ?? throw new ArgumentNullException(nameof(output));
+		private readonly IOrganizationServiceRepository organizationServiceRepository = organizationServiceRepository ?? throw new ArgumentNullException(nameof(organizationServiceRepository));
+		private readonly ISolutionRepository solutionRepository = solutionRepository ?? throw new ArgumentNullException(nameof(solutionRepository));
+		private readonly ISettingDefinitionRepository settingRepository = settingRepository ?? throw new ArgumentNullException(nameof(settingRepository));
+		private readonly IOrganizationSettingRepository organizationSettingRepository = organizationSettingRepository ?? throw new ArgumentNullException(nameof(organizationSettingRepository));
+		private readonly IAppSettingRepository appSettingRepository = appSettingRepository ?? throw new ArgumentNullException(nameof(appSettingRepository));
 
-
-        public async Task<CommandResult> ExecuteAsync(ExportCommand command, CancellationToken cancellationToken)
+		public async Task<CommandResult> ExecuteAsync(ExportCommand command, CancellationToken cancellationToken)
 		{
 			this.output.Write($"Connecting to the current dataverse environment...");
 			var crm = await this.organizationServiceRepository.GetCurrentConnectionAsync();
@@ -109,14 +95,14 @@ namespace Greg.Xrm.Command.Commands.Settings
 			this.output.WriteLine();
 			this.output.WriteTable(
 				settingList,
-				rowHeaders: () => new[] { "Unique Name", "Default Value", "Env. Value", "Type", "Visible", "Overridable on" },
-				rowData: setting => new[] {
+				rowHeaders: () => ["Unique Name", "Default Value", "Env. Value", "Type", "Visible", "Overridable on"],
+				rowData: setting => [
 					setting.uniquename,
 					setting.defaultvalue?.Trim() ?? string.Empty,
 					organizationSettingList.FirstOrDefault(x => x.settingdefinitionid?.Id == setting.Id)?.value ?? string.Empty,
 					setting.FormattedDataType ?? string.Empty,
 					setting.ishidden ? string.Empty : "X",
-					setting.FormattedOverridableLevel ?? string.Empty});
+					setting.FormattedOverridableLevel ?? string.Empty]);
 		}
 
 		private void WriteJson(ExportCommand command, IReadOnlyList<SettingDefinition> settingList, IReadOnlyList<OrganizationSetting> organizationSettingList, IReadOnlyList<AppSetting> appSettingList)
@@ -124,7 +110,7 @@ namespace Greg.Xrm.Command.Commands.Settings
 			var jsonItems = settingList.Select(x => new JsonSettingDefinition(
 				x,
 				organizationSettingList.FirstOrDefault(y => y.settingdefinitionid?.Id == x.Id),
-				appSettingList.Where(y => y.settingdefinitionid?.Id == x.Id).ToArray()))
+				[.. appSettingList.Where(y => y.settingdefinitionid?.Id == x.Id)]))
 			.OrderBy(x => x.uniquename)
 			.ToList();
 
@@ -172,9 +158,9 @@ namespace Greg.Xrm.Command.Commands.Settings
 
 			try
 			{
-				using var package = new ExcelPackage();
-				var ws = package.Workbook.Worksheets.Add("Settings");
-				ws.View.ShowGridLines = false;
+				using var workbook = new XLWorkbook();
+				var ws = workbook.Worksheets.Add("Settings");
+				ws.ShowGridLines = false;
 
 
 				var appList = appSettingList
@@ -187,53 +173,55 @@ namespace Greg.Xrm.Command.Commands.Settings
 
 				var row = 1;
 				var col = 0;
-				ws.Cells[row, 1].Title().SetValue("Settings list");
+				ws.Cell(row, 1).Title().SetValue("Settings list");
 
 				row++;
 
 				if (appList.Count > 0)
 				{
 					col = 5;
-					var range = ws.Cells[row, col, row, col + appList.Count - 1];
-					range.Merge = true;
-					range.Value = "App value";
-					range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
-					range.Style.VerticalAlignment = ExcelVerticalAlignment.Center;
-					range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-					range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(68, 114, 196));
-					range.Style.Font.Color.SetColor(Color.White);
+					var range = ws.Range(row, col, row, col + appList.Count - 1);
+					range.Merge();
+					range.SetValue("App value");
+					range.Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+					range.Style.Alignment.SetVertical(XLAlignmentVerticalValues.Center);
+					range.Style.Fill.PatternType = XLFillPatternValues.Solid;
+					range.Style.Fill.BackgroundColor = XLColor.FromArgb(68, 114, 196);
+					range.Style.Font.FontColor = XLColor.White;
 					range.Style.Font.Bold = true;
-					range.Style.Font.Size = 13;
-					range.Style.Border.BorderAround(ExcelBorderStyle.Thin, Color.White);
+					range.Style.Font.FontSize = 13;
+					range.Style
+						.Border.SetOutsideBorder(XLBorderStyleValues.Thin)
+						.Border.SetOutsideBorderColor(XLColor.White);
 				}
 
 				row++;
 				col = 0;
 
-				ws.Cells[row, ++col].Value = "Unique Name";
-				ws.Cells[row, ++col].Value = "Description";
-				ws.Cells[row, ++col].Value = "Default Value";
-				ws.Cells[row, ++col].Value = "Env. value";
+				ws.Cell(row, ++col).SetValue("Unique Name");
+				ws.Cell(row, ++col).SetValue("Description");
+				ws.Cell(row, ++col).SetValue("Default Value");
+				ws.Cell(row, ++col).SetValue("Env. value");
 				foreach (var app in appList)
 				{
-					ws.Cells[row, ++col].Value = app.Name;
+					ws.Cell(row, ++col).SetValue(app.Name);
 				}
-				ws.Cells[row, ++col].Value = "Type";
-				ws.Cells[row, ++col].Value = "Visible";
-				ws.Cells[row, ++col].Value = "Overridable on";
+				ws.Cell(row, ++col).SetValue("Type");
+				ws.Cell(row, ++col).SetValue("Visible");
+				ws.Cell(row, ++col).SetValue("Overridable on");
 
 				foreach (var setting in settingList)
 				{
 					row++;
 					col = 0;
-					ws.Cells[row, ++col].SetValue(setting.uniquename).Bold();
-					ws.Cells[row, ++col].Value = setting.description;
-					ws.Cells[row, col].Style.WrapText = true;
-					ws.Cells[row, ++col]
+					ws.Cell(row, ++col).SetValue(setting.uniquename).Bold();
+					ws.Cell(row, ++col).SetValue(setting.description);
+					ws.Cell(row, col).Style.Alignment.SetWrapText(true);
+					ws.Cell(row, ++col).AsRange()
 						.SetFormat(setting.datatype, setting.defaultvalue)
 						.ApplyValidation(setting.datatype)
 						.Unlocked();
-					ws.Cells[row, ++col]
+					ws.Cell(row, ++col).AsRange()
 						.SetFormat(setting.datatype, organizationSettingList.FirstOrDefault(x => x.settingdefinitionid?.Id == setting.Id)?.value)
 						.ApplyValidation(setting.datatype)
 						.Unlocked(setting.overridablelevel, SettingDefinitionOverridableLevel.Organization, SettingDefinitionOverridableLevel.AppAndOrganization);
@@ -241,24 +229,25 @@ namespace Greg.Xrm.Command.Commands.Settings
 					foreach (var app in appList)
 					{
 						var appSetting = appSettingList.FirstOrDefault(x => x.settingdefinitionid?.Id == setting.Id && x.parentappmoduleid?.Id == app.Id);
-						ws.Cells[row, ++col]
+						ws.Cell(row, ++col).AsRange()
 							.SetFormat(setting.datatype, appSetting?.value)
 							.ApplyValidation(setting.datatype)
 							.Unlocked(setting.overridablelevel, SettingDefinitionOverridableLevel.App, SettingDefinitionOverridableLevel.AppAndOrganization);
 					}
 
-					ws.Cells[row, ++col].Value = setting.FormattedDataType;
-					ws.Cells[row, ++col].Value = setting.ishidden ? string.Empty : "X";
-					ws.Cells[row, ++col].Value = setting.FormattedOverridableLevel;
+					ws.Cell(row, ++col).SetValue(setting.FormattedDataType);
+					ws.Cell(row, ++col).SetValue(setting.ishidden ? string.Empty : "X");
+					ws.Cell(row, ++col).SetValue(setting.FormattedOverridableLevel);
 				}
 
-				var tableRange = ws.Cells[3, 1, row, col];
-				tableRange.Style.VerticalAlignment = ExcelVerticalAlignment.Center;
-				var table = ws.Tables.Add(tableRange, "Settings");
-				table.TableStyle = OfficeOpenXml.Table.TableStyles.Medium2;
+				var tableRange = ws.Range(3, 1, row, col);
+				tableRange.Style.Alignment.SetVertical(XLAlignmentVerticalValues.Center);
 
+				
+				var table = tableRange.CreateTable("Settings");
+				
 				var colWidth = 25;
-				ws.Column(1).AutoFit();
+				ws.Column(1).AdjustToContents();
 				ws.Column(2).Width = colWidth * 3;
 				for (var i = 3; i <= col; i++)
 				{
@@ -266,20 +255,22 @@ namespace Greg.Xrm.Command.Commands.Settings
 
 					if (i >= col-2)
 					{ 
-						ws.Column(i).AutoFit();
-						ws.Column(i).Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+						ws.Column(i).AdjustToContents();
+						ws.Column(i).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
 					}
 				}
+				ws.SheetView.Freeze(4, 3);
 
-				ws.View.FreezePanes(4, 3);
+				var protection = ws.Protect("ciaociao");
+				protection.AllowElement(XLSheetProtectionElements.Sort);
+				protection.AllowElement(XLSheetProtectionElements.AutoFilter);
 
-				ws.Protection.IsProtected = true;
-				ws.Protection.AllowSort = true;
-				ws.Protection.AllowAutoFilter = true;
-				ws.Protection.SetPassword("ciaociao");
 
-				package.Workbook.Protection.LockStructure = true;
-				await package.SaveAsAsync(new FileInfo(command.OutputFileName));
+				workbook.Protect("ciaociao");
+				workbook.LockStructure = true;
+				workbook.LockWindows = true;
+
+				workbook.SaveAs(command.OutputFileName);
 
 				this.output.WriteLine("Done", ConsoleColor.Green);
 			}
@@ -299,102 +290,6 @@ namespace Greg.Xrm.Command.Commands.Settings
 			}
 
 			return CommandResult.Success();
-		}
-
-
-
-	}
-
-    public static class ExcelExtensions
-    {
-		public static ExcelRange SetFormat(this ExcelRange range, OptionSetValue? type, string? value)
-		{
-			if (type?.Value == (int)SettingDefinitionDataType.Boolean)
-			{
-				return range.SetFormatBoolean(value);
-			}
-			if (type?.Value == (int)SettingDefinitionDataType.Number)
-			{
-				return range.SetFormatNumber(value);
-			}
-
-			return range.SetValue(value);
-		}
-
-		public static ExcelRange SetFormatBoolean(this ExcelRange range, string? value)
-		{
-			return range.TextAlign(ExcelHorizontalAlignment.Center).SetValue(value?.ToString().ToUpperInvariant());
-		}
-
-		public static ExcelRange SetFormatNumber(this ExcelRange range, string? value)
-		{
-			range.TextAlign(ExcelHorizontalAlignment.Right);
-			range.Style.Numberformat.Format = "#,##0.0";
-
-			if (value != null && double.TryParse(value, out var number))
-			{
-				return range.SetValue(number);
-			}
-
-			return range;
-		}
-
-
-		public static ExcelRange ApplyValidation(this ExcelRange range, OptionSetValue? value)
-		{
-			if (value == null) return range;
-			if (value.Value == (int)SettingDefinitionDataType.Boolean)
-			{
-				return range.ApplyValidationBoolean();
-			}
-			if (value.Value == (int)SettingDefinitionDataType.Number)
-			{
-				return range.ApplyValidationNumber();
-			}
-
-			return range;
-		}
-
-		public static ExcelRange ApplyValidationNumber(this ExcelRange range)
-		{
-			var list = range.DataValidation.AddDecimalDataValidation();
-			list.AllowBlank = true;
-			list.ShowErrorMessage = true;
-			list.Error = "Invalid value, only numbers are supported!";
-			list.ErrorStyle = OfficeOpenXml.DataValidation.ExcelDataValidationWarningStyle.stop;
-			list.ErrorTitle = "Invalid value";
-			return range;
-		}
-
-        public static ExcelRange ApplyValidationBoolean(this ExcelRange range)
-		{
-			var list = range.DataValidation.AddListDataValidation();
-			list.Formula.Values.Add("TRUE");
-			list.Formula.Values.Add("FALSE");
-			list.AllowBlank = true;
-			list.ShowErrorMessage = true;
-			list.Error = "Invalid value, only 'true' and 'false' are supported!";
-			list.ErrorStyle = OfficeOpenXml.DataValidation.ExcelDataValidationWarningStyle.stop;
-			list.ErrorTitle = "Invalid value";
-			return range;
-		}
-
-		public static ExcelRange Unlocked(this ExcelRange range, OptionSetValue? overridableLevel = null, params SettingDefinitionOverridableLevel[] validLevels)
-		{
-			var isLocked = overridableLevel != null && !validLevels.Contains((SettingDefinitionOverridableLevel)overridableLevel.Value);
-			range.Style.Locked = isLocked;
-
-			if (isLocked)
-			{
-				range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-				range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
-			}
-			else
-			{
-				range.Input();
-			}
-
-			return range;
 		}
 	}
 }
