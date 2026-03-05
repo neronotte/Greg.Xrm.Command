@@ -107,7 +107,7 @@ namespace Greg.Xrm.Command.Commands.Script.Service
             script.AppendLine("# --- N:N RELATIONSHIPS ---");
             foreach (var rel in rels.DistinctBy(r => r.IntersectEntity).Where(r => r.Type == Extractor_RelationshipType.ManyToMany))
             {
-                script.AppendLine($"pacx rel create nn --table1 \"{rel.FirstEntity}\" --table2 \"{rel.SecondEntity}\" --explicit --schemaName \"{rel.IntersectEntity}\" --lookupDisplayName \"{rel.LookupDisplayName}\"");
+                script.AppendLine($"pacx rel create nn --table1 \"{rel.FirstEntity}\" --table2 \"{rel.SecondEntity}\" --explicit --schemaName \"{rel.IntersectEntity}\"");
             }
         }
 

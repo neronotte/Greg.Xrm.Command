@@ -63,8 +63,7 @@ namespace Greg.Xrm.Command.Commands.Script.Models
                         ChildEntity = rel.ReferencingEntity,
                         LookupField = rel.ReferencingAttribute,
                         LookupDisplayName = lookupDisplayName,
-                        IsCustomRelationship = (isCustomParent || isCustomChild) ||
-                            prefixes.Any(pre => rel.ReferencingAttribute.StartsWith(pre))
+                        IsCustomRelationship = prefixes.Any(pre => rel.SchemaName.StartsWith(pre))
                     });
                 }
 
@@ -85,7 +84,7 @@ namespace Greg.Xrm.Command.Commands.Script.Models
                         FirstEntity = rel.Entity1LogicalName,
                         SecondEntity = rel.Entity2LogicalName,
                         IntersectEntity = rel.IntersectEntityName,
-                        IsCustomRelationship = (isCustom1 || isCustom2) && nnSet.Add(rel.SchemaName)
+                        IsCustomRelationship = prefixes.Any(pre => rel.SchemaName.StartsWith(pre)) && nnSet.Add(rel.SchemaName)
                     });
                 }
             }
