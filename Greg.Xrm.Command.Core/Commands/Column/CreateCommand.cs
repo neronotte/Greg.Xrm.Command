@@ -1,4 +1,5 @@
 ﻿using Greg.Xrm.Command.Parsing;
+using Greg.Xrm.Command.Parsing.Attributes;
 using Greg.Xrm.Command.Services;
 using Microsoft.Xrm.Sdk.Metadata;
 using System.ComponentModel.DataAnnotations;
@@ -7,6 +8,7 @@ namespace Greg.Xrm.Command.Commands.Column
 {
     [Command("column", "create", HelpText = "Creates a new column on a given Dataverse table")]
     [Alias("create", "column")]
+    [HideInInteractiveExperience("Too complex, need to refactor options in order to make it more straightforward.")]
     public class CreateCommand : ICanProvideUsageExample
     {
         [Option("table", "t", HelpText = "The name of the entity for which you want to create an attribute")]

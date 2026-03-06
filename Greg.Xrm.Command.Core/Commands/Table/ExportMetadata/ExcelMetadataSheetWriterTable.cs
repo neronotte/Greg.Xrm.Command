@@ -129,15 +129,14 @@ namespace Greg.Xrm.Command.Commands.Table.ExportMetadata
 				.SetValue(Format(value));
 		}
 
-		private static object? Format<T>(T? value)
+		private static string? Format<T>(T? value)
 		{
 			if (value is null) return null;
 
 
-			if (value is BooleanManagedProperty p1) return p1.Value;
+			if (value is BooleanManagedProperty p1) return p1.Value.ToString();
 			if (value is Label p2) return p2.UserLocalizedLabel?.Label ?? p2.LocalizedLabels?.FirstOrDefault()?.Label;
-			if (value.GetType().IsValueType) return value;
-
+			if (value.GetType().IsValueType) return value?.ToString();
 
 			return value.ToString();
 		}

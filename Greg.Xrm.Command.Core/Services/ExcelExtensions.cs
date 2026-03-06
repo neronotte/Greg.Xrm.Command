@@ -31,13 +31,6 @@ namespace Greg.Xrm.Command
 			range.Style.Alignment.SetHorizontal(alignment);
 			return range;
 		}
-
-		public static IXLCell SetValue(this IXLCell range, object? value)
-		{
-			range.SetValue(value);
-			return range;
-		}
-
 		public static IXLCell Title(this IXLCell range)
 		{
 			range.Style.Font.SetFontName("Calibri Light");
@@ -203,7 +196,7 @@ namespace Greg.Xrm.Command
 
 		public static IXLTable CreateTable(this IXLWorksheet ws, string tableName, int fromRow, int fromCol, int toRow, int toCol, bool? autoFitColumns = true)
 		{
-			var table = ws.Range($"R{fromRow}C{fromCol}:R{toRow}C{toCol}").CreateTable(tableName);
+			var table = ws.Range(fromRow, fromCol, toRow, toCol).CreateTable(tableName);
 
 			table.ShowHeaderRow = true;
 			table.ShowAutoFilter = true;

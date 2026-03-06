@@ -1,18 +1,21 @@
-﻿using Greg.Xrm.Command.Parsing;
+﻿using Greg.Xrm.Command;
+using Greg.Xrm.Command.Parsing;
+using Greg.Xrm.Command.Parsing.Attributes;
 using Greg.Xrm.Command.Services.CommandHistory;
 using Greg.Xrm.Command.Services.Output;
 using Microsoft.Extensions.Logging;
 using Spectre.Console;
 using System.Data;
+using System.Reflection;
+using Rule = Spectre.Console.Rule;
 
-namespace Greg.Xrm.Command
+namespace Greg.Xrm.Command.Interactive
 {
 	class CommandRunnerInteractive(
 		IOutput output,
 		IAnsiConsole console,
 		ILogger log,
 		ICommandRegistry commandRegistry,
-		ICommandParser parser,
 		ICommandExecutorFactory commandExecutorFactory,
 		IHistoryTracker historyTracker,
 		ICommandLineArguments args) :
@@ -21,36 +24,64 @@ namespace Greg.Xrm.Command
 		public async Task<int> RunCommandAsync(CancellationToken cancellationToken)
 		{
 			var commandTree = commandRegistry.Tree;
-			var commandDefinition = Recourse(commandTree);
+			var commandDefinition = VerbTreeRecourser.Recourse(console, commandTree);
 
 			if (commandDefinition is null) return -1;
 
 			var command = TryInitializeCommand(commandDefinition);
 
-			var result = await base.ExecuteCommand(command!, cancellationToken);
+			if (command is null) return -1;
+			if (!IsValidCommand(command)) return -1;
+
+			await TrackCommandIntoHistoryAsync(command);
+
+			console.CreateRule("Command execution");
+
+			var result = await base.ExecuteCommand(command, cancellationToken);
 			
 			return result;
 		}
+
+
+
+
+
+
+		
+
+
+
 
 
 		object TryInitializeCommand(CommandDefinition commandDefinition)
 		{
 			var options = commandDefinition.Options;
 
+			console.Markup($"[{DefaultColors.Text}]Selected command:[/] [{DefaultColors.Command}]{commandDefinition.ExpandedVerbs}[/]");
+			console.WriteLine();
+			if (commandDefinition.Options.Count == 0)
+			{
+				return commandDefinition.CreateCommand(new Dictionary<string, string>());
+			}
+
+
+			console.CreateRule("Command arguments");
+
 			var dict = new Dictionary<string, string>();
 			foreach (var option in options)
 			{
-				var promptText = $"[cyan]?[/] Provide value for argument \"[green]{option.Option.LongName}[/]\"";
+				var promptText = $"[{DefaultColors.Primary}]?[/] Provide value for argument [{DefaultColors.Accent}]--{option.Option.LongName}[/]\"";
 				if (option.IsRequired)
 				{
 					promptText += " [red](required)[/]";
 				}
 
-				if (!string.IsNullOrWhiteSpace(option.Option.HelpText))
-				{
-					promptText += $"{Environment.NewLine}[grey]{Markup.Escape(option.Option.HelpText)}[/]";
-				}
-				promptText +=$"{Environment.NewLine}[cyan]>[/] ";
+				//if (!string.IsNullOrWhiteSpace(option.Option.HelpText))
+				//{
+				//	promptText += $"{Environment.NewLine}[{DefaultColors.Text}]{Markup.Escape(option.Option.HelpText)}[/]";
+				//}
+				//promptText += $"{Environment.NewLine}[cyan]>[/] ";
+				promptText += ":";
 
 				var propertyType = option.Property.PropertyType;
 
@@ -94,8 +125,6 @@ namespace Greg.Xrm.Command
 				{
 					dict["--" + option.Option.LongName] = response;
 				}
-
-				console.WriteLine();
 			}
 
 			var command = commandDefinition.CreateCommand(dict);
@@ -139,56 +168,6 @@ namespace Greg.Xrm.Command
 				p = p.DefaultValue(option.Option.DefaultValue?.ToString() ?? string.Empty);
 			}
 			return p;
-		}
-
-
-
-
-		private CommandDefinition? Recourse(IEnumerable<VerbNode> tree)
-		{
-			VerbNode result;
-			do
-			{
-				var maxLenght = tree.Max(node => node.Verb.Length);
-
-				var prompt = new SelectionPrompt<VerbNode>()
-					.Title("Select [cyan]namespace[/] or [white]command[/]:")
-					.WrapAround()
-					.EnableSearch()
-					.SearchPlaceholderText("Type to search...")
-					.HighlightStyle(new Style(Color.Black, Color.Aquamarine1, Decoration.None))
-					.UseConverter(node => $"[{GetColor(node)}]{node.Verb.PadRight(maxLenght)}[/] - {Normalize(node)}")
-					.AddChoices(tree.Where(x => !x.IsHidden));
-
-				result = console.Prompt(prompt);
-				tree = result.Children;
-			}
-			while (result.Command is null);
-
-			return result.Command;
-		}
-
-
-
-
-
-		static string GetColor(VerbNode node)
-		{
-			return node.Command is null ? "cyan" : "white";
-		}
-
-		static string? Normalize(VerbNode node)
-		{
-			var text = node.Command is null ? node.Help : node.Command.HelpText;
-
-			text = text?
-				.Split(Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries)
-				.Select(line => line.Trim())
-				.Where(line => !string.IsNullOrEmpty(line))
-				.FirstOrDefault();
-				//.Aggregate((a, b) => $"{a} {b}");
-
-			return text != null ? Markup.Escape(text) : null;
 		}
 	}
 }

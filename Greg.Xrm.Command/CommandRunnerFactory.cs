@@ -41,7 +41,7 @@ namespace Greg.Xrm.Command
 
 		private ICommandRunner Cli() => new CommandRunnerCli(output, log, parser, commandExecutorFactory, historyTracker, args);
 
-		private ICommandRunner Interactive() => new CommandRunnerInteractive(output, ansiConsole, log, registry, parser, commandExecutorFactory, historyTracker, args);
+		private ICommandRunner Interactive() => new Interactive.CommandRunnerInteractive(output, ansiConsole, log, registry, commandExecutorFactory, historyTracker, args);
 
 		private ICommandRunner NoOp(int result) => new CommandRunnerNoOp(result);
 	}

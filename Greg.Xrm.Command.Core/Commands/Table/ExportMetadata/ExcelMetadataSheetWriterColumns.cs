@@ -80,7 +80,7 @@ namespace Greg.Xrm.Command.Commands.Table.ExportMetadata
 				ws.Cell(row, ++col).SetValue(attribute.DisplayName);
 				ws.Cell(row, ++col).SetValue(attribute.Description);
 				ws.Cell(row, ++col).SetValue(attribute.PrimaryType);
-				ws.Cell(row, ++col).SetValue(attribute.RequiredLevel);
+				ws.Cell(row, ++col).SetValue(attribute.RequiredLevel?.ToString());
 				ws.Cell(row, ++col).SetValue(attribute.Type);
 				ws.Cell(row, ++col).SetValue(attribute.Format);
 				ws.Cell(row, ++col).SetValue(attribute.FormatName);
@@ -90,16 +90,16 @@ namespace Greg.Xrm.Command.Commands.Table.ExportMetadata
 				ws.Cell(row, ++col).SetValue(attribute.LookupTargets);
 				ws.Cell(row, ++col).SetValue(attribute.PicklistOptions);
 				ws.Cell(row, ++col).SetValue(attribute.PicklistDefaultValue);
-				ws.Cell(row, ++col).SetValue(attribute.IsGlobalPicklist);
-				ws.Cell(row, ++col).SetValue(attribute.MinValue);
-				ws.Cell(row, ++col).SetValue(attribute.MaxValue);
+				ws.Cell(row, ++col).SetValue(attribute.IsGlobalPicklist.GetValueOrDefault());
+				ws.Cell(row, ++col).SetValue(attribute.MinValue?.ToString());
+				ws.Cell(row, ++col).SetValue(attribute.MaxValue?.ToString());
 				ws.Cell(row, ++col).SetValue(attribute.Precision);
 				ws.Cell(row, ++col).SetValue(attribute.PrecisionSource);
-				ws.Cell(row, ++col).SetValue(attribute.IsAuditEnabled);
-				ws.Cell(row, ++col).SetValue(attribute.IsFlsEnabled);
-				ws.Cell(row, ++col).SetValue(attribute.IsFlsSecuredForCreate);
-				ws.Cell(row, ++col).SetValue(attribute.IsFlsSecuredForUpdate);
-				ws.Cell(row, ++col).SetValue(attribute.IsFlsSecuredForRead);
+				ws.Cell(row, ++col).SetValue(attribute.IsAuditEnabled.GetValueOrDefault());
+				ws.Cell(row, ++col).SetValue(attribute.IsFlsEnabled.GetValueOrDefault());
+				ws.Cell(row, ++col).SetValue(attribute.IsFlsSecuredForCreate.GetValueOrDefault());
+				ws.Cell(row, ++col).SetValue(attribute.IsFlsSecuredForUpdate.GetValueOrDefault());
+				ws.Cell(row, ++col).SetValue(attribute.IsFlsSecuredForRead.GetValueOrDefault());
 			}
 
 			ws.CreateTable("Columns", 5, 1, row, col).EmphasizeFirstColumn = true;
