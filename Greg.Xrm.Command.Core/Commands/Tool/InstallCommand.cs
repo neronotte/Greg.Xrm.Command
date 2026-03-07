@@ -9,19 +9,19 @@ namespace Greg.Xrm.Command.Commands.Tool
     [Alias("tool", "get")]
     public class InstallCommand : ICanProvideUsageExample, IValidatableObject
     {
-        [Option("name", "n", HelpText = "To install from NuGet. The unique name of the NuGet package containing the plugin to install.")]
+        [Option("name", "n", Order = 1, HelpText = "To install from NuGet. The unique name of the NuGet package containing the plugin to install.")]
         public string Name { get; set; } = string.Empty;
 
-        [Option("version", "v", HelpText = "To install from NuGet. Allows to explicit select the version of the plugin to install.")]
+        [Option("version", "v", Order = 2, HelpText = "To install from NuGet. Allows to explicit select the version of the plugin to install.")]
         public string Version { get; set; } = string.Empty;
 
-        [Option("source", "s", HelpText = "To install from other NuGet feed. Allows to explicit select the version of the plugin to install.")]
+        [Option("source", "s", Order = 3, HelpText = "To install from other NuGet feed. Allows to explicit select the version of the plugin to install.")]
         public string Source { get; set; } = string.Empty;
 
-        [Option("personalaccesstoken", "pat", HelpText = "Personal Access Token to authenticate to private NuGet feeds.")]
+        [Option("personalaccesstoken", "pat", Order = 4, HelpText = "Personal Access Token to authenticate to private NuGet feeds.")]
         public string PersonalAccessToken { get; set; } = string.Empty;
 
-        [Option("file", "f", HelpText = "To install from a local file. The full path + file name of the nuget package containing the plugin to install.")]
+        [Option("file", "f", Order = 5, HelpText = "To install from a local file. The full path + file name of the nuget package containing the plugin to install.")]
         public string FileName { get; set; } = string.Empty;
 
 

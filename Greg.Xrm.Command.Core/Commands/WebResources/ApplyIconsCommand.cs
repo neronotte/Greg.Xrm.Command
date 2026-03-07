@@ -10,14 +10,14 @@ namespace Greg.Xrm.Command.Commands.WebResources
 	[Alias("wr", "iconize")]
 	public class ApplyIconsCommand : ICanProvideUsageExample
 	{
-		[Option("table-solution", "ts", HelpText = "The name of the solution that contains the tables to update with icons. If not specified, the default solution is considered.")]
+		[Option("table-solution", "ts", Order = 1, HelpText = "The name of the solution that contains the tables to update with icons. If not specified, the default solution is considered.")]
 		public string? TableSolutionName { get; set; }
 
-		[Option("wr-solution", "wrs", HelpText = "The name of the solution that contains the web resources to set. If not specified, the default solution is considered.")]
+		[Option("wr-solution", "wrs", Order = 2, HelpText = "The name of the solution that contains the web resources to set. If not specified, the default solution is considered.")]
 		public string? WebResourceSolutionName { get; set; }
 
 
-		[Option("no-action", "nop", HelpText = "If specified, the command will not perform any action, but it will show what it would do.", DefaultValue = false)]
+		[Option("no-action", "nop", Order = 3, HelpText = "If specified, the command will not perform any action, but it will show what it would do.", DefaultValue = false)]
 		public bool NoAction { get; set; } = false;
 
 

@@ -8,11 +8,11 @@ namespace Greg.Xrm.Command.Commands.Solution
 	[Alias("solution", "component", "get-dependencies")]
 	public class ComponentGetDependenciesCommand
 	{
-		[Option("componentId", "id", HelpText = "The GUID of the component to retrieve the dependencies for")]
+		[Option("componentId", "id", Order = 2, HelpText = "The GUID of the component to retrieve the dependencies for")]
 		[Required]
 		public Guid ComponentId { get; set; } = Guid.Empty;
 
-		[Option("type", "t", HelpText = "The type of the component to retrieve the dependencies for")]
+		[Option("type", "t", Order = 1, HelpText = "The type of the component to retrieve the dependencies for")]
 		[Required]
 		public ComponentType? ComponentType { get; set; }
 	}

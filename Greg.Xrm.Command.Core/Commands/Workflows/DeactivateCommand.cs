@@ -9,13 +9,13 @@ namespace Greg.Xrm.Command.Commands.Workflows
 	[Alias("flow", "stop")]
 	public class DeactivateCommand : ICanProvideUsageExample, IValidatableObject
 	{
-		[Option("id", "id", HelpText = "The ID of the workflow to deactivate")]
+		[Option("id", "id", Order = 1, HelpText = "The ID of the workflow to deactivate")]
 		public Guid WorkflowId { get; set; } = Guid.Empty;
 
-		[Option("name", "n", HelpText = "The unique name of the workflow to deactivate")]
+		[Option("name", "n", Order = 2, HelpText = "The unique name of the workflow to deactivate")]
 		public string WorkflowName { get; set; } = string.Empty;
 
-		[Option("solution", "s", HelpText = "The solution that contains the workflows to deactivate. If not provided, the default solution is used.")]
+		[Option("solution", "s", Order = 3, HelpText = "The solution that contains the workflows to deactivate. If not provided, the default solution is used.")]
 		public string SolutionName { get; set; } = string.Empty;
 
 		public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)

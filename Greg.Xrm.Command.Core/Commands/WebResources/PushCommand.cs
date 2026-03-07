@@ -8,25 +8,24 @@ namespace Greg.Xrm.Command.Commands.WebResources
 	[Alias("wr", "push")]
 	public class PushCommand : ICanProvideUsageExample, IValidatableObject
 	{
-		[Option("path", "p", HelpText = "The path to the folder containing the webresources to deploy, or to a specific webresource file to deploy. If not provided, the current folder will be used.")]
+		[Option("path", "p", Order = 1, HelpText = "The path to the folder containing the webresources to deploy, or to a specific webresource file to deploy. If not provided, the current folder will be used.")]
 		public string? Folder { get; set; }
 
 
-		[Option("reference", "r", HelpText = "Indicates if it should also push the webresources set as project reference. See wiki for additional details.")]
-		public string? Reference { get; set; }
-
-
-		[Option("no-publish", "np", HelpText = "Indicates that the webresources should be published after the deployment", DefaultValue =false)]
+		[Option("no-publish", "np", Order = 2, HelpText = "Indicates that the webresources should be published after the deployment", DefaultValue = false)]
 		public bool NoPublish { get; set; } = false;
 
-		[Option("no-action", "nop", HelpText = "If specified, the command will not perform any action, but it will show what it would do.", DefaultValue = false)]
+		[Option("no-action", "nop", Order = 3, HelpText = "If specified, the command will not perform any action, but it will show what it would do.", DefaultValue = false)]
 		public bool NoAction { get; set; } = false;
 
-		[Option("solution", "s", HelpText = "The name of the solution that will contain the WebResources. If empty, the default solution for the current environment is used as default")]
+		[Option("solution", "s", Order = 4, HelpText = "The name of the solution that will contain the WebResources. If empty, the default solution for the current environment is used as default")]
 		public string? SolutionName { get; set; }
 
 
-		[Option("verbose", "v", HelpText = "If specified, the command will output more details about the operations performed")]
+		[Option("reference", "r", Order = 5, HelpText = "Indicates if it should also push the webresources set as project reference. See wiki for additional details.")]
+		public string? Reference { get; set; }
+
+		[Option("verbose", "v", Order = 6, HelpText = "If specified, the command will output more details about the operations performed")]
 		public bool Verbose { get; set; } = false;
 
 

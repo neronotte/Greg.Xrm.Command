@@ -12,72 +12,87 @@ namespace Greg.Xrm.Command.Commands.Table
 		// pacx create table --name "My Table"
 		// pacx create table --name "My Table" --plural "My Tables" --schemaName "new_mytable" --description "My Table Description" --ownership User --isActivity false --primaryAttributeName "Name" --primaryAttributeSchemaName "new_name"
 
-		[Option("name", "n", HelpText = "The display name of the table to be created.")]
+		[Option("name", "n", Order = 1, HelpText = "The display name of the table to be created.")]
 		[Required]
 		public string? DisplayName { get; set; }
 
-		[Option("plural", "p", HelpText = "The collection name of the table to be created.")]
+		[Option("plural", "p", Order = 2, HelpText = "The collection name of the table to be created.")]
 		public string? DisplayCollectionName { get; set; }
 
-		[Option("schemaName", "sn", HelpText = "Technical schema name of the table to be created. If not specified, it is inferred from the display name.")]
+		[Option("schemaName", "sn", Order = 3, HelpText = "Technical schema name of the table to be created. If not specified, it is inferred from the display name.")]
 		public string? SchemaName { get; set; }
 
-		[Option("description", "d", HelpText = "Meaningful description of the table contents/purpose.")]
-		public string? Description { get; set; }
 
-		[Option("ownership", "o", DefaultValue = OwnershipTypes.UserOwned, HelpText = "Defines if the table records can belong to an user or are organization-owned.")]
-		public OwnershipTypes Ownership { get; set; } = OwnershipTypes.UserOwned;
 
-		[Option("isActivity", "act", DefaultValue = false, HelpText = "Indicates whether the table is an activity or not.")]
-		public bool IsActivity { get; set; } = false;
-
-		[Option("offline", "off", DefaultValue = false, HelpText = "Indicates whether the table should be enabled for offline or not.")]
-		public bool IsAvailableOffline { get; set; } = false;
-
-		[Option("queue", "queue", DefaultValue = false, HelpText = "Indicates whether records of this table can be added to a queue or not.")]
-		public bool IsValidForQueue { get; set; } = false;
-
-		[Option("feedback", "fb", DefaultValue = false, HelpText = "Indicates whether user can provide feedbacks to records in this table or not.")]
-		public bool HasFeedback { get; set; } = false;
-
-		[Option("notes", DefaultValue = false, HelpText = "Indicates whether user can add notes and attachments to the current table or not.")]
-		public bool HasNotes { get; set; } = false;
-
-		[Option("audit", "a", DefaultValue = true, HelpText = "Indicates whether audit is enabled or not.")]
-		public bool IsAuditEnabled { get; set; } = true;
-
-		[Option("connection", "conn", DefaultValue = false, HelpText = "Indicates whether the current table can partecipate in connection relationships or not.")]
-		public bool IsConnectionsEnabled { get; set; } = false;
-
-		[Option("changeTracking", "ct", DefaultValue = null, HelpText = "Indicates whether change tracking is enabled or not.")]
-		public bool? ChangeTrackingEnabled { get; set; }
-
-		[Option("quickCreate", "qc", DefaultValue = false, HelpText = "Indicates whether quick create form is enabled or not.")]
-		public bool? IsQuickCreateEnabled { get; set; }
-
-		[Option("hasEmail", "email", DefaultValue = false, HelpText = "Rows in this table can have email addresses (for example, info@contoso.com.). If the table didn’t have an email column, one will be added. This option can only be set.")]
-		public bool? HasEmailAddresses { get; set; }
-
-		[Option("primaryAttributeName", "pan", HelpText = "The display name of the primary attribute for the table. If not specified, is used **Name**, unless it is required to be an autonumber. In that case, **Code** is used.")]
+		[Option("primaryAttributeName", "pan", Order = 10, HelpText = "The display name of the primary attribute for the table. If not specified, is used **Name**, unless it is required to be an autonumber. In that case, **Code** is used.")]
 		public string? PrimaryAttributeDisplayName { get; set; }
 
-		[Option("primaryAttributeSchemaName", "pas", HelpText = "The schema name of the primary attribute for the table. If not specified, it's inferred from the primary attribute name.")]
+		[Option("primaryAttributeSchemaName", "pas", Order = 11, HelpText = "The schema name of the primary attribute for the table. If not specified, it's inferred from the primary attribute name.")]
 		public string? PrimaryAttributeSchemaName { get; set; }
 
-		[Option("primaryAttributeDescription", "pad", HelpText = "A description for the primary attribute of the table.")]
+		[Option("primaryAttributeDescription", "pad", Order = 12, HelpText = "A description for the primary attribute of the table.")]
 		public string? PrimaryAttributeDescription { get; set; }
 
-		[Option("primaryAttributeAutoNumberFormat", "paan", HelpText= "If the primary attribute should be an autonumber, indicates the format for the autonumber (https://learn.microsoft.com/en-us/dynamics365/customerengagement/on-premises/developer/create-auto-number-attributes?view=op-9-1#autonumberformat-options).")]
+		[Option("primaryAttributeAutoNumberFormat", "paan", Order = 13, HelpText = "If the primary attribute should be an autonumber, indicates the format for the autonumber (https://learn.microsoft.com/en-us/dynamics365/customerengagement/on-premises/developer/create-auto-number-attributes?view=op-9-1#autonumberformat-options).")]
 		public string? PrimaryAttributeAutoNumber { get; set; }
 
-		[Option("primaryAttributeRequiredLevel", "par", HelpText = "Requirement level for the primary attribute. If not specified, and autonumber, it's None, otherwise it's ApplicationRequired")]
+		[Option("primaryAttributeRequiredLevel", "par", Order = 14, HelpText = "Requirement level for the primary attribute. If not specified, and autonumber, it's None, otherwise it's ApplicationRequired")]
 		public AttributeRequiredLevel? PrimaryAttributeRequiredLevel { get; set; }
 
-		[Option("primaryAttributeMaxLength", "palen", DefaultValue = 100, HelpText = "Max length of the primary attribute for the table.")]
+		[Option("primaryAttributeMaxLength", "palen", Order = 15, DefaultValue = 100, HelpText = "Max length of the primary attribute for the table.")]
 		public int? PrimaryAttributeMaxLength { get; set; }
 
 
-		[Option("solution", "s", HelpText = "The name of the solution where the table will be created. If not provided, the default solution will be used.")]
+
+
+
+
+
+		[Option("description", "d", Order = 20, HelpText = "Meaningful description of the table contents/purpose.")]
+		public string? Description { get; set; }
+
+		[Option("ownership", "o", Order = 21, DefaultValue = OwnershipTypes.UserOwned, HelpText = "Defines if the table records can belong to an user or are organization-owned.")]
+		public OwnershipTypes Ownership { get; set; } = OwnershipTypes.UserOwned;
+
+		[Option("isActivity", "act", Order = 22, DefaultValue = false, HelpText = "Indicates whether the table is an activity or not.")]
+		public bool IsActivity { get; set; } = false;
+
+		[Option("offline", "off", Order = 23, DefaultValue = false, HelpText = "Indicates whether the table should be enabled for offline or not.")]
+		public bool IsAvailableOffline { get; set; } = false;
+
+		[Option("queue", "queue", Order = 24, DefaultValue = false, HelpText = "Indicates whether records of this table can be added to a queue or not.")]
+		public bool IsValidForQueue { get; set; } = false;
+
+		[Option("feedback", "fb", Order = 25, DefaultValue = false, HelpText = "Indicates whether user can provide feedbacks to records in this table or not.")]
+		public bool HasFeedback { get; set; } = false;
+
+		[Option("notes", "notes", Order = 26, DefaultValue = false, HelpText = "Indicates whether user can add notes and attachments to the current table or not.")]
+		public bool HasNotes { get; set; } = false;
+
+		[Option("audit", "a", Order = 27, DefaultValue = true, HelpText = "Indicates whether audit is enabled or not.")]
+		public bool IsAuditEnabled { get; set; } = true;
+
+		[Option("connection", "conn", Order = 28, DefaultValue = false, HelpText = "Indicates whether the current table can partecipate in connection relationships or not.")]
+		public bool IsConnectionsEnabled { get; set; } = false;
+
+		[Option("changeTracking", "ct", Order = 29, DefaultValue = null, HelpText = "Indicates whether change tracking is enabled or not.")]
+		public bool? ChangeTrackingEnabled { get; set; }
+
+		[Option("quickCreate", "qc", Order = 30, DefaultValue = false, HelpText = "Indicates whether quick create form is enabled or not.")]
+		public bool? IsQuickCreateEnabled { get; set; }
+
+		[Option("hasEmail", "email", Order = 31, DefaultValue = false, HelpText = "Rows in this table can have email addresses (for example, info@contoso.com.). If the table didn’t have an email column, one will be added. This option can only be set.")]
+		public bool? HasEmailAddresses { get; set; }
+
+
+
+
+
+
+		
+
+
+		[Option("solution", "s", Order = 50, HelpText = "The name of the solution where the table will be created. If not provided, the default solution will be used.")]
 		public string? SolutionName { get; set; }
 
 		public void WriteUsageExamples(MarkdownWriter writer)

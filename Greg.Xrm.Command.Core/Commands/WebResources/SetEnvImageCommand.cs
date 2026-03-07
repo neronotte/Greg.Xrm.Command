@@ -12,12 +12,12 @@ namespace Greg.Xrm.Command.Commands.WebResources
 	[Alias("wr", "setOrgImage")]
 	public class SetEnvImageCommand : ICanProvideUsageExample
 	{
-		[Option("name", "n", HelpText = "The unique name of the web resource to set as the organization image. Must be a .png, .jpg or .gif image up to 200x50px.")]
+		[Option("name", "n", Order  =1, HelpText = "The unique name of the web resource to set as the organization image. Must be a .png, .jpg or .gif image up to 200x50px.")]
 		[Required]
 		public string WebResourceUniqueName { get; set; } = string.Empty;
 
 
-		[Option("cloneTheme", "c", HelpText = "If true, the theme will be cloned and the new image will be set as the organization image.", DefaultValue =false)]
+		[Option("cloneTheme", "c", Order = 2, HelpText = "If true, the theme will be cloned and the new image will be set as the organization image.", DefaultValue =false)]
 		public bool CloneTheme { get; set; } = false;
 
 		public void WriteUsageExamples(MarkdownWriter writer)

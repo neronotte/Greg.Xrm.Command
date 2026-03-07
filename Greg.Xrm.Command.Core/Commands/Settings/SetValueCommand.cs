@@ -10,18 +10,18 @@ namespace Greg.Xrm.Command.Commands.Settings
 	[Alias("setting", "setValue")]
 	public class SetValueCommand : ICanProvideUsageExample
 	{
-		[Option("name", "n", HelpText = "The unique name of the setting to set the value for.")]
+		[Option("name", "n", Order = 1, HelpText = "The unique name of the setting to set the value for.")]
 		[Required]
 		public string? Name { get; set; }
 
-		[Option("value", "v", HelpText = "The value to set for the setting. It should match the setting type. For boolean")]
+		[Option("value", "v", Order = 2, HelpText = "The value to set for the setting. It should match the setting type. For boolean")]
 		[Required]
 		public string? Value { get; set; }
 
-		[Option("app", "a", HelpText = "The unique name of the app to set the value for (if setting the value at app level).")]
+		[Option("app", "a", Order = 3, HelpText = "The unique name of the app to set the value for (if setting the value at app level).")]
 		public string? AppUniqueName { get; set; }
 
-		[Option("solution", "s", HelpText = "The solution where to save the created setting. If not specified, the default solution is considered.")]
+		[Option("solution", "s", Order = 4, HelpText = "The solution where to save the created setting. If not specified, the default solution is considered.")]
 		public string? SolutionName { get; set; }
 
 

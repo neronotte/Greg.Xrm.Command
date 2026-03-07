@@ -6,26 +6,26 @@ namespace Greg.Xrm.Command.Commands.OptionSet
 	[Command("optionset", "update", HelpText = "Updates an existing value on an option set (global or local).")]
 	public class UpdateCommand : IValidatableObject
 	{
-		[Option("name", "n", HelpText = "To be specified only if you want to update a global option set. It's the schema name of the global option set.")]
+		[Option("name", "n", Order = 1, HelpText = "To be specified only if you want to update a global option set. It's the schema name of the global option set.")]
 		public string Name { get; set; } = string.Empty;
 
-		[Option("table", "t", HelpText = "To be specified only if you want to update a local option set. It's the schema name of the table that contains the option set.")]
+		[Option("table", "t", Order = 2, HelpText = "To be specified only if you want to update a local option set. It's the schema name of the table that contains the option set.")]
 		public string TableName { get; set; } = string.Empty;
 
-		[Option("column", "c", HelpText = "To be specified only if you want to update a local option set. It's the schema name of the column that contains the option set.")]
+		[Option("column", "c", Order = 3, HelpText = "To be specified only if you want to update a local option set. It's the schema name of the column that contains the option set.")]
 		public string ColumnName { get; set; } = string.Empty;
 
 
 
 
-		[Option("value", "v", HelpText = "The value of the option to update.")]
+		[Option("value", "v", Order = 4, HelpText = "The value of the option to update.")]
 		[Required]
 		public int Value { get; set; } = 0;
 
-		[Option("label", "l", HelpText = "The new label to set on the option.")]
+		[Option("label", "l", Order =5, HelpText = "The new label to set on the option.")]
 		public string? DisplayName { get; set; }
 
-		[Option("color", "col", HelpText = "The exadecimal color code (e.g. #FF5733) of the new color to set on the option. The leading # is not mandatory.")]
+		[Option("color", "col", Order = 6, HelpText = "The exadecimal color code (e.g. #FF5733) of the new color to set on the option. The leading # is not mandatory.")]
 		public string? Color { get; set; }
 
 

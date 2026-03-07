@@ -7,24 +7,24 @@ namespace Greg.Xrm.Command.Commands.Script
 	[Command("script", "solution", HelpText = "Generates PACX scripts for all tables in a PowerApps solution.")]
     public class ScriptSolutionCommand : ICanProvideUsageExample
     {
-        [Option("solutionNames", "sn", HelpText = "Comma-separated list of PowerApps solution names.")]
+        [Option("solutionNames", "sn", Order = 1, HelpText = "Comma-separated list of PowerApps solution names.")]
         [Required]
         public string? SolutionNames { get; set; }
 
-        [Option("customPrefixes", "cp", HelpText = "Comma-separated custom prefixes for entities and fields.")]
+        [Option("customPrefixes", "cp", Order = 2, HelpText = "Comma-separated custom prefixes for entities and fields.")]
         [Required]
         public string? CustomPrefixs { get; set; }
 
-        [Option("output", "o", HelpText = "Output directory for generated files.")]
+        [Option("output", "o", Order = 3, HelpText = "Output directory for generated files.")]
         public string OutputDir { get; set; } = string.Empty;
 
-        [Option("scriptFileName", "script", HelpText = "Name for the generated PACX script file.", DefaultValue = "pacx_datamodel_script.ps1")]
+        [Option("scriptFileName", "script", Order = 4, HelpText = "Name for the generated PACX script file.", DefaultValue = "pacx_datamodel_script.ps1")]
         public string PacxScriptName { get; set; } = "pacx_datamodel_script.ps1";
 
-        [Option("stateFileName", "state", HelpText = "Name of the CSV file that will contain the state fields.", DefaultValue = "state-fields.csv")]
+        [Option("stateFileName", "state", Order = 5, HelpText = "Name of the CSV file that will contain the state fields.", DefaultValue = "state-fields.csv")]
         public string StateFieldsDefinitionName { get; set; } = "state-fields.csv";
 
-        [Option("includeStateFields", "i", HelpText = "If true, exports the statecode and statuscode fields as CSV.")]
+        [Option("includeStateFields", "i", Order = 6, HelpText = "If true, exports the statecode and statuscode fields as CSV.", DefaultValue = false)]
         public bool WithStateFieldsDefinition { get; set; } = false;
 
         public void WriteUsageExamples(MarkdownWriter writer)

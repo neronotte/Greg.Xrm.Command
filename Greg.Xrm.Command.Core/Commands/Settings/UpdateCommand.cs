@@ -8,23 +8,23 @@ namespace Greg.Xrm.Command.Commands.Settings
 	[Alias("update-setting")]
 	public class UpdateCommand : IValidatableObject
 	{
-		[Option("name", "n", HelpText = "The unique name of the setting to update.")]
+		[Option("name", "n", Order = 1, HelpText = "The unique name of the setting to update.")]
 		[Required]
 		public string Name { get; set; } = string.Empty;
 
-		[Option("description", "d", HelpText = "If specified, updates the description of the setting.")]
+		[Option("description", "d", Order = 2, HelpText = "If specified, updates the description of the setting.")]
 		public string? Description { get; set; }
 
-		[Option("defaultValue", "dv", HelpText = "If specified, updates the default value of the setting. It should match the setting type. For booleans you can also provide an int value: 0 means false, any other value means true.")]
+		[Option("defaultValue", "dv", Order = 3, HelpText = "If specified, updates the default value of the setting. It should match the setting type. For booleans you can also provide an int value: 0 means false, any other value means true.")]
 		public string? DefaultValue { get; set; }
 
-		[Option("change", "c", HelpText = @"If specified, updates the overriddable level of the setting.")]
+		[Option("change", "c", Order = 4, HelpText = @"If specified, updates the overriddable level of the setting.")]
 		public OverridableLevel? OverridableLevel { get; set; }
 
-		[Option("rel", "r", HelpText = "If specified, updates the release level of the setting.")]
+		[Option("rel", "r", Order = 5, HelpText = "If specified, updates the release level of the setting.")]
 		public SettingDefinitionReleaseLevel? ReleaseLevel { get; set; }
 
-		[Option("url", "u", HelpText = "If specified, updates the information URL of the setting.")]
+		[Option("url", "u", Order = 6, HelpText = "If specified, updates the information URL of the setting.")]
 		public string? InformationUrl { get; set; }
 
 

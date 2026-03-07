@@ -5,17 +5,17 @@ namespace Greg.Xrm.Command.Commands.OptionSet
 	[Command("optionset", "delete", HelpText = "Removes a value from an option set (global or local) or from a StatusCode field.")]
 	public class DeleteCommand : IValidatableObject
 	{
-		[Option("name", "n", HelpText = "To be specified only if you want to update a global option set. It's the schema name of the global option set.")]
+		[Option("name", "n", Order = 1, HelpText = "To be specified only if you want to update a global option set. It's the schema name of the global option set.")]
 		public string Name { get; set; } = string.Empty;
 
-		[Option("table", "t", HelpText = "To be specified only if you want to update a local option set. It's the schema name of the table that contains the option set.")]
+		[Option("table", "t", Order = 2, HelpText = "To be specified only if you want to update a local option set. It's the schema name of the table that contains the option set.")]
 		public string TableName { get; set; } = string.Empty;
 
-		[Option("column", "c", HelpText = "To be specified only if you want to update a local option set. It's the schema name of the column that contains the option set.")]
+		[Option("column", "c", Order = 3, HelpText = "To be specified only if you want to update a local option set. It's the schema name of the column that contains the option set.")]
 		public string ColumnName { get; set; } = string.Empty;
 
 
-		[Option("value", "v", HelpText = "The value of the option to remove")]
+		[Option("value", "v", Order = 4, HelpText = "The value of the option to remove")]
 		[Required]
 		public int Value { get; set; }
 

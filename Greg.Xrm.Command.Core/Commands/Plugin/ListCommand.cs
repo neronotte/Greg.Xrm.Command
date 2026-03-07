@@ -7,22 +7,22 @@ namespace Greg.Xrm.Command.Commands.Plugin
 	[Command("plugin", "list", HelpText = "Lists plugin steps associated with a plugin assembly, plugin type, table, or solution.")]
 	public class ListCommand : ICanProvideUsageExample, IValidatableObject
 	{
-		[Option("assembly", "a", HelpText = "Name or GUID of the plugin assembly to filter steps by.")]
+		[Option("assembly", "a", Order = 1, HelpText = "Name or GUID of the plugin assembly to filter steps by.")]
 		public string? AssemblyName { get; set; }
 
-		[Option("class", "c", HelpText = "Name or GUID of the plugin type to filter steps by. Names support partial matching for fuzzy search.")]
+		[Option("class", "c", Order = 2, HelpText = "Name or GUID of the plugin type to filter steps by. Names support partial matching for fuzzy search.")]
 		public string? PluginTypeName { get; set; }
 
-		[Option("table", "t", HelpText = "Name of the table to filter steps by (e.g., account, contact). Shows all plugin steps registered for this table.")]
+		[Option("table", "t", Order = 3, HelpText = "Name of the table to filter steps by (e.g., account, contact). Shows all plugin steps registered for this table.")]
 		public string? TableName { get; set; }
 
-		[Option("solution", "s", HelpText = "Name of the solution to filter steps by. Shows all plugin steps from assemblies in the specified solution. If not specified, uses the current default solution.")]
+		[Option("solution", "s", Order = 4, HelpText = "Name of the solution to filter steps by. Shows all plugin steps from assemblies in the specified solution. If not specified, uses the current default solution.")]
 		public string? SolutionName { get; set; }
 
-		[Option("showInternalPlugins", "all", HelpText = "Include internal system plugin steps (all stages). By default, only user-manageable stages are shown (PreValidation, PreOperation, PostOperation).")]
+		[Option("showInternalPlugins", "all", Order = 5, HelpText = "Include internal system plugin steps (all stages). By default, only user-manageable stages are shown (PreValidation, PreOperation, PostOperation).")]
 		public bool ShowInternalPlugins { get; set; } = false;
 
-		[Option("format", "f", HelpText = "Output format for the results.", DefaultValue = OutputFormat.Table)]
+		[Option("format", "f", Order = 6, HelpText = "Output format for the results.", DefaultValue = OutputFormat.Table)]
 		public OutputFormat Format { get; set; } = OutputFormat.Table;
 
 		public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)

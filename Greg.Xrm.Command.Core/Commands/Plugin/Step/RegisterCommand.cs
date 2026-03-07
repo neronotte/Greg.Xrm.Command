@@ -8,61 +8,68 @@ namespace Greg.Xrm.Command.Commands.Plugin.Step
 	[Command("plugin", "step", "register", HelpText = "Registers a plugin step.")]
 	public class RegisterCommand : ICanProvideUsageExample, IValidatableObject
 	{
-		[Option("class", "c", HelpText = "Name of the plugin type that executes when the step is triggered.")]
+		[Option("class", "c", Order = 1, HelpText = "Name of the plugin type that executes when the step is triggered.")]
 		[Required]
 		public string PluginTypeName { get; set; } = string.Empty;
 
-		[Option("message", "m", HelpText = "Message that triggers the step, e.g., Create, Update, Delete.")]
+		[Option("table", "t", Order = 2, HelpText = "Primary table for the step, e.g., account, contact. Leave empty for global messages (e.g. Recalculate).")]
+		public string PrimaryEntityName { get; set; } = string.Empty;
+
+		[Option("message", "m", Order = 3, HelpText = "Message that triggers the step, e.g., Create, Update, Delete.")]
 		[Required]
 		public string MessageName { get; set; } = string.Empty;
 
-		[Option("table", "t", HelpText = "Primary table for the step, e.g., account, contact. Leave empty for global messages (e.g. Recalculate).")]
-		public string PrimaryEntityName { get; set; } = string.Empty;
-
-		[Option("filteringAttributes", "fa", HelpText = "Comma (,) separated list of columns acting as filtering attributes for the message")]
-		public string FilteringAttributes { get; set; } = string.Empty;
-
-		[Option("name", "n", HelpText = "Name of the plugin step. If not specified, will be defined automatically by the platform")]
-		public string? Name { get; set; }
-
-		[Option("user", "u", HelpText = "Specify this argument if you want to run the step in a specific user context. Provide the User's GUID. Leave empty to run the plugin in the calling user context.")]
-		public Guid? UserId { get; set; }
-
-		[Option("order", "o", HelpText = "Execution order of the step. Lower numbers execute first.", DefaultValue = 1)]
-		public int ExecutionOrder { get; set; } = 1;
-
-		[Option("stage", "st", HelpText = "Pipeline stage when the step executes. Possible values: PreValidation (10), PreOperation (20), PostOperation (40)", DefaultValue = Stage.PreOperation)]
+		[Option("stage", "st", Order = 4, HelpText = "Pipeline stage when the step executes. Possible values: PreValidation (10), PreOperation (20), PostOperation (40)", DefaultValue = Stage.PreOperation)]
 		public Stage Stage { get; set; } = Stage.PreOperation;
 
-		[Option("mode", "md", HelpText = "Execution mode of the step. Possible values: Sync, Async", DefaultValue = Mode.Sync)]
-		public Mode Mode { get; set; } = Mode.Sync;
+		[Option("filteringAttributes", "fa", Order = 5, HelpText = "Comma (,) separated list of columns acting as filtering attributes for the message")]
+		public string FilteringAttributes { get; set; } = string.Empty;
 
-		[Option("deployment", "dep", HelpText = "Deployment type", DefaultValue = Deployment.ServerOnly)]
-		public Deployment Deployment { get; set; } = Deployment.ServerOnly;
+		[Option("order", "o", Order = 6, HelpText = "Execution order of the step. Lower numbers execute first.", DefaultValue = 1)]
+		public int ExecutionOrder { get; set; } = 1;
 
-		[Option("description", "d", HelpText = "Description of the plugin step.")]
-		public string? Description { get; set; }
 
-		[Option("unsecureConfig", "uc", HelpText = "Unsecure configuration string for the plugin step.")]
-		public string? UnsecureConfiguration { get; set; }
 
-		[Option("secureConfig", "sc", HelpText = "Secure configuration string for the plugin step.")]
-		public string? SecureConfiguration { get; set; }
-
-		[Option("solution", "s", HelpText = "The name of the solution where step must be added (in case of creation). If not provided, the default solution will be used.")]
-		public string? SolutionName { get; set; }
-
-		[Option("preImage", "preim", HelpText = "Indicates whether a PreImage must be registered on the step.", DefaultValue = false)]
+		[Option("preImage", "preim", Order = 10, HelpText = "Indicates whether a PreImage must be registered on the step.", DefaultValue = false)]
 		public bool PreImage { get; set; } = false;
 
-		[Option("preImageName", "preimn", HelpText = "Name of the PreImage. If not specified, will be set automatically as <table name>_pre")]
+		[Option("preImageName", "preimn", Order = 11, HelpText = "Name of the PreImage. If not specified, will be set automatically as <table name>_pre")]
 		public string? PreImageName { get; set; }
 
-		[Option("postImage", "postim", HelpText = "Indicates whether a PostImage must be registered on the step.", DefaultValue = false)]
+		[Option("postImage", "postim", Order = 12, HelpText = "Indicates whether a PostImage must be registered on the step.", DefaultValue = false)]
 		public bool PostImage { get; set; } = false;
 
-		[Option("postImageName", "postimn", HelpText = "Name of the PreImage. If not specified, will be set automatically as <table name>_pre")]
+		[Option("postImageName", "postimn", Order = 13, HelpText = "Name of the PreImage. If not specified, will be set automatically as <table name>_pre")]
 		public string? PostImageName { get; set; }
+
+
+
+		[Option("description", "d", Order = 20, HelpText = "Description of the plugin step.")]
+		public string? Description { get; set; }
+
+		[Option("unsecureConfig", "uc", Order = 21, HelpText = "Unsecure configuration string for the plugin step.")]
+		public string? UnsecureConfiguration { get; set; }
+
+		[Option("secureConfig", "sc", Order = 22, HelpText = "Secure configuration string for the plugin step.")]
+		public string? SecureConfiguration { get; set; }
+
+
+
+
+		[Option("mode", "md", Order = 30, HelpText = "Execution mode of the step. Possible values: Sync, Async", DefaultValue = Mode.Sync)]
+		public Mode Mode { get; set; } = Mode.Sync;
+
+		[Option("deployment", "dep", Order = 31, HelpText = "Deployment type", DefaultValue = Deployment.ServerOnly)]
+		public Deployment Deployment { get; set; } = Deployment.ServerOnly;
+
+		[Option("name", "n", Order = 50, HelpText = "Name of the plugin step. If not specified, will be defined automatically by the platform")]
+		public string? Name { get; set; }
+
+		[Option("user", "u", Order = 51, HelpText = "Specify this argument if you want to run the step in a specific user context. Provide the User's GUID. Leave empty to run the plugin in the calling user context.")]
+		public Guid? UserId { get; set; }
+
+		[Option("solution", "s", Order = 1000, HelpText = "The name of the solution where step must be added (in case of creation). If not provided, the default solution will be used.")]
+		public string? SolutionName { get; set; }
 
 
 		public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)

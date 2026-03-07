@@ -7,16 +7,16 @@ namespace Greg.Xrm.Command.Commands.Column
 	[Alias("column", "get-dependencies")]
 	public class GetDependenciesCommand
 	{
-		[Option("table", "t", HelpText = "The name of the table containing the column to retrieve the dependencies for")]
+		[Option("table", "t", Order = 1, HelpText = "The name of the table containing the column to retrieve the dependencies for")]
 		[Required]
 		public string? TableName { get; set; }
 
-		[Option("column", "c", HelpText = "The name of the column to retrieve the dependencies for")]
+		[Option("column", "c", Order = 2, HelpText = "The name of the column to retrieve the dependencies for")]
 		[Required]
 		public string? ColumnName { get; set; }
 
 
-		[Option("forDelete", "d", HelpText = "Specifies whether to retrieve the dependencies for delete or not", DefaultValue = true)]
+		[Option("forDelete", "d", Order = 3, HelpText = "Specifies whether to retrieve the dependencies for delete or not", DefaultValue = true)]
 		public bool ForDelete { get; set; } = true;
 	}
 }

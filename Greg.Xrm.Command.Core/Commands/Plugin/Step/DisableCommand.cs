@@ -9,21 +9,21 @@ namespace Greg.Xrm.Command.Commands.Plugin.Step
 	[Alias("plugin", "step", "deactivate")]
 	public class DisableCommand : IValidatableObject, ICanProvideUsageExample
 	{
-		[Option("class", "c", HelpText = "Name of the plugin type that executes when the step is triggered.")]
+
+		[Option("id", "id", Order = 0, HelpText = "The unique identifier of the plugin step to be removed.")]
+		public Guid? StepId { get; set; }
+
+		[Option("class", "c", Order = 1, HelpText = "Name of the plugin type that executes when the step is triggered.")]
 		public string PluginTypeName { get; set; } = string.Empty;
 
-		[Option("message", "m", HelpText = "Message that triggers the step, e.g., Create, Update, Delete.")]
-		public string MessageName { get; set; } = string.Empty;
-
-
-		[Option("stage", "st", HelpText = "Pipeline stage when the step executes. Possible values: PreValidation (10), PreOperation (20), PostOperation (40)")]
-		public Stage? Stage { get; set; }
-
-		[Option("table", "t", HelpText = "Primary table for the step, e.g., account, contact. Leave empty for global messages (e.g. Recalculate).")]
+		[Option("table", "t", Order = 2, HelpText = "Primary table for the step, e.g., account, contact. Leave empty for global messages (e.g. Recalculate).")]
 		public string PrimaryEntityName { get; set; } = string.Empty;
 
-		[Option("id", "id", HelpText = "The unique identifier of the plugin step to be removed.")]
-		public Guid? StepId { get; set; }
+		[Option("message", "m", Order = 3, HelpText = "Message that triggers the step, e.g., Create, Update, Delete.")]
+		public string MessageName { get; set; } = string.Empty;
+
+		[Option("stage", "st", Order = 4, HelpText = "Pipeline stage when the step executes. Possible values: PreValidation (10), PreOperation (20), PostOperation (40)")]
+		public Stage? Stage { get; set; }
 
 
 		public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)

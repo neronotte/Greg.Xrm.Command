@@ -8,11 +8,11 @@ namespace Greg.Xrm.Command.Commands.UnifiedRouting
     [Alias("ur","status")]
 	public class GetAgentStatusCommand : ICanProvideUsageExample
 	{
-		[Option("agentPrimaryEmail", "a", "Agent primary email (or domain name) used to perform the query.")]
+		[Option("agentPrimaryEmail", "a", Order = 1, HelpText = "Agent primary email (or domain name) used to perform the query.")]
 		[Required]
 		public string? AgentPrimaryEmail { get; set; }
 
-		[Option("dateTime", "t", "Date and time (local time) used to perform the query. Format dd/MM/yyyy HH:mm.")]
+		[Option("dateTime", "t", Order = 2, HelpText = "Date and time (local time) used to perform the query. Format dd/MM/yyyy HH:mm.")]
 		public string? DateTimeFilter { get; set; }
 
 		public void WriteUsageExamples(MarkdownWriter writer)
