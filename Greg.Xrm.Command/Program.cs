@@ -10,6 +10,7 @@ using Greg.Xrm.Command.Services.Output;
 using Greg.Xrm.Command.Services.Pluralization;
 using Greg.Xrm.Command.Services.Project;
 using Greg.Xrm.Command.Services.Settings;
+using Greg.Xrm.Command.Updates;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Spectre.Console;
@@ -29,6 +30,7 @@ internal class Program
 		serviceCollection.AddTransient<ICommandExecutorFactory, CommandExecutorFactory>();
 		serviceCollection.AddTransient<IPluralizationFactory, PluralizationFactory>();
 		serviceCollection.AddTransient<ISettingsRepository, SettingsRepository>();
+		serviceCollection.AddSingleton<IAutoUpdater, AutoUpdater>();
 		serviceCollection.AddTransient<IPacxProjectRepository, PacxProjectRepository>();
 		serviceCollection.AddSingleton<IOrganizationServiceRepository, OrganizationServiceRepository>();
 		serviceCollection.AddSingleton<IOutput, OutputToConsole>();

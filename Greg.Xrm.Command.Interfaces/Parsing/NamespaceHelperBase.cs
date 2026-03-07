@@ -7,12 +7,21 @@ namespace Greg.Xrm.Command.Parsing
 		private readonly string help;
 
 		protected NamespaceHelperBase(string help, params string[] verbs)
-        {
+		{
+			this.Hidden = false;
+			this.help = help;
+			this.Verbs = verbs;
+		}
+		
+		protected NamespaceHelperBase(bool hidden, string help, params string[] verbs)
+		{
+			this.Hidden = hidden;
 			this.help = help;
 			this.Verbs = verbs;
 		}
 
 		public string[] Verbs { get; }
+		public bool Hidden { get; protected set; }
 
 		public string GetHelp()
 		{

@@ -1,6 +1,7 @@
 ﻿using Greg.Xrm.Command.Commands.Help;
 using Greg.Xrm.Command.Parsing;
 using Greg.Xrm.Command.Services.Output;
+using Greg.Xrm.Command.Updates;
 using Microsoft.Extensions.Logging;
 
 namespace Greg.Xrm.Command
@@ -10,16 +11,14 @@ namespace Greg.Xrm.Command
 		IOutput output,
 		ICommandRegistry registry,
 		ICommandRunnerFactory commandRunnerFactory,
-		ICommandLineArguments args)
+		ICommandLineArguments args,
+		IAutoUpdater updater)
 	{
 		private readonly ILogger log = logger;
-		
-
-		private readonly AutoUpdater updater = new(logger, output);
 
 		public async Task<int> StartAsync(CancellationToken cancellationToken)
 		{
-			await this.updater.CheckForUpdates();
+			await updater.CheckForUpdatesAsync();
 			ShowTitleBanner();
 
 			log.LogTrace("1. StartAsync has been called.");
@@ -30,7 +29,7 @@ namespace Greg.Xrm.Command
 			var commandRunner = commandRunnerFactory.CreateCommandRunner();
 			var result = await commandRunner.RunCommandAsync(cancellationToken);
 
-			this.updater.LaunchUpdate();
+			await updater.LaunchUpdateAsync();
 			return result;
 		}
 
@@ -49,14 +48,15 @@ namespace Greg.Xrm.Command
 			}
 
 
-			output.Write(">>> Greg PowerPlatform CLI Extended (PACX) <<<", ConsoleColor.Green).WriteLine(" - Dataverse command tool", ConsoleColor.DarkGray);
+			output.Write(">>> Greg PowerPlatform CLI Extended (PACX) <<<", ConsoleColor.Green)
+				.WriteLine(" - Dataverse command tool", ConsoleColor.DarkGray);
 			output.Write("Version ")
-				.Write(this.updater.CurrentVersion);
+				.Write(updater.CurrentVersion);
 
-			if (this.updater.UpdateRequired)
+			if (updater.UpdateRequired)
 			{
 				output.Write(" - New version available (will be installed on exit): ", ConsoleColor.Yellow)
-					.Write(this.updater.NextVersion, ConsoleColor.Yellow);
+					.Write(updater.NextVersion, ConsoleColor.Yellow);
 			}
 
 			output.WriteLine();

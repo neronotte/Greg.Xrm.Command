@@ -9,6 +9,7 @@ namespace Greg.Xrm.Command.Interactive
 	{
 		public static CommandDefinition? Recourse(IAnsiConsole console, IEnumerable<VerbNode> tree)
 		{
+			var rootTree = tree;
 			IInteractiveOperation result;
 			IEnumerable<VerbNode>? parentTree = null;
 			do
@@ -23,8 +24,9 @@ namespace Greg.Xrm.Command.Interactive
 				var operations = new List<IInteractiveOperation>();
 				operations.AddRange(verbsToShow.Select(node => new InteractiveOperationVerbNode(node, maxLength)));
 
-				if (parentTree is not null)
+				if (tree != rootTree)
 					operations.Add(InteractiveOperationBack.Instance);
+				operations.Add(InteractiveOperationQuit.Instance);
 
 				var prompt = new SelectionPrompt<IInteractiveOperation>()
 					.Title($"Select [{DefaultColors.Namespace}]namespace[/] or [{DefaultColors.Command}]command[/] (or CTRL+C to exit):")
@@ -33,6 +35,7 @@ namespace Greg.Xrm.Command.Interactive
 					.SearchPlaceholderText("Type to search...")
 					.HighlightStyle(new Style(Color.Black, Color.SandyBrown, Decoration.None))
 					.UseConverter(node => node.GetPromptText())
+					.PageSize(15)
 					.AddChoices(operations);
 
 				result = console.Prompt(prompt);
@@ -45,7 +48,11 @@ namespace Greg.Xrm.Command.Interactive
 					tree = parentTree;
 					continue;
 				}
-				
+				if (result == InteractiveOperationQuit.Instance)
+				{
+					return null;
+				}
+
 				parentTree = tree;
 				tree = result.GetChildren();
 				

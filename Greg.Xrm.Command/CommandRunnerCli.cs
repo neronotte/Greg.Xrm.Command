@@ -16,7 +16,7 @@ namespace Greg.Xrm.Command
 	{
 		public async Task<int> RunCommandAsync(CancellationToken cancellationToken)
 		{
-			var (command, runArgs) = parser.Parse(args);
+			var (command, _) = parser.Parse(args);
 			if (command == null)
 			{
 				return -1;
