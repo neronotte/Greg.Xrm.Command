@@ -62,8 +62,8 @@
 		/// <summary>
 		/// Order in which the options should be displayed in both interactive experience and help text. 
 		/// Options with lower order values will be displayed before those with higher values. 
-		/// The default order is 0, and options with the same order value will be displayed in the order they are defined in the class.
+		/// The default order is 1000, and options with the same order value will be displayed in the order they are defined in the class.
 		/// </summary>
-		public int Order { get; set; } = 0;
+		public int Order { get; set; } = 1000;
 	}
 }

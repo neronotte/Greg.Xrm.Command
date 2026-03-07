@@ -6,9 +6,9 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Greg.Xrm.Command.Commands.Column
 {
-    [Command("column", "create", HelpText = "Creates a new column on a given Dataverse table")]
+    [Command("column", "create", HelpText = "(DEPRECATED. Use specialized `column add <type>` commands instead) Creates a new column on a given Dataverse table")]
     [Alias("create", "column")]
-    [HideInInteractiveExperience("Too complex, need to refactor options in order to make it more straightforward.")]
+    [HideInInteractiveExperience("Too complex for interactive experience, replaced by specialized commands.")]
     public class CreateCommand : ICanProvideUsageExample
     {
         [Option("table", "t", HelpText = "The name of the entity for which you want to create an attribute")]
