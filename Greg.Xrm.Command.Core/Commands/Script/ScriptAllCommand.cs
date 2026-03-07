@@ -7,9 +7,9 @@ namespace Greg.Xrm.Command.Commands.Script
     [Command("script", "all", HelpText = "Generates PACX scripts for all entities with specified custom prefixes.")]
     public class ScriptAllCommand : ICanProvideUsageExample
     {
-        [Option("customPrefixs", "cp", Order = 1, HelpText = "Comma-separated custom prefixes for entities and fields.")]
+        [Option("customPrefixes", "cp", Order = 1, HelpText = "Comma-separated custom prefixes for entities and fields.")]
         [Required]
-        public string? CustomPrefixs { get; set; }
+        public string? CustomPrefixes { get; set; }
 
         [Option("output", "o", Order = 2, HelpText = "Output directory for generated files.")]
         public string OutputDir { get; set; } = string.Empty;

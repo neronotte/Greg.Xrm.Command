@@ -10,7 +10,7 @@ namespace Greg.Xrm.Command.Interactive
 
 		public string GetPromptText()
 		{
-			return $"[{DefaultColors.Command}]X  Quit[/]";
+			return $"X  Quit";
 		}
 		public CommandDefinition? GetCommand()
 		{

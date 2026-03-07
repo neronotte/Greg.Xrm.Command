@@ -407,21 +407,6 @@ pacx column create --type Image -t tableName -n columnName -thumb
 		}
 	}
 
-    public enum DateTimeBehavior1
-    {
-        UserLocal,
-        TimeZoneIndependent,
-        DateOnly
-    }
-    public enum MemoFormatName1
-    {
-        Email,
-        Json,
-        RichText,
-        Text,
-        TextArea
-    }
-
 
     public enum SupportedAttributeType
     {

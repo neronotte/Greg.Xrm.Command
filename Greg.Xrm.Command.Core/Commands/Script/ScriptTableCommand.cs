@@ -11,9 +11,9 @@ namespace Greg.Xrm.Command.Commands.Script
         [Required]
         public string TableName { get; set; } = string.Empty;
 
-		[Option("customPrefixs", "cp", Order = 2, HelpText = "Comma-separated custom prefixes for entities and fields.")]
+		[Option("customPrefixes", "cp", Order = 2, HelpText = "Comma-separated custom prefixes for entities and fields.")]
         [Required]
-        public string? CustomPrefixs { get; set; }
+        public string? CustomPrefixes { get; set; }
 
         [Option("output", "o", Order = 3, HelpText = "Output directory for generated files.")]
         public string OutputDir { get; set; } = string.Empty;

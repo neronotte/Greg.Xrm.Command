@@ -1,10 +1,12 @@
-﻿using Microsoft.Xrm.Sdk.Metadata;
+﻿using Greg.Xrm.Command.Parsing;
+using Greg.Xrm.Command.Services;
+using Microsoft.Xrm.Sdk.Metadata;
 
 namespace Greg.Xrm.Command.Commands.Column.Create
 {
 	[Command("column", "add", "money", HelpText = "Creates a money column.")]
 	[Alias("column", "add", "currency")]
-	public class CreateMoneyCommand : BaseCreateCommand
+	public class CreateMoneyCommand : BaseCreateCommand, ICanProvideUsageExample
 	{
 		[Option("min", "min", Order = 10, HelpText = "For number type columns indicates the minimum value for the column.")]
 		public double? MinValue { get; set; }
@@ -20,5 +22,17 @@ namespace Greg.Xrm.Command.Commands.Column.Create
 
 		[Option("imeMode", "ime", Order = 20, HelpText = "Indicates the input method editor (IME) mode for the column.", DefaultValue = ImeMode.Disabled)]
 		public ImeMode ImeMode { get; set; } = ImeMode.Disabled;
+
+		public void WriteUsageExamples(MarkdownWriter writer)
+		{
+			writer.WriteCodeBlock(@"# Creates a simple money column with precision 2
+pacx column create --type Money -t tableName -n columnName
+
+# Set precision and precision source
+pacx column create --type Money -t tableName -n columnName --precision 4 --precisionSource 0
+
+# Set minimum and maximum values
+pacx column create --type Money -t tableName -n columnName --min 0 --max 1000000", "Powershell");
+		}
 	}
 }

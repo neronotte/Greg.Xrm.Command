@@ -20,6 +20,7 @@ namespace Greg.Xrm.Command.Interactive
 	{
 		private const string HelpRequestToken = "/?";
 		private const string QuitRequestToken = "/q";
+		private const string SkipOptionToken = "--Skip--";
 		private static readonly object ReselectCommandToken = new();
 
 		/// <summary>
@@ -52,9 +53,11 @@ namespace Greg.Xrm.Command.Interactive
 
 				console.CreateRule("Command execution");
 
-				var result = await base.ExecuteCommand(command, cancellationToken);
-			
-				return result;
+				await base.ExecuteCommand(command, cancellationToken);
+
+				var prompt = new TextPrompt<string>("Press [yellow]Enter[/] to run another command, or CTRL+C to exit.")
+					.AllowEmpty();
+				console.Prompt(prompt);
 			}
 		}
 
@@ -63,7 +66,7 @@ namespace Greg.Xrm.Command.Interactive
 
 
 
-		
+
 
 
 
@@ -116,12 +119,18 @@ namespace Greg.Xrm.Command.Interactive
 					{
 						ShowOptionHelp(option);
 					}
-					if (response == QuitRequestToken)
-					{
-						return ReselectCommandToken;
-					}
 				}
 				while (response == HelpRequestToken);
+
+				if (response == SkipOptionToken)
+				{
+					continue;
+				}
+
+				if (response == QuitRequestToken)
+				{
+					return ReselectCommandToken;
+				}
 
 				if (!string.IsNullOrWhiteSpace(response))
 				{
@@ -265,8 +274,14 @@ namespace Greg.Xrm.Command.Interactive
 				.Title(promptText)
 				.EnableSearch()
 				.SearchPlaceholderText("Type to search...")
-				.HighlightStyle(new Style(Color.Black, Color.Aquamarine1, Decoration.None))
-				.AddChoices(choices);
+				.HighlightStyle(new Style(Color.Black, Color.SandyBrown, Decoration.None));
+
+			if (!option.IsRequired)
+			{
+				prompt.AddChoice(SkipOptionToken);
+			}
+
+			prompt.AddChoices(choices);
 
 			prompt.AddChoice(HelpRequestToken);
 			prompt.AddChoice(QuitRequestToken);
