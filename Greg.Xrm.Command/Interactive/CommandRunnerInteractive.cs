@@ -19,26 +19,43 @@ namespace Greg.Xrm.Command.Interactive
 		CommandRunnerBase(output, log, commandExecutorFactory, historyTracker, args), ICommandRunner
 	{
 		private const string HelpRequestToken = "/?";
+		private const string QuitRequestToken = "/q";
+		private static readonly object ReselectCommandToken = new();
 
+		/// <summary>
+		/// Runs the interactive flow: choose a command, collect arguments, execute it.
+		/// The loop exists so a user can type /q while entering options and return to
+		/// command selection without leaving the interactive session.
+		/// </summary>
 		public async Task<int> RunCommandAsync(CancellationToken cancellationToken)
 		{
-			var commandTree = commandRegistry.Tree;
-			var commandDefinition = VerbTreeRecourser.Recourse(console, commandTree);
+			var rootTree = commandRegistry.Tree;
+			IEnumerable<VerbNode> currentTree = rootTree;
 
-			if (commandDefinition is null) return -1;
+			while (true)
+			{
+				var commandDefinition = VerbTreeRecourser.Recourse(console, currentTree, rootTree);
 
-			var command = TryInitializeCommand(commandDefinition);
+				if (commandDefinition is null) return -1;
 
-			if (command is null) return -1;
-			if (!IsValidCommand(command)) return -1;
+				var command = TryInitializeCommand(commandDefinition);
+				if (ReferenceEquals(command, ReselectCommandToken))
+				{
+					currentTree = FindTreeLevelForCommand(rootTree, commandDefinition) ?? rootTree;
+					continue;
+				}
 
-			await TrackCommandIntoHistoryAsync(command);
+				if (command is null) return -1;
+				if (!IsValidCommand(command)) return -1;
 
-			console.CreateRule("Command execution");
+				await TrackCommandIntoHistoryAsync(command);
 
-			var result = await base.ExecuteCommand(command, cancellationToken);
+				console.CreateRule("Command execution");
+
+				var result = await base.ExecuteCommand(command, cancellationToken);
 			
-			return result;
+				return result;
+			}
 		}
 
 
@@ -52,6 +69,11 @@ namespace Greg.Xrm.Command.Interactive
 
 
 
+		/// <summary>
+		/// Prompts for command options and creates the command instance.
+		/// /? shows contextual help for the current option; /q aborts option input and
+		/// requests command reselection from the current command level.
+		/// </summary>
 		object TryInitializeCommand(CommandDefinition commandDefinition)
 		{
 			var options = commandDefinition.Options;
@@ -63,7 +85,7 @@ namespace Greg.Xrm.Command.Interactive
 				console.Markup($"[{DefaultColors.Text}]Help:[/] {Markup.Escape(commandDefinition.HelpText)}");
 				console.WriteLine();
 			}
-			console.Markup("[dim]Provide values for the command options. Type [yellow]/?[/] for help on an option. CTRL+C to quit.[/]");
+			console.Markup("[dim]Provide values for the command options. Type [yellow]/?[/] for help on an option, or [yellow]/q[/] to choose another command. CTRL+C to quit.[/]");
 			console.WriteLine();
 
 			if (commandDefinition.Options.Count == 0)
@@ -94,6 +116,10 @@ namespace Greg.Xrm.Command.Interactive
 					{
 						ShowOptionHelp(option);
 					}
+					if (response == QuitRequestToken)
+					{
+						return ReselectCommandToken;
+					}
 				}
 				while (response == HelpRequestToken);
 
@@ -107,6 +133,34 @@ namespace Greg.Xrm.Command.Interactive
 			return command;
 		}
 
+		/// <summary>
+		/// Finds the sibling list containing the selected command (current level).
+		/// This is where the command picker should restart after /q.
+		/// </summary>
+		private static IEnumerable<VerbNode>? FindTreeLevelForCommand(IEnumerable<VerbNode> tree, CommandDefinition commandDefinition)
+		{
+			foreach (var node in tree)
+			{
+				if (ReferenceEquals(node.Command, commandDefinition))
+				{
+					return tree;
+				}
+
+				var fromChildren = FindTreeLevelForCommand(node.Children, commandDefinition);
+				if (fromChildren is not null)
+				{
+					return fromChildren;
+				}
+			}
+
+			return null;
+		}
+
+		/// <summary>
+		/// Renders help for a single option in a compact panel.
+		/// The panel emphasizes what the user needs to answer (name, alias, default,
+		/// required/optional) so they can immediately retry the prompt.
+		/// </summary>
 		private void ShowOptionHelp(OptionDefinition option)
 		{
 			console.WriteLine();
@@ -160,6 +214,10 @@ namespace Greg.Xrm.Command.Interactive
 			console.WriteLine();
 		}
 
+		/// <summary>
+		/// Chooses the right prompt type based on the option's CLR type.
+		/// This keeps input UX aligned with the option semantics (text, boolean, enum).
+		/// </summary>
 		private static IPrompt<string> CreatePrompt(OptionDefinition option, string promptText)
 		{
 			var propertyType = option.Property.PropertyType;
@@ -194,6 +252,11 @@ namespace Greg.Xrm.Command.Interactive
 			return CreateTextPrompt(option, promptText);
 		}
 
+		/// <summary>
+		/// Creates a selection prompt for enum options.
+		/// /? and /q are added as explicit choices so users can ask help or navigate
+		/// back even when input is constrained to a fixed list.
+		/// </summary>
 		private static IPrompt<string> CreateOptionsPrompt(OptionDefinition option, string promptText, Type enumType)
 		{
 			var choices = enumType.GetEnumNames();
@@ -206,20 +269,30 @@ namespace Greg.Xrm.Command.Interactive
 				.AddChoices(choices);
 
 			prompt.AddChoice(HelpRequestToken);
+			prompt.AddChoice(QuitRequestToken);
 
 			return prompt;
 		}
 
+		/// <summary>
+		/// Creates a selection prompt for boolean options.
+		/// /? and /q are included for the same reason as enum prompts.
+		/// </summary>
 		private static IPrompt<string> CreateBoolPrompt(OptionDefinition option, string promptText)
 		{
 			var prompt = new SelectionPrompt<string>()
 				.Title(promptText)
 				.HighlightStyle(new Style(Color.Black, Color.Aquamarine1, Decoration.None))
-				.AddChoices("true", "false", HelpRequestToken);
+				.AddChoices("true", "false", HelpRequestToken, QuitRequestToken);
 
 			return prompt;
 		}
 
+		/// <summary>
+		/// Creates a text prompt for free-form options.
+		/// Optional/default configuration is mirrored from option metadata so runtime
+		/// behavior is consistent with command-line parsing rules.
+		/// </summary>
 		private static IPrompt<string> CreateTextPrompt(OptionDefinition option, string promptText)
 		{
 			var p = new TextPrompt<string>(promptText);

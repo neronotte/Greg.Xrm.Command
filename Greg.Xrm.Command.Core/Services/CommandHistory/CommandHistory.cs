@@ -10,6 +10,9 @@
 		{
 			var commandText = string.Join(" ", command.Select(x => EncloseInQuotesIfContainsSpace(x)));
 
+			var lastCommand = this.Commands.LastOrDefault();
+			if (string.Equals(lastCommand, commandText, StringComparison.Ordinal)) return;
+
 			this.Commands.Add(commandText);
 			if (this.Commands.Count > this.MaxSize)
 			{

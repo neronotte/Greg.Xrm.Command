@@ -7,11 +7,11 @@ namespace Greg.Xrm.Command.Interactive
 {
 	class VerbTreeRecourser
 	{
-		public static CommandDefinition? Recourse(IAnsiConsole console, IEnumerable<VerbNode> tree)
+		public static CommandDefinition? Recourse(IAnsiConsole console, IEnumerable<VerbNode> tree, IEnumerable<VerbNode> rootTree)
 		{
-			var rootTree = tree;
+			var parents = BuildParentStack(tree, rootTree);
+
 			IInteractiveOperation result;
-			IEnumerable<VerbNode>? parentTree = null;
 			do
 			{
 				var verbsToShow = tree.Where(x => !x.IsHidden)
@@ -42,10 +42,10 @@ namespace Greg.Xrm.Command.Interactive
 
 				if (result == InteractiveOperationBack.Instance)
 				{
-					if (parentTree is null)
+					if (parents.Count == 0)
 						throw new InvalidOperationException("Cannot go back from the root tree.");
 
-					tree = parentTree;
+					tree = parents.Pop();
 					continue;
 				}
 				if (result == InteractiveOperationQuit.Instance)
@@ -53,13 +53,37 @@ namespace Greg.Xrm.Command.Interactive
 					return null;
 				}
 
-				parentTree = tree;
+				parents.Push(tree);
 				tree = result.GetChildren();
 				
 			}
 			while (result.GetCommand() is null);
 
 			return result.GetCommand();
+		}
+
+		private static Stack<IEnumerable<VerbNode>> BuildParentStack(IEnumerable<VerbNode> tree, IEnumerable<VerbNode> rootTree)
+		{
+			if (tree == rootTree)
+				return new Stack<IEnumerable<VerbNode>>();
+
+			var parents = new Stack<IEnumerable<VerbNode>>();
+			foreach (var child in rootTree)
+			{
+				if (child.Children == tree)
+				{
+					parents.Push(rootTree);
+					return parents;
+				}
+				var result = BuildParentStack(tree, child.Children);
+				if (result.Count > 0)
+				{
+					result.Push(rootTree);
+					return result;
+				}
+
+			}
+			return parents;
 		}
 	}
 }
