@@ -56,6 +56,8 @@ namespace Greg.Xrm.Command.Parsing
 		{
 			get 
 			{
+				if (this.helper?.Hidden == true) return true;
+
 				if (this.Command is not null)
 					return this.Command.Hidden;
 

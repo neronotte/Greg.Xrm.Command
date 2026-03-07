@@ -22,8 +22,9 @@ namespace Greg.Xrm.Command.Parsing
 							let requiredAttribute = property.GetCustomAttribute<RequiredAttribute>()
 							let isRequired = requiredAttribute != null
 							where optionAttribute != null
-							select new OptionDefinition(property, optionAttribute, isRequired)).ToList();
-
+							select new OptionDefinition(property, optionAttribute, isRequired))
+							.OrderBy(x => !x.IsRequired).ThenBy(x => x.Option.Order).ThenBy(x => x.Option.LongName)
+							.ToList();
 
 			CheckDuplicateOptions();
 		}

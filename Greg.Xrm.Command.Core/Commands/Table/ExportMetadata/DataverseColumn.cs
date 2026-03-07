@@ -1,12 +1,9 @@
 ﻿using Microsoft.Xrm.Sdk.Metadata;
-using OfficeOpenXml;
 
 namespace Greg.Xrm.Command.Commands.Table.ExportMetadata
 {
 	public class DataverseColumn
 	{
-
-
 		public string? LogicalName { get; set; }
 		public string? SchemaName { get; set; }
 		public string? DisplayName { get; set; }

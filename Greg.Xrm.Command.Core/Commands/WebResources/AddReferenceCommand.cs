@@ -11,18 +11,18 @@ namespace Greg.Xrm.Command.Commands.WebResources
 	[Alias("wr", "addRef")]
 	public class AddReferenceCommand : ICanProvideUsageExample
 	{
-		[Option("source", "src", HelpText = "The absolute or relative URL of the web resource to add as reference to the current project.")]
+		[Option("source", "src", Order = 1, HelpText = "The absolute or relative URL of the web resource to add as reference to the current project.")]
 		[Required]
 		public string Source { get; set; } = string.Empty;
 
-		[Option("target", "tgt", HelpText = "The target URL of the webresource, relative to the root of the dataverse WebResources. It must include the publisher prefix.")]
+		[Option("target", "tgt", Order = 2, HelpText = "The target URL of the webresource, relative to the root of the dataverse WebResources. It must include the publisher prefix.")]
 		[Required]
 		public string Target { get; set; } = string.Empty;
 
-		[Option("path", HelpText = "The folder containing the .wr.pacx project where the reference should be added. If not specified, the command will find it recoursing up from the current folder.")]
+		[Option("path", "p", Order = 3, HelpText = "The folder containing the .wr.pacx project where the reference should be added. If not specified, the command will find it recoursing up from the current folder.")]
 		public string? Path { get; set; }
 
-		[Option("solution", "s", HelpText = "The name of the solution that will contain the WebResources. If empty, the default solution for the current environment is used as default")]
+		[Option("solution", "s", Order = 4, HelpText = "The name of the solution that will contain the WebResources. If empty, the default solution for the current environment is used as default")]
 		public string? SolutionName { get; set; }
 
 

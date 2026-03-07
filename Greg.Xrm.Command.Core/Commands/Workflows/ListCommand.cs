@@ -8,13 +8,13 @@ namespace Greg.Xrm.Command.Commands.Workflows
 	[Alias("flow", "list")]
 	public class ListCommand : ICanProvideUsageExample
 	{
-		[Option("name", "n", HelpText = "The unique name (or part of it) of the workflow to retrieve")]
+		[Option("name", "n", Order = 1, HelpText = "The unique name (or part of it) of the workflow to retrieve")]
 		public string SearchQuery { get; set; } = string.Empty;
 
-		[Option("category", "c", HelpText = "The category of the workflows to return.")]
+		[Option("category", "c", Order = 2, HelpText = "The category of the workflows to return.")]
 		public Workflow.Category? Category { get; set; } = null;
 
-		[Option("solution", "s", HelpText = "The solution that contains the workflows to return. If not provided, the default solution is used. Pass * to avoid filtering by solution.")]
+		[Option("solution", "s", Order = 3, HelpText = "The solution that contains the workflows to return. If not provided, the default solution is used. Pass * to avoid filtering by solution.")]
 		public string SolutionName { get; set; } = string.Empty;
 
 

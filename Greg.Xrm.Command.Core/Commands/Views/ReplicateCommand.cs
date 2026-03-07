@@ -7,14 +7,14 @@ namespace Greg.Xrm.Command.Commands.Views
 	[Command("view", "replicate", HelpText = "Replicates the structure (layout and sort order) of a given view.")]
 	public class ReplicateCommand : ICanProvideUsageExample
 	{
-		[Option("name", "n", HelpText = "The name of the view to replicate")]
+		[Option("name", "n", Order = 1, HelpText = "The name of the view to replicate")]
 		[Required]
 		public string ViewName { get; set; } = string.Empty;
 
-		[Option("table", "t", HelpText = "The name of the table that contains the view. Required only if the view name is not unique in the system.")]
+		[Option("table", "t", Order = 2, HelpText = "The name of the table that contains the view. Required only if the view name is not unique in the system.")]
 		public string? TableName { get; set; }
 
-		[Option("onto", "o", HelpText = "The name of the views that should be updated with the new layout, separated by comma (,). If not specified, all saved queries except for lookup views will be updated. If * is provided as value, all views will be updated (lookup views included).")]
+		[Option("onto", "o", Order = 3, HelpText = "The name of the views that should be updated with the new layout, separated by comma (,). If not specified, all saved queries except for lookup views will be updated. If * is provided as value, all views will be updated (lookup views included).")]
 		public string? Onto { get; set; }
 
 

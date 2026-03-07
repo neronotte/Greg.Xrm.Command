@@ -52,7 +52,7 @@ namespace Greg.Xrm.Command.Commands.Script
 			var command = new ScriptTableCommand
 			{
 				TableName = tableName,
-				CustomPrefixs = customPrefixes,
+				CustomPrefixes = customPrefixes,
 				OutputDir = outputDir,
 				PacxScriptName = scriptFileName,
 				StateFieldsDefinitionName = stateFileName,
@@ -93,7 +93,7 @@ namespace Greg.Xrm.Command.Commands.Script
 			var command = new ScriptTableCommand
 			{
 				TableName = tableName,
-				CustomPrefixs = "ava_",
+				CustomPrefixes = "ava_",
 				OutputDir = "C:/output"
 			};
 
@@ -153,7 +153,7 @@ namespace Greg.Xrm.Command.Commands.Script
 			var command = new ScriptTableCommand
 			{
 				TableName = tableName,
-				CustomPrefixs = customPrefixes,
+				CustomPrefixes = customPrefixes,
 				OutputDir = outputDir,
 				PacxScriptName = scriptFileName,
 				StateFieldsDefinitionName = stateFileName,

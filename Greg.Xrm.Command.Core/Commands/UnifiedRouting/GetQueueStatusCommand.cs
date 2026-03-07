@@ -8,11 +8,11 @@ namespace Greg.Xrm.Command.Commands.UnifiedRouting
 	[Alias("ur","queueStatus")]
 	public class GetQueueStatusCommand : ICanProvideUsageExample
 	{
-		[Option("queue", "q", "Queue name used to perform the query.")]
+		[Option("queue", "q", Order = 1, HelpText = "Queue name used to perform the query.")]
 		[Required]
 		public string? Queue { get; set; }
 
-		[Option("dateTime", "t", "Date and time (local time) used to perform the query. Format dd/MM/yyyy HH:mm.")]
+		[Option("dateTime", "t", Order = 2, HelpText = "Date and time (local time) used to perform the query. Format dd/MM/yyyy HH:mm.")]
 		public string? DateTimeFilter { get; set; }
 
 		public void WriteUsageExamples(MarkdownWriter writer)

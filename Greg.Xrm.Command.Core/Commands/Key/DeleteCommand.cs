@@ -9,11 +9,11 @@ namespace Greg.Xrm.Command.Commands.Key
 	[Alias("key", "rm")]
 	public class DeleteCommand
 	{
-		[Option("table", "t", HelpText = "The logical name of the table where the key is defined.")]
+		[Option("table", "t", Order = 1, HelpText = "The logical name of the table where the key is defined.")]
 		[Required]
 		public string Table { get; set; } = string.Empty;
 
-		[Option("schemaName", "sn", HelpText = "The schema name of the key to deletes.")]
+		[Option("schemaName", "sn", Order = 2, HelpText = "The schema name of the key to deletes.")]
 		[Required]
 		public string SchemaName { get; set; } = string.Empty;
 	}

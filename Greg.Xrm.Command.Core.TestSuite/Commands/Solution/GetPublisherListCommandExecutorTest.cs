@@ -20,7 +20,7 @@ namespace Greg.Xrm.Command.Commands.Solution
 			var repository = new OrganizationServiceRepository(output, settingsRepository, pacxProjectRepository);
 
 
-			var executor = new GetPublisherListExecutor(output, repository);
+			var executor = new GetPublisherListCommandExecutor(output, repository);
 
 			var result = await executor.ExecuteAsync(new GetPublisherListCommand
 			{

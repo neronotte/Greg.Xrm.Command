@@ -7,16 +7,16 @@ namespace Greg.Xrm.Command.Commands.WebResources
 	[Alias("webresources", "create", "js")]
 	public class JsCreateCommand
 	{
-		[Option("for", "f", HelpText = "Indicates if the JS web resource to create is for a form, a ribbon command, or other", DefaultValue = JavascriptWebResourceType.Form)]
+		[Option("for", "f", Order = 1, HelpText = "Indicates if the JS web resource to create is for a form, a ribbon command, or other", DefaultValue = JavascriptWebResourceType.Form)]
 		public JavascriptWebResourceType Type { get; set; } = JavascriptWebResourceType.Form;
 
-		[Option("table", "t", HelpText = "Name of the table related to the JS. Mandatory for form JS. Optional for Ribbon JS (if not specified, is assumed as a global ribbon command). Must not be specified for Other JS.")]
+		[Option("table", "t", Order = 2, HelpText = "Name of the table related to the JS. Mandatory for form JS. Optional for Ribbon JS (if not specified, is assumed as a global ribbon command). Must not be specified for Other JS.")]
 		public string? TableName { get; set; }
 
-		[Option("namespace", "ns", HelpText = "Namespace for the generated webresources. If not specified, the **uniquename** of the default solution publisher will be used.")]
+		[Option("namespace", "ns", Order = 3, HelpText = "Namespace for the generated webresources. If not specified, the **uniquename** of the default solution publisher will be used.")]
 		public string? Namespace { get; set; }
 
-		[Option("solution", "s", HelpText = "The name of the solution that will contain the creted WebResource. Is used to deduct the namespace, if not explicitly set.")]
+		[Option("solution", "s", Order = 4, HelpText = "The name of the solution that will contain the creted WebResource. Is used to deduct the namespace, if not explicitly set.")]
 		public string? SolutionName { get; set; }
 	}
 

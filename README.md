@@ -39,6 +39,26 @@ pacx --help
 - For articles, how-tos, tutorials, or real life usage examples [follow my LinkedIn](https://www.linkedin.com/in/riccardogregori/) profile or [my dev.to page](https://dev.to/_neronotte).
 - Take a look on [episode 107 of XrmToolCast](https://youtu.be/r16vbSdeFLk?si=HYpoh-3QyrW1S41Q) where I've had a really interesting conversation with Scott Durow and Daryl LaBar about PACX aim, capabilities, and potentials.
 
+## Interactive mode 🖥️
+
+PACX can also be used in interactive mode, which allows you to run multiple commands in a cli-style UI.
+To start PACX in interactive mode, simply run:
+
+```powershell
+pacx --interactive
+```
+
+![pacx --interactive](./.content/pacx-interactive.gif)
+
+**Interactive mode** provides the following features:
+
+- Command tree **navigation** (downwards and upwards)
+- **Search** the list of commands and namespaces
+- **Execute** commands directly from the interactive mode
+- **Inline help** for commands and namespaces
+- **On demand help** for command options (via `/?`)
+- **Colorized output** for better readability
+
 ## Extensions 🧩
 
 You can extend PACX capabilities in 2 different ways:
@@ -50,6 +70,8 @@ If you have created an interesting Plugin and you want to spread the word to the
 
 ## Core Contributors 👨🏻‍💻
 
--   Riccardo Gregori (@\_neronotte)
--   Simone Giubbarelli (@SimonGiubs)
--   Francesco Catino (@reloweb)
+- Riccardo Gregori (@\_neronotte)
+- Simone Giubbarelli (@SimonGiubs)
+- Francesco Catino (@reloweb)
+- Giorgio Ripamonti (@StoyAva)
+- Emidio Santoro

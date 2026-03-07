@@ -1,12 +1,14 @@
 ﻿using Greg.Xrm.Command.Parsing;
+using Greg.Xrm.Command.Parsing.Attributes;
 using Greg.Xrm.Command.Services;
 using Microsoft.Xrm.Sdk.Metadata;
 using System.ComponentModel.DataAnnotations;
 
 namespace Greg.Xrm.Command.Commands.Column
 {
-    [Command("column", "create", HelpText = "Creates a new column on a given Dataverse table")]
+    [Command("column", "create", HelpText = "(DEPRECATED. Use specialized `column add <type>` commands instead) Creates a new column on a given Dataverse table")]
     [Alias("create", "column")]
+    [HideInInteractiveExperience("Too complex for interactive experience, replaced by specialized commands.")]
     public class CreateCommand : ICanProvideUsageExample
     {
         [Option("table", "t", HelpText = "The name of the entity for which you want to create an attribute")]
@@ -404,21 +406,6 @@ pacx column create --type Image -t tableName -n columnName -thumb
             writer.WriteParagraph("**Lookup column creation is not supported**. You should use `pacx rel create n1` command to generate a relationship, and the lookup column will be created automatically.");
 		}
 	}
-
-    public enum DateTimeBehavior1
-    {
-        UserLocal,
-        TimeZoneIndependent,
-        DateOnly
-    }
-    public enum MemoFormatName1
-    {
-        Email,
-        Json,
-        RichText,
-        Text,
-        TextArea
-    }
 
 
     public enum SupportedAttributeType

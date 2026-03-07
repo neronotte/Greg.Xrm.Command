@@ -7,12 +7,12 @@ namespace Greg.Xrm.Command.Commands.Plugin
 	[Command("plugin", "push", HelpText = "Push plugins packages or plugin assemblies into a Dataverse instance.")]
 	public class PushCommand : ICanProvideUsageExample
 	{
-		[Option("path", "p", HelpText = "Path to the plugin package (*.nupkg) or plugin assembly (*.dll) to push.")]
+		[Option("path", "p", Order = 1, HelpText = "Path to the plugin package (*.nupkg) or plugin assembly (*.dll) to push.")]
 		[Required]
 		public string Path { get; set; } = string.Empty;
 
 
-		[Option("solution", "s", HelpText = "The name of the solution where package/assembly must be added (in case of creation). If not provided, the default solution will be used.")]
+		[Option("solution", "s", Order = 2, HelpText = "The name of the solution where package/assembly must be added (in case of creation). If not provided, the default solution will be used.")]
 		public string? SolutionName { get; set; }
 
 

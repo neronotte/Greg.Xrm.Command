@@ -7,21 +7,21 @@ namespace Greg.Xrm.Command.Commands.Script
     [Command("script", "all", HelpText = "Generates PACX scripts for all entities with specified custom prefixes.")]
     public class ScriptAllCommand : ICanProvideUsageExample
     {
-        [Option("customPrefixs", "cp", HelpText = "Comma-separated custom prefixes for entities and fields.")]
+        [Option("customPrefixes", "cp", Order = 1, HelpText = "Comma-separated custom prefixes for entities and fields.")]
         [Required]
-        public string? CustomPrefixs { get; set; }
+        public string? CustomPrefixes { get; set; }
 
-        [Option("output", "o", HelpText = "Output directory for generated files.")]
+        [Option("output", "o", Order = 2, HelpText = "Output directory for generated files.")]
         public string OutputDir { get; set; } = string.Empty;
 
-        [Option("scriptFileName", "script", HelpText = "Name for the generated PACX script file.", DefaultValue = "pacx_datamodel_script.ps1")]
+        [Option("scriptFileName", "script", Order = 3, HelpText = "Name for the generated PACX script file.", DefaultValue = "pacx_datamodel_script.ps1")]
         public string PacxScriptName { get; set; } = "pacx_datamodel_script.ps1";
 
-        [Option("stateFileName", "state", HelpText = "Name of the CSV file that will contain the state fields.", DefaultValue = "state-fields.csv")]
+        [Option("stateFileName", "state", Order = 4, HelpText = "Name of the CSV file that will contain the state fields.", DefaultValue = "state-fields.csv")]
         public string StateFieldsDefinitionName { get; set; } = "state-fields.csv";
 
-        [Option("includeStateFields", "i", HelpText = "If true, exports the statecode and statuscode fields as CSV.")]
-        public bool WithStateFieldsDefinition { get; set; } = false;
+        [Option("includeStateFields", "i", Order = 5, HelpText = "If true, exports the statecode and statuscode fields as CSV.", DefaultValue = false)]
+        public bool WithStateFieldsDefinition { get; set; }
 
         public void WriteUsageExamples(MarkdownWriter writer)
         {

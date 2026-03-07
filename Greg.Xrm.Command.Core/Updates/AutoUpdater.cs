@@ -1,13 +1,14 @@
 ﻿using Greg.Xrm.Command.Services.Output;
+using Greg.Xrm.Command.Services.Settings;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
-using System.Text.Json;
 
-namespace Greg.Xrm.Command
+namespace Greg.Xrm.Command.Updates
 {
-    public class AutoUpdater(ILogger log, IOutput output)
+	public class AutoUpdater(ILogger<AutoUpdater> log, IOutput output, ISettingsRepository settings) : IAutoUpdater
     {
 		private const string ToolName = "Greg.Xrm.Command";
+		public const string EnableAutoUpdateSettingKey = "IsAutoUpdateEnabled";
 		private const int WaitForExit = 20;
 
 
@@ -18,19 +19,22 @@ namespace Greg.Xrm.Command
 		public bool UpdateRequired { get; protected set; } = false;
 
 
-		public async Task<bool> CheckForUpdates()
+		public async Task<bool> CheckForUpdatesAsync()
         {  
 			this.NextVersion = null;
 			this.UpdateRequired = false;
 
 #if RELEASE
+			var isEnabled = await settings.GetAsync<bool>(EnableAutoUpdateSettingKey);
+			if (!isEnabled) return false;
+			
 			try
             {
 				var nugetUrl = $"https://api.nuget.org/v3-flatcontainer/{ToolName.ToLowerInvariant()}/index.json";
 
 				using var client = new HttpClient();
 				var response = await client.GetStringAsync(nugetUrl);
-				using var doc = JsonDocument.Parse(response);
+				using var doc = System.Text.Json.JsonDocument.Parse(response);
 				var versions = doc.RootElement.GetProperty("versions").EnumerateArray();
 				var latestVersion = versions.Last().GetString();
 
@@ -58,9 +62,12 @@ namespace Greg.Xrm.Command
 		}
 
 
-		public void LaunchUpdate()
+		public async Task LaunchUpdateAsync()
 		{
 			if (!this.UpdateRequired) return;
+
+			var isEnabled = await settings.GetAsync<bool>(EnableAutoUpdateSettingKey);
+			if (!isEnabled) return;
 
 			try
 			{

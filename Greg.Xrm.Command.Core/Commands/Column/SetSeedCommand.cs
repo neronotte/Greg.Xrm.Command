@@ -7,15 +7,15 @@ namespace Greg.Xrm.Command.Commands.Column
 	[Alias("column", "setSeed")]
 	public class SetSeedCommand
 	{
-		[Option("table", "t", HelpText = "The logical name of the table.")]
+		[Option("table", "t", Order = 1, HelpText = "The logical name of the table.")]
 		[Required]
 		public string TableName { get; set; } = string.Empty;
 
-		[Option("column", "c", HelpText = "The logical name of the column.")]
+		[Option("column", "c", Order = 2, HelpText = "The logical name of the column.")]
 		[Required]
 		public string ColumnName { get; set; } = string.Empty;
 
-		[Option("seed", "s", HelpText = "The seed value to set.")]
+		[Option("seed", "s", Order = 3, HelpText = "The seed value to set.")]
 		[Required]
 		public int Seed { get; set; }
 	}

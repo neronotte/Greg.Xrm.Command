@@ -6,7 +6,7 @@ namespace Greg.Xrm.Command.Commands.Script
 	[TestClass]
 	public class ScriptTableCommandParameterizedTests
 	{
-		[DataTestMethod]
+		[TestMethod]
 		[DataRow("incident", "ava_", "incident_datamodel.ps1", true)]
 		[DataRow("account", "custom_,new_", "account_script.ps1", false)]
 		[DataRow("contact", "", "contact_script.ps1", false)]
@@ -38,7 +38,7 @@ namespace Greg.Xrm.Command.Commands.Script
 			var command = new ScriptTableCommand
 			{
 				TableName = tableName,
-				CustomPrefixs = customPrefixes,
+				CustomPrefixes = customPrefixes,
 				OutputDir = TestConfiguration.GetTestOutputDirectory(),
 				PacxScriptName = scriptFileName,
 				WithStateFieldsDefinition = includeStateFields
@@ -71,7 +71,7 @@ namespace Greg.Xrm.Command.Commands.Script
 			);
 
 			Assert.AreEqual("incident", command.TableName);
-			Assert.AreEqual("ava_", command.CustomPrefixs);
+			Assert.AreEqual("ava_", command.CustomPrefixes);
 			Assert.AreEqual("C:/output", command.OutputDir);
 			Assert.AreEqual("incident_datamodel.ps1", command.PacxScriptName);
 			Assert.AreEqual("incident_state-fields.csv", command.StateFieldsDefinitionName);

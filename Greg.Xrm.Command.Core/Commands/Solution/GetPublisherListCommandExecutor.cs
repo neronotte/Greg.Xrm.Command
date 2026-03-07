@@ -5,30 +5,20 @@ using Microsoft.Xrm.Sdk.Query;
 
 namespace Greg.Xrm.Command.Commands.Solution
 {
-	public class GetPublisherListExecutor : ICommandExecutor<GetPublisherListCommand>
+	public class GetPublisherListCommandExecutor(
+		IOutput output,
+		IOrganizationServiceRepository organizationServiceRepository) : ICommandExecutor<GetPublisherListCommand>
 	{
-		private readonly IOutput output;
-		private readonly IOrganizationServiceRepository organizationServiceRepository;
 		private readonly string[] blackListPublisher = { "MicrosoftCorporation", "microsoftfirstparty" };
-
-		public GetPublisherListExecutor(
-			IOutput output,
-			IOrganizationServiceRepository organizationServiceRepository)
-		{
-			this.output = output;
-			this.organizationServiceRepository = organizationServiceRepository;
-		}
-
-
 
 		public async Task<CommandResult> ExecuteAsync(GetPublisherListCommand command, CancellationToken cancellationToken)
 		{
 
 			try
 			{
-				this.output.Write($"Connecting to the current dataverse environment...");
-				var crm = await this.organizationServiceRepository.GetCurrentConnectionAsync();
-				this.output.WriteLine("Done", ConsoleColor.Green);
+				output.Write($"Connecting to the current dataverse environment...");
+				var crm = await organizationServiceRepository.GetCurrentConnectionAsync();
+				output.WriteLine("Done", ConsoleColor.Green);
 
 				var query = new QueryExpression("publisher");
 				query.NoLock = true;
@@ -49,7 +39,7 @@ namespace Greg.Xrm.Command.Commands.Solution
 				var listPublisher = (await crm.RetrieveMultipleAsync(query)).Entities;
 
 
-				this.output.WriteTable(listPublisher,
+				output.WriteTable(listPublisher,
 					publisherListColumns(command.Verbose),
 					publisherListData(command.Verbose),
 					(index, row) =>

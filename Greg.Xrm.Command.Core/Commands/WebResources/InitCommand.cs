@@ -7,15 +7,15 @@ namespace Greg.Xrm.Command.Commands.WebResources
 	[Alias("wr", "init")]
 	public class InitCommand : ICanProvideUsageExample
 	{
-		[Option("folder", "f", HelpText = "The folder where the webresources will be stored. If not provided, the current folder will be used.")]
+		[Option("folder", "f", Order = 1, HelpText = "The folder where the webresources will be stored. If not provided, the current folder will be used.")]
 		public string? Folder { get; set; }
 
 
-		[Option("remote", "r", HelpText = "Indicates that the folder will be set-up synchronizing the webresources from the Dataverse environment")]
+		[Option("remote", "r", Order = 2, HelpText = "Indicates that the folder will be set-up synchronizing the webresources from the Dataverse environment")]
 		public bool FromSolution { get; set; } = false;
 
 
-		[Option("solution", "s", HelpText = "In case you want to init the folder from the contents of a solution that is not the default one for the current environment, specifies the name of the solution to take as source")]
+		[Option("solution", "s", Order = 3, HelpText = "In case you want to init the folder from the contents of a solution that is not the default one for the current environment, specifies the name of the solution to take as source")]
 		public string? SolutionName { get; set; }
 
 

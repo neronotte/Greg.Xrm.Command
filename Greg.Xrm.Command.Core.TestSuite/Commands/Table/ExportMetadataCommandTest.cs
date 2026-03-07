@@ -4,7 +4,6 @@ using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Project;
 using Greg.Xrm.Command.Services.Settings;
 using Microsoft.Extensions.Logging;
-using OfficeOpenXml;
 using System.Diagnostics;
 
 namespace Greg.Xrm.Command.Commands.Table
@@ -16,8 +15,6 @@ namespace Greg.Xrm.Command.Commands.Table
 		[TestCategory("Integration")]
 		public void Integration_ExecuteExportExcel()
 		{
-			ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
-
 			var storage = new Storage();
 			var output = new OutputToMemory();
 			var settingsRepository = new SettingsRepository(storage);

@@ -1,31 +1,30 @@
-﻿using Microsoft.Xrm.Sdk;
+﻿using ClosedXML.Excel;
+using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Metadata;
-using OfficeOpenXml;
-using OfficeOpenXml.Table;
 using System.Linq.Expressions;
 
 namespace Greg.Xrm.Command.Commands.Table.ExportMetadata
 {
 	public class ExcelMetadataSheetWriterTable : IExcelMetadataSheetWriter
 	{
-		public void Write(ExcelPackage package, EntityMetadata entityMetadata)
+		public void Write(IXLWorkbook workbook, EntityMetadata entityMetadata)
 		{
-			var ws = package.Workbook.Worksheets.Add("Summary");
-			ws.View.ShowGridLines = false;
+			var ws = workbook.Worksheets.Add("Summary");
+			ws.ShowGridLines = false;
 
-			ws.Cells[1, 1, 1, 10]
-				.MergeCells()
-				.SetValue("Table summary")
-				.Title();
+			ws.Range(1, 1, 1, 10)
+				.Merge()
+				.Title()
+				.SetValue("Table summary");
 
-			ws.Cells[2, 1]
+			ws.Cell(2, 1)
 				.SetValue(entityMetadata.SchemaName)
 				.Explanatory();
 
 			var row = 3;
 
-			ws.Cells[++row, 1].SetValue("Property");
-			ws.Cells[row, 2].SetValue("Value");
+			ws.Cell(++row, 1).SetValue("Property");
+			ws.Cell(row, 2).SetValue("Value");
 
 			Write(ws, ++row, entityMetadata, e => e.SchemaName);
 			Write(ws, ++row, entityMetadata, e => e.LogicalName);
@@ -113,32 +112,31 @@ namespace Greg.Xrm.Command.Commands.Table.ExportMetadata
 			Write(ws, ++row, entityMetadata, e => e.UsesBusinessDataLabelTable);
 
 
-			ws.CreateTable("Summary", 4, 1, row, 2).ShowFirstColumn = true;
+			ws.CreateTable("Summary", 4, 1, row, 2).EmphasizeFirstColumn = true;
 		}
 
-		private static void Write<T>(ExcelWorksheet ws, int row, EntityMetadata e, Expression<Func<EntityMetadata, T>> propertyAccessor)
+		private static void Write<T>(IXLWorksheet ws, int row, EntityMetadata e, Expression<Func<EntityMetadata, T>> propertyAccessor)
 		{
 			var propertyName = e.GetMemberName(propertyAccessor);
 
 			propertyName = propertyName.SplitNameInPartsByCapitalLetters();
 
-			ws.Cells[row, 1].SetValue(propertyName);
+			ws.Cell(row, 1).SetValue(propertyName);
 
 			var value = propertyAccessor.Compile()(e);
-			ws.Cells[row, 2]
-				.SetValue(Format(value))
-				.TextAlign(OfficeOpenXml.Style.ExcelHorizontalAlignment.Left);
+			ws.Cell(row, 2)
+				.TextAlign(XLAlignmentHorizontalValues.Left)
+				.SetValue(Format(value));
 		}
 
-		private static object? Format<T>(T? value)
+		private static string? Format<T>(T? value)
 		{
 			if (value is null) return null;
 
 
-			if (value is BooleanManagedProperty p1) return p1.Value;
+			if (value is BooleanManagedProperty p1) return p1.Value.ToString();
 			if (value is Label p2) return p2.UserLocalizedLabel?.Label ?? p2.LocalizedLabels?.FirstOrDefault()?.Label;
-			if (value.GetType().IsValueType) return value;
-
+			if (value.GetType().IsValueType) return value?.ToString();
 
 			return value.ToString();
 		}
