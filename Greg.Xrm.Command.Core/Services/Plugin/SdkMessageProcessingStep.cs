@@ -354,11 +354,6 @@ namespace Greg.Xrm.Command.Services.Plugin
 				linkAssembly.Columns.AddColumns("name", "pluginassemblyid");
 				linkAssembly.EntityAlias = "pa";
 
-				// Join with solution components to get only assemblies in the specified solution
-				var linkSolutionComponent = linkAssembly.AddLink("solutioncomponent", "pluginassemblyid", "objectid");
-				linkSolutionComponent.LinkCriteria.AddCondition("solutionid", ConditionOperator.Equal, solutionId);
-				linkSolutionComponent.LinkCriteria.AddCondition("componenttype", ConditionOperator.Equal, 91); // 91 = Plugin Assembly
-
 				// Join with sdkmessage for message name
 				var linkMessage = query.AddLink("sdkmessage", "sdkmessageid", "sdkmessageid", JoinOperator.LeftOuter);
 				linkMessage.Columns.AddColumns("name");
@@ -370,7 +365,7 @@ namespace Greg.Xrm.Command.Services.Plugin
 				linkFilter.EntityAlias = "filter";
 
 				// Left join to check if the step itself is in the solution
-				var linkStepSolutionComponent = query.AddLink("solutioncomponent", "sdkmessageprocessingstepid", "objectid", JoinOperator.LeftOuter);
+				var linkStepSolutionComponent = query.AddLink("solutioncomponent", "sdkmessageprocessingstepid", "objectid");
 				linkStepSolutionComponent.LinkCriteria.AddCondition("solutionid", ConditionOperator.Equal, solutionId);
 				linkStepSolutionComponent.LinkCriteria.AddCondition("componenttype", ConditionOperator.Equal, 92); // 92 = Plugin Step
 				linkStepSolutionComponent.Columns.AddColumns("objectid");
@@ -381,6 +376,35 @@ namespace Greg.Xrm.Command.Services.Plugin
 
 				var result = await crm.RetrieveMultipleAsync(query, cancellationToken);
 				return result.Entities.Select(x => new SdkMessageProcessingStep(x)).ToArray();
+			}
+
+			public async Task<SdkMessageProcessingStep[]> SearchByNameAsync(IOrganizationServiceAsync2 crm, string name, ConditionOperator op, bool includeInternalStages, CancellationToken cancellationToken)
+			{
+				var query = new QueryExpression("sdkmessageprocessingstep");
+				query.ColumnSet.AddColumns(columns);
+				query.Criteria.AddCondition("name", op, name);
+				AddStageFilter(query, includeInternalStages);
+
+				var linkPluginType = query.AddLink("plugintype", "plugintypeid", "plugintypeid");
+				linkPluginType.Columns.AddColumns("name");
+				linkPluginType.EntityAlias = "pt";
+
+				var linkAssembly = linkPluginType.AddLink("pluginassembly", "pluginassemblyid", "pluginassemblyid");
+				linkAssembly.Columns.AddColumns("name", "pluginassemblyid");
+				linkAssembly.EntityAlias = "pa";
+
+				var linkMessage = query.AddLink("sdkmessage", "sdkmessageid", "sdkmessageid", JoinOperator.LeftOuter);
+				linkMessage.Columns.AddColumns("name");
+				linkMessage.EntityAlias = "msg";
+
+				var linkFilter = query.AddLink("sdkmessagefilter", "sdkmessagefilterid", "sdkmessagefilterid", JoinOperator.LeftOuter);
+				linkFilter.Columns.AddColumns("primaryobjecttypecode");
+				linkFilter.EntityAlias = "filter";
+
+				query.NoLock = true;
+				query.AddOrder("name", OrderType.Ascending);
+
+				return await crm.RetrieveAllAsync(query, x => new SdkMessageProcessingStep(x), cancellationToken);
 			}
 		}
 	}

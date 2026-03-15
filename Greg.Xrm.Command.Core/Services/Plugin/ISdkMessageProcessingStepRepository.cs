@@ -1,9 +1,11 @@
 ﻿using Microsoft.PowerPlatform.Dataverse.Client;
+using Microsoft.Xrm.Sdk.Query;
 
 namespace Greg.Xrm.Command.Services.Plugin
 {
 	public interface ISdkMessageProcessingStepRepository
 	{
+		Task<SdkMessageProcessingStep[]> SearchByNameAsync(IOrganizationServiceAsync2 crm, string name, ConditionOperator op, bool includeInternalStages, CancellationToken cancellationToken);
 		Task<SdkMessageProcessingStep?> GetByIdAsync(IOrganizationServiceAsync2 crm, Guid id);
 		Task<SdkMessageProcessingStep[]> GetByKeyAsync(IOrganizationServiceAsync2 crm, PluginType pluginType, string messageName, string? primaryEntityName, PluginRegistrationToolkit.Stage? stage = null);
 		Task<SdkMessageProcessingStep[]> GetByAssemblyNameAsync(IOrganizationServiceAsync2 crm, string assemblyName, bool includeInternalStages, CancellationToken cancellationToken);

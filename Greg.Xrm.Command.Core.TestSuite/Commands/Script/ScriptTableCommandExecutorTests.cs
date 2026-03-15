@@ -2,9 +2,7 @@ using Greg.Xrm.Command.Commands.Script.MetadataExtractor;
 using Greg.Xrm.Command.Commands.Script.Models;
 using Greg.Xrm.Command.Commands.Script.Service;
 using Greg.Xrm.Command.Services.Connection;
-using Greg.Xrm.Command.Services.Output;
 using Microsoft.PowerPlatform.Dataverse.Client;
-using Microsoft.Xrm.Sdk;
 
 namespace Greg.Xrm.Command.Commands.Script
 {
@@ -115,6 +113,7 @@ namespace Greg.Xrm.Command.Commands.Script
 		/// Remove [Ignore] when you want to debug locally
 		/// </summary>
 		[TestMethod]
+		[TestCategory("Integration")]
 		public async Task ExecuteAsync_Integration_WithRealConnection()
 		{
 			// Arrange

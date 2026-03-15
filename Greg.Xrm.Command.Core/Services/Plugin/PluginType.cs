@@ -71,6 +71,18 @@ namespace Greg.Xrm.Command.Services.Plugin
 
 		public class Repository : IPluginTypeRepository
 		{
+			public async Task<PluginType?> GetByIdAsync(IOrganizationServiceAsync2 crm, Guid id, CancellationToken cancellationToken)
+			{
+				var query = new QueryExpression("plugintype");
+				query.ColumnSet.AddColumns("plugintypeid", "name", "typename", "culture", "friendlyname", "ismanaged", "isworkflowactivity", "plugintypeexportkey", "publickeytoken", "version", "pluginassemblyid");
+				query.Criteria.AddCondition("plugintypeid", ConditionOperator.Equal, id);
+				query.NoLock = true;
+				query.TopCount = 1;
+
+				var result = await crm.RetrieveMultipleAsync(query, cancellationToken);
+				return result.Entities.Select(e => new PluginType(e)).FirstOrDefault();
+			}
+
 			public async Task<PluginType[]> GetByAssemblyId(IOrganizationServiceAsync2 crm, Guid assemblyId, CancellationToken cancellationToken)
 			{
 				var query = new QueryExpression("plugintype");
@@ -91,6 +103,17 @@ namespace Greg.Xrm.Command.Services.Plugin
 
 				var result = await crm.RetrieveMultipleAsync(query, cancellationToken);
 				return result.Entities.Select(e => new PluginType(e)).ToArray();
+			}
+
+			public async Task<PluginType[]> SearchByNameAsync(IOrganizationServiceAsync2 crm, string name, ConditionOperator op, CancellationToken cancellationToken)
+			{
+				var query = new QueryExpression("plugintype");
+				query.ColumnSet.AddColumns("plugintypeid", "name", "typename", "culture", "friendlyname", "ismanaged", "isworkflowactivity", "plugintypeexportkey", "publickeytoken", "version", "pluginassemblyid");
+				query.Criteria.AddCondition("name", op, name);
+				query.NoLock = true;
+				query.AddOrder("name", OrderType.Ascending);
+
+				return await crm.RetrieveAllAsync(query, e => new PluginType(e), cancellationToken);
 			}
 		}
 	}

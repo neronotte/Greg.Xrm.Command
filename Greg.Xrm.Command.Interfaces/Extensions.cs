@@ -184,6 +184,26 @@ namespace Greg.Xrm.Command
 
 
 
+		public static async Task<T[]> RetrieveAllAsync<T>(this IOrganizationServiceAsync2 crm, QueryExpression query, Func<Entity, T> mapper, CancellationToken cancellationToken = default)
+		{
+			query.PageInfo ??= new PagingInfo();
+			query.PageInfo.Count = 5000;
+			query.PageInfo.PageNumber = 1;
+			query.PageInfo.PagingCookie = null;
+
+			var results = new List<T>();
+			while (true)
+			{
+				var page = await crm.RetrieveMultipleAsync(query, cancellationToken);
+				results.AddRange(page.Entities.Select(mapper));
+				if (!page.MoreRecords) break;
+				query.PageInfo.PageNumber++;
+				query.PageInfo.PagingCookie = page.PagingCookie;
+			}
+			return results.ToArray();
+		}
+
+
 		public static async Task<int> GetDefaultLanguageCodeAsync(this IOrganizationServiceAsync2 crm, CancellationToken? cancellationToken = null)
 		{
 			cancellationToken ??= CancellationToken.None;

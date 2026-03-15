@@ -84,10 +84,12 @@ namespace Greg.Xrm.Command.Services.Plugin
 
 		public class Repository : IPluginAssemblyRepository
 		{
+			private static readonly string[] columns = ["name", "version", "packageid", "sourcetype", "isolationmode", "culture", "publickeytoken", "ismanaged"];
+
 			public async Task<PluginAssembly?> GetByNameAsync(IOrganizationServiceAsync2 crm, string name, CancellationToken cancellationToken)
 			{
 				var query = new QueryExpression("pluginassembly");
-				query.ColumnSet.AddColumns("name", "version", "packageid", "sourcetype", "isolationmode", "culture", "publickeytoken", "ismanaged", "content", "solutionid");
+				query.ColumnSet.AddColumns(columns);
 				query.Criteria.AddCondition("name", ConditionOperator.Equal, name);
 				query.TopCount = 1;
 				query.NoLock = true;
@@ -101,13 +103,62 @@ namespace Greg.Xrm.Command.Services.Plugin
 			public async Task<PluginAssembly[]> GetByPackageIdAsync(IOrganizationServiceAsync2 crm, Guid packageId, CancellationToken cancellationToken)
 			{
 				var query = new QueryExpression("pluginassembly");
-				query.ColumnSet.AddColumns("name", "version", "packageid", "sourcetype", "isolationmode", "culture", "publickeytoken", "ismanaged", "content", "solutionid");
+				query.ColumnSet.AddColumns(columns);
 				query.Criteria.AddCondition("packageid", ConditionOperator.Equal, packageId);
 				query.NoLock = true;
 
 				var result = await crm.RetrieveMultipleAsync(query, cancellationToken);
 				var assemblies = result.Entities.Select(x => new PluginAssembly(x)).ToArray();
 				return assemblies;
+			}
+
+			public async Task<PluginAssembly[]> GetBySolutionIdAsync(IOrganizationServiceAsync2 crm, Guid solutionId, CancellationToken cancellationToken)
+			{
+				var query = new QueryExpression("pluginassembly");
+				query.ColumnSet.AddColumns(columns);
+				query.NoLock = true;
+
+				var link = query.AddLink("solutioncomponent", "pluginassemblyid", "objectid");
+				link.LinkCriteria.AddCondition("solutionid", ConditionOperator.Equal, solutionId);
+				link.LinkCriteria.AddCondition("componenttype", ConditionOperator.Equal, 91); // 91 = PluginAssembly
+
+				return await crm.RetrieveAllAsync(query, x => new PluginAssembly(x), cancellationToken);
+			}
+
+			public async Task<PluginAssembly[]> GetByGuidsAsync(IOrganizationServiceAsync2 crm, Guid[] ids, CancellationToken cancellationToken)
+			{
+				if (ids.Length == 0) return [];
+
+				var query = new QueryExpression("pluginassembly");
+				query.ColumnSet.AddColumns(columns);
+				query.Criteria.AddCondition("pluginassemblyid", ConditionOperator.In, ids.Cast<object>().ToArray());
+				query.NoLock = true;
+
+				return await crm.RetrieveAllAsync(query, x => new PluginAssembly(x), cancellationToken);
+			}
+
+			public async Task<PluginAssembly[]> SearchByNameAsync(IOrganizationServiceAsync2 crm, string name, ConditionOperator op, CancellationToken cancellationToken)
+			{
+				// PluginAssembly has no full-text index, so Contains is not supported server-side.
+				// Fall back to fetching all assemblies and filtering in memory.
+				if (op == ConditionOperator.Contains)
+				{
+					var allQuery = new QueryExpression("pluginassembly");
+					allQuery.ColumnSet.AddColumns(columns);
+					allQuery.NoLock = true;
+					var all = await crm.RetrieveAllAsync(allQuery, x => new PluginAssembly(x), cancellationToken);
+					return [.. all
+						.Where(p => p.name?.Contains(name, StringComparison.OrdinalIgnoreCase) ?? false)
+						.OrderBy(p => p.name)];
+				}
+
+				var query = new QueryExpression("pluginassembly");
+				query.ColumnSet.AddColumns(columns);
+				query.Criteria.AddCondition("name", op, name);
+				query.NoLock = true;
+				query.AddOrder("name", OrderType.Ascending);
+
+				return await crm.RetrieveAllAsync(query, x => new PluginAssembly(x), cancellationToken);
 			}
 		}
 	}
