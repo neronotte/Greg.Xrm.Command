@@ -56,17 +56,17 @@ namespace Greg.Xrm.Command.Commands.Solution
 		{
 			writer.WriteParagraph("Generate C# constants for a solution:");
 			writer.WriteCodeBlock(
-				"pacx constants generate --solution MySolution --outputCs \"C:/src/Constants\" --namespaceCs \"MyApp.Constants\"",
+				"pacx solution constants --solutionName MySolution --outputCs \"C:/src/Constants\" --namespaceCs \"MyApp.Constants\"",
 				"PowerShell");
 
 			writer.WriteParagraph("Generate both C# and JavaScript constants:");
 			writer.WriteCodeBlock(
-				"pacx constants generate --solution MySolution --outputCs \"C:/src/Constants\" --namespaceCs \"MyApp.Constants\" --outputJs \"C:/src/js/constants\" --namespaceJs \"MyApp\"",
+				"pacx solution constants --solutionName MySolution --outputCs \"C:/src/Constants\" --namespaceCs \"MyApp.Constants\" --outputJs \"C:/src/js/constants\" --namespaceJs \"MyApp\"",
 				"PowerShell");
 
 			writer.WriteParagraph("Generate JS only, using the default solution:");
 			writer.WriteCodeBlock(
-				"pacx constants generate --outputJs \"C:/src/js/constants\" --namespaceJs \"MyApp\"",
+				"pacx solution constants --outputJs \"C:/src/js/constants\" --namespaceJs \"MyApp\"",
 				"PowerShell");
 		}
 	}
