@@ -1,11 +1,11 @@
-﻿namespace Greg.Xrm.Command.Commands.Column
+namespace Greg.Xrm.Command.Commands.Column
 {
 	public enum MemoFormatName1
-    {
-        Email,
-        Json,
-        RichText,
-        Text,
-        TextArea
-    }
+	{
+		Email,
+		Json,
+		RichText,
+		Text,
+		TextArea
+	}
 }

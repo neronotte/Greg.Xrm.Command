@@ -1,4 +1,4 @@
-﻿using Greg.Xrm.Command.Services.Connection;
+using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
 using Microsoft.Xrm.Sdk.Messages;
 using Newtonsoft.Json;
@@ -43,7 +43,7 @@ namespace Greg.Xrm.Command.Commands.OptionSet
 
 				return result;
 			}
-			catch(Exception ex)
+			catch (Exception ex)
 			{
 				output.WriteLine("Failed", ConsoleColor.Red);
 				return CommandResult.Fail(ex.Message, ex);

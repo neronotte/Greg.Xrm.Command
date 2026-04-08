@@ -1,4 +1,4 @@
-﻿using Greg.Xrm.Command.Model;
+using Greg.Xrm.Command.Model;
 using Microsoft.Extensions.Logging;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk.Messages;
@@ -29,7 +29,7 @@ namespace Greg.Xrm.Command.Services.ComponentResolution
 
 					item.Label = GetLabel(response.OptionSetMetadata);
 				}
-				catch(Exception ex)
+				catch (Exception ex)
 				{
 					log.LogError(ex, "Error retrieving option set metadata: {Message}", ex.Message);
 				}

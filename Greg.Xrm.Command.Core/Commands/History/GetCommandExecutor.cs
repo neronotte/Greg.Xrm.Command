@@ -1,6 +1,6 @@
-﻿using Greg.Xrm.Command.Services.CommandHistory;
-using Greg.Xrm.Command.Services.Output;
 using System.Reflection;
+using Greg.Xrm.Command.Services.CommandHistory;
+using Greg.Xrm.Command.Services.Output;
 
 namespace Greg.Xrm.Command.Commands.History
 {
@@ -10,24 +10,24 @@ namespace Greg.Xrm.Command.Commands.History
 		private readonly IHistoryTracker historyTracker;
 
 		public GetCommandExecutor(IOutput output, IHistoryTracker historyTracker)
-        {
+		{
 			this.output = output ?? throw new ArgumentNullException(nameof(output));
 			this.historyTracker = historyTracker ?? throw new ArgumentNullException(nameof(historyTracker));
 		}
 
-        public async Task<CommandResult> ExecuteAsync(GetCommand command, CancellationToken cancellationToken)
+		public async Task<CommandResult> ExecuteAsync(GetCommand command, CancellationToken cancellationToken)
 		{
 			if (command.Length.HasValue)
 			{
 				this.output.Write("Retrieving last ").Write(command.Length).Write(" commands...");
 			}
-            else
-            {
-                this.output.Write("Retrieving all commands...");
-            }
+			else
+			{
+				this.output.Write("Retrieving all commands...");
+			}
 
 
-            var commands = await this.historyTracker.GetLastAsync(command.Length);
+			var commands = await this.historyTracker.GetLastAsync(command.Length);
 
 			this.output.WriteLine("Done", ConsoleColor.Green);
 

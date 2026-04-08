@@ -1,4 +1,4 @@
-﻿using Greg.Xrm.Command.Parsing;
+using Greg.Xrm.Command.Parsing;
 using Spectre.Console;
 
 namespace Greg.Xrm.Command.Interactive

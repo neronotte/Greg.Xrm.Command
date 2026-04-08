@@ -1,19 +1,19 @@
-﻿using Greg.Xrm.Command.Model;
+using Greg.Xrm.Command.Model;
 using Greg.Xrm.Command.Services.Output;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk.Metadata;
 
 namespace Greg.Xrm.Command.Services.AttributeDeletion
 {
-	public class AttributeDeletionStrategyForCharts(IOutput output) 
+	public class AttributeDeletionStrategyForCharts(IOutput output)
 		: AttributeDeletionStrategyBase
 	{
 		public override ComponentType ComponentType => ComponentType.SavedQueryVisualization;
 
 
 		protected override async Task HandleInternalAsync(
-			IOrganizationServiceAsync2 crm, 
-			AttributeMetadata attribute, 
+			IOrganizationServiceAsync2 crm,
+			AttributeMetadata attribute,
 			IReadOnlyList<Dependency> dependencies)
 		{
 			var result = await RetrieveDataAsync(crm, dependencies, "savedqueryvisualization", "savedqueryvisualizationid", "name", "datadescription");

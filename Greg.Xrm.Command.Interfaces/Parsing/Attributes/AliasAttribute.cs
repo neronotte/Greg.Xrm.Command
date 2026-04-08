@@ -1,9 +1,9 @@
-﻿namespace Greg.Xrm.Command
+namespace Greg.Xrm.Command
 {
 	[AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = false)]
 	public class AliasAttribute : Attribute
 	{
-        public AliasAttribute(params string[] verbs)
+		public AliasAttribute(params string[] verbs)
 		{
 			this.Verbs = verbs ?? Array.Empty<string>();
 			this.ExpandedVerbs = string.Join(" ", this.Verbs);

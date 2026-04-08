@@ -1,7 +1,7 @@
-﻿using Greg.Xrm.Command.Parsing;
+using System.ComponentModel.DataAnnotations;
+using Greg.Xrm.Command.Parsing;
 using Greg.Xrm.Command.Services;
 using Microsoft.Xrm.Sdk.Metadata;
-using System.ComponentModel.DataAnnotations;
 
 namespace Greg.Xrm.Command.Commands.Relationship
 {
@@ -101,7 +101,7 @@ namespace Greg.Xrm.Command.Commands.Relationship
 
 
 
-		[Option("cascadeAssign1", "caass1",	Order = 26, HelpText = "Only for explicit relationship. The behavior to apply to relationship table records when the table1 record is assigned to another owner\n(values: Cascade, Active, UserOwned, NoCascade)\n(default: NoCascade)", SuppressValuesHelp = true)]
+		[Option("cascadeAssign1", "caass1", Order = 26, HelpText = "Only for explicit relationship. The behavior to apply to relationship table records when the table1 record is assigned to another owner\n(values: Cascade, Active, UserOwned, NoCascade)\n(default: NoCascade)", SuppressValuesHelp = true)]
 		public CascadeType? CascadeAssign1 { get; set; }
 
 		[Option("cascadeArchive1", "caarc1", Order = 27, HelpText = "Only for explicit relationship. The behavior to apply to relationship table records when the table1 record is archived\n(not available via UI)\n(default: NoCascade)", SuppressValuesHelp = true)]

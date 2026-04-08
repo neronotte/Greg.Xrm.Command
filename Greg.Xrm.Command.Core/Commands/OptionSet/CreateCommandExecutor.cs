@@ -1,4 +1,4 @@
-﻿using Autofac.Core;
+using Autofac.Core;
 using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.OptionSet;
 using Greg.Xrm.Command.Services.Output;
@@ -13,7 +13,7 @@ namespace Greg.Xrm.Command.Commands.OptionSet
 	public class CreateCommandExecutor(
 			IOutput output,
 			IOrganizationServiceRepository organizationServiceRepository,
-			IOptionSetParser optionSetParser) 
+			IOptionSetParser optionSetParser)
 			: ICommandExecutor<CreateCommand>
 	{
 		public async Task<CommandResult> ExecuteAsync(CreateCommand command, CancellationToken cancellationToken)
@@ -35,9 +35,9 @@ namespace Greg.Xrm.Command.Commands.OptionSet
 
 
 				var options = optionSetParser.Parse(
-					command.Options, 
-					command.Colors, 
-					customizationOptionValuePrefix.Value, 
+					command.Options,
+					command.Colors,
+					customizationOptionValuePrefix.Value,
 					defaultLanguageCode);
 
 

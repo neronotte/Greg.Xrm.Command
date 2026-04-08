@@ -1,10 +1,10 @@
-﻿using Greg.Xrm.Command.Parsing;
-using Greg.Xrm.Command.Services;
 using System.ComponentModel.DataAnnotations;
+using Greg.Xrm.Command.Parsing;
+using Greg.Xrm.Command.Services;
 
 namespace Greg.Xrm.Command.Commands.WebResources
 {
-    [Command("webresources", "push", HelpText = "Push web resources from a local folder to the target environment")]
+	[Command("webresources", "push", HelpText = "Push web resources from a local folder to the target environment")]
 	[Alias("wr", "push")]
 	public class PushCommand : ICanProvideUsageExample, IValidatableObject
 	{
@@ -76,7 +76,7 @@ namespace Greg.Xrm.Command.Commands.WebResources
 			writer.WriteTitle3("How to use it");
 
 			writer.WriteParagraph("To deploy all the webresources that are in the **current folder** to the target environment, you can use the following command:");
-			
+
 			writer.WriteCodeBlock("pacx webresources push", "Powershell");
 
 			writer.WriteParagraph("The command will:");
@@ -116,7 +116,7 @@ namespace Greg.Xrm.Command.Commands.WebResources
 			writer.WriteLine("            ...");
 			writer.WriteLine("    .wr.pacx");
 			writer.WriteCodeBlockEnd();
-			
+
 			writer.WriteParagraph("And you are placed under the `Webresources/home_react_source/src` folder, by typing:");
 
 			writer.WriteCodeBlock("pacx webresources push -f $", "Powershell");

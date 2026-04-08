@@ -60,10 +60,10 @@ namespace Greg.Xrm.Command.Commands.Plugin
 		}
 
 		[TestMethod]
-		[DataRow("Package",  SearchLevel.Package)]
+		[DataRow("Package", SearchLevel.Package)]
 		[DataRow("Assembly", SearchLevel.Assembly)]
-		[DataRow("Type",     SearchLevel.Type)]
-		[DataRow("Step",     SearchLevel.Step)]
+		[DataRow("Type", SearchLevel.Type)]
+		[DataRow("Step", SearchLevel.Step)]
 		public void AllSearchLevelValuesShouldBeParseable(string levelString, SearchLevel expected)
 		{
 			var command = Utility.TestParseCommand<ListCommand>(

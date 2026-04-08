@@ -1,9 +1,9 @@
-﻿using Greg.Xrm.Command.Services.Graphs;
 using System.Text;
+using Greg.Xrm.Command.Services.Graphs;
 
 namespace Greg.Xrm.Command.Commands.Table.Migration
 {
-    public static class MigrationStrategyBuilder
+	public static class MigrationStrategyBuilder
 	{
 		public static MigrationStrategyResult Build(DirectedGraph<TableModel> graph)
 		{

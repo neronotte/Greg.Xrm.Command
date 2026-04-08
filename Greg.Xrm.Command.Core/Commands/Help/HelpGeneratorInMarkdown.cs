@@ -1,8 +1,8 @@
-﻿using Greg.Xrm.Command.Parsing;
-using Greg.Xrm.Command.Services;
-using Greg.Xrm.Command.Services.Output;
 using System.Reflection;
 using System.Xml.Linq;
+using Greg.Xrm.Command.Parsing;
+using Greg.Xrm.Command.Services;
+using Greg.Xrm.Command.Services.Output;
 
 namespace Greg.Xrm.Command.Commands.Help
 {
@@ -48,7 +48,7 @@ namespace Greg.Xrm.Command.Commands.Help
 			var fileName = Path.Combine(directory.FullName, $"Home.md");
 
 			this.output.Write($"Generating {fileName}...");
-			
+
 			using var writer = new MarkdownWriter(fileName);
 
 			writer.WriteTitle1("Greg.Xrm.Command ⁓ aka PACX");

@@ -1,8 +1,8 @@
-﻿using Greg.Xrm.Command.Commands.Column.Builders;
+using System.ServiceModel;
+using Greg.Xrm.Command.Commands.Column.Builders;
 using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
 using Microsoft.Xrm.Sdk;
-using System.ServiceModel;
 
 namespace Greg.Xrm.Command.Commands.Column
 {
@@ -42,7 +42,7 @@ namespace Greg.Xrm.Command.Commands.Column
 
 				return CommandResult.Success();
 			}
-			catch(FaultException<OrganizationServiceFault> ex)
+			catch (FaultException<OrganizationServiceFault> ex)
 			{
 				this.output.WriteLine("ERROR", ConsoleColor.Red);
 				this.output.WriteLine(ex.Message, ConsoleColor.Red);

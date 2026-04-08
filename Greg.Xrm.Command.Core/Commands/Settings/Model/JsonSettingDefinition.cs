@@ -1,5 +1,5 @@
-﻿using Newtonsoft.Json;
 using System.Collections.Immutable;
+using Newtonsoft.Json;
 
 namespace Greg.Xrm.Command.Commands.Settings.Model
 {

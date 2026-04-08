@@ -1,11 +1,11 @@
-﻿using Autofac;
+using System.Data;
+using System.Reflection;
+using Autofac;
 using Autofac.Core;
 using Greg.Xrm.Command.Services;
 using Greg.Xrm.Command.Services.Output;
 using McMaster.NETCore.Plugins;
 using Microsoft.Extensions.Logging;
-using System.Data;
-using System.Reflection;
 
 namespace Greg.Xrm.Command.Parsing
 {
@@ -99,8 +99,8 @@ namespace Greg.Xrm.Command.Parsing
 					return;
 				}
 
-				var pluginPath = args[indexOfPluginsArgument + 1]; 
-				
+				var pluginPath = args[indexOfPluginsArgument + 1];
+
 				if (!File.Exists(pluginPath))
 				{
 					this.output.WriteLine($"The provided assembly <{pluginPath}> does not exists.", ConsoleColor.Red);
@@ -118,11 +118,11 @@ namespace Greg.Xrm.Command.Parsing
 					this.log.LogWarning("The provided file <{PluginFolder}> is not a valid dll.", pluginPath);
 					return;
 				}
-				
-				
+
+
 				var pluginName = assemblyFile.Name.Replace(".dll", string.Empty);
 
-				this.log.LogDebug("Creating loader for plugin {PluginName}...",  pluginName);
+				this.log.LogDebug("Creating loader for plugin {PluginName}...", pluginName);
 				try
 				{
 

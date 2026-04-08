@@ -1,4 +1,4 @@
-﻿namespace Greg.Xrm.Command.Commands.WebResources.ProjectFile
+namespace Greg.Xrm.Command.Commands.WebResources.ProjectFile
 {
 	public interface IWebResourceProjectFileRepository
 	{

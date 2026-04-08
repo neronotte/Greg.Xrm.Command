@@ -1,13 +1,13 @@
-﻿using Greg.Xrm.Command.Model;
+using System.ServiceModel;
+using Greg.Xrm.Command.Model;
 using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Messages;
-using System.ServiceModel;
 
 namespace Greg.Xrm.Command.Commands.Column
 {
-    public class GetDependenciesCommandExecutor : ICommandExecutor<GetDependenciesCommand>
+	public class GetDependenciesCommandExecutor : ICommandExecutor<GetDependenciesCommand>
 	{
 		private readonly IOutput output;
 		private readonly IOrganizationServiceRepository organizationServiceRepository;

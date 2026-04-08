@@ -1,6 +1,6 @@
-﻿using Greg.Xrm.Command.Parsing;
-using Greg.Xrm.Command.Services;
 using System.ComponentModel.DataAnnotations;
+using Greg.Xrm.Command.Parsing;
+using Greg.Xrm.Command.Services;
 using static Greg.Xrm.Command.Services.Plugin.PluginRegistrationToolkit;
 
 namespace Greg.Xrm.Command.Commands.Plugin.Step
@@ -92,7 +92,7 @@ namespace Greg.Xrm.Command.Commands.Plugin.Step
 		public void WriteUsageExamples(MarkdownWriter writer)
 		{
 			writer.WriteParagraph("To register a plugin step, you need to provide at minimum the plugin class name and message name. Other parameters have sensible defaults or are optional.");
-			
+
 			writer.WriteTitle3("Minimum Required Parameters");
 			writer.WriteList(
 				"`--class` (or `-c`): Name of the plugin type that executes when the step is triggered",
@@ -116,7 +116,7 @@ namespace Greg.Xrm.Command.Commands.Plugin.Step
 			writer.WriteParagraph(@"For the `--class` argument, you can use the full name of the class, 
 or just (the end of) the class name if it's unique within the system. 
 The system will perform a fuzzy search and display matches if multiple types are found.");
-			
+
 			writer.WriteParagraph("Valid options for a plugin type named **Neronotte.MyProject.Plugins.Account_OnPreCreate_ValidateFields**:");
 			writer.WriteList(
 				"`--class Neronotte.MyProject.Plugins.Account_OnPreCreate_ValidateFields` # fully qualified name",
@@ -131,7 +131,7 @@ the command will fail with a list of valid tables for that message.");
 			writer.WriteLine();
 
 			writer.WriteTitle3("Usage Examples");
-			
+
 			writer.WriteParagraph("**Basic registration** (minimum parameters):");
 			writer.WriteCodeBlock(@"# Register a plugin step with minimum parameters
 pacx plugin step register --class Account_OnPreCreate_ValidateFields --message Create", "powershell");

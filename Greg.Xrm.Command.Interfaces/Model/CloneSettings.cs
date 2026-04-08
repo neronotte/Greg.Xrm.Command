@@ -1,4 +1,4 @@
-﻿using Microsoft.Xrm.Sdk;
+using Microsoft.Xrm.Sdk;
 
 namespace Greg.Xrm.Command.Model
 {
@@ -37,7 +37,7 @@ namespace Greg.Xrm.Command.Model
 		public static bool IsForbidden(Entity original, string propertyName, string[] otherForbiddenAttributes)
 		{
 			otherForbiddenAttributes ??= Array.Empty<string>();
-			
+
 			if (string.Equals(propertyName, original.LogicalName + "id", StringComparison.OrdinalIgnoreCase)) return true;
 			if (ForbiddenAttributes.Exists(x => string.Equals(x, propertyName, StringComparison.OrdinalIgnoreCase))) return true;
 #pragma warning disable S6605 // Collection-specific "Exists" method should be used instead of the "Any" extension

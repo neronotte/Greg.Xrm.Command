@@ -1,9 +1,9 @@
-﻿using Greg.Xrm.Command.Services.Connection;
+using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
 
 namespace Greg.Xrm.Command.Commands.Auth
 {
-    public class RenameCommandExecutor : ICommandExecutor<RenameCommand>
+	public class RenameCommandExecutor : ICommandExecutor<RenameCommand>
 	{
 		private readonly IOrganizationServiceRepository organizationServiceRepository;
 		private readonly IOutput output;

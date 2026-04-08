@@ -1,10 +1,10 @@
-﻿namespace Greg.Xrm.Command.Services.Graphs
+namespace Greg.Xrm.Command.Services.Graphs
 {
-    /// <summary>
-    /// A node in a directed graph
-    /// </summary>
-    /// <typeparam name="INodeContent"></typeparam>
-    class DirectedNode<T> : IDirectedNode<T>
+	/// <summary>
+	/// A node in a directed graph
+	/// </summary>
+	/// <typeparam name="INodeContent"></typeparam>
+	class DirectedNode<T> : IDirectedNode<T>
 		where T : INodeContent
 	{
 		public DirectedNode(T content)

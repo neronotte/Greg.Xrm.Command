@@ -1,6 +1,6 @@
-﻿
-using Microsoft.Xrm.Sdk.Metadata;
+
 using System.ComponentModel.DataAnnotations;
+using Microsoft.Xrm.Sdk.Metadata;
 
 namespace Greg.Xrm.Command.Commands.Relationship
 {
@@ -9,7 +9,7 @@ namespace Greg.Xrm.Command.Commands.Relationship
 	public class AddPolyCommand
 	{
 
-		[Option("child", "c", Order = 1, HelpText ="The child table (N side of the relationship)")]
+		[Option("child", "c", Order = 1, HelpText = "The child table (N side of the relationship)")]
 		[Required]
 		public string ChildTable { get; set; } = string.Empty;
 
@@ -39,7 +39,7 @@ namespace Greg.Xrm.Command.Commands.Relationship
 		[Option("cascadeShare", "cas", Order = 7, HelpText = "The behavior to apply to child records when the parent record is shared\n(values: Cascade, Active, UserOwned, NoCascade)\n(default: NoCascade)", SuppressValuesHelp = true)]
 		public CascadeType? CascadeShare { get; set; } = CascadeType.NoCascade;
 
-		[Option("cascadeUnshare", "cau", Order = 8, HelpText ="The behavior to apply to child records when the parent record is unshared\n(values: Cascade, Active, UserOwned, NoCascade)\n(default: NoCascade)", SuppressValuesHelp = true)]
+		[Option("cascadeUnshare", "cau", Order = 8, HelpText = "The behavior to apply to child records when the parent record is unshared\n(values: Cascade, Active, UserOwned, NoCascade)\n(default: NoCascade)", SuppressValuesHelp = true)]
 		public CascadeType? CascadeUnshare { get; set; } = CascadeType.NoCascade;
 
 		[Option("cascadeDelete", "cad", Order = 9, HelpText = "The behavior to apply when the parent record is deleted\n(values: Restrict, RemoveLink)\n(default: Restrict)", DefaultValue = CascadeType.Restrict, SuppressValuesHelp = true)]

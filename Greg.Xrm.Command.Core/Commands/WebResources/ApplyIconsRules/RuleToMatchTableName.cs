@@ -1,6 +1,6 @@
-﻿namespace Greg.Xrm.Command.Commands.WebResources.ApplyIconsRules
+namespace Greg.Xrm.Command.Commands.WebResources.ApplyIconsRules
 {
-    class RuleToMatchTableName : IIconFinder
+	class RuleToMatchTableName : IIconFinder
 	{
 		public string? Find(IReadOnlyCollection<string> icons, string tableName, string publisherPrefix)
 		{

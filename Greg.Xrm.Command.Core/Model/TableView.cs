@@ -1,4 +1,4 @@
-﻿using Microsoft.Crm.Sdk;
+using Microsoft.Crm.Sdk;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;
@@ -104,7 +104,7 @@ namespace Greg.Xrm.Command.Model
 			private readonly string[] otherColumns;
 
 			protected Repository(string entityName, Func<Entity, T> factoryMethod, params string[] otherColumns)
-            {
+			{
 				this.entityName = entityName;
 				this.factoryMethod = factoryMethod;
 				this.otherColumns = otherColumns ?? [];
@@ -152,7 +152,7 @@ namespace Greg.Xrm.Command.Model
 			public async Task<IReadOnlyList<T>> GetByTableNameAsync(IOrganizationServiceAsync2 crm, string tableName)
 			{
 				var query = new QueryExpression(this.entityName);
-				query.ColumnSet.AddColumns(nameof(name), nameof(querytype), nameof(fetchxml), nameof(layoutxml), nameof(returnedtypecode)); 
+				query.ColumnSet.AddColumns(nameof(name), nameof(querytype), nameof(fetchxml), nameof(layoutxml), nameof(returnedtypecode));
 				if (otherColumns.Length > 0)
 				{
 					query.ColumnSet.AddColumns(otherColumns);

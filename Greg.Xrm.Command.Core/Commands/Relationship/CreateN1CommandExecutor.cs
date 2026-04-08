@@ -1,12 +1,12 @@
-﻿using Greg.Xrm.Command.Services.Connection;
+using System.ServiceModel;
+using System.Text;
+using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Messages;
 using Microsoft.Xrm.Sdk.Metadata;
 using Microsoft.Xrm.Sdk.Query;
-using System.ServiceModel;
-using System.Text;
 
 namespace Greg.Xrm.Command.Commands.Relationship
 {
@@ -16,7 +16,7 @@ namespace Greg.Xrm.Command.Commands.Relationship
 		private readonly IOrganizationServiceRepository organizationServiceRepository;
 
 		public CreateN1CommandExecutor(IOutput output, IOrganizationServiceRepository organizationServiceRepository)
-        {
+		{
 			this.output = output;
 			this.organizationServiceRepository = organizationServiceRepository;
 		}
@@ -165,9 +165,9 @@ namespace Greg.Xrm.Command.Commands.Relationship
 			var sb = new StringBuilder();
 			sb.Append(publisherPrefix);
 			sb.Append('_');
-			
 
-			var childTable = command.ChildTable?? string.Empty;
+
+			var childTable = command.ChildTable ?? string.Empty;
 			if (childTable.StartsWith(publisherPrefix + "_"))
 				sb.Append(childTable.AsSpan(publisherPrefix.Length + 1));
 			else
@@ -214,7 +214,7 @@ namespace Greg.Xrm.Command.Commands.Relationship
 			if (command.ParentTable == null)
 				throw new CommandException(CommandException.CommandRequiredArgumentNotProvided, $"Is not possible to infer the primary attribute schema name from the parent table name, please explicit a primary attribute schema name");
 
-			if (command.ParentTable.StartsWith(publisherPrefix + "_")) 
+			if (command.ParentTable.StartsWith(publisherPrefix + "_"))
 				return $"{command.ParentTable}id";
 
 			if (!command.ParentTable.Contains('_'))

@@ -1,4 +1,4 @@
-﻿namespace Greg.Xrm.Command.Services.Output
+namespace Greg.Xrm.Command.Services.Output
 {
 	public class OutputToConsole : IOutput
 	{
@@ -6,7 +6,7 @@
 
 		public IOutput Write(object? text)
 		{
-			lock(syncRoot)
+			lock (syncRoot)
 			{
 				Console.Write(text);
 			}
@@ -15,7 +15,7 @@
 
 		public IOutput Write(object? text, ConsoleColor color)
 		{
-			lock(syncRoot)
+			lock (syncRoot)
 			{
 				var currentColor = Console.ForegroundColor;
 				Console.ForegroundColor = color;

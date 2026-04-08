@@ -1,9 +1,9 @@
-﻿using Greg.Xrm.Command.Model;
+using System.ServiceModel;
+using Greg.Xrm.Command.Model;
 using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Messages;
-using System.ServiceModel;
 
 namespace Greg.Xrm.Command.Commands.Key
 {
@@ -94,10 +94,10 @@ namespace Greg.Xrm.Command.Commands.Key
 
 				return result;
 			}
-			catch(CommandException ex)
+			catch (CommandException ex)
 			{
-				output.WriteLine("Failed", ConsoleColor.Red);	
-   				return CommandResult.Fail(ex.Message);
+				output.WriteLine("Failed", ConsoleColor.Red);
+				return CommandResult.Fail(ex.Message);
 			}
 			catch (FaultException<OrganizationServiceFault> ex)
 			{

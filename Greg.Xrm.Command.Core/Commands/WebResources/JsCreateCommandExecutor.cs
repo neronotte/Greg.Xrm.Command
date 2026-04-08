@@ -1,13 +1,13 @@
-﻿using Greg.Xrm.Command.Commands.WebResources.Templates;
+using Greg.Xrm.Command.Commands.WebResources.Templates;
+using Greg.Xrm.Command.Model;
 using Greg.Xrm.Command.Services;
 using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
 using Microsoft.PowerPlatform.Dataverse.Client;
-using Greg.Xrm.Command.Model;
 
 namespace Greg.Xrm.Command.Commands.WebResources
 {
-    public class JsCreateCommandExecutor : ICommandExecutor<JsCreateCommand>
+	public class JsCreateCommandExecutor : ICommandExecutor<JsCreateCommand>
 	{
 		private readonly IOutput output;
 		private readonly IOrganizationServiceRepository organizationServiceRepository;
@@ -19,14 +19,14 @@ namespace Greg.Xrm.Command.Commands.WebResources
 			IOrganizationServiceRepository organizationServiceRepository,
 			ISolutionRepository solutionRepository,
 			IJsTemplateManager jsTemplateManager)
-        {
+		{
 			this.output = output ?? throw new ArgumentNullException(nameof(output));
 			this.organizationServiceRepository = organizationServiceRepository ?? throw new ArgumentNullException(nameof(organizationServiceRepository));
 			this.solutionRepository = solutionRepository ?? throw new ArgumentNullException(nameof(solutionRepository));
 			this.jsTemplateManager = jsTemplateManager ?? throw new ArgumentNullException(nameof(jsTemplateManager));
 		}
 
-        public async Task<CommandResult> ExecuteAsync(JsCreateCommand command, CancellationToken cancellationToken)
+		public async Task<CommandResult> ExecuteAsync(JsCreateCommand command, CancellationToken cancellationToken)
 		{
 			// devo navigare l'albero delle cartelle per trovare la cartella radice del mio pacchetto di webresource
 			// (è la cartella che contiene il file .wr.pacx). 

@@ -1,4 +1,4 @@
-﻿namespace Greg.Xrm.Command.Services.Project
+namespace Greg.Xrm.Command.Services.Project
 {
 	public interface IPacxProjectRepository
 	{

@@ -1,11 +1,11 @@
-﻿using Greg.Xrm.Command.Parsing;
+using System.ComponentModel.DataAnnotations;
+using Greg.Xrm.Command.Parsing;
 using Greg.Xrm.Command.Services;
 using Microsoft.Xrm.Sdk.Metadata;
-using System.ComponentModel.DataAnnotations;
 
 namespace Greg.Xrm.Command.Commands.Relationship
 {
-    [Command("rel", "poly", "create", HelpText = "Creates a new many-to-one **polymorphic** relationship between Dataverse tables")]
+	[Command("rel", "poly", "create", HelpText = "Creates a new many-to-one **polymorphic** relationship between Dataverse tables")]
 	[Alias("rel", "poli", "create")]
 	[Alias("rel", "create", "poly")]
 	[Alias("rel", "create", "poli")]

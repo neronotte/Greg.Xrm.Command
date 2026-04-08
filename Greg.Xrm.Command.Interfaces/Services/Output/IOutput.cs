@@ -1,4 +1,4 @@
-﻿
+
 namespace Greg.Xrm.Command.Services.Output
 {
 	public interface IOutput

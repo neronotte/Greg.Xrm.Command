@@ -1,4 +1,4 @@
-﻿using Greg.Xrm.Command.Model;
+using Greg.Xrm.Command.Model;
 using Greg.Xrm.Command.Services;
 using Greg.Xrm.Command.Services.AttributeDeletion;
 using Greg.Xrm.Command.Services.Connection;
@@ -28,7 +28,7 @@ namespace Greg.Xrm.Command.Commands.Column
 			var userQueryRepository = new UserQuery.Repository();
 			var attributeDeletionService = new AttributeDeletionService(output, []);
 
-			
+
 			var command = new DeleteCommand
 			{
 				TableName = "ava_table1",
@@ -43,7 +43,7 @@ namespace Greg.Xrm.Command.Commands.Column
 			task.Wait();
 			Assert.IsNotNull(task);
 			Assert.IsFalse(task.IsFaulted, task.Exception!.Message);
-			
+
 			var result = task.Result;
 			Assert.IsNotNull(result);
 			Assert.IsTrue(result.IsSuccess, result.ErrorMessage);

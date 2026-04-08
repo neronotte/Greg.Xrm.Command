@@ -1,12 +1,12 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace Greg.Xrm.Command.Commands.Views
 {
-    [Command("view", "rename", HelpText = "Changes the name of a given view")]
+	[Command("view", "rename", HelpText = "Changes the name of a given view")]
 	public class RenameCommand
-    {
+	{
 		[Option("old", "o", Order = 1, HelpText = "The display name of the view to rename.")]
-        [Required]
+		[Required]
 		public string OldName { get; set; } = string.Empty;
 
 

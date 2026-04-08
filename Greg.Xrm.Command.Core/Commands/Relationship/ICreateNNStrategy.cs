@@ -1,4 +1,4 @@
-﻿namespace Greg.Xrm.Command.Commands.Relationship
+namespace Greg.Xrm.Command.Commands.Relationship
 {
 	public interface ICreateNNStrategy
 	{

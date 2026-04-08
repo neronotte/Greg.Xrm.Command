@@ -1,4 +1,4 @@
-﻿
+
 using Greg.Xrm.Command.Parsing;
 using Greg.Xrm.Command.Services;
 using Greg.Xrm.Command.Services.Project;
@@ -6,7 +6,7 @@ using Greg.Xrm.Command.Services.Project;
 namespace Greg.Xrm.Command.Commands.Projects
 {
 	[Command("project", "init", HelpText = "Initializes a new PACX project")]
-    public class InitProjectCommand : ICanProvideUsageExample
+	public class InitProjectCommand : ICanProvideUsageExample
 	{
 		[Option("conn", "c", Order = 1, HelpText = "The name of the authentication profile that allows to connect to the environment associated to the current command. It overrides the default auth profile set via `pacx auth select`. If not provided, the current default auth profile is used.")]
 		public string? AuthenticationProfileName { get; set; }

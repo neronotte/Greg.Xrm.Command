@@ -1,11 +1,11 @@
-﻿using Microsoft.Xrm.Sdk.Query;
-using Microsoft.Xrm.Sdk;
 using System.ServiceModel;
+using Greg.Xrm.Command.Model;
+using Microsoft.Extensions.Logging;
+using Microsoft.PowerPlatform.Dataverse.Client;
+using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Messages;
 using Microsoft.Xrm.Sdk.Metadata;
-using Greg.Xrm.Command.Model;
-using Microsoft.PowerPlatform.Dataverse.Client;
-using Microsoft.Extensions.Logging;
+using Microsoft.Xrm.Sdk.Query;
 
 namespace Greg.Xrm.Command.Services.ComponentResolution
 {
@@ -68,7 +68,7 @@ namespace Greg.Xrm.Command.Services.ComponentResolution
 				{
 					tableIdColumn = metadata.PrimaryIdAttribute;
 				}
-			}	
+			}
 
 
 

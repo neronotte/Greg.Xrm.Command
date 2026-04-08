@@ -1,4 +1,4 @@
-﻿using Greg.Xrm.Command.Commands.Auth;
+using Greg.Xrm.Command.Commands.Auth;
 using Greg.Xrm.Command.Parsing;
 using Greg.Xrm.Command.Services;
 using Microsoft.Extensions.Logging.Abstractions;

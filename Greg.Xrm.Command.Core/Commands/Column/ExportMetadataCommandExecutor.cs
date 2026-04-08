@@ -1,12 +1,12 @@
-﻿using Greg.Xrm.Command.Services.Connection;
+using System.Diagnostics;
+using System.ServiceModel;
+using System.Text.Json;
+using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Messages;
 using Microsoft.Xrm.Sdk.Metadata;
 using Newtonsoft.Json;
-using System.Diagnostics;
-using System.ServiceModel;
-using System.Text.Json;
 
 namespace Greg.Xrm.Command.Commands.Column
 {
@@ -16,12 +16,12 @@ namespace Greg.Xrm.Command.Commands.Column
 		private readonly IOrganizationServiceRepository organizationServiceRepository;
 
 		public ExportMetadataCommandExecutor(IOutput output, IOrganizationServiceRepository organizationServiceRepository)
-        {
+		{
 			this.output = output;
 			this.organizationServiceRepository = organizationServiceRepository;
 		}
 
-        public async Task<CommandResult> ExecuteAsync(ExportMetadataCommand command, CancellationToken cancellationToken)
+		public async Task<CommandResult> ExecuteAsync(ExportMetadataCommand command, CancellationToken cancellationToken)
 		{
 			this.output.Write($"Connecting to the current dataverse environment...");
 			var crm = await this.organizationServiceRepository.GetCurrentConnectionAsync();
@@ -40,7 +40,7 @@ namespace Greg.Xrm.Command.Commands.Column
 
 				text = JsonConvert.SerializeObject(response.AttributeMetadata, Formatting.Indented);
 			}
-			catch(FaultException<OrganizationServiceFault> ex)
+			catch (FaultException<OrganizationServiceFault> ex)
 			{
 				return CommandResult.Fail(ex.Message, ex);
 			}
@@ -73,7 +73,7 @@ namespace Greg.Xrm.Command.Commands.Column
 					});
 				}
 			}
-			catch(Exception ex)
+			catch (Exception ex)
 			{
 				return CommandResult.Fail("Error while trying to write on the generated file: " + ex.Message, ex);
 			}

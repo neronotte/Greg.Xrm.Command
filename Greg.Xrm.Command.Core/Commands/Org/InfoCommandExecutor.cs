@@ -1,11 +1,11 @@
-﻿using Greg.Xrm.Command.Services.Connection;
+using System.Xml.Linq;
+using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
 using Microsoft.Crm.Sdk.Messages;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Organization;
 using Microsoft.Xrm.Sdk.Query;
 using Newtonsoft.Json;
-using System.Xml.Linq;
 
 namespace Greg.Xrm.Command.Commands.Org
 {

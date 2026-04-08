@@ -1,5 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Greg.Xrm.Command
 {
@@ -14,7 +14,8 @@ namespace Greg.Xrm.Command
 				.Where(t => !t.IsAbstract && !t.IsInterface)
 				.Where(t => t.GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == genericCommandExecutorType))
 				.ToList()
-				.ForEach(t =>{
+				.ForEach(t =>
+				{
 					var specificCommandExecutorType = t.GetInterfaces().First(i => i.IsGenericType && i.GetGenericTypeDefinition() == genericCommandExecutorType);
 					services.AddTransient(specificCommandExecutorType, t);
 				});

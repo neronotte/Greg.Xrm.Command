@@ -1,5 +1,5 @@
-﻿using Greg.Xrm.Command.Model;
 using System.ComponentModel.DataAnnotations;
+using Greg.Xrm.Command.Model;
 
 namespace Greg.Xrm.Command.Commands.OptionSet
 {
@@ -22,7 +22,7 @@ namespace Greg.Xrm.Command.Commands.OptionSet
 		[Required]
 		public int Value { get; set; } = 0;
 
-		[Option("label", "l", Order =5, HelpText = "The new label to set on the option.")]
+		[Option("label", "l", Order = 5, HelpText = "The new label to set on the option.")]
 		public string? DisplayName { get; set; }
 
 		[Option("color", "col", Order = 6, HelpText = "The exadecimal color code (e.g. #FF5733) of the new color to set on the option. The leading # is not mandatory.")]

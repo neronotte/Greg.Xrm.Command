@@ -1,4 +1,4 @@
-﻿using Greg.Xrm.Command.Services.Settings;
+using Greg.Xrm.Command.Services.Settings;
 
 namespace Greg.Xrm.Command.Services.CommandHistory
 {
@@ -9,11 +9,11 @@ namespace Greg.Xrm.Command.Services.CommandHistory
 
 
 		public HistoryTracker(ISettingsRepository settings)
-        {
+		{
 			this.settings = settings;
 		}
 
-        public async Task AddAsync(params string[] command)
+		public async Task AddAsync(params string[] command)
 		{
 			var history = await this.settings.GetAsync<CommandHistory>(CommandHistoryKey);
 			history ??= new CommandHistory();

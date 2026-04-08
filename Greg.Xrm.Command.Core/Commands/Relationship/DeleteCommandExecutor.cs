@@ -1,8 +1,8 @@
-﻿using Greg.Xrm.Command.Services.Connection;
+using System.ServiceModel;
+using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Messages;
-using System.ServiceModel;
 
 namespace Greg.Xrm.Command.Commands.Relationship
 {

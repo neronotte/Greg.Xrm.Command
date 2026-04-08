@@ -1,9 +1,9 @@
-﻿using System.Security.Cryptography;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace Greg.Xrm.Command.Services.Encryption
 {
-    public class AesEncryption
+	public class AesEncryption
 	{
 		public static string Encrypt(string plaintext, byte[] key, byte[] iv)
 		{
@@ -29,7 +29,7 @@ namespace Greg.Xrm.Command.Services.Encryption
 		public static string Decrypt(string ciphertext, byte[] key, byte[] iv)
 		{
 			using Aes aesAlg = Aes.Create();
-			
+
 			aesAlg.Key = key;
 			aesAlg.IV = iv;
 			ICryptoTransform decryptor = aesAlg.CreateDecryptor(aesAlg.Key, aesAlg.IV);

@@ -1,6 +1,6 @@
-﻿namespace Greg.Xrm.Command.Services.Plugin
+namespace Greg.Xrm.Command.Services.Plugin
 {
-public partial class PluginRegistrationToolkit
+	public partial class PluginRegistrationToolkit
 	{
 		/// <summary>
 		/// The plugin execution mode

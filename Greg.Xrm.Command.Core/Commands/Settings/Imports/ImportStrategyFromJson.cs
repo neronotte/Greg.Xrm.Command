@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 
 namespace Greg.Xrm.Command.Commands.Settings.Imports
 {
@@ -7,16 +7,16 @@ namespace Greg.Xrm.Command.Commands.Settings.Imports
 		private readonly Stream stream;
 
 		public ImportStrategyFromJson(Stream stream)
-        {
+		{
 			this.stream = stream;
 		}
 
-        public async Task<IReadOnlyList<IImportAction>> ImportAsync(CancellationToken cancellationToken)
+		public async Task<IReadOnlyList<IImportAction>> ImportAsync(CancellationToken cancellationToken)
 		{
 			var actions = new List<IImportAction>();
 
 			var text = await new StreamReader(this.stream).ReadToEndAsync(cancellationToken);
-			
+
 			var settings = JsonConvert.DeserializeObject<Model[]>(text);
 
 			if (settings == null || settings.Length == 0)

@@ -1,13 +1,13 @@
-﻿using Greg.Xrm.Command.Services.Output;
+using Greg.Xrm.Command.Services.Output;
 using Greg.Xrm.Command.Services.Settings;
 
 namespace Greg.Xrm.Command.Commands.Plugin
 {
 	public class UpdateFrameworkPathCommandExecutor(
-		IOutput output, 
+		IOutput output,
 		ISettingsRepository settingsRepository) : ICommandExecutor<UpdateFrameworkPathCommand>
 	{
-		
+
 		public async Task<CommandResult> ExecuteAsync(UpdateFrameworkPathCommand command, CancellationToken cancellationToken)
 		{
 			string newPath = command.NewPath.Equals("DEFAULT", StringComparison.OrdinalIgnoreCase)

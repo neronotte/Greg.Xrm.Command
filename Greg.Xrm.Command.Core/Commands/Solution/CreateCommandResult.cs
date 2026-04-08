@@ -1,4 +1,4 @@
-﻿namespace Greg.Xrm.Command.Commands.Solution
+namespace Greg.Xrm.Command.Commands.Solution
 {
 	public class CreateCommandResult : CommandResult
 	{

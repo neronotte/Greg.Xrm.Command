@@ -1,4 +1,4 @@
-﻿namespace Greg.Xrm.Command.Commands.Table.Migration
+namespace Greg.Xrm.Command.Commands.Table.Migration
 {
 	public class MigrationActionUpdateTableColumn : IMigrationAction
 	{

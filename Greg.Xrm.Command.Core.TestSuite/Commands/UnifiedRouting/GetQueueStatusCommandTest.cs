@@ -1,4 +1,4 @@
-﻿namespace Greg.Xrm.Command.Commands.UnifiedRouting
+namespace Greg.Xrm.Command.Commands.UnifiedRouting
 {
 	[TestClass]
 	public class GetQueueStatusCommandTest

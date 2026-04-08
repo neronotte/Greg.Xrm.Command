@@ -1,11 +1,11 @@
-﻿using Greg.Xrm.Command.Services.Connection;
+using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
 using Greg.Xrm.Command.Services.Plugin;
 
 namespace Greg.Xrm.Command.Commands.Plugin.Step
 {
 	public class UnregisterCommandExecutor(
-		IOutput output, 
+		IOutput output,
 		IOrganizationServiceRepository organizationServiceRepository,
 		IPluginTypeRepository pluginTypeRepository,
 		ISdkMessageProcessingStepRepository sdkMessageProcessingStepRepository,
@@ -60,7 +60,7 @@ namespace Greg.Xrm.Command.Commands.Plugin.Step
 				}
 				output.WriteLine("Done", ConsoleColor.Green);
 			}
-			catch(Exception ex)
+			catch (Exception ex)
 			{
 				output.WriteLine("Failed", ConsoleColor.Red);
 				return CommandResult.Fail("An error occurred while retrieving the plugin step: " + ex.Message);
@@ -101,7 +101,7 @@ namespace Greg.Xrm.Command.Commands.Plugin.Step
 					output.WriteLine("Done", ConsoleColor.Green);
 				}
 			}
-			catch(Exception ex)
+			catch (Exception ex)
 			{
 				output.WriteLine("Failed", ConsoleColor.Red);
 				return CommandResult.Fail("An error occurred while deleting the plugin step: " + ex.Message);

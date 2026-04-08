@@ -1,4 +1,4 @@
-﻿
+
 using Greg.Xrm.Command.Commands.Views.Model;
 using Greg.Xrm.Command.Commands.WebResources.PushLogic;
 using Greg.Xrm.Command.Services.Connection;
@@ -29,7 +29,7 @@ namespace Greg.Xrm.Command.Commands.Views
 				await view.DeleteAsync(crm);
 				output.WriteLine("Done", ConsoleColor.Green);
 			}
-			catch(Exception ex)
+			catch (Exception ex)
 			{
 				output.WriteLine("Error", ConsoleColor.Red);
 				return CommandResult.Fail(ex.Message, ex);

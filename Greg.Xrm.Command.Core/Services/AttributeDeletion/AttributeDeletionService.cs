@@ -1,4 +1,4 @@
-﻿using Greg.Xrm.Command.Model;
+using Greg.Xrm.Command.Model;
 using Greg.Xrm.Command.Services.Output;
 using Microsoft.Crm.Sdk.Messages;
 using Microsoft.PowerPlatform.Dataverse.Client;
@@ -13,13 +13,13 @@ namespace Greg.Xrm.Command.Services.AttributeDeletion
 	{
 		public async Task DeleteAttributeAsync(IOrganizationServiceAsync2 crm, AttributeMetadata attribute, DependencyList dependencies, bool? simulation = false)
 		{
-			foreach(var strategy in strategies)
+			foreach (var strategy in strategies)
 			{
 				try
 				{
 					await strategy.HandleAsync(crm, attribute, dependencies);
 				}
-				catch(AttributeDeletionException ex)
+				catch (AttributeDeletionException ex)
 				{
 					output.WriteLine($"Error while trying to remove a dependency on {strategy.GetType().Name}: " + ex.Message, ConsoleColor.Red);
 				}

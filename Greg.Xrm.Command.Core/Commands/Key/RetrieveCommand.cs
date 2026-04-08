@@ -1,5 +1,5 @@
-﻿using Newtonsoft.Json;
 using System.ComponentModel.DataAnnotations;
+using Newtonsoft.Json;
 
 namespace Greg.Xrm.Command.Commands.Key
 {

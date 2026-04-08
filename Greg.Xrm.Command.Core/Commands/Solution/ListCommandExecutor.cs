@@ -1,10 +1,10 @@
-﻿
-using Greg.Xrm.Command.Services.Connection;
-using Greg.Xrm.Command.Services.Output;
-using Microsoft.Xrm.Sdk.Query;
-using Microsoft.Xrm.Sdk;
+
 using System.ServiceModel;
 using Greg.Xrm.Command.Commands.Solution.Model;
+using Greg.Xrm.Command.Services.Connection;
+using Greg.Xrm.Command.Services.Output;
+using Microsoft.Xrm.Sdk;
+using Microsoft.Xrm.Sdk.Query;
 using Newtonsoft.Json;
 
 namespace Greg.Xrm.Command.Commands.Solution
@@ -12,7 +12,7 @@ namespace Greg.Xrm.Command.Commands.Solution
 	public class ListCommandExecutor(
 	IOutput output,
 	IOrganizationServiceRepository organizationServiceRepository)
-	
+
 	: ICommandExecutor<ListCommand>
 	{
 		public async Task<CommandResult> ExecuteAsync(ListCommand command, CancellationToken cancellationToken)
@@ -168,7 +168,7 @@ namespace Greg.Xrm.Command.Commands.Solution
 				solutionList.IsManaged ? "Managed" : "Unmanaged",
 				solutionList.PublisherUniqueName ?? string.Empty,
 				solutionList.ModifiedOn.ToString("yyyy-MM-dd HH:mm:ss"),
-			], 
+			],
 			FormatSolutionRow);
 		}
 

@@ -1,4 +1,5 @@
-﻿using Autofac;
+using System.Diagnostics;
+using Autofac;
 using Autofac.Core;
 using Autofac.Extensions.DependencyInjection;
 using Greg.Xrm.Command;
@@ -14,7 +15,6 @@ using Greg.Xrm.Command.Updates;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Spectre.Console;
-using System.Diagnostics;
 
 internal class Program
 {

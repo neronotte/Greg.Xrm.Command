@@ -1,10 +1,10 @@
-﻿using Greg.Xrm.Command.Parsing;
-using Greg.Xrm.Command.Services;
 using System.ComponentModel.DataAnnotations;
+using Greg.Xrm.Command.Parsing;
+using Greg.Xrm.Command.Services;
 
 namespace Greg.Xrm.Command.Commands.WebResources
 {
-	[Command("webresources", "setEnvImage", HelpText=  "Sets the image that will be shown in the top left corner of the title bar. This setting applies for all MDAs of a given environment.")]
+	[Command("webresources", "setEnvImage", HelpText = "Sets the image that will be shown in the top left corner of the title bar. This setting applies for all MDAs of a given environment.")]
 	[Alias("webresources", "setLogo")]
 	[Alias("webresources", "setOrgImage")]
 	[Alias("wr", "setEnvImage")]
@@ -12,12 +12,12 @@ namespace Greg.Xrm.Command.Commands.WebResources
 	[Alias("wr", "setOrgImage")]
 	public class SetEnvImageCommand : ICanProvideUsageExample
 	{
-		[Option("name", "n", Order  =1, HelpText = "The unique name of the web resource to set as the organization image. Must be a .png, .jpg or .gif image up to 200x50px.")]
+		[Option("name", "n", Order = 1, HelpText = "The unique name of the web resource to set as the organization image. Must be a .png, .jpg or .gif image up to 200x50px.")]
 		[Required]
 		public string WebResourceUniqueName { get; set; } = string.Empty;
 
 
-		[Option("cloneTheme", "c", Order = 2, HelpText = "If true, the theme will be cloned and the new image will be set as the organization image.", DefaultValue =false)]
+		[Option("cloneTheme", "c", Order = 2, HelpText = "If true, the theme will be cloned and the new image will be set as the organization image.", DefaultValue = false)]
 		public bool CloneTheme { get; set; } = false;
 
 		public void WriteUsageExamples(MarkdownWriter writer)

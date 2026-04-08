@@ -1,4 +1,4 @@
-﻿using Autofac;
+using Autofac;
 using Greg.Xrm.Command.Parsing;
 
 namespace Greg.Xrm.Command

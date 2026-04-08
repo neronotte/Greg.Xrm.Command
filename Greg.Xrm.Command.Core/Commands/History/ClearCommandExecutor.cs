@@ -1,4 +1,4 @@
-﻿using Greg.Xrm.Command.Services.CommandHistory;
+using Greg.Xrm.Command.Services.CommandHistory;
 using Greg.Xrm.Command.Services.Output;
 
 namespace Greg.Xrm.Command.Commands.History
@@ -22,7 +22,7 @@ namespace Greg.Xrm.Command.Commands.History
 			await this.historyTracker.ClearAsync();
 
 			this.output.WriteLine("Done", ConsoleColor.Green);
-			
+
 			return CommandResult.Success();
 		}
 	}

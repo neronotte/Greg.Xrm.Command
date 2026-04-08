@@ -1,9 +1,9 @@
-﻿using Greg.Xrm.Command.Services.Connection;
+using System.ServiceModel;
+using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Messages;
 using Newtonsoft.Json;
-using System.ServiceModel;
 
 namespace Greg.Xrm.Command.Commands.Key
 {
@@ -37,7 +37,7 @@ namespace Greg.Xrm.Command.Commands.Key
 
 				var dto = new
 				{
-					Table= response.EntityKeyMetadata.EntityLogicalName,
+					Table = response.EntityKeyMetadata.EntityLogicalName,
 					response.EntityKeyMetadata.SchemaName,
 					DisplayName = response.EntityKeyMetadata.DisplayName?.UserLocalizedLabel?.Label,
 					Columns = response.EntityKeyMetadata.KeyAttributes,

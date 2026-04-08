@@ -1,8 +1,8 @@
-﻿
+
+using System.Xml.Linq;
 using Greg.Xrm.Command.Commands.Views.Model;
 using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
-using System.Xml.Linq;
 
 namespace Greg.Xrm.Command.Commands.Views
 {
@@ -23,7 +23,8 @@ namespace Greg.Xrm.Command.Commands.Views
 			if (view == null) return result;
 
 
-			if (!string.IsNullOrWhiteSpace(view.layoutxml)) {
+			if (!string.IsNullOrWhiteSpace(view.layoutxml))
+			{
 
 				output.WriteLine()
 					.WriteLine("--- LayoutXml ---------------------------------------------")
@@ -32,7 +33,7 @@ namespace Greg.Xrm.Command.Commands.Views
 				{
 					output.WriteLine(XDocument.Parse(view.layoutxml));
 				}
-				catch(Exception ex)
+				catch (Exception ex)
 				{
 					output.WriteLine(ex.ToString());
 

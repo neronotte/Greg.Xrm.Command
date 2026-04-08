@@ -1,4 +1,4 @@
-﻿using Greg.Xrm.Command.Services.Output;
+using Greg.Xrm.Command.Services.Output;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
 
@@ -8,7 +8,7 @@ namespace Greg.Xrm.Command.Services.Plugin
 	/// Simple toolkit to register plugins via code
 	/// </summary>
 	public partial class PluginRegistrationToolkit(
-		IOrganizationServiceAsync2 crm, 
+		IOrganizationServiceAsync2 crm,
 		IOutput output)
 	{
 
@@ -92,7 +92,7 @@ namespace Greg.Xrm.Command.Services.Plugin
 			}
 			catch
 			{
-				for(var i = stuffToDelete.Count - 1; i >= 0; i--)
+				for (var i = stuffToDelete.Count - 1; i >= 0; i--)
 				{
 					var entity = stuffToDelete[i];
 					this.Trace("Deleting {0} {1} due to error during registration", entity.LogicalName, entity.Id);
@@ -110,16 +110,16 @@ namespace Greg.Xrm.Command.Services.Plugin
 
 
 		private SdkMessageProcessingStep CreateSdkMessageProcessingStep(
-			PluginType pluginType, 
-			SdkMessage sdkMessage, 
-			SdkMessageFilter? sdkMessageFilter, 
-			string[] filteringAttributes, 
-			Mode mode, 
-			Stage stage, 
-			Deployment deployment, 
-			int rank, 
-			string? description, 
-			string? unsecureConfig, 
+			PluginType pluginType,
+			SdkMessage sdkMessage,
+			SdkMessageFilter? sdkMessageFilter,
+			string[] filteringAttributes,
+			Mode mode,
+			Stage stage,
+			Deployment deployment,
+			int rank,
+			string? description,
+			string? unsecureConfig,
 			string? secureConfig)
 		{
 			ArgumentNullException.ThrowIfNull(pluginType);

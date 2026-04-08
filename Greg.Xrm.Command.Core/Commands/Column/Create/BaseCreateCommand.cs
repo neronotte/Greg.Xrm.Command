@@ -1,5 +1,5 @@
-﻿using Microsoft.Xrm.Sdk.Metadata;
 using System.ComponentModel.DataAnnotations;
+using Microsoft.Xrm.Sdk.Metadata;
 
 namespace Greg.Xrm.Command.Commands.Column.Create
 {

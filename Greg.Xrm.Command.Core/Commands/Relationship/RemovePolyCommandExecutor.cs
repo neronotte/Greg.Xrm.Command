@@ -1,4 +1,4 @@
-﻿using Greg.Xrm.Command.Services.Connection;
+using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
 using Microsoft.Xrm.Sdk.Messages;
 using Microsoft.Xrm.Sdk.Metadata;
@@ -7,7 +7,7 @@ namespace Greg.Xrm.Command.Commands.Relationship
 {
 	public class RemovePolyCommandExecutor(
 		IOutput output,
-		IOrganizationServiceRepository organizationServiceRepository) 
+		IOrganizationServiceRepository organizationServiceRepository)
 		: ICommandExecutor<RemovePolyCommand>
 	{
 		private readonly IOutput output = output;
@@ -77,7 +77,7 @@ namespace Greg.Xrm.Command.Commands.Relationship
 
 				return CommandResult.Success();
 			}
-			catch(Exception ex)
+			catch (Exception ex)
 			{
 				this.output.WriteLine("Failed", ConsoleColor.Red);
 				return CommandResult.Fail(ex.Message, ex);

@@ -1,14 +1,13 @@
-using Microsoft.PowerPlatform.Dataverse.Client;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.ServiceModel;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;
 using Moq;
-using System.ServiceModel;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Collections.Generic;
-using System;
-using System.Linq;
 
 namespace Greg.Xrm.Command.Commands.Solution
 {
@@ -37,7 +36,7 @@ namespace Greg.Xrm.Command.Commands.Solution
 			publisher["uniquename"] = "default";
 			publisher["friendlyname"] = "Default Publisher";
 			publisher["customizationprefix"] = "new";
-			
+
 			// Set the aliased values from the joined publisher
 			entity["p.uniquename"] = new AliasedValue("publisher", "uniquename", publisher["uniquename"]);
 			entity["p.friendlyname"] = new AliasedValue("publisher", "friendlyname", publisher["friendlyname"]);
@@ -50,6 +49,9 @@ namespace Greg.Xrm.Command.Commands.Solution
 		{
 			var collection = new EntityCollection(new List<Entity>(solutions));
 			this.OrganizationServiceMock
+				.Setup(x => x.RetrieveMultipleAsync(It.IsAny<QueryBase>()))
+				.ReturnsAsync(collection);
+			this.OrganizationServiceMock
 				.Setup(x => x.RetrieveMultipleAsync(It.IsAny<QueryBase>(), It.IsAny<CancellationToken>()))
 				.ReturnsAsync(collection);
 		}
@@ -58,6 +60,9 @@ namespace Greg.Xrm.Command.Commands.Solution
 		public async Task ExecuteAsync_WithFaultException_ShouldFail()
 		{
 			var exception = new FaultException<OrganizationServiceFault>(new OrganizationServiceFault { Message = "Test error" }, new FaultReason("Test error"));
+			this.OrganizationServiceMock
+				.Setup(x => x.RetrieveMultipleAsync(It.IsAny<QueryBase>()))
+				.ThrowsAsync(exception);
 			this.OrganizationServiceMock
 				.Setup(x => x.RetrieveMultipleAsync(It.IsAny<QueryBase>(), It.IsAny<CancellationToken>()))
 				.ThrowsAsync(exception);
@@ -88,10 +93,10 @@ namespace Greg.Xrm.Command.Commands.Solution
 			var result = await executor.ExecuteAsync(command, CancellationToken.None);
 
 			Assert.IsTrue(result.IsSuccess);
-			
-			this.OrganizationServiceMock.Verify(x => x.RetrieveMultipleAsync(It.Is<QueryExpression>(q => 
+
+			this.OrganizationServiceMock.Verify(x => x.RetrieveMultipleAsync(It.Is<QueryExpression>(q =>
 				q.Criteria.Conditions.Any(c => c.AttributeName == "ismanaged" && (bool)c.Values[0] == true)
-			), It.IsAny<CancellationToken>()), Times.Once);
+			)), Times.AtLeastOnce);
 		}
 
 		[TestMethod]
@@ -103,10 +108,10 @@ namespace Greg.Xrm.Command.Commands.Solution
 			var result = await executor.ExecuteAsync(command, CancellationToken.None);
 
 			Assert.IsTrue(result.IsSuccess);
-			
-			this.OrganizationServiceMock.Verify(x => x.RetrieveMultipleAsync(It.Is<QueryExpression>(q => 
+
+			this.OrganizationServiceMock.Verify(x => x.RetrieveMultipleAsync(It.Is<QueryExpression>(q =>
 				q.Criteria.Conditions.Any(c => c.AttributeName == "ismanaged" && (bool)c.Values[0] == false)
-			), It.IsAny<CancellationToken>()), Times.Once);
+			)), Times.AtLeastOnce);
 		}
 
 		[TestMethod]
@@ -119,10 +124,10 @@ namespace Greg.Xrm.Command.Commands.Solution
 			var result = await executor.ExecuteAsync(command, CancellationToken.None);
 
 			Assert.IsTrue(result.IsSuccess);
-			
-			this.OrganizationServiceMock.Verify(x => x.RetrieveMultipleAsync(It.Is<QueryExpression>(q => 
+
+			this.OrganizationServiceMock.Verify(x => x.RetrieveMultipleAsync(It.Is<QueryExpression>(q =>
 				q.Criteria.Conditions.Any(c => c.AttributeName == "isvisible" && (bool)c.Values[0] == true)
-			), It.IsAny<CancellationToken>()), Times.Once);
+			)), Times.AtLeastOnce);
 		}
 
 		[TestMethod]

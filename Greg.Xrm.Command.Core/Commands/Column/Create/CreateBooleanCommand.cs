@@ -1,4 +1,4 @@
-﻿using Greg.Xrm.Command.Parsing;
+using Greg.Xrm.Command.Parsing;
 using Greg.Xrm.Command.Services;
 
 namespace Greg.Xrm.Command.Commands.Column.Create

@@ -1,4 +1,4 @@
-﻿namespace Greg.Xrm.Command.Services.AttributeDeletion
+namespace Greg.Xrm.Command.Services.AttributeDeletion
 {
 	public class AttributeDeletionException : Exception
 	{

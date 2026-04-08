@@ -1,4 +1,4 @@
-﻿using Greg.Xrm.Command.Commands.UnifiedRouting.Model;
+using Greg.Xrm.Command.Commands.UnifiedRouting.Model;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;
@@ -10,8 +10,9 @@ namespace Greg.Xrm.Command.Commands.UnifiedRouting.Repository
 		private readonly IOrganizationServiceAsync2 crm;
 
 
-		public AgentStatusHistoryRepository(IOrganizationServiceAsync2 crm) {
-			this.crm = crm;        
+		public AgentStatusHistoryRepository(IOrganizationServiceAsync2 crm)
+		{
+			this.crm = crm;
 		}
 
 

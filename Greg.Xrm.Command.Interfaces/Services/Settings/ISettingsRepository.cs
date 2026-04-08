@@ -1,4 +1,4 @@
-﻿namespace Greg.Xrm.Command.Services.Settings
+namespace Greg.Xrm.Command.Services.Settings
 {
 	public interface ISettingsRepository
 	{

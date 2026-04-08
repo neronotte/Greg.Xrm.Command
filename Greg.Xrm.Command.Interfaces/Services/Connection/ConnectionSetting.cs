@@ -1,4 +1,4 @@
-﻿using Greg.Xrm.Command.Services.Encryption;
+using Greg.Xrm.Command.Services.Encryption;
 using Newtonsoft.Json;
 
 namespace Greg.Xrm.Command.Services.Connection
@@ -166,7 +166,7 @@ namespace Greg.Xrm.Command.Services.Connection
 			if (iv.Length != 16) throw new ArgumentException("The IV must be 16 bytes long.", nameof(iv));
 
 
-			this.connectionStrings[name] = AesEncryption.Encrypt( connectionString, key, iv);
+			this.connectionStrings[name] = AesEncryption.Encrypt(connectionString, key, iv);
 		}
 
 

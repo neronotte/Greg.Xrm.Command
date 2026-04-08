@@ -1,11 +1,11 @@
-﻿using Greg.Xrm.Command.Commands.Table.Migration;
+using Greg.Xrm.Command.Commands.Table.Migration;
 using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
 using Microsoft.Xrm.Sdk.Query;
 
 namespace Greg.Xrm.Command.Commands.Table
 {
-    public class TableDefineMigrationStrategyCommandExecutor : ICommandExecutor<TableDefineMigrationStrategyCommand>
+	public class TableDefineMigrationStrategyCommandExecutor : ICommandExecutor<TableDefineMigrationStrategyCommand>
 	{
 		private readonly IOutput output;
 		private readonly IOrganizationServiceRepository organizationServiceRepository;

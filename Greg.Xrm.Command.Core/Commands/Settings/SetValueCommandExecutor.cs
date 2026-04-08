@@ -1,8 +1,8 @@
-﻿
+
+using System.ServiceModel;
 using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
 using Microsoft.Xrm.Sdk;
-using System.ServiceModel;
 
 namespace Greg.Xrm.Command.Commands.Settings
 {
@@ -55,7 +55,7 @@ namespace Greg.Xrm.Command.Commands.Settings
 
 				return CommandResult.Success();
 			}
-			catch(FaultException<OrganizationServiceFault> ex)
+			catch (FaultException<OrganizationServiceFault> ex)
 			{
 				this.output.WriteLine("ERROR", ConsoleColor.Red);
 				this.output.WriteLine(ex.Message, ConsoleColor.Red);
@@ -63,7 +63,7 @@ namespace Greg.Xrm.Command.Commands.Settings
 				return CommandResult.Fail("Error updating setting value: " + ex.Message, ex);
 			}
 
-			
+
 		}
 	}
 }
