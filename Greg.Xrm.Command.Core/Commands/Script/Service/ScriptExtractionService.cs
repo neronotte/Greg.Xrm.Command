@@ -51,7 +51,7 @@ namespace Greg.Xrm.Command.Commands.Script.Service
             var allEntities = new List<Extractor_EntityMetadata>();
             foreach (var solutionName in solutionNames)
             {
-                var entities = await metadataExtractor.GetEntitiesBySolutionAsync(solutionName, prefixes);
+                var entities = await metadataExtractor.GetEntitiesBySolutionAsync(solutionName, prefixes) ?? new List<Extractor_EntityMetadata>();
                 allEntities.AddRange(entities);
             }
             allEntities = allEntities.GroupBy(e => e.SchemaName).Select(g => g.First()).ToList();

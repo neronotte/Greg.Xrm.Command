@@ -63,7 +63,7 @@ namespace Greg.Xrm.Command.Commands.Script
 			var command = Utility.TestParseCommand<ScriptTableCommand>(
 				"script", "table",
 				"--tableName", "incident",
-				"--customPrefixs", "ava_",
+				"--customPrefixes", "ava_",
 				"--output", "C:/output",
 				"--scriptFileName", "incident_datamodel.ps1",
 				"--stateFileName", "incident_state-fields.csv",

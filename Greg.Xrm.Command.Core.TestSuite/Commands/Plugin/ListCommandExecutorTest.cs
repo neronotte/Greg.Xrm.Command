@@ -185,7 +185,7 @@ namespace Greg.Xrm.Command.Commands.Plugin
 			var executor = CreateExecutor(output, orgRepo, solutionRepo, ansi, asmRepo, pkgRepo, typeRepo, stepRepo, imgRepo);
 			await executor.ExecuteAsync(new ListCommand { Name = "Contoso" }, CancellationToken.None);
 
-			Assert.AreEqual(ConditionOperator.Contains, capturedOp);
+			Assert.AreEqual(ConditionOperator.Like, capturedOp);
 		}
 
 		[TestMethod]
