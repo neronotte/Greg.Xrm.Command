@@ -26,7 +26,7 @@ namespace Greg.Xrm.Command.Commands.Solution
 		{
 			var existingSolution = new EntityCollection(new List<Entity> { new Entity("solution") });
 			this.OrganizationServiceMock
-				.Setup(x => x.RetrieveMultipleAsync(It.Is<QueryExpression>(q => q.EntityName == "solution")))
+				.Setup(x => x.RetrieveMultipleAsync(It.Is<QueryExpression>(q => q.EntityName == "solution"), It.IsAny<CancellationToken>()))
 				.ReturnsAsync(existingSolution);
 
 			var command = new CreateCommand { DisplayName = "Existing Solution" };
@@ -40,21 +40,14 @@ namespace Greg.Xrm.Command.Commands.Solution
 		public async Task ExecuteAsync_WithoutPublisherDetails_ShouldThrowException()
 		{
 			this.OrganizationServiceMock
-				.Setup(x => x.RetrieveMultipleAsync(It.Is<QueryExpression>(q => q.EntityName == "solution")))
+				.Setup(x => x.RetrieveMultipleAsync(It.Is<QueryExpression>(q => q.EntityName == "solution"), It.IsAny<CancellationToken>()))
 				.ReturnsAsync(new EntityCollection());
 
 			// No publisher info provided
 			var command = new CreateCommand { DisplayName = "New Solution" };
 			
-			try
-			{
-				await executor.ExecuteAsync(command, CancellationToken.None);
-				Assert.Fail("Expected CommandException was not thrown.");
-			}
-			catch (CommandException ex)
-			{
-				Assert.IsTrue(ex.Message.Contains("publisher"));
-			}
+			var ex = await Assert.ThrowsExceptionAsync<CommandException>(() => executor.ExecuteAsync(command, CancellationToken.None));
+			Assert.IsTrue(ex.Message.Contains("publisher"));
 		}
 
 		[TestMethod]
@@ -64,18 +57,18 @@ namespace Greg.Xrm.Command.Commands.Solution
 			var existingPublisherId = Guid.NewGuid();
 
 			this.OrganizationServiceMock
-				.Setup(x => x.RetrieveMultipleAsync(It.Is<QueryExpression>(q => q.EntityName == "solution")))
+				.Setup(x => x.RetrieveMultipleAsync(It.Is<QueryExpression>(q => q.EntityName == "solution"), It.IsAny<CancellationToken>()))
 				.ReturnsAsync(new EntityCollection());
 
 			var existingPublisher = new Entity("publisher") { Id = existingPublisherId };
 			var publisherCollection = new EntityCollection(new List<Entity> { existingPublisher });
 			
 			this.OrganizationServiceMock
-				.Setup(x => x.RetrieveMultipleAsync(It.Is<QueryExpression>(q => q.EntityName == "publisher")))
+				.Setup(x => x.RetrieveMultipleAsync(It.Is<QueryExpression>(q => q.EntityName == "publisher"), It.IsAny<CancellationToken>()))
 				.ReturnsAsync(publisherCollection);
 
 			this.OrganizationServiceMock
-				.Setup(x => x.CreateAsync(It.Is<Entity>(e => e.LogicalName == "solution")))
+				.Setup(x => x.CreateAsync(It.Is<Entity>(e => e.LogicalName == "solution"), It.IsAny<CancellationToken>()))
 				.ReturnsAsync(expectedSolutionId);
 
 			var command = new CreateCommand { DisplayName = "My Solution", PublisherUniqueName = "my_pub" };
@@ -88,7 +81,7 @@ namespace Greg.Xrm.Command.Commands.Solution
 
 			this.OrganizationServiceMock.Verify(x => x.CreateAsync(It.Is<Entity>(e => 
 				e.LogicalName == "solution"
-			)), Times.Once);
+			), It.IsAny<CancellationToken>()), Times.Once);
 		}
 
 		[TestMethod]
@@ -98,20 +91,20 @@ namespace Greg.Xrm.Command.Commands.Solution
 			var expectedSolutionId = Guid.NewGuid();
 
 			this.OrganizationServiceMock
-				.Setup(x => x.RetrieveMultipleAsync(It.Is<QueryExpression>(q => q.EntityName == "solution")))
+				.Setup(x => x.RetrieveMultipleAsync(It.Is<QueryExpression>(q => q.EntityName == "solution"), It.IsAny<CancellationToken>()))
 				.ReturnsAsync(new EntityCollection());
 
 			// Publisher not found
 			this.OrganizationServiceMock
-				.Setup(x => x.RetrieveMultipleAsync(It.Is<QueryExpression>(q => q.EntityName == "publisher")))
+				.Setup(x => x.RetrieveMultipleAsync(It.Is<QueryExpression>(q => q.EntityName == "publisher"), It.IsAny<CancellationToken>()))
 				.ReturnsAsync(new EntityCollection());
 
 			this.OrganizationServiceMock
-				.Setup(x => x.CreateAsync(It.Is<Entity>(e => e.LogicalName == "publisher")))
+				.Setup(x => x.CreateAsync(It.Is<Entity>(e => e.LogicalName == "publisher"), It.IsAny<CancellationToken>()))
 				.ReturnsAsync(expectedPublisherId);
 
 			this.OrganizationServiceMock
-				.Setup(x => x.CreateAsync(It.Is<Entity>(e => e.LogicalName == "solution")))
+				.Setup(x => x.CreateAsync(It.Is<Entity>(e => e.LogicalName == "solution"), It.IsAny<CancellationToken>()))
 				.ReturnsAsync(expectedSolutionId);
 
 			var command = new CreateCommand { DisplayName = "My Solution", PublisherCustomizationPrefix = "new" };
@@ -123,12 +116,12 @@ namespace Greg.Xrm.Command.Commands.Solution
 				e.LogicalName == "publisher" &&
 				(string)e["customizationprefix"] == "new" &&
 				(int)e["customizationoptionvalueprefix"] == 10000
-			)), Times.Once);
+			), It.IsAny<CancellationToken>()), Times.Once);
 
 			this.OrganizationServiceMock.Verify(x => x.CreateAsync(It.Is<Entity>(e => 
 				e.LogicalName == "solution" &&
 				((EntityReference)e["publisherid"]).Id == expectedPublisherId
-			)), Times.Once);
+			), It.IsAny<CancellationToken>()), Times.Once);
 		}
 
 		[TestMethod]
@@ -138,26 +131,26 @@ namespace Greg.Xrm.Command.Commands.Solution
 			var expectedPublisherId = Guid.NewGuid();
 
 			this.OrganizationServiceMock
-				.Setup(x => x.RetrieveMultipleAsync(It.Is<QueryExpression>(q => q.EntityName == "solution")))
+				.Setup(x => x.RetrieveMultipleAsync(It.Is<QueryExpression>(q => q.EntityName == "solution"), It.IsAny<CancellationToken>()))
 				.ReturnsAsync(new EntityCollection());
 
 			this.OrganizationServiceMock
-				.Setup(x => x.RetrieveMultipleAsync(It.Is<QueryExpression>(q => q.EntityName == "publisher")))
+				.Setup(x => x.RetrieveMultipleAsync(It.Is<QueryExpression>(q => q.EntityName == "publisher"), It.IsAny<CancellationToken>()))
 				.ReturnsAsync(new EntityCollection());
 
 			this.OrganizationServiceMock
-				.Setup(x => x.CreateAsync(It.Is<Entity>(e => e.LogicalName == "publisher")))
+				.Setup(x => x.CreateAsync(It.Is<Entity>(e => e.LogicalName == "publisher"), It.IsAny<CancellationToken>()))
 				.ReturnsAsync(expectedPublisherId);
 
 			this.OrganizationServiceMock
-				.Setup(x => x.CreateAsync(It.Is<Entity>(e => e.LogicalName == "solution")))
+				.Setup(x => x.CreateAsync(It.Is<Entity>(e => e.LogicalName == "solution"), It.IsAny<CancellationToken>()))
 				.ReturnsAsync(expectedSolutionId);
 
 			// Mock Ribbon Customization retrieve
 			var ribbonCustomizationId = Guid.NewGuid();
 			var ribbonCustomization = new Entity("ribboncustomization") { Id = ribbonCustomizationId };
 			this.OrganizationServiceMock
-				.Setup(x => x.RetrieveMultipleAsync(It.Is<QueryExpression>(q => q.EntityName == "ribboncustomization")))
+				.Setup(x => x.RetrieveMultipleAsync(It.Is<QueryExpression>(q => q.EntityName == "ribboncustomization"), It.IsAny<CancellationToken>()))
 				.ReturnsAsync(new EntityCollection(new List<Entity> { ribbonCustomization }));
 
 			var command = new CreateCommand { 
@@ -172,7 +165,7 @@ namespace Greg.Xrm.Command.Commands.Solution
 			this.OrganizationServiceMock.Verify(x => x.ExecuteAsync(It.Is<AddSolutionComponentRequest>(r => 
 				r.ComponentType == (int)ComponentType.RibbonCustomization &&
 				r.ComponentId == ribbonCustomizationId
-			)), Times.Once);
+			), It.IsAny<CancellationToken>()), Times.Once);
 		}
 	}
 }

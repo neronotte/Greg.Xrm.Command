@@ -50,9 +50,6 @@ namespace Greg.Xrm.Command.Commands.Solution
 		{
 			var collection = new EntityCollection(new List<Entity>(solutions));
 			this.OrganizationServiceMock
-				.Setup(x => x.RetrieveMultipleAsync(It.IsAny<QueryBase>()))
-				.ReturnsAsync(collection);
-            this.OrganizationServiceMock
 				.Setup(x => x.RetrieveMultipleAsync(It.IsAny<QueryBase>(), It.IsAny<CancellationToken>()))
 				.ReturnsAsync(collection);
 		}
@@ -62,9 +59,6 @@ namespace Greg.Xrm.Command.Commands.Solution
 		{
 			var exception = new FaultException<OrganizationServiceFault>(new OrganizationServiceFault { Message = "Test error" }, new FaultReason("Test error"));
 			this.OrganizationServiceMock
-				.Setup(x => x.RetrieveMultipleAsync(It.IsAny<QueryBase>()))
-				.ThrowsAsync(exception);
-            this.OrganizationServiceMock
 				.Setup(x => x.RetrieveMultipleAsync(It.IsAny<QueryBase>(), It.IsAny<CancellationToken>()))
 				.ThrowsAsync(exception);
 
@@ -97,7 +91,7 @@ namespace Greg.Xrm.Command.Commands.Solution
 			
 			this.OrganizationServiceMock.Verify(x => x.RetrieveMultipleAsync(It.Is<QueryExpression>(q => 
 				q.Criteria.Conditions.Any(c => c.AttributeName == "ismanaged" && (bool)c.Values[0] == true)
-			)), Times.Once);
+			), It.IsAny<CancellationToken>()), Times.Once);
 		}
 
 		[TestMethod]
@@ -112,7 +106,7 @@ namespace Greg.Xrm.Command.Commands.Solution
 			
 			this.OrganizationServiceMock.Verify(x => x.RetrieveMultipleAsync(It.Is<QueryExpression>(q => 
 				q.Criteria.Conditions.Any(c => c.AttributeName == "ismanaged" && (bool)c.Values[0] == false)
-			)), Times.Once);
+			), It.IsAny<CancellationToken>()), Times.Once);
 		}
 
 		[TestMethod]
@@ -128,7 +122,7 @@ namespace Greg.Xrm.Command.Commands.Solution
 			
 			this.OrganizationServiceMock.Verify(x => x.RetrieveMultipleAsync(It.Is<QueryExpression>(q => 
 				q.Criteria.Conditions.Any(c => c.AttributeName == "isvisible" && (bool)c.Values[0] == true)
-			)), Times.Once);
+			), It.IsAny<CancellationToken>()), Times.Once);
 		}
 
 		[TestMethod]

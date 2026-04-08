@@ -49,15 +49,7 @@ namespace Greg.Xrm.Command.Commands.Solution
 
 			var command = new DeleteCommand { SolutionUniqueName = "MissingSolution" };
 			
-			try
-			{
-				await executor.ExecuteAsync(command, CancellationToken.None);
-				Assert.Fail("Expected ArgumentOutOfRangeException was not thrown.");
-			}
-			catch (ArgumentOutOfRangeException)
-			{
-				// Expected exception
-			}
+			await Assert.ThrowsExceptionAsync<ArgumentOutOfRangeException>(() => executor.ExecuteAsync(command, CancellationToken.None));
 		}
 
 		[TestMethod]
