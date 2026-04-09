@@ -29,6 +29,24 @@ namespace Greg.Xrm.Command.Commands.Script
 				.Setup(x => x.GetTableAsync(It.IsAny<string>(), It.IsAny<List<string>>()))
 				.ReturnsAsync(mockEntity);
 
+			// Stub GeneratePacxScript to avoid ArgumentNullException in File.WriteAllTextAsync
+			mockMetadataExtractor
+				.Setup(x => x.GeneratePacxScript(It.IsAny<List<Models.Extractor_EntityMetadata>>(), It.IsAny<List<Models.Extractor_RelationshipMetadata>>(), It.IsAny<List<string>>()))
+				.Returns("# PACX Script\n");
+
+			// Stub GetRelationshipsAsync to avoid null reference
+			mockMetadataExtractor
+				.Setup(x => x.GetRelationshipsAsync(It.IsAny<List<string>>(), It.IsAny<List<Models.Extractor_EntityMetadata>>()))
+				.ReturnsAsync(new List<Models.Extractor_RelationshipMetadata>());
+
+			// Stub GetOptionSetsAsync and GenerateStateFieldsCSV for state field export path
+			mockMetadataExtractor
+				.Setup(x => x.GetOptionSetsAsync(It.IsAny<List<string>>()))
+				.ReturnsAsync(new List<Models.Extractor_OptionSetMetadata>());
+			mockMetadataExtractor
+				.Setup(x => x.GenerateStateFieldsCSV(It.IsAny<List<Models.Extractor_OptionSetMetadata>>(), It.IsAny<string>()))
+				.Returns(Task.CompletedTask);
+
 			var extractionService = new ScriptExtractionService(
 				mockOutput.Object,
 				mockMetadataExtractor.Object);

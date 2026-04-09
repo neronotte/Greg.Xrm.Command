@@ -7,6 +7,8 @@
 		public void ParseWithLongNameShouldWork()
 		{
 			var command = Utility.TestParseCommand<GetQueueStatusCommand>("unifiedrouting", "queueStatus", "--queue", "QUEUENAME");
+			Assert.AreEqual("QUEUENAME", command.Queue);
+			Assert.IsNull(command.DateTimeFilter);
 		}
 	}
 }
