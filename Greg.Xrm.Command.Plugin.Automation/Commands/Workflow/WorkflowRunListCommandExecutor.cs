@@ -1,8 +1,10 @@
 using Greg.Xrm.Command.Parsing;
 using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
+using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -51,7 +53,10 @@ namespace Greg.Xrm.Command.Plugin.Automation.Commands.Workflow
 					return CommandResult.Success();
 				}
 
-				output.WriteTable(result.Entities.Cast<FlowRun>().ToList(),
+				// Map Entity instances to DTOs — Cast<FlowRun>() would throw at runtime
+				var runs = result.Entities.Select(MapToFlowRunDto).ToList();
+
+				output.WriteTable(runs,
 					() => new[] { "Start Time", "Status", "Duration (s)", "Name" },
 					run => new[] {
 						run.StartTime?.ToLocalTime().ToString("g") ?? "-",
@@ -67,6 +72,17 @@ namespace Greg.Xrm.Command.Plugin.Automation.Commands.Workflow
 			{
 				return CommandResult.Fail("Error while retrieving flow runs: " + ex.Message, ex);
 			}
+		}
+
+		private static FlowRun MapToFlowRunDto(Entity entity)
+		{
+			return new FlowRun
+			{
+				Name = entity.GetAttributeValue<string>("name"),
+				Status = entity.GetAttributeValue<string>("status"),
+				StartTime = entity.GetAttributeValue<DateTime?>("starttime"),
+				EndTime = entity.GetAttributeValue<DateTime?>("endtime"),
+			};
 		}
 	}
 }
