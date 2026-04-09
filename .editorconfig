@@ -1,0 +1,118 @@
+# https://learn.microsoft.com/en-us/dotnet/fundamentals/code-analysis/code-style-rule-options
+# https://google.github.io/styleguide/csharp-style.html (adapted: 4-space indent)
+
+root = true
+
+[*.{cs,csx}]
+charset = utf-8-bom
+
+# Indentation and spacing
+indent_style = space
+indent_size = 4
+tab_width = 4
+csharp_new_line_before_open_brace = all
+csharp_max_line_length = 100
+
+# var preferences
+csharp_style_var_elsewhere = false:suggestion
+csharp_style_var_for_built_in_types = true:suggestion
+csharp_style_var_when_type_is_apparent = true:suggestion
+
+# Expression-bodied members
+csharp_style_expression_bodied_methods = false:silent
+csharp_style_expression_bodied_constructors = false:silent
+csharp_style_expression_bodied_operators = false:silent
+csharp_style_expression_bodied_properties = true:suggestion
+csharp_style_expression_bodied_indexers = true:suggestion
+csharp_style_expression_bodied_accessors = true:suggestion
+csharp_style_expression_bodied_lambdas = true:suggestion
+csharp_style_expression_bodied_local_functions = false:silent
+
+# Pattern matching
+csharp_style_pattern_matching_over_is_with_cast_check = true:suggestion
+csharp_style_pattern_matching_over_as_with_null_check = true:suggestion
+csharp_style_inlined_variable_declaration = true:suggestion
+
+# Null-checking preferences
+csharp_style_throw_expression = true:suggestion
+csharp_style_conditional_delegate_call = true:suggestion
+
+# Modifier preferences
+csharp_prefer_static_local_function = true:suggestion
+csharp_preferred_modifier_order = public,private,protected,internal,file,static,extern,new,virtual,abstract,sealed,override,readonly,unsafe,volatile,async:suggestion
+
+# Code-block preferences
+csharp_prefer_braces = true:suggestion
+csharp_prefer_simple_using_statement = true:suggestion
+csharp_prefer_simple_default_expression = true:suggestion
+
+# Using directives
+csharp_using_directive_placement = outside_namespace:silent
+
+# Qualification preferences
+dotnet_style_qualification_for_field = false:suggestion
+dotnet_style_qualification_for_property = false:suggestion
+dotnet_style_qualification_for_method = false:suggestion
+dotnet_style_qualification_for_event = false:suggestion
+
+# Language keywords instead of framework type names
+dotnet_style_predefined_type_for_locals_parameters_members = true:suggestion
+dotnet_style_predefined_type_for_member_access = true:suggestion
+
+# Modifier order
+dotnet_style_require_accessibility_modifiers = always:suggestion
+
+# Parentheses
+dotnet_style_parentheses_in_arithmetic_operators = never_if_unnecessary:silent
+dotnet_style_parentheses_in_relational_operators = never_if_unnecessary:silent
+dotnet_style_parentheses_in_other_binary_operators = always_for_clarity:silent
+dotnet_style_parentheses_in_other_operators = never_if_unnecessary:silent
+
+# Expression-level preferences
+dotnet_style_object_initializer = true:suggestion
+dotnet_style_collection_initializer = true:suggestion
+dotnet_style_explicit_tuple_names = true:suggestion
+dotnet_style_coalesce_expression = true:suggestion
+dotnet_style_null_propagation = true:suggestion
+dotnet_style_prefer_compound_assignment = true:suggestion
+dotnet_style_prefer_simplified_boolean_expressions = true:suggestion
+dotnet_style_prefer_is_null_check = true:suggestion
+
+# Field preferences
+dotnet_style_readonly_field = true:suggestion
+
+# Parameter preferences
+dotnet_code_quality_unused_parameters = all:suggestion
+
+# Accessibility
+dotnet_diagnostic.CA1050.severity = none
+
+# Naming conventions (Google C# style)
+dotnet_naming_rule.interfaces_begin_with_I.severity = suggestion
+dotnet_naming_rule.interfaces_begin_with_I.symbols = interface_symbols
+dotnet_naming_rule.interfaces_begin_with_I.style = begins_with_I
+dotnet_naming_symbols.interface_symbols.applicable_kinds = interface
+dotnet_naming_symbols.interface_symbols.applicable_accessibilities = public, internal, protected, protected_internal, private_protected, private
+dotnet_naming_style.begins_with_I.required_prefix = I
+dotnet_naming_style.begins_with_I.capitalization = pascal_case
+
+dotnet_naming_rule.private_fields_underscore.severity = suggestion
+dotnet_naming_rule.private_fields_underscore.symbols = private_fields
+dotnet_naming_rule.private_fields_underscore.style = begins_with_underscore
+dotnet_naming_symbols.private_fields.applicable_kinds = field
+dotnet_naming_symbols.private_fields.applicable_accessibilities = private
+dotnet_naming_style.begins_with_underscore.required_prefix = _
+dotnet_naming_style.begins_with_underscore.capitalization = camel_case
+
+dotnet_naming_rule.constants_pascal_case.severity = suggestion
+dotnet_naming_rule.constants_pascal_case.symbols = constant_symbols
+dotnet_naming_rule.constants_pascal_case.style = pascal_case_style
+dotnet_naming_symbols.constant_symbols.applicable_kinds = field
+dotnet_naming_symbols.constant_symbols.applicable_accessibilities = *
+dotnet_naming_rule.constants_pascal_case.applicable_localities = *
+dotnet_naming_style.pascal_case_style.capitalization = pascal_case
+dotnet_naming_rule.constants_pascal_case.applicable_localities = *
+dotnet_naming_rule.constants_pascal_case.applicable_localities = *
+
+# Public API should not return internal types
+dotnet_diagnostic.CA1051.severity = suggestion
