@@ -2,14 +2,26 @@
 <RunSettings>
   <DataCollectionRunSettings>
     <DataCollectors>
-      <DataCollector friendlyName="XPlat Code Coverage">
+      <DataCollector friendlyName="XPlat code coverage" uri="datacollector://Microsoft/CodeCoverage/2.0" assemblyQualifiedName="Microsoft.CodeAnalysis.CSharp.CodeCoverage.CoverageCollector, Microsoft.CodeAnalysis.CSharp.CodeCoverage, Version=8.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35">
         <Configuration>
           <Format>cobertura</Format>
-          <Exclude>[Greg.Xrm.Command.Core.TestSuite]*</Exclude> <!-- Exclude test projects from coverage -->
           <Include>[Greg.Xrm.Command.Core]*</Include>
           <Include>[Greg.Xrm.Command.Interfaces]*</Include>
+          <Exclude>[Greg.Xrm.Command.Core.TestSuite]*</Exclude>
+          <MergeWith>./coverage.json</MergeWith>
+          <SkipAutoProps>true</SkipAutoProps>
+          <DeterministicReport>true</DeterministicReport>
         </Configuration>
       </DataCollector>
     </DataCollectors>
   </DataCollectionRunSettings>
+  <LoggerRunSettings>
+    <Loggers>
+      <Logger friendlyName="console" enabled="True">
+        <Configuration>
+          <Verbosity>normal</Verbosity>
+        </Configuration>
+      </Logger>
+    </Loggers>
+  </LoggerRunSettings>
 </RunSettings>
