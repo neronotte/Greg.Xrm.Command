@@ -2,25 +2,13 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net8.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
     <AssemblyName>pacx</AssemblyName>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <PackageId>Greg.Xrm.Command</PackageId>
     <Title>Greg's Command Line Utilities for Dataverse</Title>
-    <Authors>neronotte</Authors>
-    <Company>neronotte</Company>
     <Product>Greg.Xrm.Command</Product>
-    <Copyright>Copyright @ neronotte</Copyright>
-    <PackageIcon>logo_80.png</PackageIcon>
-    <RepositoryType>git</RepositoryType>
     <PackAsTool>True</PackAsTool>
     <Version>$(VersionNumber)</Version>
-    <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
-    <PackageProjectUrl>https://github.com/neronotte/Greg.Xrm.Command</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/neronotte/Greg.Xrm.Command</RepositoryUrl>
-    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -31,15 +19,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="10.0.0" />
-    <PackageReference Include="ClosedXML" Version="0.105.0" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.4" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.3" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.3" />
-    <PackageReference Include="Microsoft.PowerPlatform.Dataverse.Client" Version="1.2.10" />
     <PackageReference Include="Spectre.Console" Version="0.54.0" />
-    <PackageReference Include="System.Text.Json" Version="10.0.3" />
-    <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
   </ItemGroup>
 
   <ItemGroup>
