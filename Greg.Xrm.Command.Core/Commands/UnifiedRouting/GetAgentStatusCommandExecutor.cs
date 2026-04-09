@@ -46,9 +46,10 @@ namespace Greg.Xrm.Command.Commands.UnifiedRouting
                     return CommandResult.Success();
                 }
 
+
                 var status = result.GetAliasedValue<string>(msdyn_presence.msdyn_presencestatustext, nameof(msdyn_presence));
                 var statusOpt = result.GetAliasedValue<OptionSetValue>(msdyn_presence.msdyn_basepresencestatus, nameof(msdyn_presence));
-                var dateStart = result.GetAttributeValue<DateTime>(msdyn_agentstatushistory.msdyn_starttime);
+                var dateStart = result.GetAttributeValue<DateTime>(msdyn_agentcapacityupdatehistory.msdyn_starttime);
 
                 if (string.IsNullOrEmpty(command.DateTimeFilter))
                     this.output.WriteLine(command.AgentPrimaryEmail)
