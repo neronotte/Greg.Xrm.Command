@@ -6,24 +6,15 @@ using Microsoft.Xrm.Sdk.Query;
 
 namespace Greg.Xrm.Command.Commands.Solution
 {
-	public class DeleteCommandExecutor : ICommandExecutor<DeleteCommand>
+	public class DeleteCommandExecutor(
+		IOutput output,
+		IOrganizationServiceRepository organizationServiceRepository) : ICommandExecutor<DeleteCommand>
 	{
-		private readonly IOutput output;
-		private readonly IOrganizationServiceRepository organizationServiceRepository;
-
-		public DeleteCommandExecutor(
-			IOutput output,
-			IOrganizationServiceRepository organizationServiceRepository)
-		{
-			this.output = output;
-			this.organizationServiceRepository = organizationServiceRepository;
-		}
-
 		public async Task<CommandResult> ExecuteAsync(DeleteCommand command, CancellationToken cancellationToken)
 		{
-			this.output.Write($"Connecting to the current dataverse environment...");
-			var crm = await this.organizationServiceRepository.GetCurrentConnectionAsync();
-			this.output.WriteLine("Done", ConsoleColor.Green);
+			output.Write($"Connecting to the current dataverse environment...");
+			var crm = await organizationServiceRepository.GetCurrentConnectionAsync();
+			output.WriteLine("Done", ConsoleColor.Green);
 
 
 			try
@@ -38,7 +29,8 @@ namespace Greg.Xrm.Command.Commands.Solution
 
 				if (result.Entities.Count == 0)
 				{
-					return CommandResult.Fail($"Solution {command.SolutionUniqueName} not found");
+					output.WriteLine($"Solution {command.SolutionUniqueName} not found.", ConsoleColor.Red);
+					return CommandResult.Fail($"Solution '{command.SolutionUniqueName}' not found.");
 				}
 
 
