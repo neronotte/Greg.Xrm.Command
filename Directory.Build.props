@@ -1,0 +1,65 @@
+<Project>
+  <!--
+    Directory.Build.props — Centralized MSBuild properties for Greg.Xrm.Command (PACX)
+    All .csproj files under this directory inherit these settings unless they override them.
+
+    Per-project overrides should be placed directly in the project's .csproj file.
+    Per-project unique package references belong in the project's .csproj, not here.
+
+    https://learn.microsoft.com/en-us/visualstudio/msbuild/customize-by-directory
+  -->
+
+  <!-- ============================================================ -->
+  <!-- Common compiler / language settings (all projects)           -->
+  <!-- ============================================================ -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
+    <AnalysisLevel>latest-recommended</AnalysisLevel>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <!-- ============================================================ -->
+  <!-- Common NuGet package metadata (packable projects)            -->
+  <!-- ============================================================ -->
+  <PropertyGroup>
+    <Authors>neronotte</Authors>
+    <Company>neronotte</Company>
+    <Copyright>Copyright @ neronotte</Copyright>
+    <PackageProjectUrl>https://github.com/neronotte/Greg.Xrm.Command</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/neronotte/Greg.Xrm.Command</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageIcon>logo_80.png</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <!-- CI sets this via -p:VersionNumber=... during build/pack -->
+    <Version>$(VersionNumber)</Version>
+  </PropertyGroup>
+
+  <!-- ============================================================ -->
+  <!-- Shared package references (used by 4+ projects)              -->
+  <!-- ============================================================ -->
+  <ItemGroup>
+    <!-- Dataverse SDK — every project communicates with Dataverse -->
+    <PackageReference Include="Microsoft.PowerPlatform.Dataverse.Client" Version="1.2.10" />
+    <!-- JSON serialization — Core, Interfaces, TestSuite, exe, SamplePlugin -->
+    <PackageReference Include="System.Text.Json" Version="10.0.3" />
+    <!-- Excel handling — exe, Core, TestSuite, SamplePlugin, Interfaces -->
+    <PackageReference Include="ClosedXML" Version="0.105.0" />
+    <!-- Regex stdlib patch — exe, Core, TestSuite, SamplePlugin, Interfaces -->
+    <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
+    <!-- DI container — all projects use Autofac -->
+    <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="10.0.0" />
+  </ItemGroup>
+
+  <!-- ============================================================ -->
+  <!-- NuGet package files (common to packable projects)             -->
+  <!-- ============================================================ -->
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)logo_80.png" Pack="true" PackagePath="\" Visible="false" Condition="Exists('$(MSBuildThisFileDirectory)logo_80.png')" />
+    <None Include="$(MSBuildThisFileDirectory)README.md" Pack="true" PackagePath="\" Visible="false" Condition="Exists('$(MSBuildThisFileDirectory)README.md')" />
+  </ItemGroup>
+
+</Project>

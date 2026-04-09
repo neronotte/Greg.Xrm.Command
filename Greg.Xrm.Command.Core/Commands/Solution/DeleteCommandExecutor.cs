@@ -38,7 +38,8 @@ namespace Greg.Xrm.Command.Commands.Solution
 
 				if (result.Entities.Count == 0)
 				{
-					output.WriteLine($"Solution {command.SolutionUniqueName} not found", ConsoleColor.Red);
+					output.WriteLine($"Solution {command.SolutionUniqueName} not found.", ConsoleColor.Red);
+					return CommandResult.Fail($"Solution '{command.SolutionUniqueName}' not found.");
 				}
 
 

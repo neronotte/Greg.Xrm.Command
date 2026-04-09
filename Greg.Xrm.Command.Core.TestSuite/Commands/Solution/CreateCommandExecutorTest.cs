@@ -160,6 +160,11 @@ namespace Greg.Xrm.Command.Commands.Solution
 				.Setup(x => x.RetrieveMultipleAsync(It.Is<QueryExpression>(q => q.EntityName == "ribboncustomization")))
 				.ReturnsAsync(new EntityCollection(new List<Entity> { ribbonCustomization }));
 
+			// Mock ExecuteAsync for AddSolutionComponentRequest (ribbon customization)
+			this.OrganizationServiceMock
+				.Setup(x => x.ExecuteAsync(It.IsAny<OrganizationRequest>()))
+				.ReturnsAsync(new OrganizationResponse());
+
 			var command = new CreateCommand { 
 				DisplayName = "My Solution", 
 				PublisherCustomizationPrefix = "new",

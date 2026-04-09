@@ -41,23 +41,20 @@ namespace Greg.Xrm.Command.Commands.Solution
 		}
 
 		[TestMethod]
-		public async Task ExecuteAsync_WhenSolutionNotFound_ShouldThrowException()
+		public async Task ExecuteAsync_WhenSolutionNotFound_ShouldReturnFailure()
 		{
 			this.OrganizationServiceMock
 				.Setup(x => x.RetrieveMultipleAsync(It.Is<QueryExpression>(q => q.EntityName == "solution"), It.IsAny<CancellationToken>()))
 				.ReturnsAsync(new EntityCollection());
 
 			var command = new DeleteCommand { SolutionUniqueName = "MissingSolution" };
-			
-			try
-			{
-				await executor.ExecuteAsync(command, CancellationToken.None);
-				Assert.Fail("Expected ArgumentOutOfRangeException was not thrown.");
-			}
-			catch (ArgumentOutOfRangeException)
-			{
-				// Expected exception
-			}
+			var result = await executor.ExecuteAsync(command, CancellationToken.None);
+
+			Assert.IsFalse(result.IsSuccess);
+			Assert.IsTrue(result.ErrorMessage.Contains("MissingSolution"));
+			Assert.IsTrue(result.ErrorMessage.Contains("not found"));
+
+			this.OrganizationServiceMock.Verify(x => x.DeleteAsync(It.IsAny<string>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
 		}
 
 		[TestMethod]
