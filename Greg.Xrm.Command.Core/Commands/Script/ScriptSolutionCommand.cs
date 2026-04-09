@@ -13,7 +13,7 @@ namespace Greg.Xrm.Command.Commands.Script
 
         [Option("customPrefixes", "cp", Order = 2, HelpText = "Comma-separated custom prefixes for entities and fields.")]
         [Required]
-        public string? CustomPrefixs { get; set; }
+        public string? CustomPrefixes { get; set; }
 
         [Option("output", "o", Order = 3, HelpText = "Output directory for generated files.")]
         public string OutputDir { get; set; } = string.Empty;
@@ -33,7 +33,7 @@ namespace Greg.Xrm.Command.Commands.Script
             writer.WriteParagraph("If requested, the generated CSV file will contain only the statecode and statuscode fields for each entity, for documentation purposes.");
             writer.WriteParagraph("Example usage:");
             writer.WriteCodeBlock(
-                "pacx script solution --solutionNames \"Solution1,Solution2\" --customPrefixs \"custom_\" --output \"C:/output\" --scriptFileName \"myscript.ps1\" --stateFileName \"state-fields.csv\" --includeStateFields",
+                "pacx script solution --solutionNames \"Solution1,Solution2\" --customPrefixes \"custom_\" --output \"C:/output\" --scriptFileName \"myscript.ps1\" --stateFileName \"state-fields.csv\" --includeStateFields",
                 "PowerShell");
         }
     }
