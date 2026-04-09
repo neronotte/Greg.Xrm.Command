@@ -103,6 +103,20 @@ jobs:
       run: |
         $version = Get-Content $env:GITHUB_WORKSPACE/version.txt
         dotnet build --configuration Release /p:Version=$version
+
+    # Run tests with code coverage
+    - name: Run Tests
+      run: |
+        dotnet test --configuration Release --no-build --collect:"XPlat Code Coverage" --settings Greg.Xrm.Command.Core.TestSuite/CodeCoverage.runsettings --results-directory ./coverage
+
+    # Verify code style
+    - name: Verify Code Style
+      run: dotnet format --verify-no-changes --verbosity diagnostic
+
+    # Pack
+    - name: Pack NuGet Packages
+      run: |
+        $version = Get-Content $env:GITHUB_WORKSPACE/version.txt
         dotnet pack Greg.Xrm.Command\Greg.Xrm.Command.csproj --configuration Release /p:Version=$version --output ${{ env.NuGetDirectory }}
         dotnet pack Greg.Xrm.Command.Interfaces\Greg.Xrm.Command.Interfaces.csproj --configuration Release --output ${{ env.NuGetDirectory }}
         
@@ -123,6 +137,14 @@ jobs:
         if-no-files-found: error
         retention-days: 7
         path: ${{ env.NuGetDirectory }}/*.nupkg
+
+    - name: Upload Code Coverage as artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: code-coverage
+        if-no-files-found: warn
+        retention-days: 30
+        path: ./coverage/**/coverage.cobertura.xml
 
 
         
