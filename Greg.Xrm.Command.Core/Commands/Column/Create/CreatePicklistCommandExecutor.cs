@@ -18,8 +18,11 @@ namespace Greg.Xrm.Command.Commands.Column.Create
 #pragma warning restore CS9107 // Parameter is captured into the state of the enclosing type and its value is also passed to the base constructor. The value might be captured by the base class as well.
 		, ICommandExecutor<CreatePicklistCommand>
 	{
+		private bool suppressCodeSuffix = false;
+
 		public async Task<CommandResult> ExecuteAsync(CreatePicklistCommand command, CancellationToken cancellationToken)
 		{
+			this.suppressCodeSuffix = command.SuppressCodeSuffix;
 			return await base.ExecuteAsync(command, CreateFromAsync, cancellationToken);
 		}
 
@@ -135,7 +138,7 @@ namespace Greg.Xrm.Command.Commands.Column.Create
 		{
 			var newSchemaName = base.GetSchemaName(displayName, schemaName, publisherPrefix);
 
-			if (!newSchemaName.EndsWith("code"))
+			if (!this.suppressCodeSuffix && !newSchemaName.EndsWith("code"))
 			{
 				newSchemaName += "code";
 			}

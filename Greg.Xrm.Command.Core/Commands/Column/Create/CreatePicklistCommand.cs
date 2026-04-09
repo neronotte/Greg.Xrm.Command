@@ -19,7 +19,7 @@ namespace Greg.Xrm.Command.Commands.Column.Create
 			HelpText = "The list of options for the attribute, as a single string separated by comma (,) or semicolon (;) or pipe.\nYou can pass also values separating using syntax \"label1:value1,label2:value2\"\nIf not provided, values will be automatically generated",
 			Order =20
 		)]
-		public string? Options { get; internal set; }
+		public string? Options { get; set; }
 
 
 		[Option("defaultValue", "dv", HelpText = "For Picklist type columns indicates the default value for the column. You can provide the name or the value. If not provided, is automatically evaluated by the system.",
@@ -31,6 +31,12 @@ namespace Greg.Xrm.Command.Commands.Column.Create
 			DefaultValue = false, 
 			Order = 40)]
 		public bool Multiselect { get; set; } = false;
+
+		[Option("suppressCodeSuffix", "scs",
+			HelpText = "Indicates whether the 'code' suffix should be suppressed for the schema name (default: false).",
+			DefaultValue = false,
+			Order = 50)]
+		public bool SuppressCodeSuffix { get; set; } = false;
 
 
 
