@@ -36,13 +36,15 @@
     <PackageReference Include="ClosedXML" Version="0.105.0" />
     <PackageReference Include="CsvHelper" Version="33.1.0" />
     <PackageReference Include="McMaster.NETCore.Plugins" Version="2.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="10.0.5" />
     <PackageReference Include="Microsoft.PowerPlatform.Dataverse.Client" Version="1.2.10" />
+    <PackageReference Include="ModelContextProtocol" Version="1.2.0" />
     <PackageReference Include="Nuget.Protocol" Version="7.3.0" />
     <PackageReference Include="Pluralize.NET" Version="1.0.2" />
     <PackageReference Include="Spectre.Console" Version="0.54.0" />
     <PackageReference Include="System.IO.Packaging" Version="10.0.3" />
     <PackageReference Include="System.Reflection.MetadataLoadContext" Version="10.0.3" />
-    <PackageReference Include="System.Text.Json" Version="10.0.3" />
+    <PackageReference Include="System.Text.Json" Version="10.0.5" />
     <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
   </ItemGroup>
 
