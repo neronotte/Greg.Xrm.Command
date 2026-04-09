@@ -1,21 +1,16 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>net8.0</TargetFramework>
-		<ImplicitUsings>enable</ImplicitUsings>
-		<Nullable>enable</Nullable>
 		<RootNamespace>Greg.Xrm.Command</RootNamespace>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<Title>PACX - Interfaces</Title>
+		<!-- Intentional spelling difference from other projects -->
 		<Authors>_neronotte</Authors>
 		<Company>_neronotte</Company>
 		<Product>Greg.Xrm.Command - Interfaces</Product>
 		<Copyright>Copyright @ _neronotte</Copyright>
-		<PackageProjectUrl>https://github.com/neronotte/Greg.Xrm.Command</PackageProjectUrl>
-		<PackageIcon>Logo_80.png</PackageIcon>
-		<PackageReadmeFile>README.md</PackageReadmeFile>
-		<RepositoryUrl>https://github.com/neronotte/Greg.Xrm.Command</RepositoryUrl>
 		<PackageTags>pacx dataverse sdk pac cli</PackageTags>
+		<!-- Hardcoded version — independent release cycle from main CLI -->
 		<Version>1.2024.10.151</Version>
 		<PackageVersion>1.1.1</PackageVersion>
 	</PropertyGroup>
@@ -36,15 +31,6 @@
 			<PackagePath>\</PackagePath>
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
-	</ItemGroup>
-
-	<ItemGroup>
-		<PackageReference Include="Autofac.Extensions.DependencyInjection" Version="11.0.0" />
-		<PackageReference Include="ClosedXML" Version="0.105.0" />
-		<PackageReference Include="Microsoft.PowerPlatform.Dataverse.Client" Version="1.2.10" />
-		<PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.6" />
-		<PackageReference Include="System.Text.Json" Version="10.0.6" />
-		<PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
 	</ItemGroup>
 
 </Project>
