@@ -41,6 +41,8 @@ name: Build Pipeline v01
 on:
   push:
     branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
 #  release:
 #    types:
 #      - published    # Run the workflow when a new GitHub release is published
@@ -105,6 +107,10 @@ jobs:
         dotnet build --configuration Release /p:Version=$version
         dotnet pack Greg.Xrm.Command\Greg.Xrm.Command.csproj --configuration Release /p:Version=$version --output ${{ env.NuGetDirectory }}
         dotnet pack Greg.Xrm.Command.Interfaces\Greg.Xrm.Command.Interfaces.csproj --configuration Release --output ${{ env.NuGetDirectory }}
+
+    # Run Unit Tests
+    - name: Run Tests
+      run: dotnet test --configuration Release --no-build --filter "TestCategory!=Integration" --collect:"XPlat Code Coverage" --settings Greg.Xrm.Command.Core.TestSuite/CodeCoverage.runsettings
         
     - name: Update Wiki content
       run: |
@@ -175,6 +181,9 @@ jobs:
     #     GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
     #   with:
     #       upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+    #       asset_path: ${{ env.NuGetDirectory }}\Greg.Xrm.Command.Interfaces.*.nupkg
+    #       asset_name: Greg.Xrm.Command.Interfaces.nupkg
+    #       asset_content_type: application/zipps 
     #       asset_path: ${{ env.NuGetDirectory }}\Greg.Xrm.Command.Interfaces.*.nupkg
     #       asset_name: Greg.Xrm.Command.Interfaces.nupkg
     #       asset_content_type: application/zip
