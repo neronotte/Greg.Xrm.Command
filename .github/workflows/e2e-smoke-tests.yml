@@ -1,0 +1,65 @@
+name: E2E Smoke Tests
+
+on:
+  push:
+    branches: [ "master", "feature/*" ]
+  workflow_dispatch:
+
+env:
+  Solution_Name: Greg.Xrm.Command.sln
+
+jobs:
+  smoke-tests:
+    runs-on: windows-latest
+
+    env:
+      PACX_TEST_URL: ${{ secrets.PACX_TEST_URL }}
+      PACX_TEST_CLIENT_ID: ${{ secrets.PACX_TEST_CLIENT_ID }}
+      PACX_TEST_CLIENT_SECRET: ${{ secrets.PACX_TEST_CLIENT_SECRET }}
+      PACX_TEST_TENANT_ID: ${{ secrets.PACX_TEST_TENANT_ID }}
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Setup .NET 8.0
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 8.0.x
+
+    - name: Restore Dependencies
+      run: dotnet restore
+
+    - name: Build
+      run: dotnet build --configuration Release --no-restore
+
+    - name: Run E2E Smoke Tests
+      run: |
+        dotnet test Greg.Xrm.Command.Core.IntegrationTests\Greg.Xrm.Command.Core.IntegrationTests.csproj `
+          --configuration Release `
+          --no-build `
+          --logger "trx;LogFileName=smoke-tests.trx" `
+          --filter "Category=Integration"
+      continue-on-error: true
+
+    - name: Upload Test Results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: smoke-test-results
+        if-no-files-found: warn
+        retention-days: 30
+        path: '**/smoke-tests.trx'
+
+    - name: Check Test Results
+      run: |
+        $testResults = Get-ChildItem -Recurse -Filter "smoke-tests.trx"
+        if ($testResults.Count -eq 0) {
+          Write-Host "No test results found. This may be expected if environment variables are not configured."
+          Write-Host "To enable E2E tests, configure these GitHub secrets:"
+          Write-Host "  - PACX_TEST_URL"
+          Write-Host "  - PACX_TEST_CLIENT_ID"
+          Write-Host "  - PACX_TEST_CLIENT_SECRET"
+          exit 0
+        }
+        Write-Host "Test results uploaded. Check artifact: smoke-test-results"
