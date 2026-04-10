@@ -149,34 +149,7 @@ namespace Greg.Xrm.Command.Commands.Pr
 		private static string? ResolveRepo(string? repoArg)
 		{
 			if (!string.IsNullOrWhiteSpace(repoArg)) return repoArg!.Trim();
-
-			try
-			{
-				var psi = new System.Diagnostics.ProcessStartInfo
-				{
-					FileName = "git",
-					Arguments = "config --get remote.origin.url",
-					RedirectStandardOutput = true,
-					UseShellExecute = false,
-					CreateNoWindow = true,
-				};
-				using var process = System.Diagnostics.Process.Start(psi);
-				var url = process?.StandardOutput.ReadToEnd().Trim();
-				if (string.IsNullOrEmpty(url)) return null;
-
-				url = url.Replace(".git", "").TrimEnd('/');
-				if (url.StartsWith("git@"))
-				{
-					var colonIndex = url.IndexOf(':');
-					return colonIndex >= 0 ? url.Substring(colonIndex + 1) : null;
-				}
-				var segments = url.Split('/');
-				return segments.Length >= 2 ? $"{segments[segments.Length - 2]}/{segments[segments.Length - 1]}" : null;
-			}
-			catch
-			{
-				return null;
-			}
+			return GitRepositoryResolver.ResolveFromRemote();
 		}
 	}
 }

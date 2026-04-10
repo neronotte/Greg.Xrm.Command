@@ -59,10 +59,19 @@ namespace Greg.Xrm.Command.Commands.Data
 				output.WriteLine($"  Attributes: {attributeCount}");
 				output.WriteLine($"  Relationships: {relationshipCount}");
 
+				// Use proper JSON serialization to handle special characters
+				var schema = new
+				{
+					solution = command.SolutionUniqueName,
+					entities = entityCount,
+					attributes = attributeCount,
+					relationships = relationshipCount
+				};
+
 				if (command.Format == "json")
 				{
-					var schema = $"{{\"solution\":\"{command.SolutionUniqueName}\",\"entities\":{entityCount},\"attributes\":{attributeCount},\"relationships\":{relationshipCount}}}";
-					await File.WriteAllTextAsync(command.OutputPath, schema, cancellationToken);
+					var json = Newtonsoft.Json.JsonConvert.SerializeObject(schema, Newtonsoft.Json.Formatting.Indented);
+					await File.WriteAllTextAsync(command.OutputPath, json, cancellationToken);
 				}
 				else
 				{
@@ -100,6 +109,11 @@ namespace Greg.Xrm.Command.Commands.Data
 
 			// Generate mock data
 			var random = command.RandomSeed.HasValue ? new Random(command.RandomSeed.Value) : new Random();
+
+			// For now, generate an empty JSON array as mock data output
+			var mockData = new object[] { };
+			var jsonOutput = Newtonsoft.Json.JsonConvert.SerializeObject(mockData, Newtonsoft.Json.Formatting.Indented);
+			await File.WriteAllTextAsync(command.OutputPath, jsonOutput, cancellationToken);
 
 			output.WriteLine();
 			output.WriteLine($"Mock data generation complete.", ConsoleColor.Green);

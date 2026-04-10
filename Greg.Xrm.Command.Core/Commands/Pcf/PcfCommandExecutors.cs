@@ -93,9 +93,11 @@ namespace Greg.Xrm.Command.Commands.Pcf
 			var versionStr = control?.Attribute("version")?.Value ?? "1.0.0";
 
 			var parts = versionStr.Split('.');
-			var major = int.Parse(parts[0]);
-			var minor = int.Parse(parts[1]);
-			var patch = int.Parse(parts[2]);
+			if (parts.Length < 3 || !int.TryParse(parts[0], out var major) ||
+			    !int.TryParse(parts[1], out var minor) || !int.TryParse(parts[2], out var patch))
+			{
+				return CommandResult.Fail($"Invalid version format: '{versionStr}'. Expected 'major.minor.patch'.");
+			}
 
 			var newVersion = command.BumpType.ToLowerInvariant() switch
 			{

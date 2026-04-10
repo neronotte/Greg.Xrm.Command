@@ -95,6 +95,7 @@ namespace Greg.Xrm.Command.Commands.Solution
 			foreach (var comp in componentResult.Entities)
 			{
 				var componentType = comp.GetAttributeValue<int>("componenttype");
+				var objectId = comp.GetAttributeValue<Guid>("objectid");
 				var typeName = GetComponentTypeName(componentType);
 
 				if (!string.IsNullOrEmpty(componentTypeFilter) && !typeName.Equals(componentTypeFilter, StringComparison.OrdinalIgnoreCase))
@@ -102,11 +103,57 @@ namespace Greg.Xrm.Command.Commands.Solution
 					continue;
 				}
 
-				components.Add((typeName, $"Component_{componentType}"));
+				// Resolve actual component name from the target entity
+				var componentName = await ResolveComponentNameAsync(crm, componentType, objectId, ct);
+				components.Add((typeName, componentName));
 			}
 
 			return components;
 		}
+
+		private async Task<string> ResolveComponentNameAsync(IOrganizationServiceAsync2 crm, int componentType, Guid objectId, CancellationToken ct)
+		{
+			try
+			{
+				var entityName = GetComponentEntityName(componentType);
+				if (string.IsNullOrEmpty(entityName))
+				{
+					return $"Component_{componentType}_{objectId}";
+				}
+
+				var query = new QueryExpression(entityName);
+				query.ColumnSet.AddColumn("logicalname");
+				query.Criteria.AddCondition($"{entityName}id", ConditionOperator.Equal, objectId);
+				query.TopCount = 1;
+
+				var result = await crm.RetrieveMultipleAsync(query, ct);
+				if (result.Entities.Count > 0)
+				{
+					return result.Entities[0].GetAttributeValue<string>("logicalname") ?? $"Component_{componentType}";
+				}
+			}
+			catch
+			{
+				// If we can't resolve the name, fall back to component type
+			}
+
+			return $"Component_{componentType}_{objectId}";
+		}
+
+		private static string GetComponentEntityName(int typeCode) => typeCode switch
+		{
+			1 => "entity",
+			2 => "attribute",
+			3 => "relationship",
+			9 => "optionset",
+			20 => "plugintype",
+			23 => "webresource",
+			29 => "workflow",
+			31 => "sdkmessageprocessingstep",
+			32 => "sdkmessageprocessingstepimage",
+			60 => "customapi",
+			_ => null
+		};
 
 		private static string GetComponentTypeName(int typeCode) => typeCode switch
 		{
