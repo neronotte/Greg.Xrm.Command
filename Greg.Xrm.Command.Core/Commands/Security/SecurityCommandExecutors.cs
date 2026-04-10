@@ -57,14 +57,24 @@ namespace Greg.Xrm.Command.Commands.Security
 				{
 					output.WriteLine();
 					output.WriteLine("Privileges:", ConsoleColor.Yellow);
-					// Get privileges from roles
-					var privQuery = new QueryExpression("privilege");
-					privQuery.ColumnSet.AddColumns("name", "accesslevel", "canbebasic", "canbedeep", "canbeglobal", "canbelocal", "canbeentityreference");
-					var privLink = privQuery.AddLink("roleprivileges", "privilegeid", "privilegeid");
-					privLink.LinkCriteria.AddCondition("roleid", ConditionOperator.In, roles.Entities.Select(r => r.Id).ToArray());
+					// Get privileges from roles - batch role IDs to stay within Dataverse 2000-value IN clause limit
+					var roleIds = roles.Entities.Select(r => r.Id).ToArray();
+					var batchSize = 1000;
+					var allPrivileges = new List<Entity>();
 
-					var privileges = await crm.RetrieveMultipleAsync(privQuery, cancellationToken);
-					output.WriteLine($"  Total privileges: {privileges.Entities.Count}");
+					for (int i = 0; i < roleIds.Length; i += batchSize)
+					{
+						var batch = roleIds.Skip(i).Take(batchSize).ToArray();
+						var privQuery = new QueryExpression("privilege");
+						privQuery.ColumnSet.AddColumns("name", "accesslevel", "canbebasic", "canbedeep", "canbeglobal", "canbelocal", "canbeentityreference");
+						var privLink = privQuery.AddLink("roleprivileges", "privilegeid", "privilegeid");
+						privLink.LinkCriteria.AddCondition("roleid", ConditionOperator.In, batch);
+
+						var privileges = await crm.RetrieveMultipleAsync(privQuery, cancellationToken);
+						allPrivileges.AddRange(privileges.Entities);
+					}
+
+					output.WriteLine($"  Total privileges: {allPrivileges.Count}");
 				}
 
 				return CommandResult.Success();

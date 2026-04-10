@@ -63,9 +63,23 @@ namespace Greg.Xrm.Command.Commands.Solution
 					AddRequiredComponents = command.IncludeDependencies
 				};
 
-				output.Write($"Moving {command.ComponentName} to {command.ToSolution}...");
+				output.Write($"Adding {command.ComponentName} to {command.ToSolution}...");
 				await crm.ExecuteAsync(request, cancellationToken);
 				output.WriteLine(" Done", ConsoleColor.Green);
+
+				// Remove component from source solution
+				var removeRequest = new RemoveSolutionComponentRequest
+				{
+					ComponentType = componentTypeCode,
+					ComponentId = component.Id,
+					SolutionUniqueName = command.FromSolution
+				};
+
+				output.Write($"Removing {command.ComponentName} from {command.FromSolution}...");
+				await crm.ExecuteAsync(removeRequest, cancellationToken);
+				output.WriteLine(" Done", ConsoleColor.Green);
+
+				output.WriteLine($"Component '{command.ComponentName}' moved from '{command.FromSolution}' to '{command.ToSolution}'.", ConsoleColor.Green);
 
 				return CommandResult.Success();
 			}
