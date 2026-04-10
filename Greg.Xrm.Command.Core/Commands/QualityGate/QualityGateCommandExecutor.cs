@@ -160,18 +160,57 @@ namespace Greg.Xrm.Command.Commands.QualityGate
 
 		private static void ParseIssueContent(string content, string fileName, List<QualityIssue> issues)
 		{
-			// Simplified parsing - in production, this would parse the actual solution check report format
-			// For now, create sample issues based on common patterns
-			if (content.Contains("Error") || content.Contains("High"))
+			try
 			{
-				issues.Add(new QualityIssue
+				if (content.Contains("<result"))
 				{
-					Severity = content.Contains("Error") ? "Error" : "High",
-					Component = "Solution",
-					Message = $"Issue found in {fileName}",
-					File = fileName,
-					Line = null
-				});
+					// Parse XML format from pac solution check
+					var doc = System.Xml.Linq.XDocument.Parse(content);
+					foreach (var result in doc.Descendants("result"))
+					{
+						var severity = result.Attribute("severity")?.Value ?? "Unknown";
+						var component = result.Attribute("component")?.Value ?? "Unknown";
+						var message = result.Attribute("message")?.Value ?? "";
+						var file = result.Attribute("file")?.Value;
+						var lineStr = result.Attribute("line")?.Value;
+						int? line = int.TryParse(lineStr, out var l) ? l : null;
+
+						if (!string.IsNullOrEmpty(message))
+						{
+							issues.Add(new QualityIssue
+							{
+								Severity = severity,
+								Component = component,
+								Message = message,
+								File = file ?? fileName,
+								Line = line
+							});
+						}
+					}
+				}
+				else if (content.Contains("\"severity\""))
+				{
+					// Parse JSON format
+					var json = Newtonsoft.Json.Linq.JObject.Parse(content);
+					if (json["results"] is Newtonsoft.Json.Linq.JArray results)
+					{
+						foreach (var result in results)
+						{
+							issues.Add(new QualityIssue
+							{
+								Severity = result["severity"]?.ToString() ?? "Unknown",
+								Component = result["component"]?.ToString() ?? "Unknown",
+								Message = result["message"]?.ToString() ?? "",
+								File = result["file"]?.ToString() ?? fileName,
+								Line = int.TryParse(result["line"]?.ToString(), out var l) ? l : null
+							});
+						}
+					}
+				}
+			}
+			catch
+			{
+				// If parsing fails, skip this file
 			}
 		}
 
