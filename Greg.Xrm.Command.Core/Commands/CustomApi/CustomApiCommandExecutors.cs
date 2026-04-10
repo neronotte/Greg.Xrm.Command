@@ -118,14 +118,7 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 				_ => 10 // Default to String
 			};
 
-			if (isInput)
-			{
-				param["type"] = typeCode;
-			}
-			else
-			{
-				param["type"] = typeCode;
-			}
+			param["type"] = typeCode;
 
 			await crm.CreateAsync(param, ct);
 			output.WriteLine($"  Created {(isInput ? "input" : "output")} parameter: {paramName} ({typeName})", ConsoleColor.Green);

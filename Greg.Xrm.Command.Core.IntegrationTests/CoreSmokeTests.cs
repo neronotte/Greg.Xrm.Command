@@ -16,7 +16,7 @@ namespace Greg.Xrm.Command.IntegrationTests
     {
         [TestMethod]
         [TestCategory("Integration")]
-        public async Task SmokeTest_AuthConnection_ShouldConnect()
+        public void SmokeTest_AuthConnection_ShouldConnect()
         {
             if (!IsConnected) return;
 
@@ -30,7 +30,7 @@ namespace Greg.Xrm.Command.IntegrationTests
 
         [TestMethod]
         [TestCategory("Integration")]
-        public async Task SmokeTest_OrganizationList_ShouldRetrieve()
+        public void SmokeTest_OrganizationList_ShouldRetrieve()
         {
             if (!IsConnected) return;
 
@@ -41,7 +41,7 @@ namespace Greg.Xrm.Command.IntegrationTests
 
         [TestMethod]
         [TestCategory("Integration")]
-        public async Task SmokeTest_SolutionList_ShouldRetrieve()
+        public void SmokeTest_SolutionList_ShouldRetrieve()
         {
             if (!IsConnected) return;
 
@@ -51,7 +51,7 @@ namespace Greg.Xrm.Command.IntegrationTests
             query.ColumnSet.AddColumn("version");
             query.TopCount = 5;
 
-            var result = await CrmService!.RetrieveMultipleAsync(query);
+            var result = CrmService!.RetrieveMultiple(query);
 
             Assert.IsNotNull(result, "Should retrieve solutions");
             Assert.IsTrue(result.Entities.Count > 0, "Should have at least one solution");
@@ -66,7 +66,7 @@ namespace Greg.Xrm.Command.IntegrationTests
 
         [TestMethod]
         [TestCategory("Integration")]
-        public async Task SmokeTest_TableCreateDelete_ShouldRoundTrip()
+        public void SmokeTest_TableCreateDelete_ShouldRoundTrip()
         {
             if (!IsConnected) return;
 
@@ -82,7 +82,7 @@ namespace Greg.Xrm.Command.IntegrationTests
                 table["isactivity"] = false;
                 table["schemaType"] = "Standard";
 
-                var tableId = await CrmService!.CreateAsync(table);
+                var tableId = CrmService!.Create(table);
                 Assert.IsTrue(tableId != Guid.Empty, "Should create table");
                 TestContext.WriteLine($"Created table: {tableName} (ID: {tableId})");
 
@@ -91,15 +91,15 @@ namespace Greg.Xrm.Command.IntegrationTests
                 query.ColumnSet.AddColumn("logicalname");
                 query.Criteria.AddCondition("logicalname", Microsoft.Xrm.Sdk.Query.ConditionOperator.Equal, tableName);
 
-                var result = await CrmService.RetrieveMultipleAsync(query);
+                var result = CrmService.RetrieveMultiple(query);
                 Assert.IsTrue(result.Entities.Count > 0, "Should find created table");
 
                 // Delete table
-                await CrmService.DeleteAsync("entity", tableId);
+                CrmService.Delete("entity", tableId);
                 TestContext.WriteLine($"Deleted table: {tableName}");
 
                 // Verify table is deleted
-                result = await CrmService.RetrieveMultipleAsync(query);
+                result = CrmService.RetrieveMultiple(query);
                 Assert.IsTrue(result.Entities.Count == 0, "Should not find deleted table");
             }
             finally
@@ -109,10 +109,10 @@ namespace Greg.Xrm.Command.IntegrationTests
                 {
                     var query = new Microsoft.Xrm.Sdk.Query.QueryExpression("entity");
                     query.Criteria.AddCondition("logicalname", Microsoft.Xrm.Sdk.Query.ConditionOperator.Equal, tableName);
-                    var result = await CrmService!.RetrieveMultipleAsync(query);
+                    var result = CrmService!.RetrieveMultiple(query);
                     if (result.Entities.Count > 0)
                     {
-                        await CrmService.DeleteAsync("entity", result.Entities[0].Id);
+                        CrmService.Delete("entity", result.Entities[0].Id);
                         TestContext.WriteLine($"Cleanup: Deleted table {tableName}");
                     }
                 }
@@ -122,7 +122,7 @@ namespace Greg.Xrm.Command.IntegrationTests
 
         [TestMethod]
         [TestCategory("Integration")]
-        public async Task SmokeTest_PublisherCreateDelete_ShouldRoundTrip()
+        public void SmokeTest_PublisherCreateDelete_ShouldRoundTrip()
         {
             if (!IsConnected) return;
 
@@ -137,7 +137,7 @@ namespace Greg.Xrm.Command.IntegrationTests
                 publisher["customizationprefix"] = "st";
                 publisher["email"] = "smoketest@pacx.local";
 
-                var publisherId = await CrmService!.CreateAsync(publisher);
+                var publisherId = CrmService!.Create(publisher);
                 Assert.IsTrue(publisherId != Guid.Empty, "Should create publisher");
                 TestContext.WriteLine($"Created publisher: {publisherName} (ID: {publisherId})");
 
@@ -146,11 +146,11 @@ namespace Greg.Xrm.Command.IntegrationTests
                 query.ColumnSet.AddColumn("uniquename");
                 query.Criteria.AddCondition("uniquename", Microsoft.Xrm.Sdk.Query.ConditionOperator.Equal, publisherName);
 
-                var result = await CrmService.RetrieveMultipleAsync(query);
+                var result = CrmService.RetrieveMultiple(query);
                 Assert.IsTrue(result.Entities.Count > 0, "Should find created publisher");
 
                 // Delete publisher
-                await CrmService.DeleteAsync("publisher", publisherId);
+                CrmService.Delete("publisher", publisherId);
                 TestContext.WriteLine($"Deleted publisher: {publisherName}");
             }
             finally
@@ -160,10 +160,10 @@ namespace Greg.Xrm.Command.IntegrationTests
                 {
                     var query = new Microsoft.Xrm.Sdk.Query.QueryExpression("publisher");
                     query.Criteria.AddCondition("uniquename", Microsoft.Xrm.Sdk.Query.ConditionOperator.Equal, CreateTestName("smokepub").ToLowerInvariant());
-                    var result = await CrmService!.RetrieveMultipleAsync(query);
+                    var result = CrmService!.RetrieveMultiple(query);
                     if (result.Entities.Count > 0)
                     {
-                        await CrmService.DeleteAsync("publisher", result.Entities[0].Id);
+                        CrmService.Delete("publisher", result.Entities[0].Id);
                     }
                 }
                 catch { /* Ignore cleanup errors */ }
