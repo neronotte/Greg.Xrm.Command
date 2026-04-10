@@ -10,12 +10,12 @@ namespace Greg.Xrm.Command.Commands.Plugin
     /// Scans compiled plugin DLLs for [CrmPluginStep], [CrmPluginImage], and [CrmWebhook] attributes.
     /// Uses MetadataLoadContext to load assemblies without executing them.
     /// </summary>
-    public static class PluginScanner
+    internal static class PluginScanner
     {
         /// <summary>
         /// Scans a directory of plugin DLLs and returns all plugin metadata found.
         /// </summary>
-        public static IList<PluginAssemblyMetadata> ScanDirectory(string directoryPath)
+        internal static IList<PluginAssemblyMetadata> ScanDirectory(string directoryPath)
         {
             var results = new List<PluginAssemblyMetadata>();
             var dllFiles = Directory.GetFiles(directoryPath, "*.dll", SearchOption.AllDirectories);
@@ -30,9 +30,10 @@ namespace Greg.Xrm.Command.Commands.Plugin
                         results.Add(assemblyMetadata);
                     }
                 }
-                catch (Exception)
+                catch (Exception ex) when (ex is not OutOfMemoryException and not StackOverflowException and not BadImageFormatException)
                 {
                     // Skip assemblies that can't be loaded (native DLLs, non-.NET, etc.)
+                    // Log for debugging: System.Diagnostics.Debug.WriteLine($"Skipping {dllPath}: {ex.GetType().Name}: {ex.Message}");
                 }
             }
 
@@ -43,39 +44,19 @@ namespace Greg.Xrm.Command.Commands.Plugin
         /// Scans a single plugin DLL and returns the plugin metadata.
         /// Returns null if no plugin attributes are found.
         /// </summary>
-        public static PluginAssemblyMetadata? ScanAssembly(string dllPath)
+        internal static PluginAssemblyMetadata? ScanAssembly(string dllPath)
         {
-            var pathResolver = new PathAssemblyResolver(new[]
+            if (!File.Exists(dllPath))
             {
-                typeof(object).Assembly.Location,
-                typeof(Attribute).Assembly.Location,
-                // Add System.Runtime for .NET 8
-                Path.Combine(Path.GetDirectoryName(typeof(object).Assembly.Location)!, "System.Runtime.dll"),
-            });
-
-            // Add the target DLL
-            var assemblies = new List<string>
-            {
-                typeof(object).Assembly.Location,
-                typeof(Attribute).Assembly.Location,
-            };
-
-            // Get runtime directory for core assemblies
-            var runtimeDir = Path.GetDirectoryName(typeof(object).Assembly.Location);
-            if (runtimeDir != null)
-            {
-                assemblies.Add(Path.Combine(runtimeDir, "System.Runtime.dll"));
-                assemblies.Add(Path.Combine(runtimeDir, "System.Collections.dll"));
+                return null;
             }
 
-            // Add common Dataverse SDK assemblies that plugins reference
-            var dataverseClientPath = FindDataverseClientAssembly();
-            if (dataverseClientPath != null)
+            var resolver = CreateAssemblyResolver(dllPath);
+            if (resolver == null)
             {
-                assemblies.Add(dataverseClientPath);
+                return null;
             }
 
-            var resolver = new PathAssemblyResolver(assemblies);
             var context = new MetadataLoadContext(resolver);
 
             try
@@ -101,10 +82,49 @@ namespace Greg.Xrm.Command.Commands.Plugin
 
                 return assemblyMetadata.PluginTypes.Count > 0 ? assemblyMetadata : null;
             }
+            catch (ReflectionTypeLoadException)
+            {
+                // Some types couldn't be loaded — continue with what we have
+                return null;
+            }
             finally
             {
                 context.Unload();
             }
+        }
+
+        private static PathAssemblyResolver? CreateAssemblyResolver(string dllPath)
+        {
+            var assemblies = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            // Core runtime assemblies
+            var runtimeDir = Path.GetDirectoryName(typeof(object).Assembly.Location);
+            if (runtimeDir == null) return null;
+
+            assemblies.Add(typeof(object).Assembly.Location);
+            assemblies.Add(typeof(Attribute).Assembly.Location);
+            assemblies.Add(Path.Combine(runtimeDir, "System.Runtime.dll"));
+            assemblies.Add(Path.Combine(runtimeDir, "System.Collections.dll"));
+            assemblies.Add(Path.Combine(runtimeDir, "System.Private.CoreLib.dll"));
+
+            // Scan plugin directory for dependent DLLs
+            var pluginDir = Path.GetDirectoryName(dllPath);
+            if (Directory.Exists(pluginDir))
+            {
+                foreach (var dll in Directory.GetFiles(pluginDir, "*.dll"))
+                {
+                    assemblies.Add(dll);
+                }
+            }
+
+            // Add Dataverse SDK if available
+            var dataverseClientPath = FindDataverseClientAssembly();
+            if (dataverseClientPath != null)
+            {
+                assemblies.Add(dataverseClientPath);
+            }
+
+            return new PathAssemblyResolver(assemblies);
         }
 
         private static PluginTypeMetadata? ScanPluginType(TypeInfo type)
@@ -249,14 +269,14 @@ namespace Greg.Xrm.Command.Commands.Plugin
 
     // === Metadata Models ===
 
-    public class PluginAssemblyMetadata
+    internal sealed class PluginAssemblyMetadata
     {
         public string AssemblyName { get; set; } = "";
         public string AssemblyPath { get; set; } = "";
         public List<PluginTypeMetadata> PluginTypes { get; set; } = new();
     }
 
-    public class PluginTypeMetadata
+    internal sealed class PluginTypeMetadata
     {
         public string TypeName { get; set; } = "";
         public string TypeNameWithoutNamespace { get; set; } = "";
@@ -266,7 +286,7 @@ namespace Greg.Xrm.Command.Commands.Plugin
         public List<PluginWebhookMetadata> Webhooks { get; set; } = new();
     }
 
-    public class PluginStepMetadata
+    internal sealed class PluginStepMetadata
     {
         public string Message { get; set; } = "";
         public string Entity { get; set; } = "";
@@ -280,7 +300,7 @@ namespace Greg.Xrm.Command.Commands.Plugin
         public string? Name { get; set; }
     }
 
-    public class PluginImageMetadata
+    internal sealed class PluginImageMetadata
     {
         public string Name { get; set; } = "";
         public string EntityAlias { get; set; } = "";
@@ -289,7 +309,7 @@ namespace Greg.Xrm.Command.Commands.Plugin
         public string? Message { get; set; }
     }
 
-    public class PluginWebhookMetadata
+    internal sealed class PluginWebhookMetadata
     {
         public string Url { get; set; } = "";
         public int Method { get; set; } = 0;

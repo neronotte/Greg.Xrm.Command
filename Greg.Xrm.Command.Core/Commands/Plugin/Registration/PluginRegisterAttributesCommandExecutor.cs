@@ -141,6 +141,19 @@ namespace Greg.Xrm.Command.Commands.Plugin
 		{
 			var dllContent = Convert.ToBase64String(await File.ReadAllBytesAsync(asm.AssemblyPath, ct));
 
+			// Get assembly version from DLL
+			var assemblyVersion = "1.0.0.0";
+			try
+			{
+				using var context = new System.Reflection.MetadataLoadContext(new System.Reflection.PathAssemblyResolver(new[] { typeof(object).Assembly.Location }));
+				var reflectionAssembly = context.LoadFromAssemblyPath(Path.GetFullPath(asm.AssemblyPath));
+				assemblyVersion = reflectionAssembly.GetName().Version?.ToString() ?? "1.0.0.0";
+			}
+			catch
+			{
+				// Fallback to default version if we can't read the DLL version
+			}
+
 			var query = new QueryExpression("pluginassembly");
 			query.ColumnSet.AddColumn("pluginassemblyid");
 			query.Criteria.AddCondition("name", ConditionOperator.Equal, asm.AssemblyName);
@@ -152,19 +165,41 @@ namespace Greg.Xrm.Command.Commands.Plugin
 			assembly["content"] = dllContent;
 			assembly["isolationmode"] = new OptionSetValue(isolationMode == "Sandbox" ? 2 : 1);
 			assembly["sourcetype"] = new OptionSetValue(0); // Database
-			assembly["version"] = "1.0.0.0";
+			assembly["version"] = assemblyVersion;
 			assembly["publisherid"] = new EntityReference("publisher", publisherId);
 
 			if (result.Entities.Count > 0)
 			{
-				assembly.Id = result.Entities[0].Id;
-				await crm.UpdateAsync(assembly, ct);
-				output.WriteLine($"  Updated assembly: {asm.AssemblyName}", ConsoleColor.Green);
+				// Note: Updating pluginassembly content may require delete + recreate
+				// because the content field is often immutable after creation
+				var existingId = result.Entities[0].Id;
+				assembly.Id = existingId;
+
+				try
+				{
+					await crm.UpdateAsync(assembly, ct);
+					output.WriteLine($"  Updated assembly: {asm.AssemblyName} (v{assemblyVersion})", ConsoleColor.Green);
+				}
+				catch (FaultException<Microsoft.Xrm.Sdk.OrganizationServiceFault> ex)
+				{
+					// If update fails (content is immutable), delete and recreate
+					if (ex.Message.Contains("immutable") || ex.Message.Contains("cannot be changed"))
+					{
+						output.WriteLine($"  Assembly content is immutable, recreating: {asm.AssemblyName}", ConsoleColor.Yellow);
+						await crm.DeleteAsync("pluginassembly", existingId, ct);
+						assembly.Id = await crm.CreateAsync(assembly, ct);
+						output.WriteLine($"  Recreated assembly: {asm.AssemblyName} (v{assemblyVersion})", ConsoleColor.Green);
+					}
+					else
+					{
+						throw;
+					}
+				}
 			}
 			else
 			{
 				assembly.Id = await crm.CreateAsync(assembly, ct);
-				output.WriteLine($"  Created assembly: {asm.AssemblyName}", ConsoleColor.Green);
+				output.WriteLine($"  Created assembly: {asm.AssemblyName} (v{assemblyVersion})", ConsoleColor.Green);
 			}
 
 			return assembly.Id;
@@ -267,26 +302,49 @@ namespace Greg.Xrm.Command.Commands.Plugin
 
 		private async Task RegisterImageAsync(IOrganizationServiceAsync2 crm, PluginImageMetadata image, Guid pluginTypeId, CancellationToken ct)
 		{
-			// Find the step this image belongs to (match by message)
+			// Find the step this image belongs to
 			var stepQuery = new QueryExpression("sdkmessageprocessingstep");
 			stepQuery.ColumnSet.AddColumn("sdkmessageprocessingstepid");
+			stepQuery.ColumnSet.AddColumn("name");
 			stepQuery.Criteria.AddCondition("plugintypeid", ConditionOperator.Equal, pluginTypeId);
+
+			var steps = await crm.RetrieveMultipleAsync(stepQuery, ct);
+
+			if (steps.Entities.Count == 0)
+			{
+				output.WriteLine($"    WARNING: No steps found for plugin type. Cannot register image '{image.Name}'.", ConsoleColor.Yellow);
+				return;
+			}
+
+			Entity? targetStep = null;
+
+			// If image has a specific message, try to match to a step for that message
 			if (!string.IsNullOrEmpty(image.Message))
 			{
 				var msgQuery = new QueryExpression("sdkmessage");
 				msgQuery.ColumnSet.AddColumn("sdkmessageid");
 				msgQuery.Criteria.AddCondition("name", ConditionOperator.Equal, image.Message);
 				var msgResult = await crm.RetrieveMultipleAsync(msgQuery, ct);
+
 				if (msgResult.Entities.Count > 0)
 				{
-					stepQuery.Criteria.AddCondition("sdkmessageid", ConditionOperator.Equal, msgResult.Entities[0].Id);
+					var messageId = msgResult.Entities[0].Id;
+					targetStep = steps.Entities.FirstOrDefault(s =>
+					{
+						var stepMsgRef = s.GetAttributeValue<EntityReference>("sdkmessageid");
+						return stepMsgRef?.Id == messageId;
+					});
 				}
 			}
-			var steps = await crm.RetrieveMultipleAsync(stepQuery, ct);
-			if (steps.Entities.Count == 0)
+
+			// If no specific match, use the first step (with warning if multiple exist)
+			if (targetStep == null)
 			{
-				output.WriteLine($"    WARNING: No matching step found for image '{image.Name}'. Skipping.", ConsoleColor.Yellow);
-				return;
+				if (steps.Entities.Count > 1)
+				{
+					output.WriteLine($"    WARNING: Multiple steps found for plugin type. Image '{image.Name}' will be attached to step '{steps.Entities[0].GetAttributeValue<string>("name")}'.", ConsoleColor.Yellow);
+				}
+				targetStep = steps.Entities[0];
 			}
 
 			var imageRecord = new Entity("sdkmessageprocessingstepimage");
@@ -294,17 +352,20 @@ namespace Greg.Xrm.Command.Commands.Plugin
 			imageRecord["entityalias"] = image.EntityAlias;
 			imageRecord["imagetype"] = image.ImageType;
 			imageRecord["attributes"] = image.Attributes;
-			imageRecord["sdkmessageprocessingstepid"] = new EntityReference("sdkmessageprocessingstep", steps.Entities[0].Id);
+			imageRecord["sdkmessageprocessingstepid"] = new EntityReference("sdkmessageprocessingstep", targetStep.Id);
 
 			await crm.CreateAsync(imageRecord, ct);
-			output.WriteLine($"    Created image: {image.Name} ({image.EntityAlias})", ConsoleColor.Green);
+			output.WriteLine($"    Created image: {image.Name} ({image.EntityAlias}) on step '{targetStep.GetAttributeValue<string>("name")}'", ConsoleColor.Green);
 		}
 
 		private async Task RegisterWebhookAsync(IOrganizationServiceAsync2 crm, PluginWebhookMetadata webhook, Guid pluginTypeId, CancellationToken ct)
 		{
-			output.WriteLine($"    Created webhook: {webhook.Url}", ConsoleColor.Green);
 			// Webhook registration requires service endpoint registration
-			// This is a placeholder - full implementation requires serviceendpoint entity
+			// Full implementation would create:
+			// 1. serviceendpoint entity with the webhook URL
+			// 2. sdkmessageprocessingstepimage for the webhook
+			// For now, this is a placeholder
+			output.WriteLine($"    WARNING: Webhook registration not yet implemented. URL: {webhook.Url}", ConsoleColor.Yellow);
 		}
 	}
 }
