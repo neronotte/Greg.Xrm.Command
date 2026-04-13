@@ -52,6 +52,11 @@
     <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
     <!-- DI container — all projects use Autofac -->
     <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="10.0.0" />
+    <!-- Static analysis — SonarAnalyzer for C# best practices and security -->
+    <PackageReference Include="SonarAnalyzer.CSharp" Version="10.6.0.109712">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
 
   <!-- ============================================================ -->

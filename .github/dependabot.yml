@@ -1,0 +1,58 @@
+version: 2
+updates:
+  # .NET/NuGet dependencies
+  - package-ecosystem: "nuget"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Pacific/Auckland"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "neronotte"
+    labels:
+      - "dependencies"
+      - "nuget"
+    # Group minor/patch updates to reduce PR noise
+    groups:
+      microsoft-extensions:
+        patterns:
+          - "Microsoft.Extensions.*"
+          - "Microsoft.Data.*"
+        update-types:
+          - "minor"
+          - "patch"
+      azure-sdk:
+        patterns:
+          - "Azure.*"
+          - "Microsoft.Azure.*"
+        update-types:
+          - "minor"
+          - "patch"
+      powerplatform-sdk:
+        patterns:
+          - "Microsoft.PowerPlatform.*"
+        update-types:
+          - "minor"
+          - "patch"
+      test-framework:
+        patterns:
+          - "MSTest.*"
+          - "Moq"
+          - "coverlet.*"
+        update-types:
+          - "minor"
+          - "patch"
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Pacific/Auckland"
+    labels:
+      - "dependencies"
+      - "github-actions"

@@ -41,6 +41,8 @@ name: Build Pipeline v01
 on:
   push:
     branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
 #  release:
 #    types:
 #      - published    # Run the workflow when a new GitHub release is published
@@ -109,9 +111,39 @@ jobs:
       run: |
         dotnet test --configuration Release --no-build --collect:"XPlat Code Coverage" --settings Greg.Xrm.Command.Core.TestSuite/CodeCoverage.runsettings --results-directory ./coverage
 
+    # Enforce code coverage threshold (80%)
+    - name: Check Code Coverage Threshold
+      shell: pwsh
+      run: |
+        $coverageFile = Get-ChildItem -Path ./coverage -Filter coverage.cobertura.xml -Recurse | Select-Object -First 1
+        if (-not $coverageFile) {
+          Write-Error "Coverage report not found in ./coverage"
+          exit 1
+        }
+
+        [xml]$coverageXml = Get-Content $coverageFile.FullName
+        $lineRate = [double]$coverageXml.coverage.sources.source.package.line-rate
+        $coveragePercent = [math]::Round($lineRate * 100, 2)
+
+        Write-Host "Code Coverage: $coveragePercent%"
+
+        $threshold = 80.0
+        if ($coveragePercent -lt $threshold) {
+          Write-Error "Code coverage $coveragePercent% is below threshold of $threshold%"
+          exit 1
+        }
+        Write-Host "Coverage threshold check passed (>= $threshold%)"
+
     # Verify code style
     - name: Verify Code Style
       run: dotnet format --verify-no-changes --verbosity diagnostic
+
+    # Mutation testing with Stryker.NET (Phase 3)
+    - name: Run Mutation Testing (Stryker.NET)
+      run: |
+        dotnet tool install -g dotnet-stryker
+        stryker --config-file stryker-config.json --output ./mutation-report
+      continue-on-error: true
 
     # Pack
     - name: Pack NuGet Packages
@@ -146,18 +178,16 @@ jobs:
         retention-days: 30
         path: ./coverage/**/coverage.cobertura.xml
 
-
-        
-      # Publish all NuGet packages to NuGet.org
-      # Use --skip-duplicate to prevent errors if a package with the same version already exists.
-      # If you retry a failed workflow, already published packages will be skipped without error.
-    - name: Publish NuGet package
+    # Publish NuGet packages to NuGet.org
+    - name: Publish NuGet Package
+      if: github.event_name == 'push' && github.ref == 'refs/heads/master'
       run: |
         foreach($file in (Get-ChildItem "${{ env.NuGetDirectory }}" -Recurse -Include *.nupkg)) {
           dotnet nuget push $file --api-key "${{ secrets.NUGET_APIKEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate
         }
-        
+
     - name: Create Release
+      if: github.event_name == 'push' && github.ref == 'refs/heads/master'
       id: create_release
       uses: actions/create-release@v1
       env:
@@ -167,36 +197,43 @@ jobs:
         release_name: Release ${{ env.CurrentVersion }}
         draft: false
         prerelease: false
-          
-    # - name: Upload Release Asset - Command
-    #   id: upload-release-asset-1
-    #   uses: actions/upload-release-asset@v1
-    #   env:
-    #     GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-    #   with:
-    #       upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
-    #       asset_path: ${{ env.NuGetDirectory }}\Greg.Xrm.Command.${{ env.CurrentVersion }}.nupkg
-    #       asset_name: Greg.Xrm.Command.nupkg
-    #       asset_content_type: application/zip
-          
-    # - name: Upload Release Asset - Command Core
-    #   id: upload-release-asset-2
-    #   uses: actions/upload-release-asset@v1
-    #   env:
-    #     GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-    #   with:
-    #       upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
-    #       asset_path: ${{ env.NuGetDirectory }}\Greg.Xrm.Command.Core.${{ env.CurrentVersion }}.nupkg
-    #       asset_name: Greg.Xrm.Command.Core.nupkg
-    #       asset_content_type: application/zip
-          
-    # - name: Upload Release Asset - Command Interfaces
-    #   id: upload-release-asset-3
-    #   uses: actions/upload-release-asset@v1
-    #   env:
-    #     GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-    #   with:
-    #       upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
-    #       asset_path: ${{ env.NuGetDirectory }}\Greg.Xrm.Command.Interfaces.*.nupkg
-    #       asset_name: Greg.Xrm.Command.Interfaces.nupkg
-    #       asset_content_type: application/zip
+
+  codeql:
+    name: CodeQL Analysis
+    runs-on: windows-latest
+    needs: build
+    if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/master')
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [ 'csharp' ]
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v3
+      with:
+        languages: ${{ matrix.language }}
+
+    - name: Install .NET Core
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 8.0.x
+
+    - name: Restore Dependencies
+      run: dotnet restore Greg.Xrm.Command/Greg.Xrm.Command.sln
+
+    - name: Build
+      run: dotnet build Greg.Xrm.Command/Greg.Xrm.Command.sln --configuration Release --no-restore
+
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v3
+      with:
+        category: "/language:${{matrix.language}}"
