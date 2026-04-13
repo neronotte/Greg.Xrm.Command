@@ -34,12 +34,15 @@ jobs:
       run: dotnet build --configuration Release --no-restore
 
     - name: Run E2E Smoke Tests
+      id: smoke_tests
       run: |
         dotnet test Greg.Xrm.Command.Core.IntegrationTests\Greg.Xrm.Command.Core.IntegrationTests.csproj `
           --configuration Release `
           --no-build `
           --logger "trx;LogFileName=smoke-tests.trx" `
-          --filter "Category=Integration"
+          --logger "console;verbosity=detailed" `
+          --filter "Category=Integration" `
+          --blame-hang-timeout 5min
       continue-on-error: true
 
     - name: Upload Test Results
@@ -51,15 +54,68 @@ jobs:
         retention-days: 30
         path: '**/smoke-tests.trx'
 
-    - name: Check Test Results
+    - name: Parse and Report Test Results
+      if: always()
+      shell: pwsh
       run: |
-        $testResults = Get-ChildItem -Recurse -Filter "smoke-tests.trx"
+        $testResults = Get-ChildItem -Recurse -Filter "smoke-tests.trx" -ErrorAction SilentlyContinue
         if ($testResults.Count -eq 0) {
-          Write-Host "No test results found. This may be expected if environment variables are not configured."
+          Write-Host "::notice::No test results found. This is expected if GitHub secrets are not configured."
           Write-Host "To enable E2E tests, configure these GitHub secrets:"
           Write-Host "  - PACX_TEST_URL"
           Write-Host "  - PACX_TEST_CLIENT_ID"
           Write-Host "  - PACX_TEST_CLIENT_SECRET"
           exit 0
         }
-        Write-Host "Test results uploaded. Check artifact: smoke-test-results"
+
+        Write-Host "::group::Test Results Summary"
+        foreach ($file in $testResults) {
+          [xml]$xml = Get-Content $file.FullName
+          $results = $xml.TestRun.Results
+          $total = 0
+          $passed = 0
+          $failed = 0
+          $skipped = 0
+          $duration = 0
+
+          foreach ($result in $results) {
+            foreach ($unitTest in $result.UnitTestResult) {
+              $total++
+              $outcome = $unitTest.outcome
+              if ($outcome -eq "Passed") { $passed++ }
+              elseif ($outcome -eq "Failed") { $failed++ }
+              else { $skipped++ }
+
+              if ($unitTest.execution -and $unitTest.execution.testDuration) {
+                $duration += [double]$unitTest.execution.testDuration
+              }
+            }
+          }
+
+          Write-Host "Test Results for $($file.Name):"
+          Write-Host "  Total: $total | Passed: $passed | Failed: $failed | Skipped: $skipped"
+          Write-Host "  Duration: $([math]::Round($duration / 1000, 2))s"
+
+          if ($failed -gt 0) {
+            Write-Host "::error::$failed test(s) failed. Check artifact: smoke-test-results"
+
+            # Print failure details
+            foreach ($result in $results) {
+              foreach ($unitTest in $result.UnitTestResult) {
+                if ($unitTest.outcome -eq "Failed") {
+                  Write-Host "::error file=$($unitTest.testName)::Test $($unitTest.testName) failed"
+                  if ($unitTest.Output -and $unitTest.Output.ErrorInfo) {
+                    Write-Host "  Message: $($unitTest.Output.ErrorInfo.Message)"
+                    Write-Host "  StackTrace: $($unitTest.Output.ErrorInfo.StackTrace)"
+                  }
+                }
+              }
+            }
+          }
+          elseif ($total -gt 0) {
+            Write-Host "::notice::All $passed test(s) passed in $([math]::Round($duration / 1000, 2))s"
+          }
+        }
+        Write-Host "::endgroup::"
+      env:
+        GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
