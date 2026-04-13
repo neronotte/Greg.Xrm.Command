@@ -33,7 +33,9 @@ namespace Greg.Xrm.Command.Commands.Tabular
 			{
 				output.WriteLine("[DRY RUN] Would deploy:", ConsoleColor.Yellow);
 				output.WriteLine($"  Model: {modelName}");
-				output.WriteLine($"  Tables: {bim.RootElement.TryGetProperty("tables", out var tables) ? tables.GetArrayLength() : 0}");
+				bim.RootElement.TryGetProperty("tables", out var tables);
+				var tableCount = tables.ValueKind == JsonValueKind.Array ? tables.GetArrayLength() : 0;
+				output.WriteLine($"  Tables: {tableCount}");
 				output.WriteLine($"  Measures: {CountMeasures(bim)}");
 				return CommandResult.Success();
 			}
