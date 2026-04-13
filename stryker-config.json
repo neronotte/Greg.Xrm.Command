@@ -1,0 +1,40 @@
+{
+  "stryker-config": {
+    "solution": "Greg.Xrm.Command.sln",
+    "project": "Greg.Xrm.Command.Core/Greg.Xrm.Command.Core.csproj",
+    "test-projects": [
+      "Greg.Xrm.Command.Core.TestSuite/Greg.Xrm.Command.Core.TestSuite.csproj"
+    ],
+    "thresholds": {
+      "high": 80,
+      "low": 60,
+      "break": 60
+    },
+    "reporters": [
+      "progress",
+      "html",
+      "markdown"
+    ],
+    "mutate": [
+      "**/Commands/**/*.cs",
+      "**/Parsing/**/*.cs",
+      "**/Services/**/*.cs"
+    ],
+    "excluded-mutations": [
+      "string",
+      "emptyString"
+    ],
+    "language-version": "latest",
+    "ignore-mutations": [
+      "Linq.FirstOrDefault",
+      "Linq.SingleOrDefault"
+    ],
+    "coverage-analysis": "perTest",
+    "disable-bail": false,
+    "disable-mix-mutants": false,
+    "since": {
+      "enabled": false,
+      "target": "main"
+    }
+  }
+}
