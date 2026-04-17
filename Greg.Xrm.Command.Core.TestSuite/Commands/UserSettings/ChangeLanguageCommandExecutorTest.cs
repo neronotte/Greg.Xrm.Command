@@ -1,7 +1,7 @@
-﻿using Greg.Xrm.Command.Services.Connection;
+using Greg.Xrm.Command.Services.Connection;
+using Microsoft.Crm.Sdk.Messages;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
-using Microsoft.Xrm.Sdk.Messages;
 using System.ServiceModel;
 
 namespace Greg.Xrm.Command.Commands.UserSettings

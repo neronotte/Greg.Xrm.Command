@@ -25,6 +25,11 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 				output.WriteLine("Failed", ConsoleColor.Red);
 				return CommandResult.Fail($"The LCID {command.Lcid} is not valid.");
 			}
+			catch (ArgumentOutOfRangeException)
+			{
+				output.WriteLine("Failed", ConsoleColor.Red);
+				return CommandResult.Fail($"The LCID {command.Lcid} is not valid.");
+			}
 
 
 			output.Write($"Connecting to the current dataverse environment...");
