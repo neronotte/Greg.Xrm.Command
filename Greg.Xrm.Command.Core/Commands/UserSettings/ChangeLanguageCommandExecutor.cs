@@ -37,7 +37,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 			}
 
 
-			output.Write($"Connecting to the current dataverse environment...");
+			output.Write($"Connecting to the current Dataverse environment...");
 			var crm = await organizationServiceRepository.GetCurrentConnectionAsync();
 			output.WriteLine("Done", ConsoleColor.Green);
 
@@ -92,7 +92,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 			catch (FaultException<OrganizationServiceFault> ex)
 			{
 				output.WriteLine("Failed", ConsoleColor.Red);
-				return CommandResult.Fail(ex.Message, ex);
+				return CommandResult.Fail($"Dataverse error: {ex.Message}", ex);
 			}
 			catch (Exception ex)
 			{
