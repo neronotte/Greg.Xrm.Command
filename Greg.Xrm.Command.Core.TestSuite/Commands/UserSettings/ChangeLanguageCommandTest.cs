@@ -28,6 +28,16 @@
 		}
 
 		[TestMethod]
+		public void ParseWithPositionalLcidShouldWork()
+		{
+			var command = Utility.TestParseCommand<ChangeLanguageCommand>(
+				"usersettings", "changelanguage", "1040");
+
+			Assert.AreEqual(1040, command.Lcid);
+			Assert.IsNull(command.Field);
+		}
+
+		[TestMethod]
 		public void FieldShouldDefaultToNullWhenOmitted()
 		{
 			var command = Utility.TestParseCommand<ChangeLanguageCommand>(
