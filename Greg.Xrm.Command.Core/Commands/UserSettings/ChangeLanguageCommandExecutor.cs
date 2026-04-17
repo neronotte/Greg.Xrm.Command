@@ -12,6 +12,11 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 		IOrganizationServiceRepository organizationServiceRepository
 		) : ICommandExecutor<ChangeLanguageCommand>
 	{
+		private const string UserSettingsTableName = "usersettings";
+		private const string UiLanguageIdFieldName = "uilanguageid";
+		private const string HelpLanguageIdFieldName = "helplanguageid";
+		private const string LocaleIdFieldName = "localeid";
+
 		public async Task<CommandResult> ExecuteAsync(ChangeLanguageCommand command, CancellationToken cancellationToken)
 		{
 			output.Write($"Validating LCID {command.Lcid}...");
@@ -56,22 +61,22 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 
 
 				output.Write("Updating user settings...");
-				var userSettings = new Entity("usersettings")
+				var userSettings = new Entity(UserSettingsTableName)
 				{
 					Id = whoAmIResponse.UserId
 				};
 
-				if (command.Field is null || command.Field == UserSettingsLanguageField.UiLanguageId)
+				if (command.Field is null || command.Field == LanguageField.UiLanguageId)
 				{
-					userSettings["uilanguageid"] = command.Lcid;
+					userSettings[UiLanguageIdFieldName] = command.Lcid;
 				}
-				if (command.Field is null || command.Field == UserSettingsLanguageField.HelpLanguageId)
+				if (command.Field is null || command.Field == LanguageField.HelpLanguageId)
 				{
-					userSettings["helplanguageid"] = command.Lcid;
+					userSettings[HelpLanguageIdFieldName] = command.Lcid;
 				}
-				if (command.Field is null || command.Field == UserSettingsLanguageField.LocaleId)
+				if (command.Field is null || command.Field == LanguageField.LocaleId)
 				{
-					userSettings["localeid"] = command.Lcid;
+					userSettings[LocaleIdFieldName] = command.Lcid;
 				}
 
 				await crm.UpdateAsync(userSettings);

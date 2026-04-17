@@ -102,7 +102,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 			var executor = new ChangeLanguageCommandExecutor(output, repoMock.Object);
 
 			var result = await executor.ExecuteAsync(
-				new ChangeLanguageCommand { Lcid = 1033, Field = UserSettingsLanguageField.LocaleId },
+				new ChangeLanguageCommand { Lcid = 1033, Field = LanguageField.LocaleId },
 				CancellationToken.None);
 
 			Assert.IsTrue(result.IsSuccess, result.ErrorMessage);

@@ -2,7 +2,7 @@
 
 namespace Greg.Xrm.Command.Commands.UserSettings
 {
-	public enum UserSettingsLanguageField
+	public enum LanguageField
 	{
 		UiLanguageId,
 		HelpLanguageId,
@@ -17,6 +17,6 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 		public int Lcid { get; set; }
 
 		[Option("field", "f", Order = 2, HelpText = "Field to update: UiLanguageId, HelpLanguageId, or LocaleId. If omitted, all fields are updated.")]
-		public UserSettingsLanguageField? Field { get; set; }
+		public LanguageField? Field { get; set; }
 	}
 }

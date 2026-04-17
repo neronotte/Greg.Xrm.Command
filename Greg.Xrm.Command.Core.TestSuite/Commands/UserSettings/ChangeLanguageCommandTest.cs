@@ -12,7 +12,7 @@
 				"--field", "UiLanguageId");
 
 			Assert.AreEqual(1040, command.Lcid);
-			Assert.AreEqual(UserSettingsLanguageField.UiLanguageId, command.Field);
+			Assert.AreEqual(LanguageField.UiLanguageId, command.Field);
 		}
 
 		[TestMethod]
@@ -24,7 +24,7 @@
 				"-f", "LocaleId");
 
 			Assert.AreEqual(1033, command.Lcid);
-			Assert.AreEqual(UserSettingsLanguageField.LocaleId, command.Field);
+			Assert.AreEqual(LanguageField.LocaleId, command.Field);
 		}
 
 		[TestMethod]
@@ -39,10 +39,10 @@
 		}
 
 		[TestMethod]
-		[DataRow("UiLanguageId", UserSettingsLanguageField.UiLanguageId)]
-		[DataRow("HelpLanguageId", UserSettingsLanguageField.HelpLanguageId)]
-		[DataRow("LocaleId", UserSettingsLanguageField.LocaleId)]
-		public void AllFieldValuesShouldBeParseable(string fieldValue, UserSettingsLanguageField expected)
+		[DataRow("UiLanguageId", LanguageField.UiLanguageId)]
+		[DataRow("HelpLanguageId", LanguageField.HelpLanguageId)]
+		[DataRow("LocaleId", LanguageField.LocaleId)]
+		public void AllFieldValuesShouldBeParseable(string fieldValue, LanguageField expected)
 		{
 			var command = Utility.TestParseCommand<ChangeLanguageCommand>(
 				"usersettings", "changelanguage",
