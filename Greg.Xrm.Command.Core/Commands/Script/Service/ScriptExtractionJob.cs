@@ -45,7 +45,7 @@ namespace Greg.Xrm.Command.Commands.Script.Service
             else
             {
                 output.WriteLine("Step 1: Extracting entity metadata...");
-                entities = await metadataExtractor.GetEntitiesByPrefixAsync(prefixes) ?? new List<Extractor_EntityMetadata>();
+                entities = await metadataExtractor.GetEntitiesByPrefixAsync(prefixes);
                 output.WriteLine($"Entities found: {entities.Count}");
                 foreach (var entity in entities)
                 {
@@ -55,7 +55,7 @@ namespace Greg.Xrm.Command.Commands.Script.Service
             }
 
             output.WriteLine("Step 2: Extracting relationship metadata...");
-            var relationships = await metadataExtractor.GetRelationshipsAsync(prefixes, entities) ?? new List<Extractor_RelationshipMetadata>();
+            var relationships = await metadataExtractor.GetRelationshipsAsync(prefixes, entities);
             output.WriteLine($"Relationships found: {relationships.Count}");
             foreach (var rel in relationships.OrderBy(r => r.Name))
             {
@@ -79,7 +79,7 @@ namespace Greg.Xrm.Command.Commands.Script.Service
             {
                 output.WriteLine("Step 4: Generating State Field CSV...");
                 csvPath = Path.Combine(outputDir, stateFieldsDefinitionName);
-                var optionSets = await metadataExtractor.GetOptionSetsAsync(entities.Select(e => e.SchemaName).ToList()) ?? new List<Extractor_OptionSetMetadata>();
+                var optionSets = await metadataExtractor.GetOptionSetsAsync(entities.Select(e => e.SchemaName).ToList());
                 await metadataExtractor.GenerateStateFieldsCSV(optionSets, csvPath);
                 output.WriteLine($"State Field CSV generated: {csvPath}");
                 output.WriteLine();
