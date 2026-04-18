@@ -1,4 +1,4 @@
-﻿namespace Greg.Xrm.Command.Commands.Solution
+namespace Greg.Xrm.Command.Commands.Solution
 {
 	[Command("solution", "getPublisherList", HelpText = "Lists the available publishers in current Dataverse environment. It displays unique name, friendly name and prefix.")]
 	public class GetPublisherListCommand

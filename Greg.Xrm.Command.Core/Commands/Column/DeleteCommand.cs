@@ -1,5 +1,5 @@
-﻿using Greg.Xrm.Command.Parsing;
 using System.ComponentModel.DataAnnotations;
+using Greg.Xrm.Command.Parsing;
 
 namespace Greg.Xrm.Command.Commands.Column
 {

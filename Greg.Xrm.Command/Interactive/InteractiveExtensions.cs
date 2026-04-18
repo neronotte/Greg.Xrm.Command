@@ -1,4 +1,4 @@
-﻿using Greg.Xrm.Command.Parsing;
+using Greg.Xrm.Command.Parsing;
 using Spectre.Console;
 
 namespace Greg.Xrm.Command.Interactive
@@ -27,9 +27,10 @@ namespace Greg.Xrm.Command.Interactive
 
 		public static void CreateRule(this IAnsiConsole console, string title)
 		{
-			console.Write(new Rule($"[{DefaultColors.Primary}]{title}[/]") { 
-				Style = Style.Parse(DefaultColors.Primary), 
-				Border = BoxBorder.Rounded 
+			console.Write(new Rule($"[{DefaultColors.Primary}]{title}[/]")
+			{
+				Style = Style.Parse(DefaultColors.Primary),
+				Border = BoxBorder.Rounded
 			});
 			console.WriteLine();
 		}

@@ -1,10 +1,10 @@
-﻿using Greg.Xrm.Command;
+using System.Text;
+using Greg.Xrm.Command;
 using Greg.Xrm.Command.Parsing;
 using Greg.Xrm.Command.Services.CommandHistory;
 using Greg.Xrm.Command.Services.Output;
 using Microsoft.Extensions.Logging;
 using Spectre.Console;
-using System.Text;
 
 namespace Greg.Xrm.Command.Interactive
 {

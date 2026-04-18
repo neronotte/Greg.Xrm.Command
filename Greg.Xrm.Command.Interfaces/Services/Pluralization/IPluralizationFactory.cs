@@ -1,7 +1,7 @@
-﻿namespace Greg.Xrm.Command.Services.Pluralization
+namespace Greg.Xrm.Command.Services.Pluralization
 {
-    public interface IPluralizationFactory
-    {
-        IPluralizationStrategy CreateFor(int languageCode);
-    }
+	public interface IPluralizationFactory
+	{
+		IPluralizationStrategy CreateFor(int languageCode);
+	}
 }

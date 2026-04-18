@@ -1,6 +1,6 @@
-﻿using Greg.Xrm.Command.Parsing;
-using Greg.Xrm.Command.Services;
 using System.ComponentModel.DataAnnotations;
+using Greg.Xrm.Command.Parsing;
+using Greg.Xrm.Command.Services;
 using static Greg.Xrm.Command.Services.Plugin.PluginRegistrationToolkit;
 
 namespace Greg.Xrm.Command.Commands.Plugin.Step

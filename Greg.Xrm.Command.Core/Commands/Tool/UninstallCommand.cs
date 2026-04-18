@@ -1,9 +1,9 @@
-﻿using Greg.Xrm.Command.Services;
 using System.ComponentModel.DataAnnotations;
+using Greg.Xrm.Command.Services;
 
 namespace Greg.Xrm.Command.Commands.Tool
 {
-    [Command("tool", "uninstall", HelpText = "Uninstalls a PACX plugin.")]
+	[Command("tool", "uninstall", HelpText = "Uninstalls a PACX plugin.")]
 	[Alias("tool", "remove")]
 	[Alias("tool", "delete")]
 	[Alias("uninstall", "tool")]

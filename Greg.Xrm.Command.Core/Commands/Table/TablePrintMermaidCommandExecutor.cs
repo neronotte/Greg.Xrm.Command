@@ -1,11 +1,11 @@
-﻿using Greg.Xrm.Command.Commands.Table.Migration;
+using Greg.Xrm.Command.Commands.Table.Migration;
 using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
 using Microsoft.Xrm.Sdk.Query;
 
 namespace Greg.Xrm.Command.Commands.Table
 {
-    public class TablePrintMermaidCommandExecutor : ICommandExecutor<TablePrintMermaidCommand>
+	public class TablePrintMermaidCommandExecutor : ICommandExecutor<TablePrintMermaidCommand>
 	{
 		private readonly IOutput output;
 		private readonly IOrganizationServiceRepository organizationServiceRepository;

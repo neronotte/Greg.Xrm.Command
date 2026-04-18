@@ -1,4 +1,4 @@
-﻿using Greg.Xrm.Command.Parsing;
+using Greg.Xrm.Command.Parsing;
 
 namespace Greg.Xrm.Command.Commands.Help
 {
@@ -12,8 +12,8 @@ namespace Greg.Xrm.Command.Commands.Help
 		}
 
 
-        public HelpCommand(CommandDefinition commandDefinition)
-        {
+		public HelpCommand(CommandDefinition commandDefinition)
+		{
 			this.CommandDefinition = commandDefinition;
 			this.ExportHelp = false;
 			this.ExportHelpPath = string.Empty;

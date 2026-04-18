@@ -1,10 +1,10 @@
-﻿using Greg.Xrm.Command.Model;
+using Greg.Xrm.Command.Model;
 using Microsoft.Extensions.Logging;
 using Microsoft.PowerPlatform.Dataverse.Client;
 
 namespace Greg.Xrm.Command.Services.ComponentResolution
 {
-	public class ComponentResolverEngine: IComponentResolverEngine
+	public class ComponentResolverEngine : IComponentResolverEngine
 	{
 		private readonly ILogger<ComponentResolverEngine> log;
 		private readonly Dictionary<int, Func<IComponentResolver>> resolverStrategyCache = [];

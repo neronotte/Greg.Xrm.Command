@@ -1,6 +1,6 @@
-﻿using Greg.Xrm.Command.Parsing;
-using Greg.Xrm.Command.Services;
 using System.ComponentModel.DataAnnotations;
+using Greg.Xrm.Command.Parsing;
+using Greg.Xrm.Command.Services;
 
 namespace Greg.Xrm.Command.Commands.Workflows
 {

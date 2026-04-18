@@ -1,9 +1,9 @@
-﻿using Greg.Xrm.Command.Model;
+using System.ComponentModel;
+using System.IO.Packaging;
+using Greg.Xrm.Command.Model;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;
-using System.ComponentModel;
-using System.IO.Packaging;
 
 namespace Greg.Xrm.Command.Services.Plugin
 {
@@ -78,7 +78,7 @@ namespace Greg.Xrm.Command.Services.Plugin
 
 		public bool ismanaged
 		{
-  			get => Get<bool>();
+			get => Get<bool>();
 			set => SetValue(value);
 		}
 

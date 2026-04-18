@@ -1,8 +1,8 @@
-﻿using Greg.Xrm.Command.Model;
+using System.ServiceModel;
+using Greg.Xrm.Command.Model;
 using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
 using Microsoft.Xrm.Sdk;
-using System.ServiceModel;
 
 namespace Greg.Xrm.Command.Commands.Workflows
 {
@@ -89,7 +89,7 @@ namespace Greg.Xrm.Command.Commands.Workflows
 					output.WriteLine("Done", ConsoleColor.Green);
 					successCount++;
 				}
-				catch(FaultException<OrganizationServiceFault> ex)
+				catch (FaultException<OrganizationServiceFault> ex)
 				{
 					output.WriteLine("Failed", ConsoleColor.Red);
 					output.WriteLine(ex.Dump());

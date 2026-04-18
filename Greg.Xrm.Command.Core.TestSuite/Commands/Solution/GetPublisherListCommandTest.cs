@@ -1,8 +1,8 @@
-﻿namespace Greg.Xrm.Command.Commands.Solution
+namespace Greg.Xrm.Command.Commands.Solution
 {
 	[TestClass]
 	public class GetPublisherListCommandTest
-    {
+	{
 		[TestMethod]
 		public void ParseWithLongNameShouldWork()
 		{

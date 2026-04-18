@@ -1,4 +1,4 @@
-﻿using Greg.Xrm.Command.Services;
+using Greg.Xrm.Command.Services;
 
 namespace Greg.Xrm.Command.Parsing
 {
@@ -47,14 +47,14 @@ namespace Greg.Xrm.Command.Parsing
 		/// Valid only for leaf nodes.
 		/// </summary>
 		public CommandDefinition? Command { get; set; }
-		
+
 
 		/// <summary>
 		/// Indicates whether the current verb should be hidden from the help.
 		/// </summary>
-		public bool IsHidden 
+		public bool IsHidden
 		{
-			get 
+			get
 			{
 				if (this.helper?.Hidden == true) return true;
 

@@ -1,4 +1,4 @@
-﻿using Greg.Xrm.Command.Services.Connection;
+using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
 
 namespace Greg.Xrm.Command.Commands.Auth
@@ -9,12 +9,12 @@ namespace Greg.Xrm.Command.Commands.Auth
 		private readonly IOrganizationServiceRepository repository;
 
 		public SelectCommandExecutor(IOutput output, IOrganizationServiceRepository repository)
-        {
+		{
 			this.output = output;
 			this.repository = repository;
 		}
 
-        public async Task<CommandResult> ExecuteAsync(SelectCommand command, CancellationToken cancellationToken)
+		public async Task<CommandResult> ExecuteAsync(SelectCommand command, CancellationToken cancellationToken)
 		{
 			if (string.IsNullOrWhiteSpace(command.Name))
 			{

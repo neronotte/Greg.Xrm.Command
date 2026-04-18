@@ -1,4 +1,4 @@
-﻿namespace Greg.Xrm.Command
+namespace Greg.Xrm.Command
 {
 	class CommandRunnerNoOp(int result) : ICommandRunner
 	{

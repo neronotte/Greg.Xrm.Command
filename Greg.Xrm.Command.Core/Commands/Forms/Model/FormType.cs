@@ -1,6 +1,6 @@
-﻿namespace Greg.Xrm.Command.Commands.Forms.Model
+namespace Greg.Xrm.Command.Commands.Forms.Model
 {
-    public enum FormType
+	public enum FormType
 	{
 		Dashboard = 0,
 		AppointmentBook = 1,

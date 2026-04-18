@@ -1,6 +1,6 @@
-﻿using Microsoft.PowerPlatform.Dataverse.Client;
-using Microsoft.Xrm.Sdk;
 using System.Runtime.CompilerServices;
+using Microsoft.PowerPlatform.Dataverse.Client;
+using Microsoft.Xrm.Sdk;
 
 namespace Greg.Xrm.Command.Model
 {

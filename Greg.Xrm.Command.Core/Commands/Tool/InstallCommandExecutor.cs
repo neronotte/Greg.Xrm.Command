@@ -1,4 +1,4 @@
-﻿using Greg.Xrm.Command.Services;
+using Greg.Xrm.Command.Services;
 using Greg.Xrm.Command.Services.Output;
 using Greg.Xrm.Command.Services.Plugin;
 using NuGet.Common;

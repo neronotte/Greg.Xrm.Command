@@ -1,4 +1,4 @@
-﻿
+
 namespace Greg.Xrm.Command.Commands.WebResources
 {
 	[Command("webresources", "js", "create", HelpText = "(Preview) Creates a new Javascript webresource from a template")]

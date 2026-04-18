@@ -1,9 +1,9 @@
-﻿using Greg.Xrm.Command.Parsing;
+using Greg.Xrm.Command.Parsing;
 using Greg.Xrm.Command.Services;
 
 namespace Greg.Xrm.Command.Commands.Table
 {
-    [Command("table", "defineMigrationStrategy", HelpText = "Builds the data migration strategy to populate all the tables contained in a given solution")]
+	[Command("table", "defineMigrationStrategy", HelpText = "Builds the data migration strategy to populate all the tables contained in a given solution")]
 	[Alias("table", "defmig")]
 	public class TableDefineMigrationStrategyCommand : ICanProvideUsageExample
 	{

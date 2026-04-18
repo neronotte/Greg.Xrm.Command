@@ -1,13 +1,13 @@
-﻿using Greg.Xrm.Command.Services.Settings;
+using Greg.Xrm.Command.Services.Settings;
 
 namespace Greg.Xrm.Command.Commands.WebResources.Templates
 {
-    public class JsTemplateManager : IJsTemplateManager
+	public class JsTemplateManager : IJsTemplateManager
 	{
 		private readonly ISettingsRepository settingsRepository;
 
 		public JsTemplateManager(ISettingsRepository settingsRepository)
-        {
+		{
 			this.settingsRepository = settingsRepository;
 		}
 

@@ -1,4 +1,4 @@
-﻿
+
 namespace Greg.Xrm.Command.Commands.Solution
 {
 	[Command("solution", "list", HelpText = "Lists all solutions in the current environment.")]
@@ -33,7 +33,7 @@ namespace Greg.Xrm.Command.Commands.Solution
 			Json
 		}
 
-		public enum OutputOrder 
+		public enum OutputOrder
 		{
 			Name,
 			CreatedOn,

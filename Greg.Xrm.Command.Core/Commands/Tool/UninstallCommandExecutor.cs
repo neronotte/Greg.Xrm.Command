@@ -1,4 +1,4 @@
-﻿using Greg.Xrm.Command.Services;
+using Greg.Xrm.Command.Services;
 using Greg.Xrm.Command.Services.Output;
 
 namespace Greg.Xrm.Command.Commands.Tool
@@ -9,13 +9,13 @@ namespace Greg.Xrm.Command.Commands.Tool
 		private readonly IStorage storage;
 
 		public UninstallCommandExecutor(IOutput output, IStorage storage)
-        {
+		{
 			this.output = output;
 			this.storage = storage;
 		}
 
 
-        public Task<CommandResult> ExecuteAsync(UninstallCommand command, CancellationToken cancellationToken)
+		public Task<CommandResult> ExecuteAsync(UninstallCommand command, CancellationToken cancellationToken)
 		{
 			var storageFolder = storage.GetOrCreateStorageFolder();
 			var pluginRootFolder = storageFolder.CreateSubdirectory("Plugins");
@@ -30,14 +30,14 @@ namespace Greg.Xrm.Command.Commands.Tool
 			try
 			{
 				output.Write($"Deleting plugin <{pluginFolder.Name}>...");
-				
+
 				File.WriteAllText(Path.Combine(pluginFolder.FullName, ".delete"), "Plugin deleted on " + DateTime.Now.ToLongDateString());
 
 				output.WriteLine("Done", ConsoleColor.Green);
 
 				return Task.FromResult(CommandResult.Success());
 			}
-			catch(Exception ex)
+			catch (Exception ex)
 			{
 				output.WriteLine("Failed", ConsoleColor.Red);
 				return Task.FromResult(CommandResult.Fail(ex.Message));

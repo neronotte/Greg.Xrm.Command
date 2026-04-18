@@ -1,4 +1,4 @@
-﻿namespace Greg.Xrm.Command.Commands.Ribbon
+namespace Greg.Xrm.Command.Commands.Ribbon
 {
 	[Command("ribbon", "get", HelpText = "Returns the full definition of a specific (application or table) ribbon (command bar).")]
 	public class GetRibbonCommand

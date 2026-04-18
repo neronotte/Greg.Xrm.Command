@@ -1,4 +1,4 @@
-﻿using Microsoft.Crm.Sdk.Messages;
+using Microsoft.Crm.Sdk.Messages;
 
 namespace Greg.Xrm.Command.Commands.WebResources.PushLogic
 {

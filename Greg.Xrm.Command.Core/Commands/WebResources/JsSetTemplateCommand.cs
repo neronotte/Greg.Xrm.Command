@@ -1,10 +1,10 @@
-﻿using Greg.Xrm.Command.Parsing;
-using Greg.Xrm.Command.Services;
 using System.ComponentModel.DataAnnotations;
+using Greg.Xrm.Command.Parsing;
+using Greg.Xrm.Command.Services;
 
 namespace Greg.Xrm.Command.Commands.WebResources
 {
-    [Command("webresources", "js", "setTemplate", HelpText = "Allows to override the default template used when creating custom JS WebResources.")]
+	[Command("webresources", "js", "setTemplate", HelpText = "Allows to override the default template used when creating custom JS WebResources.")]
 	[Alias("wr", "js", "setTemplate")]
 	[Alias("wr", "setTemplate", "js")]
 	public class JsSetTemplateCommand : ICanProvideUsageExample, IValidatableObject
@@ -13,7 +13,7 @@ namespace Greg.Xrm.Command.Commands.WebResources
 		[Required]
 		public string FileName { get; set; } = string.Empty;
 
-		[Option("type", "t", Order =1, HelpText = "The type of the template to override.", DefaultValue = JavascriptWebResourceType.Form)]
+		[Option("type", "t", Order = 1, HelpText = "The type of the template to override.", DefaultValue = JavascriptWebResourceType.Form)]
 		public JavascriptWebResourceType Type { get; set; } = JavascriptWebResourceType.Form;
 
 		[Option("forTable", "ft", Order = 2, HelpText = "To be used in conjunction with `--type Ribbon`, indicates if the template is for a table command bar. If not specified, is assumed as a global command bar.", DefaultValue = false)]

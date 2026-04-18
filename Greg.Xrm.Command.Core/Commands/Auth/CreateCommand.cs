@@ -1,7 +1,7 @@
-﻿using Greg.Xrm.Command.Parsing;
-using Greg.Xrm.Command.Services;
 using System.ComponentModel.DataAnnotations;
 using System.Text.RegularExpressions;
+using Greg.Xrm.Command.Parsing;
+using Greg.Xrm.Command.Services;
 
 namespace Greg.Xrm.Command.Commands.Auth
 {
@@ -61,7 +61,7 @@ namespace Greg.Xrm.Command.Commands.Auth
 				// something can be any combination of characters valid in a classic URL
 				var pattern = @"^https://[a-zA-Z0-9\-_.]+\.crm\d*\.dynamics\.com/?$";
 				var regex = new Regex(pattern);
-				
+
 				if (!regex.IsMatch(EnvironmentUrl))
 				{
 					yield return new ValidationResult("The environment URL must be in the format: https://something.crm[number].dynamics.com (with optional trailing slash).", [nameof(EnvironmentUrl)]);

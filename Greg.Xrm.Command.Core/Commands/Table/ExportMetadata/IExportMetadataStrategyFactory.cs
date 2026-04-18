@@ -1,7 +1,7 @@
-﻿namespace Greg.Xrm.Command.Commands.Table.ExportMetadata
+namespace Greg.Xrm.Command.Commands.Table.ExportMetadata
 {
-    public interface IExportMetadataStrategyFactory
-    {
-        IExportMetadataStrategy Create(ExportMetadataFormat format);
-    }
+	public interface IExportMetadataStrategyFactory
+	{
+		IExportMetadataStrategy Create(ExportMetadataFormat format);
+	}
 }

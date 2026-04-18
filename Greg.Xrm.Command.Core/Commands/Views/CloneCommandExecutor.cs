@@ -1,10 +1,10 @@
-﻿using Greg.Xrm.Command.Commands.Views.Model;
+using System.Xml.Linq;
+using Greg.Xrm.Command.Commands.Views.Model;
 using Greg.Xrm.Command.Commands.WebResources.PushLogic;
 using Greg.Xrm.Command.Model;
 using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
 using Microsoft.Crm.Sdk;
-using System.Xml.Linq;
 
 namespace Greg.Xrm.Command.Commands.Views
 {
@@ -47,7 +47,7 @@ namespace Greg.Xrm.Command.Commands.Views
 
 
 				var newView = view.GetType() == typeof(SavedQuery) ? (TableView)new SavedQuery() : new UserQuery();
-				newView.name = newName; 
+				newView.name = newName;
 				newView.layoutxml = view.layoutxml;
 				newView.querytype = SavedQueryQueryType.MainApplicationView;
 				newView.returnedtypecode = view.returnedtypecode;

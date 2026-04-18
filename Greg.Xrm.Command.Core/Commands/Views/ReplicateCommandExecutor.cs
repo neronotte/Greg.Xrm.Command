@@ -1,4 +1,4 @@
-﻿using Greg.Xrm.Command.Commands.Views.Model;
+using Greg.Xrm.Command.Commands.Views.Model;
 using Greg.Xrm.Command.Commands.WebResources.PushLogic;
 using Greg.Xrm.Command.Model;
 using Greg.Xrm.Command.Services.Connection;
@@ -38,14 +38,16 @@ namespace Greg.Xrm.Command.Commands.Views
 					.Where(o => o.querytype != SavedQueryQueryType.LookupView)
 					.ToList();
 			}
-			else if (command.Onto.Trim() == "*") 
+			else if (command.Onto.Trim() == "*")
 			{
 				otherViews = otherViews
 					.Where(o => o.Id != view.Id)
 					.ToList();
 
-			} else {
-				
+			}
+			else
+			{
+
 				var names = command.Onto.Split(",", StringSplitOptions.RemoveEmptyEntries)
 					.Select(n => n.Trim())
 					.ToList();
@@ -86,7 +88,7 @@ namespace Greg.Xrm.Command.Commands.Views
 					return CommandResult.Fail($"Unable to replicate the selected view layout");
 				}
 			}
-			catch(Exception ex)
+			catch (Exception ex)
 			{
 				output.WriteLine("Error", ConsoleColor.Red);
 				return CommandResult.Fail($"An error occurred while replicating the layout: {ex.Message}", ex);

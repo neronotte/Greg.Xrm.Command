@@ -1,12 +1,12 @@
-﻿using System.Text.RegularExpressions;
+using System.Text.RegularExpressions;
 
 namespace Greg.Xrm.Command.Services.Pluralization
 {
-    public class PluralizationStrategy1040 : IPluralizationStrategy
-    {
-        public Task<string> GetPluralForAsync(string word)
-        {
-            if (string.IsNullOrWhiteSpace(word)) return Task.FromResult(word);
+	public class PluralizationStrategy1040 : IPluralizationStrategy
+	{
+		public Task<string> GetPluralForAsync(string word)
+		{
+			if (string.IsNullOrWhiteSpace(word)) return Task.FromResult(word);
 
 			var plural = PluralizaNoun(word);
 
@@ -55,7 +55,7 @@ namespace Greg.Xrm.Command.Services.Pluralization
 		private static string PluralizeSingleWord(string word)
 		{
 			var lowerWord = word.ToLower();
-			
+
 			// Check for irregular nouns first
 			if (IrregularNouns.TryGetValue(lowerWord, out string? value))
 				return PreserveCase(word, value);
@@ -83,7 +83,7 @@ namespace Greg.Xrm.Command.Services.Pluralization
 			{
 				if (pluralized.Length == 1)
 					return pluralized.ToUpper();
-				
+
 				return char.ToUpper(pluralized[0]) + pluralized[1..];
 			}
 
@@ -223,16 +223,16 @@ namespace Greg.Xrm.Command.Services.Pluralization
 		
 		// Invariant words (don't change)
 		{"re", "re"},
-        {"sci", "sci"},
-        {"tè", "tè"},
-        {"caffè", "caffè"},
-        {"città", "città"},
-        {"università", "università"},
-        {"auto", "auto"},
-        {"foto", "foto"},
-        {"radio", "radio"},
-        {"cinema", "cinema"},
-        {"euro", "euro"},
+		{"sci", "sci"},
+		{"tè", "tè"},
+		{"caffè", "caffè"},
+		{"città", "città"},
+		{"università", "università"},
+		{"auto", "auto"},
+		{"foto", "foto"},
+		{"radio", "radio"},
+		{"cinema", "cinema"},
+		{"euro", "euro"},
         
         // Greek-origin words ending in -ma → -mi (irregular pattern)
         {"programma", "programmi"},
@@ -241,7 +241,7 @@ namespace Greg.Xrm.Command.Services.Pluralization
 		{"clima", "climi"},
 		{"tema", "temi"},
 		{"panorama", "panorami"},
-        {"schema", "schemi"},
+		{"schema", "schemi"},
 		{"dogma", "dogmi"},
 		{"diploma", "diplomi"},
 		{"trauma", "traumi"},
@@ -253,13 +253,13 @@ namespace Greg.Xrm.Command.Services.Pluralization
         
         // Words ending in -i (invariant - already plural or don't change)
         {"analisi", "analisi"},
-        {"crisi", "crisi"},
-        {"tesi", "tesi"},
-        {"sintesi", "sintesi"},
-        {"ipotesi", "ipotesi"},
-        {"diagnosi", "diagnosi"},
-        {"prognosi", "prognosi"},
-        {"metropoli", "metropoli"}
+		{"crisi", "crisi"},
+		{"tesi", "tesi"},
+		{"sintesi", "sintesi"},
+		{"ipotesi", "ipotesi"},
+		{"diagnosi", "diagnosi"},
+		{"prognosi", "prognosi"},
+		{"metropoli", "metropoli"}
 	};
 	}
 }

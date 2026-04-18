@@ -51,7 +51,7 @@ namespace Greg.Xrm.Command.Commands.Script
 			mockMetadataExtractor.Verify(
 				x => x.GetTableAsync(
 					tableName,
-					It.Is<List<string>>(prefixes => 
+					It.Is<List<string>>(prefixes =>
 						string.IsNullOrEmpty(customPrefixes) ? prefixes.Count == 0 : prefixes.Count > 0)),
 				Times.Once);
 		}
@@ -63,7 +63,7 @@ namespace Greg.Xrm.Command.Commands.Script
 			var command = Utility.TestParseCommand<ScriptTableCommand>(
 				"script", "table",
 				"--tableName", "incident",
-				"--customPrefixs", "ava_",
+				"--customPrefixes", "ava_",
 				"--output", "C:/output",
 				"--scriptFileName", "incident_datamodel.ps1",
 				"--stateFileName", "incident_state-fields.csv",

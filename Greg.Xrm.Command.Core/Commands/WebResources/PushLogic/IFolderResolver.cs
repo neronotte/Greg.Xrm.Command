@@ -1,4 +1,4 @@
-﻿namespace Greg.Xrm.Command.Commands.WebResources.PushLogic
+namespace Greg.Xrm.Command.Commands.WebResources.PushLogic
 {
 	public interface IFolderResolver
 	{

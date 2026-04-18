@@ -1,6 +1,6 @@
-﻿using Microsoft.Xrm.Sdk.Query;
-using Microsoft.Xrm.Sdk;
 using Microsoft.PowerPlatform.Dataverse.Client;
+using Microsoft.Xrm.Sdk;
+using Microsoft.Xrm.Sdk.Query;
 
 namespace Greg.Xrm.Command.Model
 {
@@ -8,8 +8,8 @@ namespace Greg.Xrm.Command.Model
 	{
 		public SolutionComponent(Entity entity) : base(entity)
 		{
-			this.TypeLabel = this.ComponentTypeName 
-				?? this.SolutionComponentDefinitionPrimaryEntityName 
+			this.TypeLabel = this.ComponentTypeName
+				?? this.SolutionComponentDefinitionPrimaryEntityName
 				?? GetSolutionComponentTypeName(componenttype.Value);
 			this.Label = $"{this.TypeLabel}: {this.objectid}";
 		}

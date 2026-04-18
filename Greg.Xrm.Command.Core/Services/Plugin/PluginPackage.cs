@@ -1,4 +1,4 @@
-﻿using Greg.Xrm.Command.Model;
+using Greg.Xrm.Command.Model;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;
@@ -7,9 +7,9 @@ namespace Greg.Xrm.Command.Services.Plugin
 {
 	public class PluginPackage : EntityWrapper
 	{
- 		protected PluginPackage(Entity entity) : base(entity)
+		protected PluginPackage(Entity entity) : base(entity)
 		{
-		}	
+		}
 
 		public PluginPackage() : base(new Entity("pluginpackage"))
 		{
@@ -41,7 +41,7 @@ namespace Greg.Xrm.Command.Services.Plugin
 
 		public bool ismanaged
 		{
-  			get => Get<bool>();
+			get => Get<bool>();
 			set => SetValue(value);
 		}
 

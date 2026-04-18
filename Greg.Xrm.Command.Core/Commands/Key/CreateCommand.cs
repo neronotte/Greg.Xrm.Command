@@ -1,6 +1,6 @@
-﻿using Greg.Xrm.Command.Parsing;
-using Greg.Xrm.Command.Services;
 using System.ComponentModel.DataAnnotations;
+using Greg.Xrm.Command.Parsing;
+using Greg.Xrm.Command.Services;
 
 namespace Greg.Xrm.Command.Commands.Key
 {
@@ -36,7 +36,7 @@ pacx key create --table account --columns accountnumber,telephone1
 pacx key add --table account --columns accountnumber,telephone1", "Powershell");
 
 			writer.WriteParagraph("If you don't specify a **display name**, it will be inferred automatically using the following convention: `<table logical name> + '_key'`");
-			
+
 			writer.WriteLine("If you don't specify a **schema name**, it will be inferred automatically using the following convention: `<publisher prefix> + '_' + <display name all lowercase without spaces and special characters>`");
 			writer.WriteParagraph("If the table schema name already starts with the publisher prefix, it won't be duplicated. E.g.:");
 

@@ -1,4 +1,4 @@
-﻿namespace Greg.Xrm.Command.Services.Plugin
+namespace Greg.Xrm.Command.Services.Plugin
 {
 	public interface IPluginPackageReader
 	{

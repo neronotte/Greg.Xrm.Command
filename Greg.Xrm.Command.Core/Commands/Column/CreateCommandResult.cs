@@ -1,4 +1,4 @@
-﻿namespace Greg.Xrm.Command.Commands.Column
+namespace Greg.Xrm.Command.Commands.Column
 {
 	public class CreateCommandResult : CommandResult
 	{

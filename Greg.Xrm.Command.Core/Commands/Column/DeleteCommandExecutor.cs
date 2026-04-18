@@ -1,4 +1,5 @@
-﻿using Greg.Xrm.Command.Model;
+using System.ServiceModel;
+using Greg.Xrm.Command.Model;
 using Greg.Xrm.Command.Services.AttributeDeletion;
 using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
@@ -6,11 +7,10 @@ using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Messages;
 using Microsoft.Xrm.Sdk.Metadata;
-using System.ServiceModel;
 
 namespace Greg.Xrm.Command.Commands.Column
 {
-    public class DeleteCommandExecutor(
+	public class DeleteCommandExecutor(
 			IOutput output,
 			IOrganizationServiceRepository organizationServiceRepository,
 			IDependencyRepository dependencyRepository,
@@ -101,7 +101,7 @@ namespace Greg.Xrm.Command.Commands.Column
 
 				return CommandResult.Success();
 			}
-			catch(FaultException<OrganizationServiceFault> ex)
+			catch (FaultException<OrganizationServiceFault> ex)
 			{
 				return CommandResult.Fail(ex.Message, ex);
 			}
@@ -155,7 +155,7 @@ namespace Greg.Xrm.Command.Commands.Column
 
 				return response.AttributeMetadata;
 			}
-			catch(FaultException<OrganizationServiceFault> ex)
+			catch (FaultException<OrganizationServiceFault> ex)
 			{
 				output.WriteLine(" Failed: " + ex.Message, ConsoleColor.Red);
 				return null;

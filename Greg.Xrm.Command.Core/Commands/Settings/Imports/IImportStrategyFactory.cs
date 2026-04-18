@@ -1,4 +1,4 @@
-﻿namespace Greg.Xrm.Command.Commands.Settings.Imports
+namespace Greg.Xrm.Command.Commands.Settings.Imports
 {
 	public interface IImportStrategyFactory
 	{

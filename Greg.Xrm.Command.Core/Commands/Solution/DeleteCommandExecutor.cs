@@ -1,7 +1,7 @@
-﻿using Greg.Xrm.Command.Services.Connection;
+using System.ServiceModel;
+using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
 using Microsoft.Xrm.Sdk;
-using System.ServiceModel;
 using Microsoft.Xrm.Sdk.Query;
 
 namespace Greg.Xrm.Command.Commands.Solution
@@ -12,14 +12,14 @@ namespace Greg.Xrm.Command.Commands.Solution
 		private readonly IOrganizationServiceRepository organizationServiceRepository;
 
 		public DeleteCommandExecutor(
-			IOutput output, 
+			IOutput output,
 			IOrganizationServiceRepository organizationServiceRepository)
-        {
+		{
 			this.output = output;
 			this.organizationServiceRepository = organizationServiceRepository;
 		}
 
-        public async Task<CommandResult> ExecuteAsync(DeleteCommand command, CancellationToken cancellationToken)
+		public async Task<CommandResult> ExecuteAsync(DeleteCommand command, CancellationToken cancellationToken)
 		{
 			this.output.Write($"Connecting to the current dataverse environment...");
 			var crm = await this.organizationServiceRepository.GetCurrentConnectionAsync();

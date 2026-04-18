@@ -1,4 +1,4 @@
-﻿namespace Greg.Xrm.Command.Parsing
+namespace Greg.Xrm.Command.Parsing
 {
 	public class CommandTree : List<VerbNode>, ICommandTree
 	{

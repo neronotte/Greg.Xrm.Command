@@ -1,4 +1,4 @@
-﻿using Greg.Xrm.Command.Commands.Help;
+using Greg.Xrm.Command.Commands.Help;
 using Greg.Xrm.Command.Parsing;
 using Greg.Xrm.Command.Services.Output;
 using Greg.Xrm.Command.Updates;
@@ -33,7 +33,7 @@ namespace Greg.Xrm.Command
 			return result;
 		}
 
-		
+
 
 
 
@@ -63,6 +63,6 @@ namespace Greg.Xrm.Command
 			output.Write("Online documentation: ").WriteLine("https://github.com/neronotte/Greg.Xrm.Command/wiki");
 			output.Write("Feedback, Suggestions, Issues: ").WriteLine("https://github.com/neronotte/Greg.Xrm.Command/discussions");
 			output.WriteLine();
-		}	
+		}
 	}
 }

@@ -1,5 +1,5 @@
-﻿using Greg.Xrm.Command.Parsing;
 using System.ComponentModel.DataAnnotations;
+using Greg.Xrm.Command.Parsing;
 
 namespace Greg.Xrm.Command.Commands.Solution
 {
@@ -27,5 +27,5 @@ namespace Greg.Xrm.Command.Commands.Solution
 
 		[Option("applicationRibbons", "ar", Order = 7, HelpText = "Once the solution has been created, adds the application ribbons", DefaultValue = false)]
 		public bool AddApplicationRibbons { get; set; }
-    }
+	}
 }

@@ -1,6 +1,6 @@
-﻿using Greg.Xrm.Command.Parsing;
-using Greg.Xrm.Command.Services;
 using System.ComponentModel.DataAnnotations;
+using Greg.Xrm.Command.Parsing;
+using Greg.Xrm.Command.Services;
 using static Greg.Xrm.Command.Services.Plugin.PluginRegistrationToolkit;
 
 namespace Greg.Xrm.Command.Commands.Plugin.Step
@@ -11,7 +11,7 @@ namespace Greg.Xrm.Command.Commands.Plugin.Step
 	public class UnregisterCommand : IValidatableObject, ICanProvideUsageExample
 	{
 
-		[Option("id", "id", Order =0, HelpText = "The unique identifier of the plugin step to be removed.")]
+		[Option("id", "id", Order = 0, HelpText = "The unique identifier of the plugin step to be removed.")]
 		public Guid? StepId { get; set; }
 
 		[Option("class", "c", Order = 1, HelpText = "Name of the plugin type that executes when the step is triggered.")]
@@ -46,7 +46,7 @@ namespace Greg.Xrm.Command.Commands.Plugin.Step
 		{
 			writer.WriteParagraph("To remove a plugin step, you have two ways:");
 			writer.WriteList(
-			"By specifying the unique identifier of the step:", 
+			"By specifying the unique identifier of the step:",
 			"By specifying a surrogate key that allows to identify the step to remove, made by the name of the plugin type, the message, and optionally the table");
 			writer.WriteLine();
 

@@ -1,14 +1,14 @@
-﻿using ClosedXML.Excel;
+using System.Diagnostics;
+using ClosedXML.Excel;
 using Greg.Xrm.Command.Commands.Settings.Model;
 using Greg.Xrm.Command.Model;
 using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
 using Newtonsoft.Json;
-using System.Diagnostics;
 
 namespace Greg.Xrm.Command.Commands.Settings
 {
-    public class ExportCommandExecutor(
+	public class ExportCommandExecutor(
 			IOutput output,
 			IOrganizationServiceRepository organizationServiceRepository,
 			ISolutionRepository solutionRepository,
@@ -243,9 +243,9 @@ namespace Greg.Xrm.Command.Commands.Settings
 				var tableRange = ws.Range(3, 1, row, col);
 				tableRange.Style.Alignment.SetVertical(XLAlignmentVerticalValues.Center);
 
-				
+
 				var table = tableRange.CreateTable("Settings");
-				
+
 				var colWidth = 25;
 				ws.Column(1).AdjustToContents();
 				ws.Column(2).Width = colWidth * 3;
@@ -253,8 +253,8 @@ namespace Greg.Xrm.Command.Commands.Settings
 				{
 					ws.Column(i).Width = colWidth;
 
-					if (i >= col-2)
-					{ 
+					if (i >= col - 2)
+					{
 						ws.Column(i).AdjustToContents();
 						ws.Column(i).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
 					}
@@ -274,13 +274,13 @@ namespace Greg.Xrm.Command.Commands.Settings
 
 				this.output.WriteLine("Done", ConsoleColor.Green);
 			}
-			catch(Exception ex)
+			catch (Exception ex)
 			{
 				this.output.WriteLine("ERROR", ConsoleColor.Red);
 				return CommandResult.Fail($"Error creating Excel file: {ex.Message}");
 			}
 
-			if (command.AutoRun) 
+			if (command.AutoRun)
 			{
 				Process.Start(new ProcessStartInfo
 				{

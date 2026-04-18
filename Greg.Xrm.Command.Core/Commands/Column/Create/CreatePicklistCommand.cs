@@ -1,4 +1,4 @@
-﻿using Greg.Xrm.Command.Parsing;
+using Greg.Xrm.Command.Parsing;
 using Greg.Xrm.Command.Services;
 
 namespace Greg.Xrm.Command.Commands.Column.Create
@@ -15,9 +15,9 @@ namespace Greg.Xrm.Command.Commands.Column.Create
 		public string? GlobalOptionSetName { get; set; }
 
 
-		[Option("options", "o", 
+		[Option("options", "o",
 			HelpText = "The list of options for the attribute, as a single string separated by comma (,) or semicolon (;) or pipe.\nYou can pass also values separating using syntax \"label1:value1,label2:value2\"\nIf not provided, values will be automatically generated",
-			Order =20
+			Order = 20
 		)]
 		public string? Options { get; internal set; }
 
@@ -26,9 +26,9 @@ namespace Greg.Xrm.Command.Commands.Column.Create
 			Order = 30)]
 		public string? DefaultFormValue { get; set; }
 
-		[Option("multiselect", "m", 
-			HelpText = "Indicates whether the attribute is a multi-select picklist (default: false).", 
-			DefaultValue = false, 
+		[Option("multiselect", "m",
+			HelpText = "Indicates whether the attribute is a multi-select picklist (default: false).",
+			DefaultValue = false,
 			Order = 40)]
 		public bool Multiselect { get; set; } = false;
 

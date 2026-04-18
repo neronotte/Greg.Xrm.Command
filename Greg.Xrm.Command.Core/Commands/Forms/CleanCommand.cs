@@ -1,10 +1,10 @@
-﻿using Greg.Xrm.Command.Parsing;
-using Greg.Xrm.Command.Services;
 using System.ComponentModel.DataAnnotations;
+using Greg.Xrm.Command.Parsing;
+using Greg.Xrm.Command.Services;
 
 namespace Greg.Xrm.Command.Commands.Forms
 {
-    [Command("forms", "clean", HelpText = "\"Fixes\" the content of the main form of a given table")]
+	[Command("forms", "clean", HelpText = "\"Fixes\" the content of the main form of a given table")]
 	[Alias("form", "clean")]
 	public class CleanCommand : ICanProvideUsageExample
 	{

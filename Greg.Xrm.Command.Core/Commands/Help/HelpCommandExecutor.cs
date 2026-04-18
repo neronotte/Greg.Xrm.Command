@@ -1,6 +1,6 @@
-﻿using Greg.Xrm.Command.Parsing;
-using Greg.Xrm.Command.Services.Output;
 using System.Reflection;
+using Greg.Xrm.Command.Parsing;
+using Greg.Xrm.Command.Services.Output;
 
 namespace Greg.Xrm.Command.Commands.Help
 {
@@ -19,7 +19,7 @@ namespace Greg.Xrm.Command.Commands.Help
 			if (command.ExportHelp)
 			{
 				this.output.WriteLine("Generating help files...");
-				
+
 				var generator = new HelpGeneratorInMarkdown(this.output, command.CommandTree, command.ExportHelpPath);
 				generator.GenerateMarkdownHelp();
 
@@ -29,7 +29,7 @@ namespace Greg.Xrm.Command.Commands.Help
 			if (command.LastMatchingVerb is not null)
 			{
 				if (command.LastMatchingVerb.Command is not null)
-					return GenerateHelpForCommand(command.LastMatchingVerb.Command);	
+					return GenerateHelpForCommand(command.LastMatchingVerb.Command);
 
 				var generator = new HelpGeneratorForVerb(this.output, command.LastMatchingVerb);
 				generator.GenerateHelp();

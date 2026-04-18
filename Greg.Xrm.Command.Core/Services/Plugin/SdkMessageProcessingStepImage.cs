@@ -1,4 +1,4 @@
-﻿using Greg.Xrm.Command.Model;
+using Greg.Xrm.Command.Model;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;
@@ -66,7 +66,7 @@ namespace Greg.Xrm.Command.Services.Plugin
 				query.ColumnSet.AddColumns("sdkmessageprocessingstepid", "messagepropertyname", "name", "entityalias", "imagetype");
 				query.Criteria.AddCondition("sdkmessageprocessingstepid", ConditionOperator.In, stepIds.Cast<object>().ToArray());
 				query.NoLock = true;
-				
+
 				var result = await crm.RetrieveMultipleAsync(query);
 				return result.Entities.Select(x => new SdkMessageProcessingStepImage(x)).ToArray();
 			}

@@ -1,6 +1,6 @@
+using System.ComponentModel.DataAnnotations;
 using Greg.Xrm.Command.Parsing;
 using Greg.Xrm.Command.Services;
-using System.ComponentModel.DataAnnotations;
 
 namespace Greg.Xrm.Command.Commands.Plugin.Step
 {
@@ -28,12 +28,12 @@ namespace Greg.Xrm.Command.Commands.Plugin.Step
 		public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
 		{
 			var parameterCount = new[] { AssemblyName, PluginTypeName, TableName, SolutionName }.Count(p => !string.IsNullOrWhiteSpace(p));
-			
+
 			if (parameterCount > 1)
 			{
 				yield return new ValidationResult("Cannot specify multiple filter parameters. Please provide only one of: AssemblyName, PluginTypeName, TableName, or SolutionName.", [nameof(AssemblyName), nameof(PluginTypeName), nameof(TableName), nameof(SolutionName)]);
 			}
-			
+
 			// Note: If no parameters are specified, we'll use the default solution
 		}
 

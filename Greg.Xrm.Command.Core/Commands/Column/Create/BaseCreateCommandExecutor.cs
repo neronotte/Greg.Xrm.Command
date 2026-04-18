@@ -1,4 +1,6 @@
-﻿using Greg.Xrm.Command.Services.Connection;
+using System.ServiceModel;
+using System.Text;
+using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
@@ -6,8 +8,6 @@ using Microsoft.Xrm.Sdk.Messages;
 using Microsoft.Xrm.Sdk.Metadata;
 using Microsoft.Xrm.Sdk.Query;
 using Newtonsoft.Json;
-using System.ServiceModel;
-using System.Text;
 
 namespace Greg.Xrm.Command.Commands.Column.Create
 {
@@ -20,7 +20,7 @@ namespace Greg.Xrm.Command.Commands.Column.Create
 
 
 		protected virtual async Task<CommandResult> ExecuteAsync(
-			TCommand command, 
+			TCommand command,
 			Func<IOrganizationServiceAsync2, TCommand, int, string, int, Task<AttributeMetadata>> createAttributeFunc,
 			CancellationToken cancellationToken)
 		{

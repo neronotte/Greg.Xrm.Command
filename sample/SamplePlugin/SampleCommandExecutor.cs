@@ -1,4 +1,4 @@
-﻿using Greg.Xrm.Command;
+using Greg.Xrm.Command;
 using Greg.Xrm.Command.Services.Output;
 
 namespace SamplePlugin

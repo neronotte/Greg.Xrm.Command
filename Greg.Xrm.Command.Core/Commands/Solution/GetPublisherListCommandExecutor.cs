@@ -1,4 +1,4 @@
-﻿using Greg.Xrm.Command.Services.Connection;
+using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;
@@ -97,7 +97,7 @@ namespace Greg.Xrm.Command.Commands.Solution
 						user.GetFormattedValue("customizationoptionvalueprefix") ?? string.Empty,
 						user.GetAttributeValue<DateTime?>("createdon").GetValueOrDefault().ToLocalTime().ToString() ?? string.Empty,
 						user.GetFormattedValue("createdby") ?? string.Empty,
-						user.GetAttributeValue<string>("description") ?? string.Empty						
+						user.GetAttributeValue<string>("description") ?? string.Empty
 					}).ToArray();
 				}
 

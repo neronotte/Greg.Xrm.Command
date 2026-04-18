@@ -1,4 +1,4 @@
-﻿namespace Greg.Xrm.Command.Services
+namespace Greg.Xrm.Command.Services
 {
 	public class Storage : IStorage
 	{
@@ -6,7 +6,7 @@
 
 		public DirectoryInfo GetOrCreateStorageFolder()
 		{
-			if (this.storageFolder != null) 
+			if (this.storageFolder != null)
 				return this.storageFolder;
 
 			var folderPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);

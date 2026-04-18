@@ -1,4 +1,4 @@
-﻿using Greg.Xrm.Command.Services.Graphs;
+using Greg.Xrm.Command.Services.Graphs;
 using Greg.Xrm.Command.Services.Output;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk.Messages;
@@ -6,7 +6,7 @@ using Microsoft.Xrm.Sdk.Metadata;
 
 namespace Greg.Xrm.Command.Commands.Table.Migration;
 
-    public class TableGraphBuilder
+public class TableGraphBuilder
 {
 	private readonly IOutput output;
 

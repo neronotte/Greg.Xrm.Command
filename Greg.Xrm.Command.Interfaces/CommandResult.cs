@@ -1,8 +1,8 @@
-﻿namespace Greg.Xrm.Command
+namespace Greg.Xrm.Command
 {
-    public class CommandResult : Dictionary<string, object>
+	public class CommandResult : Dictionary<string, object>
 	{
-        protected CommandResult(bool isSuccess, string? errorMessage = null, Exception? exception = null)
+		protected CommandResult(bool isSuccess, string? errorMessage = null, Exception? exception = null)
 		{
 			this.IsSuccess = isSuccess;
 			this.ErrorMessage = errorMessage ?? string.Empty;

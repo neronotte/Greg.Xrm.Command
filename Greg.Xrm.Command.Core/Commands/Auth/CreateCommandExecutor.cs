@@ -1,10 +1,10 @@
-﻿using Greg.Xrm.Command.Services.Connection;
+using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
 using Microsoft.PowerPlatform.Dataverse.Client.Utils;
 
 namespace Greg.Xrm.Command.Commands.Auth
 {
-    public class CreateCommandExecutor(
+	public class CreateCommandExecutor(
 			IOrganizationServiceRepository organizationServiceRepository,
 			IOutput output) : ICommandExecutor<CreateCommand>
 	{
@@ -44,7 +44,7 @@ namespace Greg.Xrm.Command.Commands.Auth
 				output.WriteLine("Done.", ConsoleColor.Green);
 				return CommandResult.Success();
 			}
-			catch(DataverseConnectionException ex)
+			catch (DataverseConnectionException ex)
 			{
 				output.WriteLine("Failed", ConsoleColor.Red);
 				output.WriteLine(ex.Message, ConsoleColor.Red);

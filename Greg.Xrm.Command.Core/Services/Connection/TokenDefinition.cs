@@ -1,9 +1,9 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 
 namespace Greg.Xrm.Command.Services.Connection
 {
 	public class TokenDefinition
-    {
+	{
 		public TokenDefinition(Uri serviceUri, string accessToken)
 		{
 			if (serviceUri is null)

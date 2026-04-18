@@ -1,4 +1,4 @@
-﻿namespace Greg.Xrm.Command.Interactive
+namespace Greg.Xrm.Command.Interactive
 {
 	public static class DefaultColors
 	{

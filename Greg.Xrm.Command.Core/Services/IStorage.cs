@@ -1,4 +1,4 @@
-﻿namespace Greg.Xrm.Command.Services
+namespace Greg.Xrm.Command.Services
 {
 	public interface IStorage
 	{
