@@ -1,4 +1,4 @@
-﻿namespace Greg.Xrm.Command.Parsing.Attributes
+namespace Greg.Xrm.Command.Parsing.Attributes
 {
 	/// <summary>
 	/// Hides a specific command when launching in interactive experience mode.

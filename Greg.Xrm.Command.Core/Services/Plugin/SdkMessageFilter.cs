@@ -1,4 +1,4 @@
-﻿using Greg.Xrm.Command.Model;
+using Greg.Xrm.Command.Model;
 using Microsoft.Xrm.Sdk;
 
 namespace Greg.Xrm.Command.Services.Plugin

@@ -1,6 +1,6 @@
-﻿namespace Greg.Xrm.Command.Services.Graphs
+namespace Greg.Xrm.Command.Services.Graphs
 {
-    public interface INodeContent
+	public interface INodeContent
 	{
 		object Key { get; }
 	}

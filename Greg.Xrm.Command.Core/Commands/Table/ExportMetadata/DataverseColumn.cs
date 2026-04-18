@@ -1,4 +1,4 @@
-﻿using Microsoft.Xrm.Sdk.Metadata;
+using Microsoft.Xrm.Sdk.Metadata;
 
 namespace Greg.Xrm.Command.Commands.Table.ExportMetadata
 {
@@ -91,7 +91,7 @@ namespace Greg.Xrm.Command.Commands.Table.ExportMetadata
 		private static void Fill(DataverseColumn c, DoubleAttributeMetadata attribute)
 		{
 			c.MinValue = attribute.MinValue;
-			c.MaxValue= attribute.MaxValue;
+			c.MaxValue = attribute.MaxValue;
 			c.Precision = attribute.Precision;
 		}
 

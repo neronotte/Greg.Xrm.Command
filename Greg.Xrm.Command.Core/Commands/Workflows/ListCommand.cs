@@ -1,4 +1,4 @@
-﻿using Greg.Xrm.Command.Model;
+using Greg.Xrm.Command.Model;
 using Greg.Xrm.Command.Parsing;
 using Greg.Xrm.Command.Services;
 

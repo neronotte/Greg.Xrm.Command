@@ -1,12 +1,12 @@
-﻿using Greg.Xrm.Command.Services.Output;
+using System.Diagnostics;
+using Greg.Xrm.Command.Services.Output;
 using Greg.Xrm.Command.Services.Settings;
 using Microsoft.Extensions.Logging;
-using System.Diagnostics;
 
 namespace Greg.Xrm.Command.Updates
 {
 	public class AutoUpdater(ILogger<AutoUpdater> log, IOutput output, ISettingsRepository settings) : IAutoUpdater
-    {
+	{
 		private const string ToolName = "Greg.Xrm.Command";
 		public const string EnableAutoUpdateSettingKey = "IsAutoUpdateEnabled";
 		private const int WaitForExit = 20;
@@ -14,13 +14,13 @@ namespace Greg.Xrm.Command.Updates
 
 		public string CurrentVersion => GetType().Assembly.GetName()?.Version?.ToString() ?? "[unable to get version from assembly]";
 
-        public string? NextVersion { get; protected set; }
+		public string? NextVersion { get; protected set; }
 
 		public bool UpdateRequired { get; protected set; } = false;
 
 
 		public async Task<bool> CheckForUpdatesAsync()
-        {  
+		{
 			this.NextVersion = null;
 			this.UpdateRequired = false;
 

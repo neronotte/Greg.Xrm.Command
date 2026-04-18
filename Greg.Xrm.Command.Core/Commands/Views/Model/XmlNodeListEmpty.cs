@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Xml;
 
 namespace Greg.Xrm.Command.Commands.Views.Model
@@ -10,7 +10,7 @@ namespace Greg.Xrm.Command.Commands.Views.Model
 
 		private XmlNodeListEmpty()
 		{
-			
+
 		}
 
 		public override int Count => 0;

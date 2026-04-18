@@ -1,6 +1,6 @@
-﻿using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using System.ComponentModel.DataAnnotations;
+using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 
 namespace Greg.Xrm.Command.Services.Project
 {

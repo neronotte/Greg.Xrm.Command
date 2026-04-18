@@ -1,4 +1,4 @@
-﻿namespace Greg.Xrm.Command.Services.CommandHistory
+namespace Greg.Xrm.Command.Services.CommandHistory
 {
 	public interface IHistoryTracker
 	{

@@ -1,4 +1,4 @@
-﻿using Greg.Xrm.Command.Commands.Table.ExportMetadata;
+using Greg.Xrm.Command.Commands.Table.ExportMetadata;
 using Greg.Xrm.Command.Model;
 using Greg.Xrm.Command.Services.Output;
 using Microsoft.PowerPlatform.Dataverse.Client;
@@ -121,7 +121,7 @@ namespace Greg.Xrm.Command.Commands.Settings.Model
 			private readonly IOutput output;
 
 			public Repository(IOutput output)
-            {
+			{
 				this.output = output;
 			}
 

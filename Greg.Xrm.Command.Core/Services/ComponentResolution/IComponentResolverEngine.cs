@@ -1,4 +1,4 @@
-﻿using Greg.Xrm.Command.Model;
+using Greg.Xrm.Command.Model;
 using Microsoft.PowerPlatform.Dataverse.Client;
 
 namespace Greg.Xrm.Command.Services.ComponentResolution

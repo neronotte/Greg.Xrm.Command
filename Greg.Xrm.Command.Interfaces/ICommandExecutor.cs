@@ -1,4 +1,4 @@
-﻿namespace Greg.Xrm.Command
+namespace Greg.Xrm.Command
 {
 	public interface ICommandExecutor<T>
 	{

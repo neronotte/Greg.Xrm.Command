@@ -1,9 +1,9 @@
-﻿using Greg.Xrm.Command.Services.Connection;
+using System.ServiceModel;
+using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
 using Microsoft.Crm.Sdk.Messages;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
-using System.ServiceModel;
 
 namespace Greg.Xrm.Command.Commands.Auth
 {

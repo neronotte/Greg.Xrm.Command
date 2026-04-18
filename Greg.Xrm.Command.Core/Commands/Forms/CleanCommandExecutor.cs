@@ -1,16 +1,16 @@
-﻿using Greg.Xrm.Command.Commands.Forms.Model;
+using System.Xml.Linq;
+using System.Xml.XPath;
+using Greg.Xrm.Command.Commands.Forms.Model;
 using Greg.Xrm.Command.Model;
 using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk.Messages;
 using Microsoft.Xrm.Sdk.Metadata;
-using System.Xml.Linq;
-using System.Xml.XPath;
 
 namespace Greg.Xrm.Command.Commands.Forms
 {
-    public class CleanCommandExecutor
+	public class CleanCommandExecutor
 	(
 			IOrganizationServiceRepository organizationServiceRepository,
 			IOutput output,
@@ -58,7 +58,7 @@ namespace Greg.Xrm.Command.Commands.Forms
 			if (!success) return result1 ?? CommandResult.Fail("Error creating the holding solution");
 			if (solution == null) return CommandResult.Fail("Error creating the holding solution");
 
-			using(solution)
+			using (solution)
 			{
 				try
 				{
@@ -102,7 +102,7 @@ namespace Greg.Xrm.Command.Commands.Forms
 					output.WriteLine($"ERROR: {ex.Message}", ConsoleColor.Red);
 				}
 			}
-			
+
 
 			return CommandResult.Success();
 		}
@@ -158,7 +158,7 @@ namespace Greg.Xrm.Command.Commands.Forms
 
 
 			// if we are here, we have more tan 1 form
-			
+
 			if (string.IsNullOrWhiteSpace(formName))
 			{
 				result = CommandResult.Fail($"Table <{tableName}> has more than one main form. Please specify the form name using the --form parameter.");
@@ -225,14 +225,15 @@ namespace Greg.Xrm.Command.Commands.Forms
 
 			var isFirstComment = true;
 
-			var i = 0; 
+			var i = 0;
 			var updatedTabCount = 0;
 			foreach (var tab in tabs)
 			{
 				i++;
 				if (!string.IsNullOrWhiteSpace(tab.Attribute("name")?.Value))
 				{
-					if (isFirstComment) {
+					if (isFirstComment)
+					{
 						output.WriteLine();
 						isFirstComment = false;
 					}
@@ -436,7 +437,7 @@ namespace Greg.Xrm.Command.Commands.Forms
 
 
 			var isTabAdminPresent = doc.XPathSelectElements("./tabs/tab")?
-				.Any(t => string.Equals( t.Attribute("name")?.Value, "tab_admin", StringComparison.OrdinalIgnoreCase)) ?? false;
+				.Any(t => string.Equals(t.Attribute("name")?.Value, "tab_admin", StringComparison.OrdinalIgnoreCase)) ?? false;
 			if (isTabAdminPresent)
 			{
 				output.WriteLine("NO ACTION. Tab tab_admin already in the form.", ConsoleColor.DarkGray);

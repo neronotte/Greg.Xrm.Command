@@ -1,4 +1,4 @@
-﻿namespace Greg.Xrm.Command.Services.ComponentResolvers
+namespace Greg.Xrm.Command.Services.ComponentResolvers
 {
 	public interface IComponentResolverFactory
 	{

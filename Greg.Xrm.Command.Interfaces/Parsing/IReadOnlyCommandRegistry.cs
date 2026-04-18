@@ -1,4 +1,4 @@
-﻿using Autofac.Core;
+using Autofac.Core;
 
 namespace Greg.Xrm.Command.Parsing
 {

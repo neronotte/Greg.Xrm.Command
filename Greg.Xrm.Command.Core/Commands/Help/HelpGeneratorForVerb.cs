@@ -1,17 +1,17 @@
-﻿using Greg.Xrm.Command.Parsing;
-using Greg.Xrm.Command.Services.Output;
 using System.Data;
 using System.Reflection;
+using Greg.Xrm.Command.Parsing;
+using Greg.Xrm.Command.Services.Output;
 
 namespace Greg.Xrm.Command.Commands.Help
 {
-    public class HelpGeneratorForVerb
+	public class HelpGeneratorForVerb
 	{
 		private readonly IOutput output;
 		private readonly VerbNode verb;
 
 		public HelpGeneratorForVerb(IOutput output, VerbNode verb)
-        {
+		{
 			this.output = output;
 			this.verb = verb;
 		}

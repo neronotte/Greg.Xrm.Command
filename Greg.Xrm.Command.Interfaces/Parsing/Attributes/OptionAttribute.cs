@@ -1,4 +1,4 @@
-﻿namespace Greg.Xrm.Command
+namespace Greg.Xrm.Command
 {
 	[AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = false)]
 	public class OptionAttribute : Attribute
@@ -21,7 +21,7 @@
 		}
 
 		public OptionAttribute(string longName, string shortName, string helpText, object? defaultValue = null)
-        {
+		{
 			this.LongName = longName;
 			this.ShortName = shortName;
 			this.HelpText = helpText;

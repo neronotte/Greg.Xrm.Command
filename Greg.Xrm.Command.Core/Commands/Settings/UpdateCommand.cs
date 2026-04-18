@@ -1,5 +1,5 @@
-﻿using Greg.Xrm.Command.Commands.Settings.Model;
 using System.ComponentModel.DataAnnotations;
+using Greg.Xrm.Command.Commands.Settings.Model;
 
 namespace Greg.Xrm.Command.Commands.Settings
 {
@@ -31,10 +31,10 @@ namespace Greg.Xrm.Command.Commands.Settings
 		public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
 		{
 			if (
-				(Description == null) 
-				&& (DefaultValue == null) 
-				&& (OverridableLevel == null) 
-				&& (ReleaseLevel == null) 
+				(Description == null)
+				&& (DefaultValue == null)
+				&& (OverridableLevel == null)
+				&& (ReleaseLevel == null)
 				&& (InformationUrl == null))
 			{
 				yield return new ValidationResult("At least one property to update must be specified.", new[] { nameof(Description), nameof(DefaultValue), nameof(OverridableLevel), nameof(ReleaseLevel), nameof(InformationUrl) });

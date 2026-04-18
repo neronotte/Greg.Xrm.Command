@@ -1,17 +1,17 @@
-﻿using Microsoft.Xrm.Sdk.Metadata;
 using System.ComponentModel.DataAnnotations;
 using System.Runtime.Serialization;
+using Microsoft.Xrm.Sdk.Metadata;
 
 namespace Greg.Xrm.Command.Commands.Relationship
 {
 	[Command("rel", "create", "n1", HelpText = "Creates a new many-to-one relationship between two tables")]
 	public class CreateN1Command
 	{
-		[Option("child", "c", Order = 1, HelpText ="The child table (N side of the relationship)")]
+		[Option("child", "c", Order = 1, HelpText = "The child table (N side of the relationship)")]
 		[Required]
 		public string ChildTable { get; set; } = string.Empty;
 
-		[Option("parent", "p", Order = 2, HelpText ="The parent table (1 side of the relationship)")]
+		[Option("parent", "p", Order = 2, HelpText = "The parent table (1 side of the relationship)")]
 		[Required]
 		public string ParentTable { get; set; } = string.Empty;
 
@@ -41,7 +41,7 @@ namespace Greg.Xrm.Command.Commands.Relationship
 		[Option("cascadeAssign", "caass", Order = 15, HelpText = "The behavior to apply to child records when the parent record is assigned to another owner\n(values: Cascade, Active, UserOwned, NoCascade)\n(default: NoCascade)", SuppressValuesHelp = true)]
 		public CascadeType? CascadeAssign { get; set; }
 
-		[Option("cascadeArchive", "caarc", Order = 16, HelpText = "The behavior to apply to child records when the parent record is archived\n(not available via UI)\n(default: NoCascade)",SuppressValuesHelp = true)]
+		[Option("cascadeArchive", "caarc", Order = 16, HelpText = "The behavior to apply to child records when the parent record is archived\n(not available via UI)\n(default: NoCascade)", SuppressValuesHelp = true)]
 		public CascadeType? CascadeArchive { get; set; }
 
 		[Option("cascadeShare", "cas", Order = 17, HelpText = "The behavior to apply to child records when the parent record is shared\n(values: Cascade, Active, UserOwned, NoCascade)\n(default: NoCascade)", SuppressValuesHelp = true)]
@@ -56,7 +56,7 @@ namespace Greg.Xrm.Command.Commands.Relationship
 		[Option("cascadeMerge", "cam", Order = 20, HelpText = "The behavior to apply to child records when the parent record is merged to another one\n(not available via UI)\n(default: NoCascade)", SuppressValuesHelp = true)]
 		public CascadeType? CascadeMerge { get; set; }
 
-		[Option("cascadeReparent", "car", Order = 21, HelpText = "The behavior to apply to child records when the parent record is reparented\n(values: Cascade, Active, UserOwned, NoCascade)\n(default: NoCascade)", SuppressValuesHelp =true)]
+		[Option("cascadeReparent", "car", Order = 21, HelpText = "The behavior to apply to child records when the parent record is reparented\n(values: Cascade, Active, UserOwned, NoCascade)\n(default: NoCascade)", SuppressValuesHelp = true)]
 		public CascadeType? CascadeReparent { get; set; }
 
 
@@ -67,7 +67,7 @@ namespace Greg.Xrm.Command.Commands.Relationship
 		[Option("menuBehavior", "m", Order = 32, HelpText = "Indicates how the child entity is displayed in the parent navbar", DefaultValue = AssociatedMenuBehavior.DoNotDisplay)]
 		public AssociatedMenuBehavior MenuBehavior { get; set; } = AssociatedMenuBehavior.DoNotDisplay;
 
-		[Option("menuLabel", "ml", Order = 33, HelpText= "Associated menu label. To be specified only if the menuBehavior arg is set to UseLabel", DefaultValue = null)]
+		[Option("menuLabel", "ml", Order = 33, HelpText = "Associated menu label. To be specified only if the menuBehavior arg is set to UseLabel", DefaultValue = null)]
 		public string? MenuLabel { get; set; }
 
 		[Option("menuGroup", "mg", Order = 34, HelpText = "Associated menu group. To be specified only if the menuBehavior arg is set to UseLabel or UseCollectionName", DefaultValue = AssociatedMenuGroup.Details)]

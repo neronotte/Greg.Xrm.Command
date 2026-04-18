@@ -1,9 +1,9 @@
-﻿using Greg.Xrm.Command.Commands.WebResources.Templates;
+using Greg.Xrm.Command.Commands.WebResources.Templates;
 using Greg.Xrm.Command.Services.Output;
 
 namespace Greg.Xrm.Command.Commands.WebResources
 {
-    public class JsSetTemplateCommandExecutor : ICommandExecutor<JsSetTemplateCommand>
+	public class JsSetTemplateCommandExecutor : ICommandExecutor<JsSetTemplateCommand>
 	{
 		private readonly IOutput output;
 		private readonly IJsTemplateManager jsTemplateManager;
@@ -11,13 +11,13 @@ namespace Greg.Xrm.Command.Commands.WebResources
 		public JsSetTemplateCommandExecutor(
 			IOutput output,
 			IJsTemplateManager jsTemplateManager)
-        {
+		{
 			this.output = output;
 			this.jsTemplateManager = jsTemplateManager;
 		}
 
 
-        public async Task<CommandResult> ExecuteAsync(JsSetTemplateCommand command, CancellationToken cancellationToken)
+		public async Task<CommandResult> ExecuteAsync(JsSetTemplateCommand command, CancellationToken cancellationToken)
 		{
 			string templateContent;
 			try
@@ -26,7 +26,7 @@ namespace Greg.Xrm.Command.Commands.WebResources
 				templateContent = await File.ReadAllTextAsync(command.FileName, cancellationToken);
 				this.output.WriteLine("Done", ConsoleColor.Green);
 			}
-			catch(Exception ex)
+			catch (Exception ex)
 			{
 				this.output.WriteLine("ERROR", ConsoleColor.Red);
 				return CommandResult.Fail("Error while trying to read the template file contents: " + ex.Message, ex);

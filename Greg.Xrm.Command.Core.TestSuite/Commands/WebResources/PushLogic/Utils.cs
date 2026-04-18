@@ -1,4 +1,4 @@
-﻿namespace Greg.Xrm.Command.Commands.WebResources.PushLogic
+namespace Greg.Xrm.Command.Commands.WebResources.PushLogic
 {
 	public static class Utils
 	{
@@ -32,7 +32,7 @@
 			File.WriteAllText(fullPath, content);
 		}
 
-		public static void DeleteFolder(string root, string ? path = null)
+		public static void DeleteFolder(string root, string? path = null)
 		{
 			if (path != null)
 			{

@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace Greg.Xrm.Command.Commands.Column
 {
@@ -9,7 +9,7 @@ namespace Greg.Xrm.Command.Commands.Column
 		[Required]
 		public string TableSchemaName { get; set; } = string.Empty;
 
-		[Option("column", "c", Order = 2, HelpText ="The name of the column to export")]
+		[Option("column", "c", Order = 2, HelpText = "The name of the column to export")]
 		[Required]
 		public string ColumnSchemaName { get; set; } = string.Empty;
 
@@ -18,5 +18,5 @@ namespace Greg.Xrm.Command.Commands.Column
 
 		[Option("run", "r", Order = 4, HelpText = "Automatically opens the file containing the exported metadata after export.", DefaultValue = false)]
 		public bool AutoOpenFile { get; set; } = false;
-    }
+	}
 }

@@ -1,4 +1,4 @@
-﻿namespace Greg.Xrm.Command.Services.Graphs
+namespace Greg.Xrm.Command.Services.Graphs
 {
 	public class ConsistencyException : Exception
 	{

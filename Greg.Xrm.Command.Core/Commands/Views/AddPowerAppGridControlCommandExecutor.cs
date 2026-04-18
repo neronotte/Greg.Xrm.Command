@@ -1,13 +1,13 @@
-﻿using Greg.Xrm.Command.Commands.Views.Model;
+using System.Xml.Linq;
+using Greg.Xrm.Command.Commands.Views.Model;
 using Greg.Xrm.Command.Commands.WebResources.PushLogic;
 using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
-using System.Xml.Linq;
 
 namespace Greg.Xrm.Command.Commands.Views
 {
-    public class AddPowerAppGridControlCommandExecutor(
-		IOutput output, 
+	public class AddPowerAppGridControlCommandExecutor(
+		IOutput output,
 		IOrganizationServiceRepository organizationServiceRepository,
 		IViewRetrieverService viewRetriever,
 		IPublishXmlBuilder publishXmlBuilder) : ICommandExecutor<AddPowerAppGridControlCommand>
@@ -45,7 +45,7 @@ namespace Greg.Xrm.Command.Commands.Views
 					controlDescriptions.Remove();
 				}
 			}
-			catch(Exception ex)
+			catch (Exception ex)
 			{
 				return CommandResult.Fail("Failed to parse the view layoutxml", ex);
 			}
@@ -141,7 +141,7 @@ namespace Greg.Xrm.Command.Commands.Views
 
 				output.WriteLine("Done", ConsoleColor.Green);
 			}
-			catch(Exception ex)
+			catch (Exception ex)
 			{
 				output.WriteLine("Failed", ConsoleColor.Red);
 				return CommandResult.Fail("Failed to save the updated view layout: " + ex.Message, ex);
@@ -161,107 +161,107 @@ namespace Greg.Xrm.Command.Commands.Views
 			);
 		}
 
-//		const string Template = @"
-//< controlDescriptions>
-//	<controlDescription>
-//		<customControl id=""{E7A81278-8635-4D9E-8D4D-59480B391C5B}"">
-//			<parameters/>
-//		</customControl>
-//		<customControl formFactor=""0"" name=""Microsoft.PowerApps.PowerAppsOneGrid"">
-//			<parameters>
-//				<data-set name=""Items"">
-//					<ViewId>00000000-0000-0000-0000-000000000000</ViewId>
-//				</data-set>
-//				<AccessibleLabel static=""true"" type=""SingleLine.Text""/>
-//				<EnableEditing static=""true"" type=""Enum"">no</EnableEditing>
-//				<DisableChildItemsEditing static=""true"" type=""Enum"">no</DisableChildItemsEditing>
-//				<EnableFiltering static=""true"" type=""Enum"">yes</EnableFiltering>
-//				<EnableSorting static=""true"" type=""Enum"">yes</EnableSorting>
-//				<EnableGrouping static=""true"" type=""Enum"">no</EnableGrouping>
-//				<EnableAggregation static=""true"" type=""Enum"">no</EnableAggregation>
-//				<EnableColumnMoving static=""true"" type=""Enum"">no</EnableColumnMoving>
-//				<EnableMultipleSelection static=""true"" type=""Enum"">yes</EnableMultipleSelection>
-//				<EnableRangeSelection static=""true"" type=""Enum"">yes</EnableRangeSelection>
-//				<EnableJumpBar static=""true"" type=""Enum"">no</EnableJumpBar>
-//				<EnablePagination static=""true"" type=""Enum"">yes</EnablePagination>
-//				<EnableDropdownColor static=""true"" type=""Enum"">yes</EnableDropdownColor>
-//				<EnableStatusIcons static=""true"" type=""Enum"">yes</EnableStatusIcons>
-//				<EnableTypeIcons static=""true"" type=""Enum"">no</EnableTypeIcons>
-//				<NavigationTypesAllowed static=""true"" type=""Enum"">all</NavigationTypesAllowed>
-//				<ReflowBehavior static=""true"" type=""Enum"">Reflow</ReflowBehavior>
-//				<ShowAvatar static=""true"" type=""Enum"">yes</ShowAvatar>
-//				<NumberOfListColumns static=""true"" type=""Whole.None"">3</NumberOfListColumns>
-//				<ContextualLookupColumnFilters static=""true"" type=""Enum"">yes</ContextualLookupColumnFilters>
-//				<LookupFilterBeginsWith static=""true"" type=""Enum"">no</LookupFilterBeginsWith>
-//				<UseFirstColumnForLookupEdits static=""true"" type=""Enum"">no</UseFirstColumnForLookupEdits>
-//				<GridCustomizerControlFullName static=""true"" type=""SingleLine.Text""/>
-//				<EnableStatusColumn static=""true"" type=""Enum"">yes</EnableStatusColumn>
-//			</parameters>
-//		</customControl>
-//		<customControl formFactor=""1"" name=""Microsoft.PowerApps.PowerAppsOneGrid"">
-//			<parameters>
-//				<data-set name=""Items"">
-//					<ViewId>00000000-0000-0000-0000-000000000000</ViewId>
-//				</data-set>
-//				<AccessibleLabel static=""true"" type=""SingleLine.Text""/>
-//				<EnableEditing static=""true"" type=""Enum"">no</EnableEditing>
-//				<DisableChildItemsEditing static=""true"" type=""Enum"">no</DisableChildItemsEditing>
-//				<EnableFiltering static=""true"" type=""Enum"">yes</EnableFiltering>
-//				<EnableSorting static=""true"" type=""Enum"">yes</EnableSorting>
-//				<EnableGrouping static=""true"" type=""Enum"">no</EnableGrouping>
-//				<EnableAggregation static=""true"" type=""Enum"">no</EnableAggregation>
-//				<EnableColumnMoving static=""true"" type=""Enum"">no</EnableColumnMoving>
-//				<EnableMultipleSelection static=""true"" type=""Enum"">yes</EnableMultipleSelection>
-//				<EnableRangeSelection static=""true"" type=""Enum"">yes</EnableRangeSelection>
-//				<EnableJumpBar static=""true"" type=""Enum"">no</EnableJumpBar>
-//				<EnablePagination static=""true"" type=""Enum"">yes</EnablePagination>
-//				<EnableDropdownColor static=""true"" type=""Enum"">yes</EnableDropdownColor>
-//				<EnableStatusIcons static=""true"" type=""Enum"">yes</EnableStatusIcons>
-//				<EnableTypeIcons static=""true"" type=""Enum"">no</EnableTypeIcons>
-//				<NavigationTypesAllowed static=""true"" type=""Enum"">all</NavigationTypesAllowed>
-//				<ReflowBehavior static=""true"" type=""Enum"">Reflow</ReflowBehavior>
-//				<ShowAvatar static=""true"" type=""Enum"">yes</ShowAvatar>
-//				<NumberOfListColumns static=""true"" type=""Whole.None"">3</NumberOfListColumns>
-//				<ContextualLookupColumnFilters static=""true"" type=""Enum"">yes</ContextualLookupColumnFilters>
-//				<LookupFilterBeginsWith static=""true"" type=""Enum"">no</LookupFilterBeginsWith>
-//				<UseFirstColumnForLookupEdits static=""true"" type=""Enum"">no</UseFirstColumnForLookupEdits>
-//				<GridCustomizerControlFullName static=""true"" type=""SingleLine.Text""/>
-//				<EnableStatusColumn static=""true"" type=""Enum"">yes</EnableStatusColumn>
-//			</parameters>
-//		</customControl>
-//		<customControl formFactor=""2"" name=""Microsoft.PowerApps.PowerAppsOneGrid"">
-//			<parameters>
-//				<data-set name=""Items"">
-//					<ViewId>00000000-0000-0000-0000-000000000000</ViewId>
-//				</data-set>
-//				<AccessibleLabel static=""true"" type=""SingleLine.Text""/>
-//				<EnableEditing static=""true"" type=""Enum"">no</EnableEditing>
-//				<DisableChildItemsEditing static=""true"" type=""Enum"">no</DisableChildItemsEditing>
-//				<EnableFiltering static=""true"" type=""Enum"">yes</EnableFiltering>
-//				<EnableSorting static=""true"" type=""Enum"">yes</EnableSorting>
-//				<EnableGrouping static=""true"" type=""Enum"">no</EnableGrouping>
-//				<EnableAggregation static=""true"" type=""Enum"">no</EnableAggregation>
-//				<EnableColumnMoving static=""true"" type=""Enum"">no</EnableColumnMoving>
-//				<EnableMultipleSelection static=""true"" type=""Enum"">yes</EnableMultipleSelection>
-//				<EnableRangeSelection static=""true"" type=""Enum"">yes</EnableRangeSelection>
-//				<EnableJumpBar static=""true"" type=""Enum"">no</EnableJumpBar>
-//				<EnablePagination static=""true"" type=""Enum"">yes</EnablePagination>
-//				<EnableDropdownColor static=""true"" type=""Enum"">yes</EnableDropdownColor>
-//				<EnableStatusIcons static=""true"" type=""Enum"">yes</EnableStatusIcons>
-//				<EnableTypeIcons static=""true"" type=""Enum"">no</EnableTypeIcons>
-//				<NavigationTypesAllowed static=""true"" type=""Enum"">all</NavigationTypesAllowed>
-//				<ReflowBehavior static=""true"" type=""Enum"">Reflow</ReflowBehavior>
-//				<ShowAvatar static=""true"" type=""Enum"">yes</ShowAvatar>
-//				<NumberOfListColumns static=""true"" type=""Whole.None"">3</NumberOfListColumns>
-//				<ContextualLookupColumnFilters static=""true"" type=""Enum"">yes</ContextualLookupColumnFilters>
-//				<LookupFilterBeginsWith static=""true"" type=""Enum"">no</LookupFilterBeginsWith>
-//				<UseFirstColumnForLookupEdits static=""true"" type=""Enum"">no</UseFirstColumnForLookupEdits>
-//				<GridCustomizerControlFullName static=""true"" type=""SingleLine.Text""/>
-//				<EnableStatusColumn static=""true"" type=""Enum"">yes</EnableStatusColumn>
-//			</parameters>
-//		</customControl>
-//	</controlDescription>
-//</controlDescriptions>
-//";
-    }
+		//		const string Template = @"
+		//< controlDescriptions>
+		//	<controlDescription>
+		//		<customControl id=""{E7A81278-8635-4D9E-8D4D-59480B391C5B}"">
+		//			<parameters/>
+		//		</customControl>
+		//		<customControl formFactor=""0"" name=""Microsoft.PowerApps.PowerAppsOneGrid"">
+		//			<parameters>
+		//				<data-set name=""Items"">
+		//					<ViewId>00000000-0000-0000-0000-000000000000</ViewId>
+		//				</data-set>
+		//				<AccessibleLabel static=""true"" type=""SingleLine.Text""/>
+		//				<EnableEditing static=""true"" type=""Enum"">no</EnableEditing>
+		//				<DisableChildItemsEditing static=""true"" type=""Enum"">no</DisableChildItemsEditing>
+		//				<EnableFiltering static=""true"" type=""Enum"">yes</EnableFiltering>
+		//				<EnableSorting static=""true"" type=""Enum"">yes</EnableSorting>
+		//				<EnableGrouping static=""true"" type=""Enum"">no</EnableGrouping>
+		//				<EnableAggregation static=""true"" type=""Enum"">no</EnableAggregation>
+		//				<EnableColumnMoving static=""true"" type=""Enum"">no</EnableColumnMoving>
+		//				<EnableMultipleSelection static=""true"" type=""Enum"">yes</EnableMultipleSelection>
+		//				<EnableRangeSelection static=""true"" type=""Enum"">yes</EnableRangeSelection>
+		//				<EnableJumpBar static=""true"" type=""Enum"">no</EnableJumpBar>
+		//				<EnablePagination static=""true"" type=""Enum"">yes</EnablePagination>
+		//				<EnableDropdownColor static=""true"" type=""Enum"">yes</EnableDropdownColor>
+		//				<EnableStatusIcons static=""true"" type=""Enum"">yes</EnableStatusIcons>
+		//				<EnableTypeIcons static=""true"" type=""Enum"">no</EnableTypeIcons>
+		//				<NavigationTypesAllowed static=""true"" type=""Enum"">all</NavigationTypesAllowed>
+		//				<ReflowBehavior static=""true"" type=""Enum"">Reflow</ReflowBehavior>
+		//				<ShowAvatar static=""true"" type=""Enum"">yes</ShowAvatar>
+		//				<NumberOfListColumns static=""true"" type=""Whole.None"">3</NumberOfListColumns>
+		//				<ContextualLookupColumnFilters static=""true"" type=""Enum"">yes</ContextualLookupColumnFilters>
+		//				<LookupFilterBeginsWith static=""true"" type=""Enum"">no</LookupFilterBeginsWith>
+		//				<UseFirstColumnForLookupEdits static=""true"" type=""Enum"">no</UseFirstColumnForLookupEdits>
+		//				<GridCustomizerControlFullName static=""true"" type=""SingleLine.Text""/>
+		//				<EnableStatusColumn static=""true"" type=""Enum"">yes</EnableStatusColumn>
+		//			</parameters>
+		//		</customControl>
+		//		<customControl formFactor=""1"" name=""Microsoft.PowerApps.PowerAppsOneGrid"">
+		//			<parameters>
+		//				<data-set name=""Items"">
+		//					<ViewId>00000000-0000-0000-0000-000000000000</ViewId>
+		//				</data-set>
+		//				<AccessibleLabel static=""true"" type=""SingleLine.Text""/>
+		//				<EnableEditing static=""true"" type=""Enum"">no</EnableEditing>
+		//				<DisableChildItemsEditing static=""true"" type=""Enum"">no</DisableChildItemsEditing>
+		//				<EnableFiltering static=""true"" type=""Enum"">yes</EnableFiltering>
+		//				<EnableSorting static=""true"" type=""Enum"">yes</EnableSorting>
+		//				<EnableGrouping static=""true"" type=""Enum"">no</EnableGrouping>
+		//				<EnableAggregation static=""true"" type=""Enum"">no</EnableAggregation>
+		//				<EnableColumnMoving static=""true"" type=""Enum"">no</EnableColumnMoving>
+		//				<EnableMultipleSelection static=""true"" type=""Enum"">yes</EnableMultipleSelection>
+		//				<EnableRangeSelection static=""true"" type=""Enum"">yes</EnableRangeSelection>
+		//				<EnableJumpBar static=""true"" type=""Enum"">no</EnableJumpBar>
+		//				<EnablePagination static=""true"" type=""Enum"">yes</EnablePagination>
+		//				<EnableDropdownColor static=""true"" type=""Enum"">yes</EnableDropdownColor>
+		//				<EnableStatusIcons static=""true"" type=""Enum"">yes</EnableStatusIcons>
+		//				<EnableTypeIcons static=""true"" type=""Enum"">no</EnableTypeIcons>
+		//				<NavigationTypesAllowed static=""true"" type=""Enum"">all</NavigationTypesAllowed>
+		//				<ReflowBehavior static=""true"" type=""Enum"">Reflow</ReflowBehavior>
+		//				<ShowAvatar static=""true"" type=""Enum"">yes</ShowAvatar>
+		//				<NumberOfListColumns static=""true"" type=""Whole.None"">3</NumberOfListColumns>
+		//				<ContextualLookupColumnFilters static=""true"" type=""Enum"">yes</ContextualLookupColumnFilters>
+		//				<LookupFilterBeginsWith static=""true"" type=""Enum"">no</LookupFilterBeginsWith>
+		//				<UseFirstColumnForLookupEdits static=""true"" type=""Enum"">no</UseFirstColumnForLookupEdits>
+		//				<GridCustomizerControlFullName static=""true"" type=""SingleLine.Text""/>
+		//				<EnableStatusColumn static=""true"" type=""Enum"">yes</EnableStatusColumn>
+		//			</parameters>
+		//		</customControl>
+		//		<customControl formFactor=""2"" name=""Microsoft.PowerApps.PowerAppsOneGrid"">
+		//			<parameters>
+		//				<data-set name=""Items"">
+		//					<ViewId>00000000-0000-0000-0000-000000000000</ViewId>
+		//				</data-set>
+		//				<AccessibleLabel static=""true"" type=""SingleLine.Text""/>
+		//				<EnableEditing static=""true"" type=""Enum"">no</EnableEditing>
+		//				<DisableChildItemsEditing static=""true"" type=""Enum"">no</DisableChildItemsEditing>
+		//				<EnableFiltering static=""true"" type=""Enum"">yes</EnableFiltering>
+		//				<EnableSorting static=""true"" type=""Enum"">yes</EnableSorting>
+		//				<EnableGrouping static=""true"" type=""Enum"">no</EnableGrouping>
+		//				<EnableAggregation static=""true"" type=""Enum"">no</EnableAggregation>
+		//				<EnableColumnMoving static=""true"" type=""Enum"">no</EnableColumnMoving>
+		//				<EnableMultipleSelection static=""true"" type=""Enum"">yes</EnableMultipleSelection>
+		//				<EnableRangeSelection static=""true"" type=""Enum"">yes</EnableRangeSelection>
+		//				<EnableJumpBar static=""true"" type=""Enum"">no</EnableJumpBar>
+		//				<EnablePagination static=""true"" type=""Enum"">yes</EnablePagination>
+		//				<EnableDropdownColor static=""true"" type=""Enum"">yes</EnableDropdownColor>
+		//				<EnableStatusIcons static=""true"" type=""Enum"">yes</EnableStatusIcons>
+		//				<EnableTypeIcons static=""true"" type=""Enum"">no</EnableTypeIcons>
+		//				<NavigationTypesAllowed static=""true"" type=""Enum"">all</NavigationTypesAllowed>
+		//				<ReflowBehavior static=""true"" type=""Enum"">Reflow</ReflowBehavior>
+		//				<ShowAvatar static=""true"" type=""Enum"">yes</ShowAvatar>
+		//				<NumberOfListColumns static=""true"" type=""Whole.None"">3</NumberOfListColumns>
+		//				<ContextualLookupColumnFilters static=""true"" type=""Enum"">yes</ContextualLookupColumnFilters>
+		//				<LookupFilterBeginsWith static=""true"" type=""Enum"">no</LookupFilterBeginsWith>
+		//				<UseFirstColumnForLookupEdits static=""true"" type=""Enum"">no</UseFirstColumnForLookupEdits>
+		//				<GridCustomizerControlFullName static=""true"" type=""SingleLine.Text""/>
+		//				<EnableStatusColumn static=""true"" type=""Enum"">yes</EnableStatusColumn>
+		//			</parameters>
+		//		</customControl>
+		//	</controlDescription>
+		//</controlDescriptions>
+		//";
+	}
 }

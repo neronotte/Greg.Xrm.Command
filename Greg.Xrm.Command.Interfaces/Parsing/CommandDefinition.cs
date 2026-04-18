@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Reflection;
 
@@ -67,9 +67,9 @@ namespace Greg.Xrm.Command.Parsing
 		{
 			var usedOptions = new List<string>();
 
-			var command = Activator.CreateInstance(this.CommandType) 
+			var command = Activator.CreateInstance(this.CommandType)
 				?? throw new CommandException(CommandException.CommandCannotBeCreated, $"Command '{this.CommandType}'cannot be created. Please pull an issue on GitHub page.");
-			
+
 			foreach (var optionDef in this.Options)
 			{
 				var property = optionDef.Property;
@@ -83,7 +83,7 @@ namespace Greg.Xrm.Command.Parsing
 				{
 					usedOptions.Add("-" + option.ShortName);
 				}
-				else if(optionDef.IsRequired)
+				else if (optionDef.IsRequired)
 				{
 					throw new CommandException(CommandException.CommandRequiredArgumentNotProvided, $"Option --{option.LongName} is required.");
 				}
@@ -177,7 +177,7 @@ namespace Greg.Xrm.Command.Parsing
 				CheckIfMatchType(defaultValue, propertyType, argumentName);
 				if (defaultValue == null && isRequired)
 					throw new CommandException(CommandException.CommandRequiredArgumentNotProvided, $"You must specify a value for the option --{argumentName}.");
-				
+
 				return defaultValue;
 			}
 
@@ -247,7 +247,7 @@ namespace Greg.Xrm.Command.Parsing
 			if (obj is null) return;
 			if (obj.GetType() != type)
 				throw new CommandException(CommandException.CommandInvalidArgumentType, $"Invalid type for the default value of argument '{argumentName}': expected '{type.FullName}', actual '{obj.GetType().FullName}'");
-        }
+		}
 
 
 

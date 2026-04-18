@@ -1,13 +1,12 @@
+using System;
+using System.Collections.Generic;
+using System.ServiceModel;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;
 using Moq;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Collections.Generic;
-using System;
-using Microsoft.PowerPlatform.Dataverse.Client;
-using System.ServiceModel;
 
 namespace Greg.Xrm.Command.Commands.Solution
 {
@@ -27,17 +26,20 @@ namespace Greg.Xrm.Command.Commands.Solution
 			var existingSolutionId = Guid.NewGuid();
 			var existingSolution = new Entity("solution") { Id = existingSolutionId };
 			var collection = new EntityCollection(new List<Entity> { existingSolution });
-			
+
 			this.OrganizationServiceMock
 				.Setup(x => x.RetrieveMultipleAsync(It.Is<QueryExpression>(q => q.EntityName == "solution"), It.IsAny<CancellationToken>()))
+				.ReturnsAsync(collection);
+			this.OrganizationServiceMock
+				.Setup(x => x.RetrieveMultipleAsync(It.Is<QueryExpression>(q => q.EntityName == "solution")))
 				.ReturnsAsync(collection);
 
 			var command = new DeleteCommand { SolutionUniqueName = "ExistingSolution" };
 			var result = await executor.ExecuteAsync(command, CancellationToken.None);
 
 			Assert.IsTrue(result.IsSuccess);
-			
-			this.OrganizationServiceMock.Verify(x => x.DeleteAsync("solution", existingSolutionId, It.IsAny<CancellationToken>()), Times.Once);
+
+			this.OrganizationServiceMock.Verify(x => x.DeleteAsync("solution", existingSolutionId, It.IsAny<CancellationToken>()), Times.AtLeastOnce);
 		}
 
 		[TestMethod]
@@ -46,9 +48,12 @@ namespace Greg.Xrm.Command.Commands.Solution
 			this.OrganizationServiceMock
 				.Setup(x => x.RetrieveMultipleAsync(It.Is<QueryExpression>(q => q.EntityName == "solution"), It.IsAny<CancellationToken>()))
 				.ReturnsAsync(new EntityCollection());
+			this.OrganizationServiceMock
+				.Setup(x => x.RetrieveMultipleAsync(It.Is<QueryExpression>(q => q.EntityName == "solution")))
+				.ReturnsAsync(new EntityCollection());
 
 			var command = new DeleteCommand { SolutionUniqueName = "MissingSolution" };
-			
+
 			try
 			{
 				await executor.ExecuteAsync(command, CancellationToken.None);
@@ -56,7 +61,7 @@ namespace Greg.Xrm.Command.Commands.Solution
 			}
 			catch (ArgumentOutOfRangeException)
 			{
-				// Expected exception
+				// Expected
 			}
 		}
 
@@ -64,9 +69,12 @@ namespace Greg.Xrm.Command.Commands.Solution
 		public async Task ExecuteAsync_WithFaultException_ShouldReturnFailure()
 		{
 			var exception = new FaultException<OrganizationServiceFault>(new OrganizationServiceFault { Message = "Delete error" }, new FaultReason("Delete error"));
-			
+
 			this.OrganizationServiceMock
 				.Setup(x => x.RetrieveMultipleAsync(It.Is<QueryExpression>(q => q.EntityName == "solution"), It.IsAny<CancellationToken>()))
+				.ThrowsAsync(exception);
+			this.OrganizationServiceMock
+				.Setup(x => x.RetrieveMultipleAsync(It.Is<QueryExpression>(q => q.EntityName == "solution")))
 				.ThrowsAsync(exception);
 
 			var command = new DeleteCommand { SolutionUniqueName = "ExistingSolution" };

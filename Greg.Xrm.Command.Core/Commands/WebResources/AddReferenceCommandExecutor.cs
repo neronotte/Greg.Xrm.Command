@@ -1,9 +1,9 @@
-﻿using Greg.Xrm.Command.Commands.WebResources.ProjectFile;
+using System.Text.RegularExpressions;
+using Greg.Xrm.Command.Commands.WebResources.ProjectFile;
 using Greg.Xrm.Command.Model;
 using Greg.Xrm.Command.Services;
 using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
-using System.Text.RegularExpressions;
 
 namespace Greg.Xrm.Command.Commands.WebResources
 {

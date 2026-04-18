@@ -1,4 +1,4 @@
-﻿using Greg.Xrm.Command.Parsing;
+using Greg.Xrm.Command.Parsing;
 using Greg.Xrm.Command.Services.CommandHistory;
 using Greg.Xrm.Command.Services.Output;
 using Microsoft.Extensions.Logging;
@@ -6,11 +6,11 @@ using Microsoft.Extensions.Logging;
 namespace Greg.Xrm.Command
 {
 	class CommandRunnerCli(
-			IOutput output, 
-			ILogger log, 
+			IOutput output,
+			ILogger log,
 			ICommandParser parser,
 			ICommandExecutorFactory commandExecutorFactory,
-			IHistoryTracker historyTracker, 
+			IHistoryTracker historyTracker,
 			ICommandLineArguments args)
 #pragma warning disable CS9107 // Parameter is captured into the state of the enclosing type and its value is also passed to the base constructor. The value might be captured by the base class as well.
 		: CommandRunnerBase(output, log, commandExecutorFactory, historyTracker, args), ICommandRunner

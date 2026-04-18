@@ -1,7 +1,7 @@
-﻿using Greg.Xrm.Command.Parsing;
+using System.Reflection;
+using Greg.Xrm.Command.Parsing;
 using Greg.Xrm.Command.Parsing.Attributes;
 using Spectre.Console;
-using System.Reflection;
 
 namespace Greg.Xrm.Command.Interactive
 {
@@ -55,7 +55,7 @@ namespace Greg.Xrm.Command.Interactive
 
 				parents.Push(tree);
 				tree = result.GetChildren();
-				
+
 			}
 			while (result.GetCommand() is null);
 

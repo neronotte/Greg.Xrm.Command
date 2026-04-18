@@ -1,4 +1,4 @@
-﻿using Greg.Xrm.Command.Services;
+using Greg.Xrm.Command.Services;
 using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
 using Microsoft.Crm.Sdk.Messages;
@@ -73,7 +73,7 @@ namespace Greg.Xrm.Command.Commands.Org.Language
 				while (true)
 				{
 					cancellationToken.ThrowIfCancellationRequested();
-					
+
 					Console.CursorLeft = 0;
 					output.Write(spinner.Spin());
 					output.Write(" ");

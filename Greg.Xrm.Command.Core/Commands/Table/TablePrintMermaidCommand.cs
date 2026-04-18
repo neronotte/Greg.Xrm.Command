@@ -1,4 +1,4 @@
-﻿namespace Greg.Xrm.Command.Commands.Table
+namespace Greg.Xrm.Command.Commands.Table
 {
 	[Command("table", "print", HelpText = "Returns the Mermaid (https://mermaid.js.org/) classDiagram representation of the set of tables contained in a given solution")]
 	public class TablePrintMermaidCommand

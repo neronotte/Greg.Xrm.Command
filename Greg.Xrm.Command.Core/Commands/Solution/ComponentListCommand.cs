@@ -1,4 +1,4 @@
-﻿namespace Greg.Xrm.Command.Commands.Solution
+namespace Greg.Xrm.Command.Commands.Solution
 {
 	[Command("solution", "component", "list", HelpText = "Returns the list of components in a given solution.")]
 	public class ComponentListCommand

@@ -1,8 +1,8 @@
-﻿using Microsoft.Extensions.Logging;
+using System.ServiceModel;
+using Microsoft.Extensions.Logging;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;
-using System.ServiceModel;
 
 namespace Greg.Xrm.Command.Services.ComponentResolvers
 {

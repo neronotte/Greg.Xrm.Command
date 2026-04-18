@@ -1,11 +1,11 @@
-﻿using System.Reflection;
+using System.Reflection;
 
 namespace Greg.Xrm.Command.Parsing
 {
-    /// <summary>
-    /// Registry that holds all the command definitions
-    /// </summary>
-    public interface ICommandRegistry : IReadOnlyCommandRegistry
+	/// <summary>
+	/// Registry that holds all the command definitions
+	/// </summary>
+	public interface ICommandRegistry : IReadOnlyCommandRegistry
 	{
 		/// <summary>
 		/// 

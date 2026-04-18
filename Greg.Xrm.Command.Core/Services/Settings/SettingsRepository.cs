@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 
 namespace Greg.Xrm.Command.Services.Settings
 {
@@ -8,7 +8,7 @@ namespace Greg.Xrm.Command.Services.Settings
 		private readonly IStorage storage;
 
 		public SettingsRepository(IStorage storage)
-        {
+		{
 			this.storage = storage;
 		}
 
@@ -21,7 +21,7 @@ namespace Greg.Xrm.Command.Services.Settings
 
 
 
-        public async Task<T?> GetAsync<T>(string key)
+		public async Task<T?> GetAsync<T>(string key)
 		{
 			this.InitializeSettings();
 			if (this.settingsFolder == null)
@@ -46,11 +46,11 @@ namespace Greg.Xrm.Command.Services.Settings
 		public Task SetAsync<T>(string key, T value)
 		{
 			this.InitializeSettings();
-			if (this.settingsFolder == null) 
+			if (this.settingsFolder == null)
 				throw new InvalidOperationException("Settings folder is not initialized.");
 
 			var fileName = Path.Combine(this.settingsFolder, $"{key}.json");
-			using(var writer = new StreamWriter(fileName, false, System.Text.Encoding.UTF8))
+			using (var writer = new StreamWriter(fileName, false, System.Text.Encoding.UTF8))
 			{
 				if (typeof(T) == typeof(string))
 				{

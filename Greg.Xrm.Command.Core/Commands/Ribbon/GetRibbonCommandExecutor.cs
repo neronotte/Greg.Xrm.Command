@@ -1,18 +1,18 @@
-﻿using Autofac.Core;
+using System.Diagnostics;
+using System.IO.Packaging;
+using System.Text;
+using Autofac.Core;
 using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
 using Microsoft.Crm.Sdk.Messages;
 using Microsoft.PowerPlatform.Dataverse.Client;
-using System.Diagnostics;
-using System.IO.Packaging;
-using System.Text;
 
 namespace Greg.Xrm.Command.Commands.Ribbon
 {
 	public class GetRibbonCommandExecutor(
 		IOutput output,
 		IOrganizationServiceRepository organizationServiceRepository)
-	
+
 	: ICommandExecutor<GetRibbonCommand>
 	{
 		public async Task<CommandResult> ExecuteAsync(GetRibbonCommand command, CancellationToken cancellationToken)
@@ -69,7 +69,7 @@ namespace Greg.Xrm.Command.Commands.Ribbon
 						});
 					}
 				}
-				catch(Exception ex)
+				catch (Exception ex)
 				{
 					output.WriteLine("Failed", ConsoleColor.Red);
 					return CommandResult.Fail(ex.Message, ex);
@@ -111,7 +111,7 @@ namespace Greg.Xrm.Command.Commands.Ribbon
 
 		private byte[] UnzipRibbonXml(byte[] data)
 		{
-			
+
 			var memStream = new MemoryStream();
 			memStream.Write(data, 0, data.Length);
 			var package = (ZipPackage)ZipPackage.Open(memStream, FileMode.Open);

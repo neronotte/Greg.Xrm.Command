@@ -1,5 +1,5 @@
-﻿using Greg.Xrm.Command.Model;
 using System.ComponentModel.DataAnnotations;
+using Greg.Xrm.Command.Model;
 
 namespace Greg.Xrm.Command.Commands.OptionSet
 {

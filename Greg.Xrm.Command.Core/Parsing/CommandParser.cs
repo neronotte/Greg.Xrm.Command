@@ -1,15 +1,15 @@
-﻿using Greg.Xrm.Command.Commands.Help;
+using Greg.Xrm.Command.Commands.Help;
 using Greg.Xrm.Command.Services.Output;
 
 namespace Greg.Xrm.Command.Parsing
 {
-    public class CommandParser : ICommandParser
+	public class CommandParser : ICommandParser
 	{
 		private readonly IOutput output;
 		private readonly ICommandRegistry registry;
 
 		public CommandParser(IOutput output, ICommandRegistry registry)
-        {
+		{
 			this.output = output;
 			this.registry = registry;
 		}

@@ -1,4 +1,4 @@
-﻿using Microsoft.Xrm.Sdk.Metadata;
+using Microsoft.Xrm.Sdk.Metadata;
 
 namespace Greg.Xrm.Command.Services.OptionSet
 {

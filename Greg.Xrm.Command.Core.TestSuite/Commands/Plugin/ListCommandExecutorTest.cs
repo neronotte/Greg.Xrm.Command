@@ -172,7 +172,7 @@ namespace Greg.Xrm.Command.Commands.Plugin
 		// ── Search operator ───────────────────────────────────────────────────
 
 		[TestMethod]
-		public async Task ExecuteAsync_NameWithoutStar_ShouldUseContainsOperator()
+		public async Task ExecuteAsync_NameWithoutStar_ShouldUseLikeOperator()
 		{
 			var (output, orgRepo, solutionRepo, ansi, asmRepo, pkgRepo, typeRepo, stepRepo, imgRepo) = CreateMocks();
 
@@ -318,7 +318,7 @@ namespace Greg.Xrm.Command.Commands.Plugin
 				.ReturnsAsync(fakeSolution);
 
 			// Two assemblies match by name...
-			var inSolutionId  = Guid.NewGuid();
+			var inSolutionId = Guid.NewGuid();
 			var outSolutionId = Guid.NewGuid();
 			asmRepo
 				.Setup(r => r.SearchByNameAsync(It.IsAny<IOrganizationServiceAsync2>(), It.IsAny<string>(), It.IsAny<ConditionOperator>(), It.IsAny<CancellationToken>()))

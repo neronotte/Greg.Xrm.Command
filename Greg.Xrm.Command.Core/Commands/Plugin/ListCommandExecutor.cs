@@ -41,32 +41,32 @@ namespace Greg.Xrm.Command.Commands.Plugin
 
 			// Determine which levels to search
 			bool searchAll = command.Level is null;
-			bool searchPackage  = searchAll || command.Level == SearchLevel.Package;
+			bool searchPackage = searchAll || command.Level == SearchLevel.Package;
 			bool searchAssembly = searchAll || command.Level == SearchLevel.Assembly;
-			bool searchType     = searchAll || command.Level == SearchLevel.Type;
-			bool searchStep     = searchAll || command.Level == SearchLevel.Step;
+			bool searchType = searchAll || command.Level == SearchLevel.Type;
+			bool searchStep = searchAll || command.Level == SearchLevel.Step;
 
 			output.Write("Searching plugin registrations...");
 
-			var packageSearchTask  = searchPackage  ? packageRepo.SearchByNameAsync(crm, searchTerm, op, cancellationToken)  : Task.FromResult(Array.Empty<PluginPackage>());
+			var packageSearchTask = searchPackage ? packageRepo.SearchByNameAsync(crm, searchTerm, op, cancellationToken) : Task.FromResult(Array.Empty<PluginPackage>());
 			var assemblySearchTask = searchAssembly ? assemblyRepo.SearchByNameAsync(crm, searchTerm, op, cancellationToken) : Task.FromResult(Array.Empty<PluginAssembly>());
-			var typeSearchTask     = searchType     ? typeRepo.SearchByNameAsync(crm, searchTerm, op, cancellationToken)     : Task.FromResult(Array.Empty<PluginType>());
-			var stepSearchTask     = searchStep     ? stepRepo.SearchByNameAsync(crm, searchTerm, op, includeInternalStages: false, cancellationToken) : Task.FromResult(Array.Empty<SdkMessageProcessingStep>());
+			var typeSearchTask = searchType ? typeRepo.SearchByNameAsync(crm, searchTerm, op, cancellationToken) : Task.FromResult(Array.Empty<PluginType>());
+			var stepSearchTask = searchStep ? stepRepo.SearchByNameAsync(crm, searchTerm, op, includeInternalStages: false, cancellationToken) : Task.FromResult(Array.Empty<SdkMessageProcessingStep>());
 
 			await Task.WhenAll(packageSearchTask, assemblySearchTask, typeSearchTask, stepSearchTask);
 
-			var matchedPackages   = packageSearchTask.Result;
+			var matchedPackages = packageSearchTask.Result;
 			var matchedAssemblies = assemblySearchTask.Result;
-			var matchedTypes      = typeSearchTask.Result;
-			var matchedSteps      = stepSearchTask.Result;
+			var matchedTypes = typeSearchTask.Result;
+			var matchedSteps = stepSearchTask.Result;
 
 			output.WriteLine("Done", ConsoleColor.Green);
 
 			// Which IDs matched at each level (used for pruning)
-			var matchedPackageIds  = matchedPackages.Select(p => p.Id).ToHashSet();
+			var matchedPackageIds = matchedPackages.Select(p => p.Id).ToHashSet();
 			var matchedAssemblyIds = matchedAssemblies.Select(a => a.Id).ToHashSet();
-			var matchedTypeIds     = matchedTypes.Select(t => t.Id).ToHashSet();
-			var matchedStepIds     = matchedSteps.Select(s => s.Id).ToHashSet();
+			var matchedTypeIds = matchedTypes.Select(t => t.Id).ToHashSet();
+			var matchedStepIds = matchedSteps.Select(s => s.Id).ToHashSet();
 
 			// Collect all assembly IDs that need to be loaded for hierarchy building
 			var assemblyIdsInScope = new HashSet<Guid>();
@@ -136,9 +136,9 @@ namespace Greg.Xrm.Command.Commands.Plugin
 				.OrderBy(a => a.name)
 				.ToArray();
 
-			var typesByAssembly  = new Dictionary<Guid, PluginType[]>();
-			var stepsByAssembly  = new Dictionary<Guid, SdkMessageProcessingStep[]>();
-			var imagesByStep     = new Dictionary<Guid, SdkMessageProcessingStepImage[]>();
+			var typesByAssembly = new Dictionary<Guid, PluginType[]>();
+			var stepsByAssembly = new Dictionary<Guid, SdkMessageProcessingStep[]>();
+			var imagesByStep = new Dictionary<Guid, SdkMessageProcessingStepImage[]>();
 
 			await Task.WhenAll(assembliesInScope.Select(async asm =>
 			{
@@ -149,7 +149,7 @@ namespace Greg.Xrm.Command.Commands.Plugin
 			}));
 
 			var allStepIds = stepsByAssembly.Values.SelectMany(s => s).Select(s => s.Id).ToArray();
-			var allImages  = await imageRepo.GetByStepIdsAsync(crm, allStepIds);
+			var allImages = await imageRepo.GetByStepIdsAsync(crm, allStepIds);
 			foreach (var img in allImages)
 			{
 				var stepId = img.sdkmessageprocessingstepid?.Id ?? Guid.Empty;
@@ -280,9 +280,9 @@ namespace Greg.Xrm.Command.Commands.Plugin
 
 			var message = step.messagename;
 
-			var entity  = step.primaryobjecttypecode;
-			var stage   = GetStageName(step.stage?.Value);
-			var suffix  = string.IsNullOrEmpty(entity) || entity == "none"
+			var entity = step.primaryobjecttypecode;
+			var stage = GetStageName(step.stage?.Value);
+			var suffix = string.IsNullOrEmpty(entity) || entity == "none"
 				? $"{message} ({stage})"
 				: $"{message} of {entity} ({stage})";
 
@@ -298,7 +298,7 @@ namespace Greg.Xrm.Command.Commands.Plugin
 			20 => "Pre-Operation",
 			30 => "Post-Operation",
 			40 => "Post-Operation, Async",
-			_  => "Unknown"
+			_ => "Unknown"
 		};
 
 		private static string GetImageTypeName(int? imageType) => imageType switch

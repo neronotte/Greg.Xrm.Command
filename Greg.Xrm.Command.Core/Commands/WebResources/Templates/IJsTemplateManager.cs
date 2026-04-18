@@ -1,4 +1,4 @@
-﻿namespace Greg.Xrm.Command.Commands.WebResources.Templates
+namespace Greg.Xrm.Command.Commands.WebResources.Templates
 {
 	public interface IJsTemplateManager
 	{

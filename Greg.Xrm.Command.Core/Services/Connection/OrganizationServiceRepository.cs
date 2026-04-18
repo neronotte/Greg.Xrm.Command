@@ -1,13 +1,13 @@
-﻿using Greg.Xrm.Command.Services.Output;
+using System.Diagnostics;
+using System.Drawing.Text;
+using System.ServiceModel;
+using Greg.Xrm.Command.Services.Output;
 using Greg.Xrm.Command.Services.Project;
 using Greg.Xrm.Command.Services.Settings;
 using Microsoft.Crm.Sdk.Messages;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.PowerPlatform.Dataverse.Client.Utils;
 using Microsoft.Xrm.Sdk;
-using System.Diagnostics;
-using System.Drawing.Text;
-using System.ServiceModel;
 
 namespace Greg.Xrm.Command.Services.Connection
 {
@@ -312,7 +312,7 @@ namespace Greg.Xrm.Command.Services.Connection
 			{
 				return await CreateServiceClientFromConnectionString(connectionName, connectionString);
 			}
-			catch(System.ServiceModel.Security.MessageSecurityException)
+			catch (System.ServiceModel.Security.MessageSecurityException)
 			{
 				return await CreateServiceClientFromConnectionString(connectionName, connectionString);
 			}

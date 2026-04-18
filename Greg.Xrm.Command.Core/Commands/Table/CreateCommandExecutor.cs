@@ -1,4 +1,5 @@
-﻿using Greg.Xrm.Command.Services.Connection;
+using System.ServiceModel;
+using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
 using Greg.Xrm.Command.Services.Pluralization;
 using Microsoft.Crm.Sdk.Messages;
@@ -6,7 +7,6 @@ using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Messages;
 using Microsoft.Xrm.Sdk.Metadata;
 using Microsoft.Xrm.Sdk.Query;
-using System.ServiceModel;
 
 namespace Greg.Xrm.Command.Commands.Table
 {
@@ -248,7 +248,7 @@ namespace Greg.Xrm.Command.Commands.Table
 
 		private static Label SetPrimaryAttributeDisplayName(CreateCommand command, int defaultLanguageCode, bool isActivity = false)
 		{
-			if(isActivity)
+			if (isActivity)
 				return new Label("Subject", defaultLanguageCode);
 
 			if (command.PrimaryAttributeDisplayName != null)

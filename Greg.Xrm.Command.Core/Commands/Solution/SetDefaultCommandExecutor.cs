@@ -1,25 +1,25 @@
-﻿using Greg.Xrm.Command.Services.Connection;
+using System.ServiceModel;
+using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;
-using System.ServiceModel;
 
 namespace Greg.Xrm.Command.Commands.Solution
 {
-    public class SetDefaultCommandExecutor : ICommandExecutor<SetDefaultCommand>
+	public class SetDefaultCommandExecutor : ICommandExecutor<SetDefaultCommand>
 	{
 		private readonly IOutput output;
 		private readonly IOrganizationServiceRepository organizationServiceRepository;
 
 		public SetDefaultCommandExecutor(
-			IOutput output, 
+			IOutput output,
 			IOrganizationServiceRepository organizationServiceRepository)
-        {
+		{
 			this.output = output;
 			this.organizationServiceRepository = organizationServiceRepository;
 		}
 
-        public async Task<CommandResult> ExecuteAsync(SetDefaultCommand command, CancellationToken cancellationToken)
+		public async Task<CommandResult> ExecuteAsync(SetDefaultCommand command, CancellationToken cancellationToken)
 		{
 			if (string.IsNullOrWhiteSpace(command.SolutionUniqueName))
 				throw new CommandException(CommandException.CommandRequiredArgumentNotProvided, "The unique name of the solution to set as default is required.");
@@ -58,7 +58,7 @@ namespace Greg.Xrm.Command.Commands.Solution
 
 				uniqueName = result.Entities[0].GetAttributeValue<string>("uniquename");
 			}
-			catch(FaultException<OrganizationServiceFault> ex)
+			catch (FaultException<OrganizationServiceFault> ex)
 			{
 				return CommandResult.Fail("Error while checking solution existence: " + ex.Message, ex);
 			}
@@ -70,7 +70,7 @@ namespace Greg.Xrm.Command.Commands.Solution
 				this.output.Write("Solution '").Write(command.SolutionUniqueName, ConsoleColor.Yellow).WriteLine("' set as default.");
 				return CommandResult.Success();
 			}
-			catch(FaultException<OrganizationServiceFault> ex)
+			catch (FaultException<OrganizationServiceFault> ex)
 			{
 				return CommandResult.Fail("Error while setting default solution: " + ex.Message, ex);
 			}

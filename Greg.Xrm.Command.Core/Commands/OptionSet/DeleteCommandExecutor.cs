@@ -1,4 +1,4 @@
-﻿using Greg.Xrm.Command.Commands.WebResources.PushLogic;
+using Greg.Xrm.Command.Commands.WebResources.PushLogic;
 using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
 using Microsoft.Xrm.Sdk.Messages;

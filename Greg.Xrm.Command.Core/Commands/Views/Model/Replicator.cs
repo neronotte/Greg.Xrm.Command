@@ -1,8 +1,8 @@
-﻿using Greg.Xrm.Command.Model;
-using Microsoft.Crm.Sdk;
-using Microsoft.PowerPlatform.Dataverse.Client;
 using System.Data;
 using System.Xml;
+using Greg.Xrm.Command.Model;
+using Microsoft.Crm.Sdk;
+using Microsoft.PowerPlatform.Dataverse.Client;
 
 namespace Greg.Xrm.Command.Commands.Views.Model
 {
@@ -35,7 +35,7 @@ namespace Greg.Xrm.Command.Commands.Views.Model
 
 				var xmlDocument1 = new XmlDocument();
 				xmlDocument1.LoadXml(targetView.layoutxml!);
-				
+
 				var xmlDocument2 = new XmlDocument();
 				xmlDocument2.LoadXml(sourceView.layoutxml!);
 
@@ -86,7 +86,7 @@ namespace Greg.Xrm.Command.Commands.Views.Model
 
 					var xmlDocument4 = new XmlDocument();
 					xmlDocument4.LoadXml(sourceView.fetchxml!);
-					
+
 					var xmlNodeList2 = xmlDocument4.SelectNodes("fetch/entity/attribute");
 					if (includeLayout)
 					{

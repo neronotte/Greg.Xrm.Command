@@ -1,4 +1,4 @@
-﻿using Greg.Xrm.Command.Services.Output;
+using Greg.Xrm.Command.Services.Output;
 using Greg.Xrm.Command.Services.Settings;
 
 namespace Greg.Xrm.Command.Commands.Plugin

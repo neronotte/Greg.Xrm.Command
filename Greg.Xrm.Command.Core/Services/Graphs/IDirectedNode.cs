@@ -1,6 +1,6 @@
-﻿namespace Greg.Xrm.Command.Services.Graphs
+namespace Greg.Xrm.Command.Services.Graphs
 {
-    public interface IDirectedNode<T>
+	public interface IDirectedNode<T>
 		where T : INodeContent
 	{
 		/// <summary>

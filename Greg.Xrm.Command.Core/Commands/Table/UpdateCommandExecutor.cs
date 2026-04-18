@@ -1,4 +1,4 @@
-﻿using Greg.Xrm.Command.Services.Connection;
+using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Messages;
@@ -6,12 +6,12 @@ using Microsoft.Xrm.Sdk.Metadata;
 
 namespace Greg.Xrm.Command.Commands.Table
 {
-    public class UpdateCommandExecutor(
-		IOutput output, 
-		IOrganizationServiceRepository organizationServiceRepository) 
+	public class UpdateCommandExecutor(
+		IOutput output,
+		IOrganizationServiceRepository organizationServiceRepository)
 		: ICommandExecutor<UpdateCommand>
 	{
-        public async Task<CommandResult> ExecuteAsync(UpdateCommand command, CancellationToken cancellationToken)
+		public async Task<CommandResult> ExecuteAsync(UpdateCommand command, CancellationToken cancellationToken)
 		{
 			output.Write($"Connecting to the current dataverse environment...");
 			var crm = await organizationServiceRepository.GetCurrentConnectionAsync();
@@ -22,16 +22,16 @@ namespace Greg.Xrm.Command.Commands.Table
 			{
 				output.Write($"Retrieving metadata for table '{command.SchemaName}'...");
 				var request = new RetrieveEntityRequest
-                {
-                    LogicalName = command.SchemaName,
-                    EntityFilters = EntityFilters.All
-                };
+				{
+					LogicalName = command.SchemaName,
+					EntityFilters = EntityFilters.All
+				};
 
-                var response = (RetrieveEntityResponse)await crm.ExecuteAsync(request);
+				var response = (RetrieveEntityResponse)await crm.ExecuteAsync(request);
 				table = response.EntityMetadata;
 				output.WriteLine("Done", ConsoleColor.Green);
 			}
-			catch(Exception ex)
+			catch (Exception ex)
 			{
 				output.WriteLine("Failed", ConsoleColor.Red);
 				return CommandResult.Fail($"An error occurred while updating the table '{command.SchemaName}': {ex.Message}", ex);
@@ -112,5 +112,5 @@ namespace Greg.Xrm.Command.Commands.Table
 				return CommandResult.Fail($"An error occurred while updating the table '{command.SchemaName}': {ex.Message}", ex);
 			}
 		}
-    }
+	}
 }

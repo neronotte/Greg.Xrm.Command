@@ -1,4 +1,4 @@
-﻿namespace Greg.Xrm.Command.Updates
+namespace Greg.Xrm.Command.Updates
 {
 	public interface IAutoUpdater
 	{

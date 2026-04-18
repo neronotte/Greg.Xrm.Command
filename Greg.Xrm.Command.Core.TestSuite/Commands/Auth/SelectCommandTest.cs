@@ -1,4 +1,4 @@
-﻿using Greg.Xrm.Command.Commands.Auth;
+using Greg.Xrm.Command.Commands.Auth;
 
 namespace Greg.Xrm.Command.Commands.Delete
 {

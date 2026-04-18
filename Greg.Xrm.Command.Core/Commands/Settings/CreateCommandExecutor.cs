@@ -1,16 +1,16 @@
-﻿using Greg.Xrm.Command.Commands.Settings.Model;
+using System.Globalization;
+using System.ServiceModel;
+using Greg.Xrm.Command.Commands.Settings.Model;
 using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
-using Microsoft.PowerPlatform.Dataverse.Client;
-using Microsoft.Xrm.Sdk.Query;
-using Microsoft.Xrm.Sdk;
-using System.ServiceModel;
 using Microsoft.Crm.Sdk.Messages;
-using System.Globalization;
+using Microsoft.PowerPlatform.Dataverse.Client;
+using Microsoft.Xrm.Sdk;
+using Microsoft.Xrm.Sdk.Query;
 
 namespace Greg.Xrm.Command.Commands.Settings
 {
-    public class CreateCommandExecutor : ICommandExecutor<CreateCommand>
+	public class CreateCommandExecutor : ICommandExecutor<CreateCommand>
 	{
 		private readonly IOutput output;
 		private readonly IOrganizationServiceRepository organizationServiceRepository;
@@ -29,7 +29,7 @@ namespace Greg.Xrm.Command.Commands.Settings
 		{
 			if (string.IsNullOrWhiteSpace(command.DisplayName))
 			{
-				return CommandResult.Fail( "The display name is required." );
+				return CommandResult.Fail("The display name is required.");
 			}
 
 
@@ -101,7 +101,7 @@ namespace Greg.Xrm.Command.Commands.Settings
 				result["Solution Component Id"] = response.id;
 				return result;
 			}
-			catch(FaultException<OrganizationServiceFault> ex)
+			catch (FaultException<OrganizationServiceFault> ex)
 			{
 				this.output.WriteLine("ERROR", ConsoleColor.Red);
 				this.output.WriteLine(ex.Message, ConsoleColor.Red);

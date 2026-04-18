@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace Greg.Xrm.Command.Commands.Solution
 {
@@ -8,5 +8,5 @@ namespace Greg.Xrm.Command.Commands.Solution
 		[Option("uniqueName", "un", HelpText = "The unique name of the solution to delete.")]
 		[Required]
 		public string? SolutionUniqueName { get; set; }
-    }
+	}
 }

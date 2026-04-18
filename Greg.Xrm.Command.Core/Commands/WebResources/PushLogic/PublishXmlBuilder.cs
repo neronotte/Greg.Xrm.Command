@@ -1,9 +1,9 @@
-﻿using Microsoft.Crm.Sdk.Messages;
 using System.Text;
+using Microsoft.Crm.Sdk.Messages;
 
 namespace Greg.Xrm.Command.Commands.WebResources.PushLogic
 {
-    public class PublishXmlBuilder : IPublishXmlBuilder
+	public class PublishXmlBuilder : IPublishXmlBuilder
 	{
 		private readonly List<Guid> webResourceList = new();
 		private readonly List<string> tableList = new();
@@ -17,7 +17,7 @@ namespace Greg.Xrm.Command.Commands.WebResources.PushLogic
 
 		public void AddWebResource(Guid id)
 		{
-			if(!this.webResourceList.Contains(id))
+			if (!this.webResourceList.Contains(id))
 				this.webResourceList.Add(id);
 		}
 
@@ -83,8 +83,8 @@ namespace Greg.Xrm.Command.Commands.WebResources.PushLogic
 				publishXml.AppendLine("  </optionsets>");
 			}
 
-			publishXml.Append("</importexportxml>"); 
-			
+			publishXml.Append("</importexportxml>");
+
 			var request = new PublishXmlRequest
 			{
 				ParameterXml = publishXml.ToString()

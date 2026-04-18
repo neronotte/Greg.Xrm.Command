@@ -1,4 +1,4 @@
-﻿using Greg.Xrm.Command.Commands.Column.Builders;
+using Greg.Xrm.Command.Commands.Column.Builders;
 using Greg.Xrm.Command.Services;
 using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.OptionSet;

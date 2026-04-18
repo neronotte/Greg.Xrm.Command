@@ -1,8 +1,8 @@
-﻿using Greg.Xrm.Command.Model;
+using System.ServiceModel;
+using Greg.Xrm.Command.Model;
 using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
 using Microsoft.Xrm.Sdk;
-using System.ServiceModel;
 
 namespace Greg.Xrm.Command.Commands.Workflows
 {
@@ -63,7 +63,8 @@ namespace Greg.Xrm.Command.Commands.Workflows
 			output.WriteTable(workflowList,
 				() => ["Id", "Name", "Category", "State", "Status"],
 				w => [w.Id.ToString(), w.name ?? string.Empty, w.CategoryFormatted ?? string.Empty, w.StateCodeFormatted ?? string.Empty, w.StatusCodeFormatted ?? string.Empty],
-				(col, row) => {
+				(col, row) =>
+				{
 
 					if (col == 1) return ConsoleColor.White;
 					if (col == 0 || col == 2) return ConsoleColor.DarkGray;

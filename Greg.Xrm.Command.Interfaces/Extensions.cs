@@ -1,10 +1,10 @@
-﻿using Microsoft.PowerPlatform.Dataverse.Client;
+using System.Globalization;
+using System.Text;
+using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Messages;
 using Microsoft.Xrm.Sdk.Metadata;
 using Microsoft.Xrm.Sdk.Query;
-using System.Globalization;
-using System.Text;
 
 namespace Greg.Xrm.Command
 {
@@ -147,8 +147,8 @@ namespace Greg.Xrm.Command
 		}
 
 		public static async Task CheckManyToOneEligibilityAsync(this IOrganizationServiceAsync2 crm, string parentTable, string childTable)
-		{ 
-			await crm.CheckManyToOneEligibilityAsync(new[] { parentTable }, childTable); 
+		{
+			await crm.CheckManyToOneEligibilityAsync(new[] { parentTable }, childTable);
 		}
 
 		/// <summary>

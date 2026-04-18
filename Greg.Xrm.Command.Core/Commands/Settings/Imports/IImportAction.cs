@@ -1,6 +1,6 @@
-﻿namespace Greg.Xrm.Command.Commands.Settings.Imports
+namespace Greg.Xrm.Command.Commands.Settings.Imports
 {
-	public interface IImportAction 
+	public interface IImportAction
 	{
 	}
 }

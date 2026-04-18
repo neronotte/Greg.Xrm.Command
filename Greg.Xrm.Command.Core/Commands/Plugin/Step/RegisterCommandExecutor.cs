@@ -1,10 +1,10 @@
-﻿using Greg.Xrm.Command.Model;
+using System.Text;
+using Greg.Xrm.Command.Model;
 using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
 using Greg.Xrm.Command.Services.Plugin;
 using Microsoft.Crm.Sdk.Messages;
 using Microsoft.Xrm.Sdk;
-using System.Text;
 
 namespace Greg.Xrm.Command.Commands.Plugin.Step
 {
@@ -14,7 +14,7 @@ namespace Greg.Xrm.Command.Commands.Plugin.Step
 		ISolutionRepository solutionRepository,
 		ISdkMessageRepository sdkMessageRepository,
 		IPluginTypeRepository pluginTypeRepository
-	): ICommandExecutor<RegisterCommand>
+	) : ICommandExecutor<RegisterCommand>
 	{
 		public async Task<CommandResult> ExecuteAsync(RegisterCommand command, CancellationToken cancellationToken)
 		{
@@ -160,13 +160,13 @@ namespace Greg.Xrm.Command.Commands.Plugin.Step
 					command.PostImageName);
 				output.WriteLine("Done", ConsoleColor.Green);
 			}
-			catch(Exception ex)
+			catch (Exception ex)
 			{
 				output.WriteLine("Failed", ConsoleColor.Red);
 				return CommandResult.Fail(ex.Message);
 			}
 
-			
+
 
 
 			try
@@ -182,7 +182,7 @@ namespace Greg.Xrm.Command.Commands.Plugin.Step
 				await crm.ExecuteAsync(request);
 				output.WriteLine("Done", ConsoleColor.Green);
 			}
-			catch(Exception)
+			catch (Exception)
 			{
 				output.WriteLine("Failed", ConsoleColor.Red);
 			}

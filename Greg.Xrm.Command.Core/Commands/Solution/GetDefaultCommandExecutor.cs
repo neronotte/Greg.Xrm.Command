@@ -1,4 +1,4 @@
-﻿using Greg.Xrm.Command.Services.Connection;
+using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
 
 namespace Greg.Xrm.Command.Commands.Solution

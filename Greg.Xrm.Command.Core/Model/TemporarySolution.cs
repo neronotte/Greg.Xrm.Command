@@ -1,8 +1,8 @@
-﻿using Greg.Xrm.Command.Commands.WebResources.PushLogic;
+using System.Diagnostics;
+using Greg.Xrm.Command.Commands.WebResources.PushLogic;
 using Greg.Xrm.Command.Services.Output;
 using Microsoft.Crm.Sdk.Messages;
 using Microsoft.PowerPlatform.Dataverse.Client;
-using System.Diagnostics;
 
 namespace Greg.Xrm.Command.Model
 {
@@ -65,7 +65,7 @@ namespace Greg.Xrm.Command.Model
 				var response = (ExportSolutionResponse)await crm.ExecuteAsync(request);
 				sw.Stop();
 				output.WriteLine("DONE in " + sw.Elapsed, ConsoleColor.Green);
-				return new SolutionZipArchive( response.ExportSolutionFile);
+				return new SolutionZipArchive(response.ExportSolutionFile);
 			}
 			catch
 			{
@@ -86,7 +86,7 @@ namespace Greg.Xrm.Command.Model
 				var request = new ImportSolutionRequest
 				{
 					CustomizationFile = zipFile,
-					OverwriteUnmanagedCustomizations = true,	
+					OverwriteUnmanagedCustomizations = true,
 				};
 
 				await crm.ExecuteAsync(request);

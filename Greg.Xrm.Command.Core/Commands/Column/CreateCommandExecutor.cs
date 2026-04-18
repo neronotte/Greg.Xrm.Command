@@ -1,4 +1,6 @@
-﻿using Greg.Xrm.Command.Commands.Column.Builders;
+using System.ServiceModel;
+using System.Text;
+using Greg.Xrm.Command.Commands.Column.Builders;
 using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
 using Microsoft.Extensions.Primitives;
@@ -7,8 +9,6 @@ using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Messages;
 using Microsoft.Xrm.Sdk.Query;
 using Newtonsoft.Json;
-using System.ServiceModel;
-using System.Text;
 
 namespace Greg.Xrm.Command.Commands.Column
 {
@@ -65,7 +65,7 @@ namespace Greg.Xrm.Command.Commands.Column
 
 				return new CreateCommandResult(response.AttributeId);
 			}
-			catch(FaultException<OrganizationServiceFault> ex)
+			catch (FaultException<OrganizationServiceFault> ex)
 			{
 				var sb = new StringBuilder();
 				sb.Append("Exception of type FaultException<OrganizationServiceFault> occurred. ");

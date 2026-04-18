@@ -1,16 +1,16 @@
-﻿using Greg.Xrm.Command.Services.Connection;
+using System.Text;
+using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Messages;
 using Microsoft.Xrm.Sdk.Metadata;
 using Microsoft.Xrm.Sdk.Query;
-using System.Text;
 
 namespace Greg.Xrm.Command.Commands.Relationship
 {
 	public class AddPolyCommandExecutor(
-		IOutput output, 
-		IOrganizationServiceRepository organizationServiceRepository) 
+		IOutput output,
+		IOrganizationServiceRepository organizationServiceRepository)
 		: ICommandExecutor<AddPolyCommand>
 	{
 		private readonly IOutput output = output;
@@ -90,7 +90,7 @@ namespace Greg.Xrm.Command.Commands.Relationship
 				return CommandResult.Fail(ex.Message, ex);
 			}
 
-			
+
 
 
 
@@ -162,7 +162,7 @@ namespace Greg.Xrm.Command.Commands.Relationship
 				result["Relationship ID"] = response["RelationshipId"];
 				return result;
 			}
-			catch(Exception ex)
+			catch (Exception ex)
 			{
 				return CommandResult.Fail(ex.Message, ex);
 			}

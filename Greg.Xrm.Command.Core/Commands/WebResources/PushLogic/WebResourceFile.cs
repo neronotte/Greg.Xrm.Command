@@ -1,4 +1,4 @@
-﻿using Greg.Xrm.Command.Model;
+using Greg.Xrm.Command.Model;
 
 namespace Greg.Xrm.Command.Commands.WebResources.PushLogic
 {
@@ -11,7 +11,7 @@ namespace Greg.Xrm.Command.Commands.WebResources.PushLogic
 			this.Type = type;
 		}
 
-        public string LocalPath { get; }
+		public string LocalPath { get; }
 		public string RemotePath { get; }
 		public WebResourceType Type { get; }
 	}

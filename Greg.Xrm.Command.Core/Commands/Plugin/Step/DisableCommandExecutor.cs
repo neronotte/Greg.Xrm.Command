@@ -1,4 +1,4 @@
-﻿using Greg.Xrm.Command.Services.Connection;
+using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
 using Greg.Xrm.Command.Services.Plugin;
 using Microsoft.Xrm.Sdk;
@@ -71,7 +71,7 @@ namespace Greg.Xrm.Command.Commands.Plugin.Step
 
 
 
-			
+
 
 			try
 			{
