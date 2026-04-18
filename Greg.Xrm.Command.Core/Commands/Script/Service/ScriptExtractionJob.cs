@@ -35,36 +35,36 @@ namespace Greg.Xrm.Command.Commands.Script.Service
 			this.preloadedEntities = preloadedEntities;
 		}
 
-		public async Task<CommandResult> RunAsync()
-		{
-			List<Extractor_EntityMetadata> entities;
-			if (preloadedEntities != null)
-			{
-				entities = preloadedEntities;
-			}
-			else
-			{
-				output.WriteLine("Step 1: Extracting entity metadata...");
-				entities = await metadataExtractor.GetEntitiesByPrefixAsync(prefixes) ?? new List<Extractor_EntityMetadata>();
-				output.WriteLine($"Entities found: {entities.Count}");
-				foreach (var entity in entities)
-				{
-					output.WriteLine($"  - {entity.SchemaName} ({entity.DisplayName}) - {entity.Fields.Count} fields");
-				}
-				output.WriteLine();
-			}
+        public async Task<CommandResult> RunAsync()
+        {
+            List<Extractor_EntityMetadata> entities;
+            if (preloadedEntities != null)
+            {
+                entities = preloadedEntities;
+            }
+            else
+            {
+                output.WriteLine("Step 1: Extracting entity metadata...");
+                entities = await metadataExtractor.GetEntitiesByPrefixAsync(prefixes);
+                output.WriteLine($"Entities found: {entities.Count}");
+                foreach (var entity in entities)
+                {
+                    output.WriteLine($"  - {entity.SchemaName} ({entity.DisplayName}) - {entity.Fields.Count} fields");
+                }
+                output.WriteLine();
+            }
 
-			output.WriteLine("Step 2: Extracting relationship metadata...");
-			var relationships = await metadataExtractor.GetRelationshipsAsync(prefixes, entities) ?? new List<Extractor_RelationshipMetadata>();
-			output.WriteLine($"Relationships found: {relationships.Count}");
-			foreach (var rel in relationships.OrderBy(r => r.Name))
-			{
-				if (rel.Type == Extractor_RelationshipType.OneToMany)
-					output.WriteLine($"  - {rel.Name}: {rel.ParentEntity} -> {rel.ChildEntity} ({rel.LookupField})");
-				else
-					output.WriteLine($"  - {rel.Name}: {rel.FirstEntity} <-> {rel.SecondEntity}");
-			}
-			output.WriteLine();
+            output.WriteLine("Step 2: Extracting relationship metadata...");
+            var relationships = await metadataExtractor.GetRelationshipsAsync(prefixes, entities);
+            output.WriteLine($"Relationships found: {relationships.Count}");
+            foreach (var rel in relationships.OrderBy(r => r.Name))
+            {
+                if (rel.Type == Extractor_RelationshipType.OneToMany)
+                    output.WriteLine($"  - {rel.Name}: {rel.ParentEntity} -> {rel.ChildEntity} ({rel.LookupField})");
+                else
+                    output.WriteLine($"  - {rel.Name}: {rel.FirstEntity} <-> {rel.SecondEntity}");
+            }
+            output.WriteLine();
 
 			Directory.CreateDirectory(outputDir);
 
@@ -74,16 +74,16 @@ namespace Greg.Xrm.Command.Commands.Script.Service
 			await File.WriteAllTextAsync(pacxScriptPath, script);
 			output.WriteLine($"PACX script generated: {pacxScriptPath}");
 
-			string? csvPath = null;
-			if (exportStateFields)
-			{
-				output.WriteLine("Step 4: Generating State Field CSV...");
-				csvPath = Path.Combine(outputDir, stateFieldsDefinitionName);
-				var optionSets = await metadataExtractor.GetOptionSetsAsync(entities.Select(e => e.SchemaName).ToList()) ?? new List<Extractor_OptionSetMetadata>();
-				await metadataExtractor.GenerateStateFieldsCSV(optionSets, csvPath);
-				output.WriteLine($"State Field CSV generated: {csvPath}");
-				output.WriteLine();
-			}
+            string? csvPath = null;
+            if (exportStateFields)
+            {
+                output.WriteLine("Step 4: Generating State Field CSV...");
+                csvPath = Path.Combine(outputDir, stateFieldsDefinitionName);
+                var optionSets = await metadataExtractor.GetOptionSetsAsync(entities.Select(e => e.SchemaName).ToList());
+                await metadataExtractor.GenerateStateFieldsCSV(optionSets, csvPath);
+                output.WriteLine($"State Field CSV generated: {csvPath}");
+                output.WriteLine();
+            }
 
 			output.WriteLine("Extraction completed successfully!");
 			output.WriteLine("=================================");
