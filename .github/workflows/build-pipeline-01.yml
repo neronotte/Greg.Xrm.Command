@@ -41,8 +41,6 @@ name: Build Pipeline v01
 on:
   push:
     branches: [ "master" ]
-  pull_request:
-    branches: [ "master" ]
 #  release:
 #    types:
 #      - published    # Run the workflow when a new GitHub release is published
