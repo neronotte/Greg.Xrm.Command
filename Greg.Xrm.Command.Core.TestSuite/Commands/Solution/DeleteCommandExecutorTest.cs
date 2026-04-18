@@ -1,12 +1,6 @@
-using System;
-using System.Collections.Generic;
 using System.ServiceModel;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;
-using Moq;
 
 namespace Greg.Xrm.Command.Commands.Solution
 {
@@ -54,15 +48,8 @@ namespace Greg.Xrm.Command.Commands.Solution
 
 			var command = new DeleteCommand { SolutionUniqueName = "MissingSolution" };
 
-			try
-			{
-				await executor.ExecuteAsync(command, CancellationToken.None);
-				Assert.Fail("Expected ArgumentOutOfRangeException was not thrown.");
-			}
-			catch (ArgumentOutOfRangeException)
-			{
-				// Expected
-			}
+			var result = await executor.ExecuteAsync(command, CancellationToken.None);
+			Assert.IsFalse(result.IsSuccess);
 		}
 
 		[TestMethod]
