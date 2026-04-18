@@ -172,7 +172,7 @@ namespace Greg.Xrm.Command.Commands.Plugin
 		// ── Search operator ───────────────────────────────────────────────────
 
 		[TestMethod]
-		public async Task ExecuteAsync_NameWithoutStar_ShouldUseContainsOperator()
+		public async Task ExecuteAsync_NameWithoutStar_ShouldUseLikeOperator()
 		{
 			var (output, orgRepo, solutionRepo, ansi, asmRepo, pkgRepo, typeRepo, stepRepo, imgRepo) = CreateMocks();
 
