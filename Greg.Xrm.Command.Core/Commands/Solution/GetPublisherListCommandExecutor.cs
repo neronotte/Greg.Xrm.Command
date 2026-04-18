@@ -21,8 +21,7 @@ namespace Greg.Xrm.Command.Commands.Solution
 				var crm = await organizationServiceRepository.GetCurrentConnectionAsync();
 				output.WriteLine("Done", ConsoleColor.Green);
 
-				string[] blackListPublisher = { "MicrosoftCorporation", "microsoftfirstparty" };
-
+				var blackListPublisher = new string[0];
 				if (!string.IsNullOrEmpty(command.publisherBlacklist))
 					blackListPublisher = command.publisherBlacklist.Split(',', StringSplitOptions.TrimEntries);
 
@@ -43,7 +42,7 @@ namespace Greg.Xrm.Command.Commands.Solution
 				if (blackListPublisher.Length > 0)
 					query.Criteria.AddCondition("uniquename", ConditionOperator.NotIn, blackListPublisher);
 
-				var listPublisher = (await crm.RetrieveMultipleAsync(query)).Entities;
+				var listPublisher = (await crm.RetrieveMultipleAsync(query, cancellationToken)).Entities;
 
 
 				output.WriteTable(listPublisher,
