@@ -1,15 +1,15 @@
-﻿using Greg.Xrm.Command.Services.Settings;
-using Microsoft.Xrm.Sdk;
 using System.Globalization;
 using System.IO.Packaging;
 using System.Reflection;
 using System.Xml;
+using Greg.Xrm.Command.Services.Settings;
+using Microsoft.Xrm.Sdk;
 
 namespace Greg.Xrm.Command.Services.Plugin
 {
 	public class PluginPackageReader(
 		ISettingsRepository settingsRepository
-	): IPluginPackageReader
+	) : IPluginPackageReader
 	{
 
 
@@ -145,7 +145,7 @@ namespace Greg.Xrm.Command.Services.Plugin
 					.Select(x => x.FullName!)
 					.ToArray();
 			}
-			catch(Exception ex)
+			catch (Exception ex)
 			{
 				return PluginAssemblyReadResult.Error($"Error reading assembly file <{filePath}>: {ex.Message}");
 			}

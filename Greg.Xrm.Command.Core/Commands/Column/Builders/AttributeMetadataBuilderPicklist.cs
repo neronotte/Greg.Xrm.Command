@@ -1,10 +1,10 @@
-﻿using Greg.Xrm.Command.Services.OptionSet;
+using System.ServiceModel;
+using Greg.Xrm.Command.Services.OptionSet;
 using Greg.Xrm.Command.Services.Output;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Messages;
 using Microsoft.Xrm.Sdk.Metadata;
-using System.ServiceModel;
 
 namespace Greg.Xrm.Command.Commands.Column.Builders
 {
@@ -95,7 +95,7 @@ namespace Greg.Xrm.Command.Commands.Column.Builders
 				output.WriteLine($"The provided default value '{defaultFormValue}' is not valid. It must be either one of the labels of the option, or an integer value.", ConsoleColor.Yellow);
 				return null;
 			}
-				
+
 			option = options.FirstOrDefault(o => o.Value == optionValue);
 			if (option == null)
 			{

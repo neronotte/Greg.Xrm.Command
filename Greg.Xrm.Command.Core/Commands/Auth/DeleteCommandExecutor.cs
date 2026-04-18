@@ -1,9 +1,9 @@
-﻿using Greg.Xrm.Command.Services.Connection;
+using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
 
 namespace Greg.Xrm.Command.Commands.Auth
 {
-    public class DeleteCommandExecutor : ICommandExecutor<DeleteCommand>
+	public class DeleteCommandExecutor : ICommandExecutor<DeleteCommand>
 	{
 		private readonly IOrganizationServiceRepository organizationServiceRepository;
 		private readonly IOutput output;

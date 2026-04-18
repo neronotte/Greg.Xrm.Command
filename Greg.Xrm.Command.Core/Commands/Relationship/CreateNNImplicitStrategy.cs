@@ -1,19 +1,19 @@
-﻿using Greg.Xrm.Command.Services.Output;
+using System.Text;
+using Greg.Xrm.Command.Services.Output;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Messages;
 using Microsoft.Xrm.Sdk.Metadata;
-using System.Text;
 
 namespace Greg.Xrm.Command.Commands.Relationship
 {
-    public class CreateNNImplicitStrategy : ICreateNNStrategy
+	public class CreateNNImplicitStrategy : ICreateNNStrategy
 	{
 		private readonly IOutput output;
 		private readonly IOrganizationServiceAsync2 crm;
 
 		public CreateNNImplicitStrategy(IOutput output, IOrganizationServiceAsync2 crm)
-        {
+		{
 			this.output = output ?? throw new ArgumentNullException(nameof(output));
 			this.crm = crm ?? throw new ArgumentNullException(nameof(crm));
 		}
@@ -22,7 +22,7 @@ namespace Greg.Xrm.Command.Commands.Relationship
 
 
 
-        public async Task<CommandResult> CreateAsync(CreateNNCommand command, string currentSolutionName, int defaultLanguageCode, string publisherPrefix)
+		public async Task<CommandResult> CreateAsync(CreateNNCommand command, string currentSolutionName, int defaultLanguageCode, string publisherPrefix)
 		{
 			await crm.CheckManyToManyEligibilityAsync(command.Table1);
 			await crm.CheckManyToManyEligibilityAsync(command.Table2);

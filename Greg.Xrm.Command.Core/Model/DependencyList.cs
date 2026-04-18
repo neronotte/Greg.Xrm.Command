@@ -1,8 +1,8 @@
-﻿using Greg.Xrm.Command.Services.Output;
+using Greg.Xrm.Command.Services.Output;
 
 namespace Greg.Xrm.Command.Model
 {
-    public class DependencyList : List<Dependency>
+	public class DependencyList : List<Dependency>
 	{
 		public DependencyList()
 		{

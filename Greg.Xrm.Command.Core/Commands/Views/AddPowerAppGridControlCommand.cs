@@ -1,16 +1,16 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace Greg.Xrm.Command.Commands.Views
 {
 	[Command("view", "addPowerappGridControl", HelpText = "(Preview) Adds a Power Apps grid control to a given view.")]
-	[Alias("view", "pappgrid" )]
+	[Alias("view", "pappgrid")]
 	public class AddPowerAppGridControlCommand
 	{
 		[Option("viewName", "n", Order = 1, HelpText = "The display name of the view to update.")]
 		[Required]
 		public string ViewName { get; set; } = string.Empty;
 
-		[Option("table", "t", Order =2, HelpText = "The name of the table that contains the view. Required only if the view name is not unique in the system.")]
+		[Option("table", "t", Order = 2, HelpText = "The name of the table that contains the view. Required only if the view name is not unique in the system.")]
 		public string? TableName { get; set; }
 
 

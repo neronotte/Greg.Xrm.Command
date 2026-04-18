@@ -1,4 +1,4 @@
-﻿using Greg.Xrm.Command.Services.Output;
+using Greg.Xrm.Command.Services.Output;
 using Greg.Xrm.Command.Services.Settings;
 using Greg.Xrm.Command.Updates;
 

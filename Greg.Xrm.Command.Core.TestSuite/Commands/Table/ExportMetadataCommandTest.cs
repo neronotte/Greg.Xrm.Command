@@ -1,14 +1,14 @@
-﻿using Greg.Xrm.Command.Commands.Table.ExportMetadata;
+using System.Diagnostics;
+using Greg.Xrm.Command.Commands.Table.ExportMetadata;
 using Greg.Xrm.Command.Services;
 using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Project;
 using Greg.Xrm.Command.Services.Settings;
 using Microsoft.Extensions.Logging;
-using System.Diagnostics;
 
 namespace Greg.Xrm.Command.Commands.Table
 {
-    [TestClass]
+	[TestClass]
 	public class ExportMetadataCommandTest
 	{
 		[TestMethod]

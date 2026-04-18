@@ -1,4 +1,5 @@
-﻿
+
+using System.ServiceModel;
 using Greg.Xrm.Command.Commands.Solution.Model;
 using Greg.Xrm.Command.Model;
 using Greg.Xrm.Command.Services.ComponentResolution;
@@ -6,7 +7,6 @@ using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
 using Microsoft.Xrm.Sdk;
 using Newtonsoft.Json;
-using System.ServiceModel;
 
 namespace Greg.Xrm.Command.Commands.Solution
 {
@@ -88,7 +88,7 @@ namespace Greg.Xrm.Command.Commands.Solution
 				await componentResolverEngine.ResolveAllAsync(solutionComponents, crm);
 				output.WriteLine("Done", ConsoleColor.Green);
 			}
-			catch(Exception ex)
+			catch (Exception ex)
 			{
 				output.WriteLine("Failed", ConsoleColor.Red);
 				return CommandResult.Fail("Error while resolving components: " + ex.Message, ex);
@@ -109,7 +109,7 @@ namespace Greg.Xrm.Command.Commands.Solution
 			}
 
 
-				return CommandResult.Success();
+			return CommandResult.Success();
 		}
 
 		private void PrintTableCompact(List<SolutionComponent> solutionComponents)
@@ -119,9 +119,9 @@ namespace Greg.Xrm.Command.Commands.Solution
 				solutionComponents,
 				rowHeaders: () => ["TypeCode", "Type", "Object ID", "Label"],
 				rowData: x => [
-					x.componenttype?.Value.ToString()?? string.Empty, 
-					x.TypeLabel, 
-					x.objectid.ToString(), 
+					x.componenttype?.Value.ToString()?? string.Empty,
+					x.TypeLabel,
+					x.objectid.ToString(),
 					x.Label]
 			);
 		}

@@ -1,4 +1,4 @@
-﻿using Greg.Xrm.Command.Parsing;
+using Greg.Xrm.Command.Parsing;
 using Greg.Xrm.Command.Services;
 using Microsoft.Xrm.Sdk.Metadata;
 
@@ -8,7 +8,7 @@ namespace Greg.Xrm.Command.Commands.Column.Create
 	[Alias("column", "add", "text")]
 	public class CreateStringCommand : BaseCreateCommand, ICanProvideUsageExample
 	{
-		[Option("format", "f",  HelpText = "The format of the string attribute (default: Text).", Order = 10)]
+		[Option("format", "f", HelpText = "The format of the string attribute (default: Text).", Order = 10)]
 		public StringFormat StringFormat { get; set; } = StringFormat.Text;
 
 		[Option("len", "l", HelpText = "The maximum length for string attribute.", DefaultValue = 100, Order = 20)]

@@ -1,4 +1,4 @@
-﻿using Greg.Xrm.Command.Model;
+using Greg.Xrm.Command.Model;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
@@ -15,8 +15,8 @@ namespace Greg.Xrm.Command.Commands.WebResources.ProjectFile
 		{
 			if (map == null) return false;
 
-			return ExternalReferences.Any(x => string.Equals(x.Source, map.Source, StringComparison.OrdinalIgnoreCase)) 
-				|| ExternalReferences.Any(x => string.Equals( x.Target, map.Target, StringComparison.OrdinalIgnoreCase));
+			return ExternalReferences.Any(x => string.Equals(x.Source, map.Source, StringComparison.OrdinalIgnoreCase))
+				|| ExternalReferences.Any(x => string.Equals(x.Target, map.Target, StringComparison.OrdinalIgnoreCase));
 		}
 	}
 
@@ -38,8 +38,8 @@ namespace Greg.Xrm.Command.Commands.WebResources.ProjectFile
 
 
 		public string Source { get; protected set; }
-		
-		public string Target { get; protected set; } 
+
+		public string Target { get; protected set; }
 
 		[JsonConverter(typeof(StringEnumConverter))]
 		public WebResourceType Type { get; protected set; }

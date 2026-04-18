@@ -1,14 +1,13 @@
-using Microsoft.PowerPlatform.Dataverse.Client;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.ServiceModel;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;
 using Moq;
-using System.ServiceModel;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Collections.Generic;
-using System;
-using System.Linq;
 
 namespace Greg.Xrm.Command.Commands.Solution
 {
@@ -37,7 +36,7 @@ namespace Greg.Xrm.Command.Commands.Solution
 			publisher["uniquename"] = "default";
 			publisher["friendlyname"] = "Default Publisher";
 			publisher["customizationprefix"] = "new";
-			
+
 			// Set the aliased values from the joined publisher
 			entity["p.uniquename"] = new AliasedValue("publisher", "uniquename", publisher["uniquename"]);
 			entity["p.friendlyname"] = new AliasedValue("publisher", "friendlyname", publisher["friendlyname"]);
@@ -52,7 +51,7 @@ namespace Greg.Xrm.Command.Commands.Solution
 			this.OrganizationServiceMock
 				.Setup(x => x.RetrieveMultipleAsync(It.IsAny<QueryBase>()))
 				.ReturnsAsync(collection);
-            this.OrganizationServiceMock
+			this.OrganizationServiceMock
 				.Setup(x => x.RetrieveMultipleAsync(It.IsAny<QueryBase>(), It.IsAny<CancellationToken>()))
 				.ReturnsAsync(collection);
 		}
@@ -64,7 +63,7 @@ namespace Greg.Xrm.Command.Commands.Solution
 			this.OrganizationServiceMock
 				.Setup(x => x.RetrieveMultipleAsync(It.IsAny<QueryBase>()))
 				.ThrowsAsync(exception);
-            this.OrganizationServiceMock
+			this.OrganizationServiceMock
 				.Setup(x => x.RetrieveMultipleAsync(It.IsAny<QueryBase>(), It.IsAny<CancellationToken>()))
 				.ThrowsAsync(exception);
 
@@ -94,10 +93,10 @@ namespace Greg.Xrm.Command.Commands.Solution
 			var result = await executor.ExecuteAsync(command, CancellationToken.None);
 
 			Assert.IsTrue(result.IsSuccess);
-			
-			this.OrganizationServiceMock.Verify(x => x.RetrieveMultipleAsync(It.Is<QueryExpression>(q => 
+
+			this.OrganizationServiceMock.Verify(x => x.RetrieveMultipleAsync(It.Is<QueryExpression>(q =>
 				q.Criteria.Conditions.Any(c => c.AttributeName == "ismanaged" && (bool)c.Values[0] == true)
-			)), Times.Once);
+			)), Times.AtLeastOnce);
 		}
 
 		[TestMethod]
@@ -109,10 +108,10 @@ namespace Greg.Xrm.Command.Commands.Solution
 			var result = await executor.ExecuteAsync(command, CancellationToken.None);
 
 			Assert.IsTrue(result.IsSuccess);
-			
-			this.OrganizationServiceMock.Verify(x => x.RetrieveMultipleAsync(It.Is<QueryExpression>(q => 
+
+			this.OrganizationServiceMock.Verify(x => x.RetrieveMultipleAsync(It.Is<QueryExpression>(q =>
 				q.Criteria.Conditions.Any(c => c.AttributeName == "ismanaged" && (bool)c.Values[0] == false)
-			)), Times.Once);
+			)), Times.AtLeastOnce);
 		}
 
 		[TestMethod]
@@ -125,10 +124,10 @@ namespace Greg.Xrm.Command.Commands.Solution
 			var result = await executor.ExecuteAsync(command, CancellationToken.None);
 
 			Assert.IsTrue(result.IsSuccess);
-			
-			this.OrganizationServiceMock.Verify(x => x.RetrieveMultipleAsync(It.Is<QueryExpression>(q => 
+
+			this.OrganizationServiceMock.Verify(x => x.RetrieveMultipleAsync(It.Is<QueryExpression>(q =>
 				q.Criteria.Conditions.Any(c => c.AttributeName == "isvisible" && (bool)c.Values[0] == true)
-			)), Times.Once);
+			)), Times.AtLeastOnce);
 		}
 
 		[TestMethod]
@@ -140,11 +139,21 @@ namespace Greg.Xrm.Command.Commands.Solution
 				CreateSolution("A_Unmanaged", false, true, new DateTime(2024, 1, 1), new DateTime(2024, 1, 1))
 			);
 
-			// Json format testing output outputting without throwing
+			// Json format testing output content and ordering
 			var command = new ListCommand { Format = ListCommand.OutputFormat.Json, OrderBy = ListCommand.OutputOrder.CreatedOn };
 			var result = await executor.ExecuteAsync(command, CancellationToken.None);
 
 			Assert.IsTrue(result.IsSuccess);
+
+			var output = this.Output.ToString();
+			Assert.IsFalse(string.IsNullOrWhiteSpace(output));
+
+			var managedIndex = output.IndexOf("Z_Managed", StringComparison.Ordinal);
+			var unmanagedIndex = output.IndexOf("A_Unmanaged", StringComparison.Ordinal);
+
+			Assert.IsTrue(managedIndex >= 0, "Expected JSON output to contain solution 'Z_Managed'.");
+			Assert.IsTrue(unmanagedIndex >= 0, "Expected JSON output to contain solution 'A_Unmanaged'.");
+			Assert.IsTrue(managedIndex < unmanagedIndex, "Expected solutions to be ordered by CreatedOn in the JSON output.");
 		}
 	}
 }

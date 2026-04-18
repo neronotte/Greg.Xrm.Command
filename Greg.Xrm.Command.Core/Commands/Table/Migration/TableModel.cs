@@ -1,8 +1,8 @@
-﻿using Greg.Xrm.Command.Services.Graphs;
+using Greg.Xrm.Command.Services.Graphs;
 
 namespace Greg.Xrm.Command.Commands.Table.Migration;
 
-    public class TableModel : INodeContent
+public class TableModel : INodeContent
 {
 	private readonly string name;
 

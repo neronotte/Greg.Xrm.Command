@@ -1,4 +1,4 @@
-﻿using Greg.Xrm.Command.Model;
+using Greg.Xrm.Command.Model;
 using Greg.Xrm.Command.Services.Output;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
@@ -6,7 +6,7 @@ using Microsoft.Xrm.Sdk.Query;
 
 namespace Greg.Xrm.Command.Commands.Settings.Model
 {
-    public class AppSetting : EntityWrapper
+	public class AppSetting : EntityWrapper
 	{
 		protected AppSetting(Entity entity) : base(entity)
 		{
@@ -45,7 +45,7 @@ namespace Greg.Xrm.Command.Commands.Settings.Model
 			private readonly IOutput output;
 
 			public Repository(IOutput output)
-            {
+			{
 				this.output = output;
 			}
 

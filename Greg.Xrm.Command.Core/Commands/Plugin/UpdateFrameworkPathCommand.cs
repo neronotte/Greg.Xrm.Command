@@ -1,7 +1,7 @@
-﻿using Greg.Xrm.Command.Parsing;
+using System.ComponentModel.DataAnnotations;
+using Greg.Xrm.Command.Parsing;
 using Greg.Xrm.Command.Services;
 using Greg.Xrm.Command.Services.Plugin;
-using System.ComponentModel.DataAnnotations;
 
 namespace Greg.Xrm.Command.Commands.Plugin
 {

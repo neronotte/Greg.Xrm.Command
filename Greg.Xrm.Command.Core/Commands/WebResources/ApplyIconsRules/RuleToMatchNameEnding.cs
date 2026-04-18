@@ -1,4 +1,4 @@
-﻿namespace Greg.Xrm.Command.Commands.WebResources.ApplyIconsRules
+namespace Greg.Xrm.Command.Commands.WebResources.ApplyIconsRules
 {
 	class RuleToMatchNameEnding : IIconFinder
 	{

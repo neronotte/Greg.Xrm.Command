@@ -1,4 +1,4 @@
-﻿using Greg.Xrm.Command.Model;
+using Greg.Xrm.Command.Model;
 using Microsoft.Identity.Client;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
@@ -169,7 +169,7 @@ namespace Greg.Xrm.Command.Services.Plugin
 				var query = new QueryExpression("sdkmessageprocessingstep");
 				query.ColumnSet.AddColumns(columns);
 				query.Criteria.AddCondition("plugintypeid", ConditionOperator.Equal, pluginType.Id);
-				
+
 				if (stage.HasValue)
 				{
 					query.Criteria.AddCondition("stage", ConditionOperator.Equal, (int)stage.Value);
@@ -318,7 +318,7 @@ namespace Greg.Xrm.Command.Services.Plugin
 				linkFilter.LinkCriteria.AddCondition("primaryobjecttypecode", ConditionOperator.Equal, tableName.ToLowerInvariant());
 
 				query.NoLock = true;
-				
+
 				// Note: Cannot sort by aliased columns in QueryExpression, so we'll sort in memory after retrieval
 				// Sort by: Mode (Sync first), then Stage, then Rank
 				query.AddOrder("mode", OrderType.Ascending); // 0 = Sync, 1 = Async

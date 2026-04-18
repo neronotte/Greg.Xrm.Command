@@ -1,4 +1,4 @@
-﻿namespace Greg.Xrm.Command.Model
+namespace Greg.Xrm.Command.Model
 {
 	public static class ColorExtensions
 	{

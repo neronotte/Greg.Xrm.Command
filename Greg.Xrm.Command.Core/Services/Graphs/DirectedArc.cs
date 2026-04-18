@@ -1,13 +1,13 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 
 namespace Greg.Xrm.Command.Services.Graphs
 {
-    /// <summary>
-    /// A directed arc in a directed graph
-    /// </summary>
-    /// <typeparam name="INodeContent"></typeparam>
+	/// <summary>
+	/// A directed arc in a directed graph
+	/// </summary>
+	/// <typeparam name="INodeContent"></typeparam>
 	class DirectedArc<T> : IReadOnlyDictionary<string, object>, IDirectedArc<T>
 		where T : INodeContent
 	{

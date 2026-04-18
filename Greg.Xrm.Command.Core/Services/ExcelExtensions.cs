@@ -1,4 +1,4 @@
-﻿using ClosedXML.Excel;
+using ClosedXML.Excel;
 
 namespace Greg.Xrm.Command
 {
@@ -209,7 +209,7 @@ namespace Greg.Xrm.Command
 					ws.Column(i).AdjustToContents();
 				}
 			}
-			
+
 
 
 			return table;

@@ -1,15 +1,15 @@
-﻿using Greg.Xrm.Command.Model;
+using Greg.Xrm.Command.Model;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;
 
 namespace Greg.Xrm.Command.Commands.Forms.Model
 {
-    public class Form : EntityWrapper
+	public class Form : EntityWrapper
 	{
-        public Form(Entity entity) : base(entity)
-        {
-        }
+		public Form(Entity entity) : base(entity)
+		{
+		}
 
 		[DataverseColumn]
 #pragma warning disable IDE1006 // Naming Styles

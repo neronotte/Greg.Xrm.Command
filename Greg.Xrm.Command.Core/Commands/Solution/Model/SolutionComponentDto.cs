@@ -1,4 +1,4 @@
-﻿using Greg.Xrm.Command.Model;
+using Greg.Xrm.Command.Model;
 
 namespace Greg.Xrm.Command.Commands.Solution.Model
 {

@@ -1,4 +1,4 @@
-﻿namespace Greg.Xrm.Command
+namespace Greg.Xrm.Command
 {
 	/// <summary>
 	/// Defines a new command
@@ -29,5 +29,5 @@
 		/// Indicates if the command must be hidden from the help list
 		/// </summary>
 		public bool Hidden { get; set; }
-    }
+	}
 }

@@ -6,10 +6,10 @@ using Microsoft.Extensions.Logging.Abstractions;
 namespace Greg.Xrm.Command.Parsing
 {
 	[TestClass]
-    public class CommandLineParserTest
-    {
-        [TestMethod]
-        public void AuthListShouldBeResolvedProperly()
+	public class CommandLineParserTest
+	{
+		[TestMethod]
+		public void AuthListShouldBeResolvedProperly()
 		{
 			var log = NullLogger<CommandRegistry>.Instance;
 			var output = new OutputToMemory();
@@ -20,11 +20,11 @@ namespace Greg.Xrm.Command.Parsing
 
 			var parser = new CommandParser(new OutputToMemory(), registry);
 
-            var command = parser.Parse("auth", "list");
+			var command = parser.Parse("auth", "list");
 
 			Assert.IsNotNull(command.Item1);
 			Assert.IsNotNull(command.Item2);
 			Assert.AreEqual(typeof(ListCommand), command.Item1.GetType());
-        }
-    }
+		}
+	}
 }

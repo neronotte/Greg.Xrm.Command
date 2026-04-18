@@ -31,7 +31,7 @@ namespace Greg.Xrm.Command.Commands.Script
 			var mockEntity = new Extractor_EntityMetadata
 			{
 				SchemaName = tableName
-            };
+			};
 
 			mockMetadataExtractor
 				.Setup(x => x.GetTableAsync(tableName, It.IsAny<List<string>>()))
@@ -74,7 +74,7 @@ namespace Greg.Xrm.Command.Commands.Script
 		{
 			// Arrange
 			var tableName = "nonexistent_table";
-			
+
 			var mockOutput = new Mock<IOutput>();
 			var mockMetadataExtractor = new Mock<IScriptMetadataExtractor>();
 
@@ -122,13 +122,13 @@ namespace Greg.Xrm.Command.Commands.Script
 			var outputDir = TestConfiguration.GetTestOutputDirectory();
 			var scriptFileName = "";
 			var stateFileName = "";
-			
+
 			// Alternative: Use explicit parameters
 			var serviceClient = TestConfiguration.CreateServiceClient(
 				url: "",
 				clientId: "",
 				clientSecret: ""
-            );
+			);
 
 			Assert.IsTrue(serviceClient.IsReady, $"Failed to connect to Dataverse: {serviceClient.LastError}");
 
@@ -164,7 +164,7 @@ namespace Greg.Xrm.Command.Commands.Script
 
 			// Assert
 			Assert.IsTrue(result.IsSuccess, $"Command failed: {result.ErrorMessage}");
-			
+
 			// Verify output files were created
 			var scriptFilePath = Path.Combine(outputDir, scriptFileName);
 			Assert.IsTrue(File.Exists(scriptFilePath), $"Script file not created at {scriptFilePath}");

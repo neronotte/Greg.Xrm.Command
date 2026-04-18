@@ -1,9 +1,9 @@
-﻿using Greg.Xrm.Command.Commands.Settings.Imports;
+using Greg.Xrm.Command.Commands.Settings.Imports;
 using Greg.Xrm.Command.Services.Output;
 
 namespace Greg.Xrm.Command.Commands.Settings
 {
-    public class ImportCommandExecutor : ICommandExecutor<ImportCommand>
+	public class ImportCommandExecutor : ICommandExecutor<ImportCommand>
 	{
 		private readonly IOutput output;
 		private readonly IImportStrategyFactory importStrategyFactory;
@@ -12,13 +12,13 @@ namespace Greg.Xrm.Command.Commands.Settings
 			IOutput output,
 			IImportStrategyFactory importStrategyFactory
 			)
-        {
+		{
 			this.output = output;
 			this.importStrategyFactory = importStrategyFactory;
 		}
 
 
-        public async Task<CommandResult> ExecuteAsync(ImportCommand command, CancellationToken cancellationToken)
+		public async Task<CommandResult> ExecuteAsync(ImportCommand command, CancellationToken cancellationToken)
 		{
 			var file = new FileInfo(command.FileName);
 			if (!file.Exists)
@@ -36,7 +36,7 @@ namespace Greg.Xrm.Command.Commands.Settings
 				importStrategy = await this.importStrategyFactory.CreateAsync(stream, cancellationToken);
 				this.output.WriteLine("Done", ConsoleColor.Green);
 			}
-			catch(Exception ex)
+			catch (Exception ex)
 			{
 				this.output.WriteLine("ERROR", ConsoleColor.Red);
 				return CommandResult.Fail($"Error while reading content of file <{command.FileName}>: {ex.Message}");
@@ -52,7 +52,7 @@ namespace Greg.Xrm.Command.Commands.Settings
 				actions = await importStrategy.ImportAsync(cancellationToken);
 				this.output.WriteLine("Done", ConsoleColor.Green);
 			}
-			catch(Exception ex)
+			catch (Exception ex)
 			{
 				this.output.WriteLine("ERROR", ConsoleColor.Red);
 				return CommandResult.Fail($"Error while parsing content of file <{command.FileName}>: {ex.Message}");

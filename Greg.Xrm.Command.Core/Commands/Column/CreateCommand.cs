@@ -1,102 +1,102 @@
-﻿using Greg.Xrm.Command.Parsing;
+using System.ComponentModel.DataAnnotations;
+using Greg.Xrm.Command.Parsing;
 using Greg.Xrm.Command.Parsing.Attributes;
 using Greg.Xrm.Command.Services;
 using Microsoft.Xrm.Sdk.Metadata;
-using System.ComponentModel.DataAnnotations;
 
 namespace Greg.Xrm.Command.Commands.Column
 {
-    [Command("column", "create", HelpText = "(DEPRECATED. Use specialized `column add <type>` commands instead) Creates a new column on a given Dataverse table")]
-    [Alias("create", "column")]
-    [HideInInteractiveExperience("Too complex for interactive experience, replaced by specialized commands.")]
-    public class CreateCommand : ICanProvideUsageExample
-    {
-        [Option("table", "t", HelpText = "The name of the entity for which you want to create an attribute")]
-        [Required]
-        public string? EntityName { get; set; }
+	[Command("column", "create", HelpText = "(DEPRECATED. Use specialized `column add <type>` commands instead) Creates a new column on a given Dataverse table")]
+	[Alias("create", "column")]
+	[HideInInteractiveExperience("Too complex for interactive experience, replaced by specialized commands.")]
+	public class CreateCommand : ICanProvideUsageExample
+	{
+		[Option("table", "t", HelpText = "The name of the entity for which you want to create an attribute")]
+		[Required]
+		public string? EntityName { get; set; }
 
-        [Option("solution", "s", HelpText = "The name of the unmanaged solution to which you want to add this attribute.")]
-        public string? SolutionName { get; set; }
+		[Option("solution", "s", HelpText = "The name of the unmanaged solution to which you want to add this attribute.")]
+		public string? SolutionName { get; set; }
 
-        [Option("name", "n", HelpText = "The display name of the attribute.")]
-        [Required]
-        public string? DisplayName { get; set; }
+		[Option("name", "n", HelpText = "The display name of the attribute.")]
+		[Required]
+		public string? DisplayName { get; set; }
 
-        [Option("schemaName", "sn", HelpText = "The schema name of the attribute.\nIf not specified, is deducted from the display name")]
-        public string? SchemaName { get; set; }
+		[Option("schemaName", "sn", HelpText = "The schema name of the attribute.\nIf not specified, is deducted from the display name")]
+		public string? SchemaName { get; set; }
 
-        [Option("description", "d", HelpText = "The description of the attribute.")]
-        public string? Description { get; set; }
+		[Option("description", "d", HelpText = "The description of the attribute.")]
+		public string? Description { get; set; }
 
-        [Option("type", "at", HelpText = "The type of the attribute.", DefaultValue = SupportedAttributeType.String)]
-        public SupportedAttributeType AttributeType { get; set; } = SupportedAttributeType.String;
+		[Option("type", "at", HelpText = "The type of the attribute.", DefaultValue = SupportedAttributeType.String)]
+		public SupportedAttributeType AttributeType { get; set; } = SupportedAttributeType.String;
 
-        [Option("stringFormat", "sf", HelpText = "The format of the string attribute (default: Text).")]
-        public StringFormat StringFormat { get; set; } = StringFormat.Text;
+		[Option("stringFormat", "sf", HelpText = "The format of the string attribute (default: Text).")]
+		public StringFormat StringFormat { get; set; } = StringFormat.Text;
 
-        [Option("memoFormat", "mf", HelpText = "The format of the memo attribute (default: Text).", DefaultValue = MemoFormatName1.Text)]
-        public MemoFormatName1 MemoFormat { get; set; } = MemoFormatName1.Text;
+		[Option("memoFormat", "mf", HelpText = "The format of the memo attribute (default: Text).", DefaultValue = MemoFormatName1.Text)]
+		public MemoFormatName1 MemoFormat { get; set; } = MemoFormatName1.Text;
 
-        [Option("intFormat", "if", HelpText = "For whole number type columns indicates the integer format for the column.(default: None)")]
-        public IntegerFormat IntegerFormat { get; set; } = IntegerFormat.None;
+		[Option("intFormat", "if", HelpText = "For whole number type columns indicates the integer format for the column.(default: None)")]
+		public IntegerFormat IntegerFormat { get; set; } = IntegerFormat.None;
 
-        [Option("requiredLevel", "r", HelpText = "The required level of the attribute.")]
-        public AttributeRequiredLevel RequiredLevel { get; set; } = AttributeRequiredLevel.None;
+		[Option("requiredLevel", "r", HelpText = "The required level of the attribute.")]
+		public AttributeRequiredLevel RequiredLevel { get; set; } = AttributeRequiredLevel.None;
 
-        [Option("len", "l", HelpText = "The maximum length for string attribute.")]
-        public int? MaxLength { get; set; }
+		[Option("len", "l", HelpText = "The maximum length for string attribute.")]
+		public int? MaxLength { get; set; }
 
-        [Option("autoNumber", "an", HelpText = "In case of autonumber field, the autonumber format to apply.")]
-        public string? AutoNumber { get; set; }
+		[Option("autoNumber", "an", HelpText = "In case of autonumber field, the autonumber format to apply.")]
+		public string? AutoNumber { get; set; }
 
-        [Option("audit", "a", HelpText = "Indicates whether the attribute is enabled for auditing (default: true).")]
-        public bool IsAuditEnabled { get; set; } = true;
+		[Option("audit", "a", HelpText = "Indicates whether the attribute is enabled for auditing (default: true).")]
+		public bool IsAuditEnabled { get; set; } = true;
 
-        [Option("options", "o", HelpText = "The list of options for the attribute, as a single string separated by comma (,) or semicolon (;) or pipe.\nYou can pass also values separating using syntax \"label1:value1,label2:value2\"\nIf not provided, values will be automatically generated")]
-        public string? Options { get; internal set; }
+		[Option("options", "o", HelpText = "The list of options for the attribute, as a single string separated by comma (,) or semicolon (;) or pipe.\nYou can pass also values separating using syntax \"label1:value1,label2:value2\"\nIf not provided, values will be automatically generated")]
+		public string? Options { get; internal set; }
 
-        [Option("globalOptionSetName", "gon", HelpText = "For Picklist type columns that must be tied to a global option set,\nprovides the name of the global option set.")]
-        public string? GlobalOptionSetName { get; set; }
+		[Option("globalOptionSetName", "gon", HelpText = "For Picklist type columns that must be tied to a global option set,\nprovides the name of the global option set.")]
+		public string? GlobalOptionSetName { get; set; }
 
-        [Option("multiselect", "m", HelpText = "Indicates whether the attribute is a multi-select picklist (default: false).", DefaultValue = false)]
-        public bool Multiselect { get; set; } = false;
+		[Option("multiselect", "m", HelpText = "Indicates whether the attribute is a multi-select picklist (default: false).", DefaultValue = false)]
+		public bool Multiselect { get; set; } = false;
 
-        [Option("min", "min", HelpText = "For number type columns indicates the minimum value for the column.")]
-        public double? MinValue { get; set; }
+		[Option("min", "min", HelpText = "For number type columns indicates the minimum value for the column.")]
+		public double? MinValue { get; set; }
 
-        [Option("max", "max", HelpText = "For number type columns indicates the maximum value for the column.")]
-        public double? MaxValue { get; set; }
+		[Option("max", "max", HelpText = "For number type columns indicates the maximum value for the column.")]
+		public double? MaxValue { get; set; }
 
-        [Option("precision", "p", HelpText = "For money or decimal type columns indicates the precision for the column.", DefaultValue = 2)]
-        public int? Precision { get; set; }
+		[Option("precision", "p", HelpText = "For money or decimal type columns indicates the precision for the column.", DefaultValue = 2)]
+		public int? Precision { get; set; }
 
-        [Option("precisionSource", "ps", HelpText = "For money type columns indicates if precision should be taken from:\n(0) the precision property,\n(1) the `Organization.PricingDecimalPrecision` attribute or\n(2) the `TransactionCurrency.CurrencyPrecision` property of the transaction currency that is associated the current record.\n", DefaultValue = 2)]
-        public int? PrecisionSource { get; set; }
+		[Option("precisionSource", "ps", HelpText = "For money type columns indicates if precision should be taken from:\n(0) the precision property,\n(1) the `Organization.PricingDecimalPrecision` attribute or\n(2) the `TransactionCurrency.CurrencyPrecision` property of the transaction currency that is associated the current record.\n", DefaultValue = 2)]
+		public int? PrecisionSource { get; set; }
 
-        [Option("imeMode", "ime", HelpText = "For number type columns indicates the input method editor (IME) mode for the column.", DefaultValue = ImeMode.Disabled)]
-        public ImeMode ImeMode { get; set; } = ImeMode.Disabled;
+		[Option("imeMode", "ime", HelpText = "For number type columns indicates the input method editor (IME) mode for the column.", DefaultValue = ImeMode.Disabled)]
+		public ImeMode ImeMode { get; set; } = ImeMode.Disabled;
 
-        [Option("dateTimeBehavior", "dtb", HelpText = "For DateTime type columns indicates the DateTimeBehavior of the column.", DefaultValue = DateTimeBehavior1.UserLocal)]
-        public DateTimeBehavior1 DateTimeBehavior { get; set; } = DateTimeBehavior1.UserLocal;
+		[Option("dateTimeBehavior", "dtb", HelpText = "For DateTime type columns indicates the DateTimeBehavior of the column.", DefaultValue = DateTimeBehavior1.UserLocal)]
+		public DateTimeBehavior1 DateTimeBehavior { get; set; } = DateTimeBehavior1.UserLocal;
 
-        [Option("dateTimeFormat", "dtf", HelpText = "For DateTime type columns indicates the DateTimeFormat of the column.", DefaultValue = DateTimeFormat.DateAndTime)]
+		[Option("dateTimeFormat", "dtf", HelpText = "For DateTime type columns indicates the DateTimeFormat of the column.", DefaultValue = DateTimeFormat.DateAndTime)]
 
-        public DateTimeFormat DateTimeFormat { get; set; } = DateTimeFormat.DateAndTime;
+		public DateTimeFormat DateTimeFormat { get; set; } = DateTimeFormat.DateAndTime;
 
-        [Option("trueLabel", "tl", HelpText = "For Boolean type columns that represents the Label to be associated to the \"True\" value.", DefaultValue = "True")]
-        public string? TrueLabel { get; set; } = "True";
+		[Option("trueLabel", "tl", HelpText = "For Boolean type columns that represents the Label to be associated to the \"True\" value.", DefaultValue = "True")]
+		public string? TrueLabel { get; set; } = "True";
 
-        [Option("falseLabel", "fl", HelpText = "For  Boolean type columns that represents the Label to be associated to the \"False\" value.", DefaultValue = "False")]
-        public string? FalseLabel { get; set; } = "False";
+		[Option("falseLabel", "fl", HelpText = "For  Boolean type columns that represents the Label to be associated to the \"False\" value.", DefaultValue = "False")]
+		public string? FalseLabel { get; set; } = "False";
 
-        [Option("defaultValue", "dv", HelpText = "For Picklist type columns indicates the default value for the column. You can provide the name or the value. If not provided, is automatically evaluated by the system.")]
+		[Option("defaultValue", "dv", HelpText = "For Picklist type columns indicates the default value for the column. You can provide the name or the value. If not provided, is automatically evaluated by the system.")]
 		public string? DefaultFormValue { get; set; }
 
-        [Option("maxSizeInKB", "maxKb", HelpText = "For File or Image type columns indicates the maximum size in KB for the column. Do not provide a value if you want to stay with the default (32Mb for file columns, 10Mb for image columns). The value must be lower than 10485760 (1Gb) for file columns, and lower than 30720 (30Mb) for image columns .")]
+		[Option("maxSizeInKB", "maxKb", HelpText = "For File or Image type columns indicates the maximum size in KB for the column. Do not provide a value if you want to stay with the default (32Mb for file columns, 10Mb for image columns). The value must be lower than 10485760 (1Gb) for file columns, and lower than 30720 (30Mb) for image columns .")]
 		public int? MaxSizeInKB { get; set; }
 
-        [Option("storeOnlyThumbnailImage", "thumb", HelpText = "For Image type columns indicates if the column stores only thumbnail-sized images.", DefaultValue = false)]
-        public bool? StoreThumbnail { get; set; } = false;
+		[Option("storeOnlyThumbnailImage", "thumb", HelpText = "For Image type columns indicates if the column stores only thumbnail-sized images.", DefaultValue = false)]
+		public bool? StoreThumbnail { get; set; } = false;
 
 
 		public void WriteUsageExamples(MarkdownWriter writer)
@@ -107,15 +107,15 @@ namespace Greg.Xrm.Command.Commands.Column
 			writer.WriteParagraph("The following sections describe how to generate each specific type of column.");
 
 			WriteUsageString(writer);
-            WriteUsageMemo(writer);
-            WriteUsageBoolean(writer);
-            WriteUsageInteger(writer);
-            WriteUsageMoney(writer);
-            WriteUsageDecimal(writer);
-            WriteUsagePicklist(writer);
-            WriteUsageDateTime(writer);
+			WriteUsageMemo(writer);
+			WriteUsageBoolean(writer);
+			WriteUsageInteger(writer);
+			WriteUsageMoney(writer);
+			WriteUsageDecimal(writer);
+			WriteUsagePicklist(writer);
+			WriteUsageDateTime(writer);
 			WriteUsageFile(writer);
-            WriteUsageImage(writer);
+			WriteUsageImage(writer);
 			WriteUsageLookup(writer);
 		}
 
@@ -161,7 +161,7 @@ pacx column create -t tableName -n columnName --stringFormat RichText --len 2000
 pacx column create -t tableName -n columnName --stringFormat Json --len 4000", "Powershell");
 
 
-            writer.WriteParagraph("If you want to create an autonumber field, you can use the `--autoNumber` option. The format must be specified in the form of a string, using [the same syntax as the one used in the maker portal](https://learn.microsoft.com/en-us/dynamics365/customerengagement/on-premises/developer/create-auto-number-attributes?view=op-9-1#autonumberformat-options). For example, you can use `{SEQNUM(5)}` to create a 5-digit autonumber field.");
+			writer.WriteParagraph("If you want to create an autonumber field, you can use the `--autoNumber` option. The format must be specified in the form of a string, using [the same syntax as the one used in the maker portal](https://learn.microsoft.com/en-us/dynamics365/customerengagement/on-premises/developer/create-auto-number-attributes?view=op-9-1#autonumberformat-options). For example, you can use `{SEQNUM(5)}` to create a 5-digit autonumber field.");
 
 			writer.WriteCodeBlock(@"# Example value: XX-00001
 pacx column create -t tableName -n columnName --autonumber ""XX-{SEQNUM(5)}""
@@ -274,10 +274,10 @@ pacx column create --type Money -t tableName -n columnName --min 0 --max 1000000
 		{
 			writer.WriteTitle3("Decimal/Double Number column");
 
-            writer.WriteLine("This type of column is used for storing decimal numbers with a specified precision and range.");
+			writer.WriteLine("This type of column is used for storing decimal numbers with a specified precision and range.");
 			writer.WriteLine("If you specify \"Decimal\" as the type, the system will automatically generate a column that in the maker UI is shown as DataType=Decimal.");
 			writer.WriteLine("If you specify \"Double\" as the type, the system will automatically generate a column that in the maker UI is shown as DataType=Float.");
-            writer.WriteLine();
+			writer.WriteLine();
 
 			writer.WriteCodeBlock(@"# Creates a simple decimal column with precision 2
 pacx column create --type Decimal -t tableName -n columnName
@@ -296,18 +296,18 @@ pacx column create --type Double -t tableName -n columnName --precision 4 --min 
 		private static void WriteUsagePicklist(MarkdownWriter writer)
 		{
 			writer.WriteTitle3("Choice (Picklist) column")
-                .WriteLine("This type of column is used for storing a single choice from a predefined list of options. You can create a simple picklist with options, or use an existing global option set.")
-                .WriteLine("If you want to create a local option set column you can:")
-                .WriteLine();
+				.WriteLine("This type of column is used for storing a single choice from a predefined list of options. You can create a simple picklist with options, or use an existing global option set.")
+				.WriteLine("If you want to create a local option set column you can:")
+				.WriteLine();
 
-            writer.WriteList(
-                "Specify only the options labels, separated by commas, semicolons or pipes (|). The system will automatically generate the values for you.",
-                "Specify the options as \"label1:value1,label2:value2\" to create a picklist with custom values."
-            );
+			writer.WriteList(
+				"Specify only the options labels, separated by commas, semicolons or pipes (|). The system will automatically generate the values for you.",
+				"Specify the options as \"label1:value1,label2:value2\" to create a picklist with custom values."
+			);
 
-            writer.WriteParagraph("As of now, you cannot specify a color for the picklist options.");
+			writer.WriteParagraph("As of now, you cannot specify a color for the picklist options.");
 
-            writer.WriteParagraph("Please note that if you specify the values, values must be specified for all options, and they must be unique. If you don't specify the values, the system will generate them automatically starting from the Publisher OptionSetPrefix + 0000.");
+			writer.WriteParagraph("Please note that if you specify the values, values must be specified for all options, and they must be unique. If you don't specify the values, the system will generate them automatically starting from the Publisher OptionSetPrefix + 0000.");
 
 			writer.WriteParagraph("If you want to create a multi-select picklist, you can use the `--multiselect` option. If you want to use an existing global option set, you can use the `--globalOptionSetName` option.");
 
@@ -322,10 +322,10 @@ pacx column create --type Picklist -t tableName -n columnName --options ""Tag1,T
 
 # Use existing global option set
 pacx column create --type Picklist -t tableName -n columnName --globalOptionSetName existing_global_optionset", "Powershell");
-		
-            writer.WriteParagraph("You can also specify a default value for the picklist using the `--defaultValue` option. You can provide either the label or the value of the option (labels are matched first).");
 
-            writer.WriteCodeBlock(@"# Create picklist with default value by label
+			writer.WriteParagraph("You can also specify a default value for the picklist using the `--defaultValue` option. You can provide either the label or the value of the option (labels are matched first).");
+
+			writer.WriteCodeBlock(@"# Create picklist with default value by label
 pacx column create --type Picklist -t tableName -n columnName --options ""Red:100000000,Green:100000001,Blue:100000002"" --defaultValue Green
 # Create picklist with default value by value
 pacx column create --type Picklist -t tableName -n columnName --options ""Red,Green,Blue"" --defaultValue 100000001 # Green
@@ -382,20 +382,20 @@ pacx column create --type File -t tableName -n columnName -maxKb 10240
 ", "Powershell");
 
 
-            writer.WriteParagraph("You can also specify if the image column should store only thumbnail-sized images using the `--canStoreOnlyThumbnailImage` option.");
-            writer.WriteCodeBlock(@"# Create image column that stores only thumbnail-sized images
+			writer.WriteParagraph("You can also specify if the image column should store only thumbnail-sized images using the `--canStoreOnlyThumbnailImage` option.");
+			writer.WriteCodeBlock(@"# Create image column that stores only thumbnail-sized images
 pacx column create --type Image -t tableName -n columnName --storeOnlyThumbnailImage
 pacx column create --type Image -t tableName -n columnName -thumb
 ", "Powershell");
 
-            writer.WriteParagraph("To generate a thumbnail-sized image, Dataverse will crop and resize the image to a square shape according to the following rules:");
+			writer.WriteParagraph("To generate a thumbnail-sized image, Dataverse will crop and resize the image to a square shape according to the following rules:");
 
-            writer.WriteList(
+			writer.WriteList(
 			"Images with at least one side larger than 144 pixels are cropped on center to 144x144.",
 			"Images with both sides smaller than 144 are cropped square to their smallest side."
 			);
 
-            writer.WriteParagraph("See [this article](https://learn.microsoft.com/en-us/power-apps/developer/data-platform/image-column-data?tabs=sdk#resize-rules-for-thumbnail-sized-images) to get more info.");
+			writer.WriteParagraph("See [this article](https://learn.microsoft.com/en-us/power-apps/developer/data-platform/image-column-data?tabs=sdk#resize-rules-for-thumbnail-sized-images) to get more info.");
 		}
 
 
@@ -403,24 +403,24 @@ pacx column create --type Image -t tableName -n columnName -thumb
 		{
 			writer.WriteTitle3("Lookup column");
 
-            writer.WriteParagraph("**Lookup column creation is not supported**. You should use `pacx rel create n1` command to generate a relationship, and the lookup column will be created automatically.");
+			writer.WriteParagraph("**Lookup column creation is not supported**. You should use `pacx rel create n1` command to generate a relationship, and the lookup column will be created automatically.");
 		}
 	}
 
 
-    public enum SupportedAttributeType
-    {
-        String,
-        Memo,
-        Boolean,
-        Integer,
-        Money,
-        Decimal,
-        Double,
-        Picklist,
-        DateTime,
-        Lookup,
-        File,
-        Image
+	public enum SupportedAttributeType
+	{
+		String,
+		Memo,
+		Boolean,
+		Integer,
+		Money,
+		Decimal,
+		Double,
+		Picklist,
+		DateTime,
+		Lookup,
+		File,
+		Image
 	}
 }

@@ -1,4 +1,4 @@
-﻿using Greg.Xrm.Command.Commands.WebResources.Templates;
+using Greg.Xrm.Command.Commands.WebResources.Templates;
 using Greg.Xrm.Command.Services.Output;
 
 namespace Greg.Xrm.Command.Commands.WebResources

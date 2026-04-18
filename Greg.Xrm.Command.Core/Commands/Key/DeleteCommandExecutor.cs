@@ -1,15 +1,15 @@
-﻿using Greg.Xrm.Command.Services.Connection;
+using System.ServiceModel;
+using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Messages;
-using System.ServiceModel;
 
 namespace Greg.Xrm.Command.Commands.Key
 {
 	public class DeleteCommandExecutor(
 		IOutput output,
 		IOrganizationServiceRepository organizationServiceRepository
-	): ICommandExecutor<DeleteCommand>
+	) : ICommandExecutor<DeleteCommand>
 	{
 		public async Task<CommandResult> ExecuteAsync(DeleteCommand command, CancellationToken cancellationToken)
 		{
@@ -26,7 +26,7 @@ namespace Greg.Xrm.Command.Commands.Key
 					Name = command.SchemaName
 				};
 				await crm.ExecuteAsync(request);
-				
+
 				output.WriteLine("Done", ConsoleColor.Green);
 
 				return CommandResult.Success();

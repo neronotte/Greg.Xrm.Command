@@ -1,38 +1,38 @@
-using Greg.Xrm.Command.Services.Output;
 using Greg.Xrm.Command.Commands.Script.MetadataExtractor;
 using Greg.Xrm.Command.Commands.Script.Models;
+using Greg.Xrm.Command.Services.Output;
 
 namespace Greg.Xrm.Command.Commands.Script.Service
 {
-    public class ScriptExtractionService : IScriptExtractionService
-    {
-        private readonly IOutput output;
-        private readonly IScriptMetadataExtractor metadataExtractor;
+	public class ScriptExtractionService : IScriptExtractionService
+	{
+		private readonly IOutput output;
+		private readonly IScriptMetadataExtractor metadataExtractor;
 
-        public ScriptExtractionService(IOutput output, IScriptMetadataExtractor metadataExtractor)
-        {
-            this.output = output;
-            this.metadataExtractor = metadataExtractor;
-        }
+		public ScriptExtractionService(IOutput output, IScriptMetadataExtractor metadataExtractor)
+		{
+			this.output = output;
+			this.metadataExtractor = metadataExtractor;
+		}
 
-        public async Task<CommandResult> ExtractAllAsync(ScriptAllCommand command, CancellationToken cancellationToken)
-        {
-            var prefixes = command.CustomPrefixes?.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(p => p.Trim()).ToList() ?? new List<string>();
-            var outputDir = string.IsNullOrWhiteSpace(command.OutputDir) ? Environment.CurrentDirectory : command.OutputDir;
-            var exportStateFields = command.WithStateFieldsDefinition;
-            var pacxScriptName = command.PacxScriptName;
-            var stateFieldsDefinitionName = command.StateFieldsDefinitionName;
+		public async Task<CommandResult> ExtractAllAsync(ScriptAllCommand command, CancellationToken cancellationToken)
+		{
+			var prefixes = command.CustomPrefixes?.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(p => p.Trim()).ToList() ?? new List<string>();
+			var outputDir = string.IsNullOrWhiteSpace(command.OutputDir) ? Environment.CurrentDirectory : command.OutputDir;
+			var exportStateFields = command.WithStateFieldsDefinition;
+			var pacxScriptName = command.PacxScriptName;
+			var stateFieldsDefinitionName = command.StateFieldsDefinitionName;
 
-            return await new ScriptExtractionJob(
-                output,
-                metadataExtractor,
-                prefixes,
-                outputDir,
-                pacxScriptName,
-                stateFieldsDefinitionName,
-                exportStateFields
-            ).RunAsync();
-        }
+			return await new ScriptExtractionJob(
+				output,
+				metadataExtractor,
+				prefixes,
+				outputDir,
+				pacxScriptName,
+				stateFieldsDefinitionName,
+				exportStateFields
+			).RunAsync();
+		}
 
         public async Task<CommandResult> ExtractSolutionAsync(ScriptSolutionCommand command, CancellationToken cancellationToken)
         {
@@ -67,30 +67,30 @@ namespace Greg.Xrm.Command.Commands.Script.Service
             ).RunAsync();
         }
 
-        public async Task<CommandResult> ExtractTableAsync(ScriptTableCommand command, CancellationToken cancellationToken)
-        {
-            var prefixes = command.CustomPrefixes?.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(p => p.Trim()).ToList() ?? [];
-            var outputDir = string.IsNullOrWhiteSpace(command.OutputDir) ? Environment.CurrentDirectory : command.OutputDir;
-            var exportStateFields = command.WithStateFieldsDefinition;
-            var pacxScriptName = command.PacxScriptName;
-            var stateFieldsDefinitionName = command.StateFieldsDefinitionName;
-            output.WriteLine("Step 1: Extracting table metadata...");
-            var entity = await metadataExtractor.GetTableAsync(command.TableName, prefixes);
-            if (entity == null)
-            {
-                output.WriteLine($"Table not found: {command.TableName}", ConsoleColor.Red);
-                return CommandResult.Fail($"Table not found: {command.TableName}");
-            }
-            return await new ScriptExtractionJob(
-                output,
-                metadataExtractor,
-                prefixes,
-                outputDir,
-                pacxScriptName,
-                stateFieldsDefinitionName,
-                exportStateFields,
-                new List<Extractor_EntityMetadata> { entity }
-            ).RunAsync();
-        }
-    }
+		public async Task<CommandResult> ExtractTableAsync(ScriptTableCommand command, CancellationToken cancellationToken)
+		{
+			var prefixes = command.CustomPrefixes?.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(p => p.Trim()).ToList() ?? [];
+			var outputDir = string.IsNullOrWhiteSpace(command.OutputDir) ? Environment.CurrentDirectory : command.OutputDir;
+			var exportStateFields = command.WithStateFieldsDefinition;
+			var pacxScriptName = command.PacxScriptName;
+			var stateFieldsDefinitionName = command.StateFieldsDefinitionName;
+			output.WriteLine("Step 1: Extracting table metadata...");
+			var entity = await metadataExtractor.GetTableAsync(command.TableName, prefixes);
+			if (entity == null)
+			{
+				output.WriteLine($"Table not found: {command.TableName}", ConsoleColor.Red);
+				return CommandResult.Fail($"Table not found: {command.TableName}");
+			}
+			return await new ScriptExtractionJob(
+				output,
+				metadataExtractor,
+				prefixes,
+				outputDir,
+				pacxScriptName,
+				stateFieldsDefinitionName,
+				exportStateFields,
+				new List<Extractor_EntityMetadata> { entity }
+			).RunAsync();
+		}
+	}
 }

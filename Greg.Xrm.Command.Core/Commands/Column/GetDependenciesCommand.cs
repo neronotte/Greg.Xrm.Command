@@ -1,8 +1,8 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace Greg.Xrm.Command.Commands.Column
 {
-    [Command("column", "getDependencies", HelpText = "Retrieves the list of solution components that depend from a given column")]
+	[Command("column", "getDependencies", HelpText = "Retrieves the list of solution components that depend from a given column")]
 	[Alias("column", "getdeps")]
 	[Alias("column", "get-dependencies")]
 	public class GetDependenciesCommand

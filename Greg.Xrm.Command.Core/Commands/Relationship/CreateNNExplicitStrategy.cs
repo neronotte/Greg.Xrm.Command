@@ -1,14 +1,14 @@
-﻿using Greg.Xrm.Command.Services.Output;
+using System.Text;
+using Greg.Xrm.Command.Services.Output;
 using Microsoft.Crm.Sdk.Messages;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Messages;
 using Microsoft.Xrm.Sdk.Metadata;
-using System.Text;
 
 namespace Greg.Xrm.Command.Commands.Relationship
 {
-    public class CreateNNExplicitStrategy : ICreateNNStrategy
+	public class CreateNNExplicitStrategy : ICreateNNStrategy
 	{
 		private readonly IOutput output;
 		private readonly IOrganizationServiceAsync2 crm;
@@ -78,7 +78,7 @@ namespace Greg.Xrm.Command.Commands.Relationship
 				Entity = entityMetadata,
 				PrimaryAttribute = primaryAttribute
 			};
-			
+
 			parentRequest.Requests.Add(request);
 
 
@@ -371,7 +371,7 @@ namespace Greg.Xrm.Command.Commands.Relationship
 			if (command.PrimaryAttributeAutoNumber == string.Empty)
 				return null;
 
-			if (command.PrimaryAttributeAutoNumber is null) 
+			if (command.PrimaryAttributeAutoNumber is null)
 			{
 				var table1Name = table1.DisplayName.GetLocalizedLabel(defaultLanguageCode);
 				var table2Name = table2.DisplayName.GetLocalizedLabel(defaultLanguageCode);
@@ -415,7 +415,7 @@ namespace Greg.Xrm.Command.Commands.Relationship
 				return $"{publisherPrefix}_{namePart}";
 			}
 
-			
+
 			if (table.SchemaName.StartsWith(publisherPrefix + "_"))
 				return $"{table.SchemaName}id";
 

@@ -1,4 +1,4 @@
-﻿using Greg.Xrm.Command.Services.Output;
+using Greg.Xrm.Command.Services.Output;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;
@@ -63,7 +63,7 @@ namespace Greg.Xrm.Command.Model
 			var image = myInternal.GetPostImage();
 			if (image.Contains("content"))
 			{
-				return this.content;				
+				return this.content;
 			}
 
 			// lazy load the content
@@ -128,7 +128,7 @@ namespace Greg.Xrm.Command.Model
 			private readonly IOutput output;
 
 			public Repository(IOutput output)
-            {
+			{
 				this.output = output;
 			}
 
@@ -177,7 +177,7 @@ namespace Greg.Xrm.Command.Model
 				query.NoLock = true;
 
 				var result = await crm.RetrieveMultipleAsync(query);
-				this.output.WriteLine("Done", ConsoleColor.Green) ;
+				this.output.WriteLine("Done", ConsoleColor.Green);
 
 				return result.Entities.Select(e => new WebResource(e)).ToList();
 			}

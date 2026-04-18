@@ -1,11 +1,11 @@
-﻿using Greg.Xrm.Command.Model;
-using Microsoft.Xrm.Sdk;
 using System.ServiceModel;
 using System.Text;
+using Greg.Xrm.Command.Model;
+using Microsoft.Xrm.Sdk;
 
 namespace Greg.Xrm.Command
 {
-    public static class CommonExtensions
+	public static class CommonExtensions
 	{
 
 		/// <summary>

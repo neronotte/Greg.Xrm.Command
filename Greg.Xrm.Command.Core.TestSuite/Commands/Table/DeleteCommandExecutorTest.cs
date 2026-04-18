@@ -1,4 +1,4 @@
-﻿
+
 using Greg.Xrm.Command.Services.Connection;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;

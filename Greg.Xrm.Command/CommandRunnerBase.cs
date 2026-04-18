@@ -1,21 +1,21 @@
-﻿using Greg.Xrm.Command.Commands.Help;
+using System.ComponentModel.DataAnnotations;
+using System.Reflection;
+using System.ServiceModel;
+using Greg.Xrm.Command.Commands.Help;
 using Greg.Xrm.Command.Commands.History;
 using Greg.Xrm.Command.Parsing;
 using Greg.Xrm.Command.Services.CommandHistory;
 using Greg.Xrm.Command.Services.Output;
 using Microsoft.Extensions.Logging;
 using Microsoft.Xrm.Sdk;
-using System.ComponentModel.DataAnnotations;
-using System.Reflection;
-using System.ServiceModel;
 
 namespace Greg.Xrm.Command
 {
 	abstract class CommandRunnerBase(
-		IOutput output, 
-		ILogger log, 
+		IOutput output,
+		ILogger log,
 		ICommandExecutorFactory commandExecutorFactory,
-		IHistoryTracker historyTracker, 
+		IHistoryTracker historyTracker,
 		ICommandLineArguments args)
 	{
 		private static readonly Type[] commandsNotToTrack =

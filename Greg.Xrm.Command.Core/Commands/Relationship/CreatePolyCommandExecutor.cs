@@ -1,13 +1,13 @@
-﻿using Greg.Xrm.Command.Services.Connection;
+using System.Text;
+using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
+using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Metadata;
 using Microsoft.Xrm.Sdk.Query;
-using Microsoft.Xrm.Sdk;
-using System.Text;
 
 namespace Greg.Xrm.Command.Commands.Relationship
 {
-    public class CreatePolyCommandExecutor : ICommandExecutor<CreatePolyCommand>
+	public class CreatePolyCommandExecutor : ICommandExecutor<CreatePolyCommand>
 	{
 		private readonly IOutput output;
 		private readonly IOrganizationServiceRepository organizationServiceRepository;
@@ -201,7 +201,7 @@ namespace Greg.Xrm.Command.Commands.Relationship
 				sb.Append('_');
 				sb.Append(command.RelationshipNameSuffix);
 			}
-			else 
+			else
 			{
 				var suffix = command.LookupAttributeDisplayName.OnlyLettersNumbersOrUnderscore();
 

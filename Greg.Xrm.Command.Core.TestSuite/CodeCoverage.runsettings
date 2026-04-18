@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+  <DataCollectionRunSettings>
+    <DataCollectors>
+      <DataCollector friendlyName="XPlat Code Coverage">
+        <Configuration>
+          <Format>cobertura</Format>
+          <Exclude>[Greg.Xrm.Command.Core.TestSuite]*</Exclude> <!-- Exclude test projects from coverage -->
+          <Include>[Greg.Xrm.Command.Core]*</Include>
+          <Include>[Greg.Xrm.Command.Interfaces]*</Include>
+        </Configuration>
+      </DataCollector>
+    </DataCollectors>
+  </DataCollectionRunSettings>
+</RunSettings>

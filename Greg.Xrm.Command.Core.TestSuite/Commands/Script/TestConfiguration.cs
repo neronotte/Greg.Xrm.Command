@@ -19,11 +19,11 @@ namespace Greg.Xrm.Command.Commands.Script
 			if (useEnvironmentVariables)
 			{
 				// Read from environment variables
-				var url = Environment.GetEnvironmentVariable("DATAVERSE_URL") 
+				var url = Environment.GetEnvironmentVariable("DATAVERSE_URL")
 					?? throw new InvalidOperationException("DATAVERSE_URL environment variable not set");
-				var clientId = Environment.GetEnvironmentVariable("DATAVERSE_CLIENT_ID") 
+				var clientId = Environment.GetEnvironmentVariable("DATAVERSE_CLIENT_ID")
 					?? throw new InvalidOperationException("DATAVERSE_CLIENT_ID environment variable not set");
-				var clientSecret = Environment.GetEnvironmentVariable("DATAVERSE_CLIENT_SECRET") 
+				var clientSecret = Environment.GetEnvironmentVariable("DATAVERSE_CLIENT_SECRET")
 					?? throw new InvalidOperationException("DATAVERSE_CLIENT_SECRET environment variable not set");
 
 				connectionString = $"AuthType=ClientSecret;" +

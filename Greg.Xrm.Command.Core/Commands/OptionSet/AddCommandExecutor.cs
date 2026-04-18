@@ -1,4 +1,4 @@
-﻿using Greg.Xrm.Command.Commands.WebResources.PushLogic;
+using Greg.Xrm.Command.Commands.WebResources.PushLogic;
 using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
 using Microsoft.PowerPlatform.Dataverse.Client;
@@ -145,7 +145,7 @@ namespace Greg.Xrm.Command.Commands.OptionSet
 				};
 
 				var response = (RetrieveAttributeResponse)await crm.ExecuteAsync(request);
-				
+
 				if (response.AttributeMetadata is PicklistAttributeMetadata optionSetMetadata)
 				{
 					return optionSetMetadata.OptionSet.Options;

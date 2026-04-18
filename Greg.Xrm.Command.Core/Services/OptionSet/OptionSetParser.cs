@@ -1,4 +1,4 @@
-﻿using Greg.Xrm.Command.Model;
+using Greg.Xrm.Command.Model;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Metadata;
 
@@ -10,8 +10,8 @@ namespace Greg.Xrm.Command.Services.OptionSet
 
 
 		public IReadOnlyCollection<OptionMetadata> Parse(
-			string? optionString, 
-			string? colorsString, 
+			string? optionString,
+			string? colorsString,
 			int customizationOptionValuePrefix,
 			int languageCode)
 		{
@@ -28,11 +28,11 @@ namespace Greg.Xrm.Command.Services.OptionSet
 			if (optionArray.Length == 0)
 				throw new CommandException(CommandException.CommandRequiredArgumentNotProvided, $"The options are required for columns of type Picklist");
 
-			if (optionArray.Any(x => x.HasValue) && 
+			if (optionArray.Any(x => x.HasValue) &&
 				optionArray.Count(x => x.HasValue) != optionArray.Length)
 				throw new CommandException(CommandException.CommandInvalidArgumentValue, $"If you specify the value for one option, it must be specified for all options.");
 
-			if (optionArray.Any(x => x.HasValue) && 
+			if (optionArray.Any(x => x.HasValue) &&
 				optionArray.Select(x => x.Value).Distinct().Count() != optionArray.Length)
 				throw new CommandException(CommandException.CommandInvalidArgumentValue, $"The values of the options must be unique.");
 
@@ -79,7 +79,7 @@ namespace Greg.Xrm.Command.Services.OptionSet
 				var optionValue = customizationOptionValuePrefix * 10000 + i;
 				option.TrySetValue(optionValue);
 
-				optionSet.Add(new OptionMetadata(new Label(option.Label, languageCode), option.Value) 
+				optionSet.Add(new OptionMetadata(new Label(option.Label, languageCode), option.Value)
 				{
 					Color = colorsArray[i],
 				});

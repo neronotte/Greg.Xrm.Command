@@ -1,7 +1,7 @@
-﻿using Greg.Xrm.Command.Parsing;
+using System.ComponentModel.DataAnnotations;
+using Greg.Xrm.Command.Parsing;
 using Greg.Xrm.Command.Services;
 using Microsoft.Xrm.Sdk.Metadata;
-using System.ComponentModel.DataAnnotations;
 
 namespace Greg.Xrm.Command.Commands.Table
 {
@@ -89,7 +89,7 @@ namespace Greg.Xrm.Command.Commands.Table
 
 
 
-		
+
 
 
 		[Option("solution", "s", Order = 50, HelpText = "The name of the solution where the table will be created. If not provided, the default solution will be used.")]

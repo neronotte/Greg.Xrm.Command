@@ -1,4 +1,4 @@
-﻿namespace Greg.Xrm.Command.Parsing
+namespace Greg.Xrm.Command.Parsing
 {
 	/// <summary>
 	/// Creates a command object starting from a set of arguments

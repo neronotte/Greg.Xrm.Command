@@ -1,11 +1,11 @@
-﻿using ClosedXML.Excel;
+using ClosedXML.Excel;
 using Greg.Xrm.Command.Commands.Settings.Model;
 using Microsoft.Xrm.Sdk;
 
 namespace Greg.Xrm.Command.Commands.Settings
 {
 	public static class ExcelExtensions
-    {
+	{
 		public static IXLCell SetFormat(this IXLCell cell, OptionSetValue? type, string? value)
 		{
 			if (type?.Value == (int)SettingDefinitionDataType.Boolean)
@@ -86,7 +86,7 @@ namespace Greg.Xrm.Command.Commands.Settings
 			return range;
 		}
 
-        public static IXLRange ApplyValidationBoolean(this IXLRange range)
+		public static IXLRange ApplyValidationBoolean(this IXLRange range)
 		{
 			var list = range.CreateDataValidation();
 			list.List("\"TRUE,FALSE\"");

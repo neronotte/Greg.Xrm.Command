@@ -1,4 +1,4 @@
-﻿using System.IO.Compression;
+using System.IO.Compression;
 using System.Xml.Linq;
 
 namespace Greg.Xrm.Command.Model
@@ -9,7 +9,7 @@ namespace Greg.Xrm.Command.Model
 	/// </summary>
 	public class SolutionZipArchive : IDisposable
 	{
-        private readonly MemoryStream archiveStream = new();
+		private readonly MemoryStream archiveStream = new();
 		private bool disposedValue;
 
 		/// <summary>
@@ -18,11 +18,11 @@ namespace Greg.Xrm.Command.Model
 		/// <param name="byteContent">The contents of the solution zip file.</param>
 		/// <exception cref="ArgumentNullException">If the provided array is null or has length = 0</exception>
 		public SolutionZipArchive(byte[] byteContent)
-        {
-            if (byteContent == null || byteContent.Length == 0)
+		{
+			if (byteContent == null || byteContent.Length == 0)
 				throw new ArgumentNullException(nameof(byteContent));
 
-            this.archiveStream.Write(byteContent, 0, byteContent.Length);
+			this.archiveStream.Write(byteContent, 0, byteContent.Length);
 			this.disposedValue = false;
 		}
 
@@ -98,7 +98,7 @@ namespace Greg.Xrm.Command.Model
 					doc.Save(entryStream);
 				}
 			}
-				
+
 
 			return hasBeenUpdated;
 		}

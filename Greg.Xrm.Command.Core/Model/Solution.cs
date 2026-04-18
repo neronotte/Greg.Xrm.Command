@@ -1,4 +1,4 @@
-﻿using Greg.Xrm.Command.Commands.WebResources.PushLogic;
+using Greg.Xrm.Command.Commands.WebResources.PushLogic;
 using Greg.Xrm.Command.Parsing;
 using Greg.Xrm.Command.Services.Output;
 using Microsoft.Crm.Sdk.Messages;
@@ -130,18 +130,18 @@ namespace Greg.Xrm.Command.Model
 
 
 
-		public class Repository : ISolutionRepository 
+		public class Repository : ISolutionRepository
 		{
 			private readonly Dictionary<string, Solution> cache = new();
 			private readonly IOutput output;
 
 			public Repository(IOutput output)
-            {
+			{
 				this.output = output ?? throw new ArgumentNullException(nameof(output));
 			}
 
 
-            public async Task<ITemporarySolution> CreateTemporarySolutionAsync(IOrganizationServiceAsync2 crm, EntityReference publisherRef)
+			public async Task<ITemporarySolution> CreateTemporarySolutionAsync(IOrganizationServiceAsync2 crm, EntityReference publisherRef)
 			{
 				var solutionName = $"pacx_temp_{DateTime.Now.Ticks}";
 

@@ -1,4 +1,4 @@
-﻿using Greg.Xrm.Command.Services;
+using Greg.Xrm.Command.Services;
 
 namespace Greg.Xrm.Command.Parsing
 {
@@ -12,7 +12,7 @@ namespace Greg.Xrm.Command.Parsing
 			this.help = help;
 			this.Verbs = verbs;
 		}
-		
+
 		protected NamespaceHelperBase(bool hidden, string help, params string[] verbs)
 		{
 			this.Hidden = hidden;

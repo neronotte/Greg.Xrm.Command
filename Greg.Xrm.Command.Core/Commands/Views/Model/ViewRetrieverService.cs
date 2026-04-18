@@ -1,4 +1,4 @@
-﻿using Greg.Xrm.Command.Model;
+using Greg.Xrm.Command.Model;
 using Greg.Xrm.Command.Services.Output;
 using Microsoft.PowerPlatform.Dataverse.Client;
 
@@ -10,8 +10,8 @@ namespace Greg.Xrm.Command.Commands.Views.Model
 		IUserQueryRepository userQueryRepository
 	) : IViewRetrieverService
 	{
-        public async Task<(CommandResult, TableView?)> GetByNameAsync(
-			IOrganizationServiceAsync2 crm, 
+		public async Task<(CommandResult, TableView?)> GetByNameAsync(
+			IOrganizationServiceAsync2 crm,
 			QueryType1 queryType,
 			string viewName,
 			string? tableName)
@@ -75,5 +75,5 @@ namespace Greg.Xrm.Command.Commands.Views.Model
 
 			return (CommandResult.Success(), view);
 		}
-    }
+	}
 }

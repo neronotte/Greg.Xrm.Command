@@ -1,9 +1,9 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 
 namespace Greg.Xrm.Command.Services.Connection
 {
-    public class TokenCache : Dictionary<string, TokenDefinition>
-    {
+	public class TokenCache : Dictionary<string, TokenDefinition>
+	{
 		public void Set(string name, Uri serviceUri, string token)
 		{
 			this[name] = new TokenDefinition(serviceUri, token);
@@ -15,13 +15,13 @@ namespace Greg.Xrm.Command.Services.Connection
 			var tokenCachePath = GetTokenCachePath();
 			var tokenCacheFile = Path.Combine(tokenCachePath, "tokens.json");
 			var json = JsonConvert.SerializeObject(this, Formatting.Indented);
-			await File.WriteAllTextAsync(tokenCacheFile, json);		
+			await File.WriteAllTextAsync(tokenCacheFile, json);
 		}
 
 
 
 		public static string GetTokenCachePath()
-        {
+		{
 			var folderPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
 			if (!Directory.Exists(folderPath))
 			{
@@ -50,7 +50,7 @@ namespace Greg.Xrm.Command.Services.Connection
 			var tokenCacheFile = Path.Combine(tokenCachePath, "tokens.json");
 			if (!File.Exists(tokenCacheFile)) return new TokenCache();
 			var json = await File.ReadAllTextAsync(tokenCacheFile);
-			return JsonConvert.DeserializeObject<TokenCache>(json) ?? [];	
+			return JsonConvert.DeserializeObject<TokenCache>(json) ?? [];
 		}
 
 

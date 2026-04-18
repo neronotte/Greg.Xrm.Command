@@ -1,4 +1,4 @@
-﻿using Greg.Xrm.Command.Commands.WebResources.ProjectFile;
+using Greg.Xrm.Command.Commands.WebResources.ProjectFile;
 using Greg.Xrm.Command.Commands.WebResources.PushLogic;
 using Greg.Xrm.Command.Model;
 using Greg.Xrm.Command.Services.Connection;
@@ -18,7 +18,7 @@ namespace Greg.Xrm.Command.Commands.WebResources
 			IWebResourceFilesResolver webResourceFilesResolver,
 			IWebResourceRepository webResourceRepository,
 			IPublishXmlBuilder publishXmlBuilder,
-			IWebResourceProjectFileRepository webResourceProjectFileRepository) 
+			IWebResourceProjectFileRepository webResourceProjectFileRepository)
 			: ICommandExecutor<PushCommand>
 	{
 		public async Task<CommandResult> ExecuteAsync(PushCommand command, CancellationToken cancellationToken)
@@ -52,7 +52,7 @@ namespace Greg.Xrm.Command.Commands.WebResources
 
 
 
-			var files = new List<WebResourceMap> ();
+			var files = new List<WebResourceMap>();
 			try
 			{
 				var folders = folderResolver.ResolveFrom(command.Folder, solution.PublisherCustomizationPrefix ?? string.Empty);
@@ -290,7 +290,7 @@ namespace Greg.Xrm.Command.Commands.WebResources
 					return CommandResult.Success();
 				}
 
-				if (result.ComponentsAdded.Count > 0 && result.ComponentsAlreadyThere.Count > 0 && result.ComponentsWithErrors.Count == 0) 
+				if (result.ComponentsAdded.Count > 0 && result.ComponentsAlreadyThere.Count > 0 && result.ComponentsWithErrors.Count == 0)
 				{
 					output
 						.Write(result.ComponentsAdded.Count, ConsoleColor.Green).Write(" webresources added, ")
@@ -317,7 +317,7 @@ namespace Greg.Xrm.Command.Commands.WebResources
 						output.WriteLine(JsonConvert.SerializeObject(childResponse, Formatting.Indented), ConsoleColor.DarkGray);
 						output.WriteLine();
 					}
-					
+
 					output.WriteLine($"ERROR while adding '{component.name}' to '{solution.uniquename}': {childResponse.Fault.Message}", ConsoleColor.Red);
 				}
 

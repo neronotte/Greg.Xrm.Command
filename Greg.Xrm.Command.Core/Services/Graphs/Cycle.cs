@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 
 namespace Greg.Xrm.Command.Services.Graphs
 {

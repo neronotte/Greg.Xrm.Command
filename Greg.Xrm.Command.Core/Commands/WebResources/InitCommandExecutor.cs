@@ -1,13 +1,13 @@
-﻿using Greg.Xrm.Command.Services.Connection;
-using Greg.Xrm.Command.Services.Output;
-using Microsoft.PowerPlatform.Dataverse.Client;
+using Greg.Xrm.Command.Commands.WebResources.ProjectFile;
 using Greg.Xrm.Command.Model;
 using Greg.Xrm.Command.Services;
-using Greg.Xrm.Command.Commands.WebResources.ProjectFile;
+using Greg.Xrm.Command.Services.Connection;
+using Greg.Xrm.Command.Services.Output;
+using Microsoft.PowerPlatform.Dataverse.Client;
 
 namespace Greg.Xrm.Command.Commands.WebResources
 {
-    public class InitCommandExecutor : ICommandExecutor<InitCommand>
+	public class InitCommandExecutor : ICommandExecutor<InitCommand>
 	{
 		private readonly IOutput output;
 		private readonly IOrganizationServiceRepository organizationServiceRepository;

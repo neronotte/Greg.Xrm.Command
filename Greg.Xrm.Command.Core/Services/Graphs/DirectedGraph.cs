@@ -1,13 +1,13 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Text;
 
 namespace Greg.Xrm.Command.Services.Graphs
 {
-    /// <summary>
-    /// Implements the logic of a directed graph
-    /// </summary>
-    /// <typeparam name="T">The type of the nodes</typeparam>
-    public class DirectedGraph<T> : ICloneable, IEnumerable<T>
+	/// <summary>
+	/// Implements the logic of a directed graph
+	/// </summary>
+	/// <typeparam name="T">The type of the nodes</typeparam>
+	public class DirectedGraph<T> : ICloneable, IEnumerable<T>
 		where T : INodeContent
 	{
 		private readonly object syncRoot = new();

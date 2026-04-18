@@ -1,4 +1,4 @@
-﻿namespace Greg.Xrm.Command.Commands.Settings.Model
+namespace Greg.Xrm.Command.Commands.Settings.Model
 {
 	public enum SettingDefinitionDataType
 	{

@@ -1,8 +1,8 @@
-﻿using System.Reflection;
+using System.Reflection;
 
 namespace Greg.Xrm.Command.Model
 {
-    [AttributeUsage(AttributeTargets.Property, AllowMultiple =false, Inherited =true)]
+	[AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
 	public class DataverseColumnAttribute : Attribute
 	{
 

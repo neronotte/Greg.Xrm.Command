@@ -1,10 +1,10 @@
-﻿using Greg.Xrm.Command.Model;
+using System.Xml.Linq;
+using System.Xml.XPath;
+using Greg.Xrm.Command.Model;
 using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk.Metadata;
-using System.Xml.Linq;
-using System.Xml.XPath;
 
 namespace Greg.Xrm.Command.Services.AttributeDeletion
 {
@@ -21,7 +21,7 @@ namespace Greg.Xrm.Command.Services.AttributeDeletion
 		{
 
 			// Create a temporary holding solution that will hold all the forms having the current field within
-			using(var solution = await CreateHoldingSolutionAsync(crm))
+			using (var solution = await CreateHoldingSolutionAsync(crm))
 			{
 				foreach (var form in dependencies)
 				{

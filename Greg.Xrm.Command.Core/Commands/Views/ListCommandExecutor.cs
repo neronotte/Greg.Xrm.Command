@@ -1,4 +1,4 @@
-﻿using Greg.Xrm.Command.Model;
+using Greg.Xrm.Command.Model;
 using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
 
@@ -53,7 +53,8 @@ namespace Greg.Xrm.Command.Commands.Views
 
 			output.WriteLine();
 			output.WriteTable(viewList, () => ["Ownership", "Name", "View Type"],
-			row => {
+			row =>
+			{
 
 				var ownership = row.GetType() == typeof(SavedQuery) ? "Saved" : "User";
 				var name = row.name ?? string.Empty;

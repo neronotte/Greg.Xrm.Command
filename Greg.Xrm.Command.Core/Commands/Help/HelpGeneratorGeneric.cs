@@ -1,17 +1,17 @@
-﻿using Greg.Xrm.Command.Parsing;
-using Greg.Xrm.Command.Services.Output;
 using System.Reflection;
+using Greg.Xrm.Command.Parsing;
+using Greg.Xrm.Command.Services.Output;
 
 namespace Greg.Xrm.Command.Commands.Help
 {
-    public class HelpGeneratorGeneric
+	public class HelpGeneratorGeneric
 	{
 		private readonly IOutput output;
 		private readonly IReadOnlyList<CommandDefinition> commandList;
 		private readonly IReadOnlyList<VerbNode> commandTree;
 
 		public HelpGeneratorGeneric(IOutput output, IReadOnlyList<CommandDefinition> commandList, IReadOnlyList<VerbNode> commandTree)
-        {
+		{
 			this.output = output;
 			this.commandList = commandList;
 			this.commandTree = commandTree;
@@ -40,7 +40,7 @@ namespace Greg.Xrm.Command.Commands.Help
 
 				output.Write("  ")
 					.Write(node.Verb.PadRight(padding), color);
-				
+
 				var helpText = (node.Help ?? string.Empty).Split(Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
 
 				if (helpText.Length == 1)
@@ -68,7 +68,7 @@ namespace Greg.Xrm.Command.Commands.Help
 		}
 
 
-        public void GenerateHelp()
+		public void GenerateHelp()
 		{
 			output.WriteLine("Available commands: ");
 			output.WriteLine();

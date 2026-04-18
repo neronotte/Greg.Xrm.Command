@@ -1,10 +1,10 @@
-﻿using Greg.Xrm.Command.Commands.UnifiedRouting.Model;
+using System.Globalization;
+using System.ServiceModel;
+using Greg.Xrm.Command.Commands.UnifiedRouting.Model;
 using Greg.Xrm.Command.Commands.UnifiedRouting.Repository;
 using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
 using Microsoft.Xrm.Sdk;
-using System.Globalization;
-using System.ServiceModel;
 
 namespace Greg.Xrm.Command.Commands.UnifiedRouting
 {
@@ -39,7 +39,7 @@ namespace Greg.Xrm.Command.Commands.UnifiedRouting
 				var repo = new AgentStatusHistoryRepository(crm);
 				var results = await repo.GetAgentStatusHistoryByQueue(command.Queue ?? string.Empty, timeQuery);
 
-				if (results.Count==0)
+				if (results.Count == 0)
 				{
 					output.WriteLine("No records found for: ", ConsoleColor.Yellow).WriteLine(command.Queue, ConsoleColor.Yellow);
 					return CommandResult.Success();
@@ -48,9 +48,9 @@ namespace Greg.Xrm.Command.Commands.UnifiedRouting
 				this.output.Write("The agents status in ").Write(command.Queue).Write(" at ").Write(timeQuery.ToLocalTime().ToString()).WriteLine(" is:");
 
 
-				this.output.WriteTable(results, 
+				this.output.WriteTable(results,
 					() => new[] { "User", "Status", "Since" },
-					user => new [] {
+					user => new[] {
 						user.GetAliasedValue<string>(systemuser.internalemailaddress, nameof(systemuser)) ?? string.Empty,
 						user.GetAliasedValue<string>(msdyn_presence.msdyn_presencestatustext, nameof(msdyn_presence)) ?? string.Empty,
 						user.GetAttributeValue<DateTime?>(msdyn_agentstatushistory.msdyn_starttime).GetValueOrDefault().ToLocalTime().ToString()
@@ -70,6 +70,6 @@ namespace Greg.Xrm.Command.Commands.UnifiedRouting
 			{
 				return CommandResult.Fail(ex.Message, ex);
 			}
-		}        
+		}
 	}
 }

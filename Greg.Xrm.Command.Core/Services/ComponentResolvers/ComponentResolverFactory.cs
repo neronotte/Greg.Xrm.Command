@@ -1,17 +1,17 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using Microsoft.PowerPlatform.Dataverse.Client;
 
 namespace Greg.Xrm.Command.Services.ComponentResolvers
 {
 	public class ComponentResolverFactory : IComponentResolverFactory
-    {
-        private readonly IOrganizationServiceAsync2 crm;
-        private readonly ILogger log;
+	{
+		private readonly IOrganizationServiceAsync2 crm;
+		private readonly ILogger log;
 
-        public ComponentResolverFactory(IOrganizationServiceAsync2 crm, ILogger log)
-        {
-            this.crm = crm;
-            this.log = log;
+		public ComponentResolverFactory(IOrganizationServiceAsync2 crm, ILogger log)
+		{
+			this.crm = crm;
+			this.log = log;
 
 
 			this.AddStrategy(ComponentType.SavedQuery);
@@ -60,21 +60,21 @@ namespace Greg.Xrm.Command.Services.ComponentResolvers
 
 
 		public IComponentResolver? GetComponentResolverFor(ComponentType componentType)
-        {
-            return GetComponentResolverFor((int)componentType);
-        }
+		{
+			return GetComponentResolverFor((int)componentType);
+		}
 
 
 
-        public IComponentResolver? GetComponentResolverFor(int componentType)
-        {
+		public IComponentResolver? GetComponentResolverFor(int componentType)
+		{
 			if (!resolverStrategyCache.TryGetValue(componentType, out var factoryMethod))
-            {
-                return null;
-            }
+			{
+				return null;
+			}
 
 
-            return factoryMethod();
-        }
-    }
+			return factoryMethod();
+		}
+	}
 }

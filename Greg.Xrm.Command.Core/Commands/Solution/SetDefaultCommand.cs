@@ -1,15 +1,15 @@
-﻿using Greg.Xrm.Command.Parsing;
-using Greg.Xrm.Command.Services;
 using System.ComponentModel.DataAnnotations;
+using Greg.Xrm.Command.Parsing;
+using Greg.Xrm.Command.Services;
 
 namespace Greg.Xrm.Command.Commands.Solution
 {
-    [Command("solution", "setDefault", HelpText = "Sets the default solution for the current environment")]
+	[Command("solution", "setDefault", HelpText = "Sets the default solution for the current environment")]
 	public class SetDefaultCommand : ICanProvideUsageExample
 	{
 		[Option("name", "un", HelpText = "The unique name of the solution to set as default")]
 		[Required]
-        public string? SolutionUniqueName { get; set; }
+		public string? SolutionUniqueName { get; set; }
 
 
 

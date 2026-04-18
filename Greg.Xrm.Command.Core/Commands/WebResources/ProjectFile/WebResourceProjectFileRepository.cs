@@ -1,4 +1,4 @@
-﻿using Greg.Xrm.Command.Services.Output;
+using Greg.Xrm.Command.Services.Output;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -36,7 +36,7 @@ namespace Greg.Xrm.Command.Commands.WebResources.ProjectFile
 					return (true, CreateProjectFile());
 				}
 			}
-			catch(Exception ex)
+			catch (Exception ex)
 			{
 				output.WriteLine($"Failed: {ex.Message}", ConsoleColor.Red);
 				return (false, CreateProjectFile());

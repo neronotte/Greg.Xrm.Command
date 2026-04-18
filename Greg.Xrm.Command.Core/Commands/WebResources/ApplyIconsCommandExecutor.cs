@@ -1,4 +1,7 @@
-﻿using Greg.Xrm.Command.Commands.WebResources.ApplyIconsRules;
+using System.ServiceModel;
+using System.Text;
+using System.Xml;
+using Greg.Xrm.Command.Commands.WebResources.ApplyIconsRules;
 using Greg.Xrm.Command.Model;
 using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
@@ -9,13 +12,10 @@ using Microsoft.Xrm.Sdk.Messages;
 using Microsoft.Xrm.Sdk.Metadata;
 using Microsoft.Xrm.Sdk.Metadata.Query;
 using Microsoft.Xrm.Sdk.Query;
-using System.ServiceModel;
-using System.Text;
-using System.Xml;
 
 namespace Greg.Xrm.Command.Commands.WebResources
 {
-    public class ApplyIconsCommandExecutor : ICommandExecutor<ApplyIconsCommand>
+	public class ApplyIconsCommandExecutor : ICommandExecutor<ApplyIconsCommand>
 	{
 		private readonly IOutput output;
 		private readonly IOrganizationServiceRepository organizationServiceRepository;
@@ -29,7 +29,7 @@ namespace Greg.Xrm.Command.Commands.WebResources
 			ISolutionRepository solutionRepository,
 			IWebResourceRepository webResourceRepository,
 			IIconFinder iconFinder)
-        {
+		{
 			this.output = output ?? throw new ArgumentNullException(nameof(output));
 			this.organizationServiceRepository = organizationServiceRepository ?? throw new ArgumentNullException(nameof(organizationServiceRepository));
 			this.solutionRepository = solutionRepository ?? throw new ArgumentNullException(nameof(solutionRepository));
@@ -38,7 +38,7 @@ namespace Greg.Xrm.Command.Commands.WebResources
 		}
 
 
-        public async Task<CommandResult> ExecuteAsync(ApplyIconsCommand command, CancellationToken cancellationToken)
+		public async Task<CommandResult> ExecuteAsync(ApplyIconsCommand command, CancellationToken cancellationToken)
 		{
 			this.output.Write($"Connecting to the current dataverse environment...");
 			var crm = await this.organizationServiceRepository.GetCurrentConnectionAsync();
@@ -145,7 +145,7 @@ namespace Greg.Xrm.Command.Commands.WebResources
 					writer.WriteElementString("entity", table.LogicalName);
 					successCount++;
 				}
-				catch(FaultException<OrganizationServiceFault> ex)
+				catch (FaultException<OrganizationServiceFault> ex)
 				{
 					this.output.WriteLine("ERROR", ConsoleColor.Red);
 					this.output.WriteLine(ex.Message, ConsoleColor.Red);
@@ -243,7 +243,7 @@ namespace Greg.Xrm.Command.Commands.WebResources
 
 		private static bool MatchName(string name, string toFind)
 		{
-			if(name.Contains('/'))
+			if (name.Contains('/'))
 			{
 				var imageName = name.Split('/').LastOrDefault();
 				return string.Equals(imageName, toFind + ".svg", StringComparison.OrdinalIgnoreCase);
@@ -289,7 +289,7 @@ namespace Greg.Xrm.Command.Commands.WebResources
 
 				return tables;
 			}
-			catch(Exception ex)
+			catch (Exception ex)
 			{
 				this.output.WriteLine("ERROR", ConsoleColor.Red);
 				this.output.WriteLine(ex.Message, ConsoleColor.Red);

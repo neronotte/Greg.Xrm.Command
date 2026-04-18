@@ -1,15 +1,15 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace Greg.Xrm.Command.Commands.Table
 {
 	[Command("table", "update", HelpText = "Updates the metadata of an existing table.")]
-    public class UpdateCommand : IValidatableObject
+	public class UpdateCommand : IValidatableObject
 	{
-		[Option("schemaName", "sn",	Order =1, HelpText = "The schema name of the table to delete")]
+		[Option("schemaName", "sn", Order = 1, HelpText = "The schema name of the table to delete")]
 		[Required]
 		public string? SchemaName { get; set; }
 
-		[Option("name", "n", Order = 2,	HelpText = "The display name of the table to be created.")]
+		[Option("name", "n", Order = 2, HelpText = "The display name of the table to be created.")]
 		[Required]
 		public string? DisplayName { get; set; }
 
@@ -38,7 +38,7 @@ namespace Greg.Xrm.Command.Commands.Table
 
 
 
-        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+		public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
 		{
 			if (HasFeedback.HasValue && !HasFeedback.Value)
 			{
@@ -56,5 +56,5 @@ namespace Greg.Xrm.Command.Commands.Table
 			}
 
 		}
-    }
+	}
 }

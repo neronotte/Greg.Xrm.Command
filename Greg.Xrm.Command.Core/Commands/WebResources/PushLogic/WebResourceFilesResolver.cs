@@ -1,11 +1,11 @@
-﻿using System.Text;
+using System.Text;
 using Greg.Xrm.Command.Model;
 using Microsoft.Crm.Sdk.Messages;
 
 namespace Greg.Xrm.Command.Commands.WebResources.PushLogic
 {
 
-    public class WebResourceFilesResolver : IWebResourceFilesResolver
+	public class WebResourceFilesResolver : IWebResourceFilesResolver
 	{
 		public const string DataXmlToken = ".data.xml";
 
@@ -33,7 +33,7 @@ namespace Greg.Xrm.Command.Commands.WebResources.PushLogic
 
 					var files1 = ResolveFilesFromFolder(new DirectoryInfo(path), folders.ProjectRootPath);
 					var files2 = ResolveFilesFromFolder(new DirectoryInfo(folders.ProjectRootPath), folders.ProjectRootPath, false, folders.PublisherPrefix + "_*");
-					
+
 					return files1.Union(files2).OrderBy(x => x.RemotePath).ToList();
 				}
 

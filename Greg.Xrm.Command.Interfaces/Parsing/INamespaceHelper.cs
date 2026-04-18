@@ -1,4 +1,4 @@
-﻿using Greg.Xrm.Command.Services;
+using Greg.Xrm.Command.Services;
 
 namespace Greg.Xrm.Command.Parsing
 {
