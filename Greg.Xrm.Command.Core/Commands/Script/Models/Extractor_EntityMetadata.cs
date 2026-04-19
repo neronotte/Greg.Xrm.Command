@@ -8,7 +8,7 @@ namespace Greg.Xrm.Command.Commands.Script.Models
 		public string DisplayName { get; set; } = string.Empty;
 		public string PluralName { get; set; } = string.Empty;
 		public bool IsCustomEntity { get; set; }
-		public List<Extractor_FieldMetadata> Fields { get; set; } = new();
+		public List<AttributeMetadata> Fields { get; set; } = new();
 		public List<Extractor_RelationshipMetadata> Relationships { get; set; } = new();
 		public List<Extractor_OptionSetMetadata> LocalOptionSets { get; set; } = new();
 		public string? PrimaryFieldName { get; set; }
@@ -46,7 +46,7 @@ namespace Greg.Xrm.Command.Commands.Script.Models
 				DisplayName = e.DisplayName?.UserLocalizedLabel?.Label ?? e.LogicalName,
 				PluralName = e.DisplayCollectionName?.UserLocalizedLabel?.Label ?? e.LogicalName,
 				IsCustomEntity = prefixes.Any(pre => e.LogicalName.StartsWith(pre)),
-				Fields = new List<Extractor_FieldMetadata>()
+				Fields = new List<AttributeMetadata>()
 			};
 			var primaryField = e.Attributes?.FirstOrDefault(a => a.LogicalName == e.PrimaryNameAttribute);
 			if (primaryField is StringAttributeMetadata strAttr)
@@ -60,76 +60,77 @@ namespace Greg.Xrm.Command.Commands.Script.Models
 			}
 			foreach (var a in fields)
 			{
-				var field = new Extractor_FieldMetadata
-				{
-					LogicalName = a.LogicalName,
-					DisplayName = a.DisplayName?.UserLocalizedLabel?.Label ?? a.LogicalName,
-					FieldType = NormalizeFieldType(a.AttributeType?.ToString() ?? "String"),
-					RequiredLevel = a.RequiredLevel?.Value.ToString() ?? "None",
-					IsCustomField = prefixes.Any(pre => a.LogicalName.StartsWith(pre)),
-					IsLookup = a.AttributeType == AttributeTypeCode.Lookup || a.AttributeType == AttributeTypeCode.Owner
-				};
-				switch (a)
-				{
-					case StringAttributeMetadata str:
-						field.MaxLength = str.MaxLength;
-						field.Format = str.Format?.ToString() ?? string.Empty;
-						field.AutoNumberFormat = str.AutoNumberFormat;
-						break;
-					case MemoAttributeMetadata memo:
-						field.MaxLength = memo.MaxLength;
-						field.Format = memo.Format?.ToString() ?? string.Empty;
-						break;
-					case IntegerAttributeMetadata integer:
-						field.MinValue = integer.MinValue;
-						field.MaxValue = integer.MaxValue;
-						field.IntegerFormat = integer.Format?.ToString();
-						break;
-					case DecimalAttributeMetadata dec:
-						field.MinValue = (double?)dec.MinValue;
-						field.MaxValue = (double?)dec.MaxValue;
-						field.Precision = dec.Precision;
-						break;
-					case MoneyAttributeMetadata money:
-						field.MinValue = money.MinValue;
-						field.MaxValue = money.MaxValue;
-						field.Precision = money.Precision;
-						field.PrecisionSource = money.PrecisionSource;
-						break;
-					case BooleanAttributeMetadata boolean:
-						field.TrueLabel = boolean.OptionSet?.TrueOption?.Label?.UserLocalizedLabel?.Label;
-						field.FalseLabel = boolean.OptionSet?.FalseOption?.Label?.UserLocalizedLabel?.Label;
-						break;
-					case DateTimeAttributeMetadata dt:
-						field.DateTimeBehavior = dt.DateTimeBehavior?.Value.ToString();
-						field.DateTimeFormat = dt.Format?.ToString();
-						break;
-					case PicklistAttributeMetadata picklist:
-						field.GlobalOptionSetName = picklist.OptionSet?.IsGlobal == true ? picklist.OptionSet.Name : null;
-						field.DefaultValue = picklist.DefaultFormValue;
-						if (picklist.OptionSet?.Options != null)
-						{
-							field.Options = picklist.OptionSet.Options.Select(o => new Extractor_OptionSetOption
-							{
-								Value = o.Value ?? 0,
-								Label = o.Label?.UserLocalizedLabel?.Label ?? string.Empty
-							}).ToList();
-						}
-						break;
-					case MultiSelectPicklistAttributeMetadata multi:
-						field.GlobalOptionSetName = multi.OptionSet?.IsGlobal == true ? multi.OptionSet.Name : null;
-						field.DefaultValue = multi.DefaultFormValue;
-						if (multi.OptionSet?.Options != null)
-						{
-							field.Options = multi.OptionSet.Options.Select(o => new Extractor_OptionSetOption
-							{
-								Value = o.Value ?? 0,
-								Label = o.Label?.UserLocalizedLabel?.Label ?? string.Empty
-							}).ToList();
-						}
-						break;
-				}
-				entity.Fields.Add(field);
+				
+				//var field = new Extractor_FieldMetadata
+				//{
+				//	LogicalName = a.LogicalName,
+				//	DisplayName = a.DisplayName?.UserLocalizedLabel?.Label ?? a.LogicalName,
+				//	FieldType = NormalizeFieldType(a.AttributeType?.ToString() ?? "String"),
+				//	RequiredLevel = a.RequiredLevel?.Value.ToString() ?? "None",
+				//	IsCustomField = prefixes.Any(pre => a.LogicalName.StartsWith(pre)),
+				//	IsLookup = a.AttributeType == AttributeTypeCode.Lookup || a.AttributeType == AttributeTypeCode.Owner
+				//};
+				//switch (a)
+				//{
+				//	case StringAttributeMetadata str:
+				//		field.MaxLength = str.MaxLength;
+				//		field.Format = str.Format?.ToString() ?? string.Empty;
+				//		field.AutoNumberFormat = str.AutoNumberFormat;
+				//		break;
+				//	case MemoAttributeMetadata memo:
+				//		field.MaxLength = memo.MaxLength;
+				//		field.Format = memo.Format?.ToString() ?? string.Empty;
+				//		break;
+				//	case IntegerAttributeMetadata integer:
+				//		field.MinValue = integer.MinValue;
+				//		field.MaxValue = integer.MaxValue;
+				//		field.IntegerFormat = integer.Format?.ToString();
+				//		break;
+				//	case DecimalAttributeMetadata dec:
+				//		field.MinValue = (double?)dec.MinValue;
+				//		field.MaxValue = (double?)dec.MaxValue;
+				//		field.Precision = dec.Precision;
+				//		break;
+				//	case MoneyAttributeMetadata money:
+				//		field.MinValue = money.MinValue;
+				//		field.MaxValue = money.MaxValue;
+				//		field.Precision = money.Precision;
+				//		field.PrecisionSource = money.PrecisionSource;
+				//		break;
+				//	case BooleanAttributeMetadata boolean:
+				//		field.TrueLabel = boolean.OptionSet?.TrueOption?.Label?.UserLocalizedLabel?.Label;
+				//		field.FalseLabel = boolean.OptionSet?.FalseOption?.Label?.UserLocalizedLabel?.Label;
+				//		break;
+				//	case DateTimeAttributeMetadata dt:
+				//		field.DateTimeBehavior = dt.DateTimeBehavior?.Value.ToString();
+				//		field.DateTimeFormat = dt.Format?.ToString();
+				//		break;
+				//	case PicklistAttributeMetadata picklist:
+				//		field.GlobalOptionSetName = picklist.OptionSet?.IsGlobal == true ? picklist.OptionSet.Name : null;
+				//		field.DefaultValue = picklist.DefaultFormValue;
+				//		if (picklist.OptionSet?.Options != null)
+				//		{
+				//			field.Options = picklist.OptionSet.Options.Select(o => new Extractor_OptionSetOption
+				//			{
+				//				Value = o.Value ?? 0,
+				//				Label = o.Label?.UserLocalizedLabel?.Label ?? string.Empty
+				//			}).ToList();
+				//		}
+				//		break;
+				//	case MultiSelectPicklistAttributeMetadata multi:
+				//		field.GlobalOptionSetName = multi.OptionSet?.IsGlobal == true ? multi.OptionSet.Name : null;
+				//		field.DefaultValue = multi.DefaultFormValue;
+				//		if (multi.OptionSet?.Options != null)
+				//		{
+				//			field.Options = multi.OptionSet.Options.Select(o => new Extractor_OptionSetOption
+				//			{
+				//				Value = o.Value ?? 0,
+				//				Label = o.Label?.UserLocalizedLabel?.Label ?? string.Empty
+				//			}).ToList();
+				//		}
+				//		break;
+				//}
+				entity.Fields.Add(a);
 			}
 			return entity;
 		}

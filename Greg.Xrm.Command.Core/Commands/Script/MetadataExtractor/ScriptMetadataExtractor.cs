@@ -8,18 +8,12 @@ using Microsoft.Xrm.Sdk.Query;
 
 namespace Greg.Xrm.Command.Commands.Script.MetadataExtractor
 {
-	public class ScriptMetadataExtractor : IScriptMetadataExtractor
+	public class ScriptMetadataExtractor(
+		IOrganizationServiceRepository organizationServiceRepository,
+		IScriptBuilder scriptBuilder) : IScriptMetadataExtractor
 	{
-		private readonly IOrganizationServiceRepository organizationServiceRepository;
-		private readonly IScriptBuilder scriptBuilder;
 		private RetrieveAllEntitiesResponse? cachedAllEntitiesResponse;
 		private Task<RetrieveAllEntitiesResponse>? cachedAllEntitiesTask;
-
-		public ScriptMetadataExtractor(IOrganizationServiceRepository organizationServiceRepository, IScriptBuilder scriptBuilder)
-		{
-			this.organizationServiceRepository = organizationServiceRepository;
-			this.scriptBuilder = scriptBuilder;
-		}
 
 		private async Task<RetrieveAllEntitiesResponse> GetAllEntitiesResponseAsync()
 		{
@@ -38,11 +32,16 @@ namespace Greg.Xrm.Command.Commands.Script.MetadataExtractor
 			return cachedAllEntitiesResponse;
 		}
 
+
+
 		public async Task<List<Extractor_EntityMetadata>> GetEntitiesByPrefixAsync(List<string> prefixes)
 		{
 			var response = await GetAllEntitiesResponseAsync();
 			return Extractor_EntityMetadata.ExtractEntitiesByPrefix(response.EntityMetadata, prefixes);
 		}
+
+
+
 
 		public async Task<List<Extractor_EntityMetadata>> GetEntitiesBySolutionAsync(string solutionName, List<string> prefixes)
 		{
@@ -60,6 +59,9 @@ namespace Greg.Xrm.Command.Commands.Script.MetadataExtractor
 			return Extractor_EntityMetadata.ExtractEntitiesBySolution(response.EntityMetadata, entityIds, prefixes);
 		}
 
+
+
+
 		private async Task<Guid> GetSolutionIdAsync(IOrganizationServiceAsync2 crm, string solutionName)
 		{
 			var query = new QueryExpression("solution")
@@ -73,6 +75,8 @@ namespace Greg.Xrm.Command.Commands.Script.MetadataExtractor
 			if (solution == null) throw new Exception($"Solution not found: {solutionName}");
 			return (Guid)solution["solutionid"];
 		}
+
+
 
 		public async Task<Extractor_EntityMetadata?> GetTableAsync(string tableName, List<string> prefixes)
 		{

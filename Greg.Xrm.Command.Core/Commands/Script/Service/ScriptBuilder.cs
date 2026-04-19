@@ -3,67 +3,92 @@ using System.Text;
 using CsvHelper;
 using CsvHelper.Configuration;
 using Greg.Xrm.Command.Commands.Script.Models;
+using Greg.Xrm.Command.Commands.Script.Service.ColumnScriptGenerators;
+using Microsoft.Xrm.Sdk.Metadata;
 
 namespace Greg.Xrm.Command.Commands.Script.Service
 {
 	public class ScriptBuilder : IScriptBuilder
 	{
-		private static void AppendCustomColumns(StringBuilder script, Extractor_EntityMetadata entity)
+		private const char Hash = '#';
+
+		private static void AppendCustomColumns(StringBuilder script, Extractor_EntityMetadata entity, List<string> prefixes)
 		{
-			var lookupNames = entity.Fields.Where(f => f.IsCustomField && f.IsLookup).Select(f => f.LogicalName).ToHashSet();
 			var customFields = entity.Fields
-				.Where(f => f.IsCustomField && !f.IsLookup)
-				.Where(f => !(f.LogicalName.EndsWith("name") && lookupNames.Contains(f.LogicalName.Substring(0, f.LogicalName.Length - 4))))
+				.Where(f => f.IsCustomAttribute.GetValueOrDefault()
+					&& f.AttributeType != AttributeTypeCode.Lookup
+					&& f.AttributeType != AttributeTypeCode.Owner
+					&& f.AttributeType != AttributeTypeCode.Virtual
+					&& f.AttributeType != AttributeTypeCode.State
+					&& f.AttributeType != AttributeTypeCode.Status)
+				//.Where(f => !(f.LogicalName.EndsWith("name") && lookupNames.Contains(f.LogicalName.Substring(0, f.LogicalName.Length - 4))))
+				.Where(f => prefixes.Any(p => f.LogicalName.StartsWith(p, StringComparison.OrdinalIgnoreCase)))
 				.OrderBy(f => f.LogicalName)
 				.ToList();
 
-			if (customFields.Any())
+			if (customFields.Count == 0) return;
+
+
+			var factory = new ScriptGeneratorFactory();
+			
+			script.AppendLine();
+			script.AppendLine($"# ===== {entity.SchemaName.ToUpper()} COLUMNS =====");
+			foreach (var field in customFields)
 			{
+				var generator = factory.CreateFor(field);
+				generator.GenerateScript(script);
+
 				script.AppendLine();
-				script.AppendLine($"# ===== {entity.SchemaName.ToUpper()} COLUMNS =====");
-				foreach (var field in customFields)
+			}
+		}
+
+		private static void AppendStandardColumns(StringBuilder commentedSection, Extractor_EntityMetadata entity, List<string> prefixes)
+		{
+			var standardFields = entity.Fields
+				.Where(f =>
+					f.AttributeType != AttributeTypeCode.Lookup
+					&& f.AttributeType != AttributeTypeCode.Owner
+					&& f.AttributeType != AttributeTypeCode.Virtual
+					&& f.AttributeType != AttributeTypeCode.State
+					&& f.AttributeType != AttributeTypeCode.Status)
+				//.Where(f => !(f.LogicalName.EndsWith("name") && lookupNames.Contains(f.LogicalName.Substring(0, f.LogicalName.Length - 4))))
+				.Where(f => !prefixes.Any(p => f.LogicalName.StartsWith(p, StringComparison.OrdinalIgnoreCase)))
+				.OrderBy(f => f.LogicalName)
+				.ToList();
+
+			if (standardFields.Count == 0) return;
+
+			var factory = new ScriptGeneratorFactory();
+
+			commentedSection.AppendLine();
+			commentedSection.AppendLine($"# ===== {entity.SchemaName.ToUpper()} STANDARD COLUMNS =====");
+			foreach (var field in standardFields)
+			{
+				var script = new StringBuilder("#");
+
+				var generator = factory.CreateFor(field);
+				generator.GenerateScript(script);
+
+				var lines = script.ToString().Split(Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
+				foreach (var line in lines.Select(x => x.Trim()))
 				{
-					var prefix = field.FieldType == "Uniqueidentifier" ? "# " : string.Empty;
-					script.Append($"{prefix}pacx column create --table \"{entity.SchemaName}\" --name \"{field.DisplayName}\" --schemaName \"{field.LogicalName}\" --type \"{field.FieldType}\"");
-					if (field.MaxLength.HasValue)
-						script.Append($" --len {field.MaxLength.Value}");
-					if (!string.IsNullOrEmpty(field.Format))
-						script.Append($" --stringFormat \"{field.Format}\"");
-					if (!string.IsNullOrEmpty(field.AutoNumberFormat))
-						script.Append($" --autoNumber \"{field.AutoNumberFormat}\"");
-					if (!string.IsNullOrEmpty(field.IntegerFormat))
-						script.Append($" --intFormat \"{field.IntegerFormat}\"");
-					if (!string.IsNullOrEmpty(field.RequiredLevel))
-						script.Append($" --requiredLevel \"{field.RequiredLevel}\"");
-					if (field.MinValue.HasValue)
-						script.Append($" --min {field.MinValue.Value}");
-					if (field.MaxValue.HasValue)
-						script.Append($" --max {field.MaxValue.Value}");
-					if (field.Precision.HasValue)
-						script.Append($" --precision {field.Precision.Value}");
-					if (field.PrecisionSource.HasValue)
-						script.Append($" --precisionSource {field.PrecisionSource.Value}");
-					if (!string.IsNullOrEmpty(field.DateTimeBehavior))
-						script.Append($" --dateTimeBehavior \"{field.DateTimeBehavior}\"");
-					if (!string.IsNullOrEmpty(field.DateTimeFormat))
-						script.Append($" --dateTimeFormat \"{field.DateTimeFormat}\"");
-					if (!string.IsNullOrEmpty(field.TrueLabel))
-						script.Append($" --trueLabel \"{field.TrueLabel}\"");
-					if (!string.IsNullOrEmpty(field.FalseLabel))
-						script.Append($" --falseLabel \"{field.FalseLabel}\"");
-					if (!string.IsNullOrEmpty(field.GlobalOptionSetName))
-						script.Append($" --globalOptionSetName \"{field.GlobalOptionSetName}\"");
-					if (field.DefaultValue != null)
-						script.Append($" --defaultValue {field.DefaultValue}");
-					if (field.Options != null && field.Options.Any())
+					if (!line.StartsWith(Hash))
 					{
-						var options = string.Join(",", field.Options.Select(o => $"{o.Label}:{o.Value}"));
-						script.Append($" --options \"{options}\"");
+						commentedSection.Append(Hash);
+						commentedSection.Append(' ');
 					}
-					script.AppendLine();
+
+					commentedSection.AppendLine(line);
 				}
 			}
 		}
+
+
+
+
+
+
+
 
 		private void AppendTableCreate(StringBuilder script, Extractor_EntityMetadata entity)
 		{
@@ -117,62 +142,6 @@ namespace Greg.Xrm.Command.Commands.Script.Service
 			AppendTableCreate(sb, entity);
 			foreach (var line in sb.ToString().Split('\n'))
 				commentedSection.AppendLine("# " + line.TrimEnd());
-		}
-
-		private static void AppendStandardColumns(StringBuilder commentedSection, Extractor_EntityMetadata entity)
-		{
-			var lookupNames = entity.Fields.Where(f => f.IsLookup).Select(f => f.LogicalName).ToHashSet();
-			var standardFields = entity.Fields
-				.Where(f => !f.IsCustomField && !f.IsLookup)
-				.Where(f => !(f.LogicalName.EndsWith("name") && lookupNames.Contains(f.LogicalName.Substring(0, f.LogicalName.Length - 4))))
-				.OrderBy(f => f.LogicalName)
-				.ToList();
-			if (standardFields.Any())
-			{
-				commentedSection.AppendLine();
-				commentedSection.AppendLine($"# ===== {entity.SchemaName.ToUpper()} STANDARD COLUMNS =====");
-				foreach (var field in standardFields)
-				{
-					var script = new StringBuilder();
-					script.Append($"pacx column create --table \"{entity.SchemaName}\" --name \"{field.DisplayName}\" --schemaName \"{field.LogicalName}\" --type \"{field.FieldType}\"");
-					if (field.MaxLength.HasValue)
-						script.Append($" --len {field.MaxLength.Value}");
-					if (!string.IsNullOrEmpty(field.Format))
-						script.Append($" --stringFormat \"{field.Format}\"");
-					if (!string.IsNullOrEmpty(field.AutoNumberFormat))
-						script.Append($" --autoNumber \"{field.AutoNumberFormat}\"");
-					if (!string.IsNullOrEmpty(field.IntegerFormat))
-						script.Append($" --intFormat \"{field.IntegerFormat}\"");
-					if (!string.IsNullOrEmpty(field.RequiredLevel))
-						script.Append($" --requiredLevel \"{field.RequiredLevel}\"");
-					if (field.MinValue.HasValue)
-						script.Append($" --min {field.MinValue.Value}");
-					if (field.MaxValue.HasValue)
-						script.Append($" --max {field.MaxValue.Value}");
-					if (field.Precision.HasValue)
-						script.Append($" --precision {field.Precision.Value}");
-					if (field.PrecisionSource.HasValue)
-						script.Append($" --precisionSource {field.PrecisionSource.Value}");
-					if (!string.IsNullOrEmpty(field.DateTimeBehavior))
-						script.Append($" --dateTimeBehavior \"{field.DateTimeBehavior}\"");
-					if (!string.IsNullOrEmpty(field.DateTimeFormat))
-						script.Append($" --dateTimeFormat \"{field.DateTimeFormat}\"");
-					if (!string.IsNullOrEmpty(field.TrueLabel))
-						script.Append($" --trueLabel \"{field.TrueLabel}\"");
-					if (!string.IsNullOrEmpty(field.FalseLabel))
-						script.Append($" --falseLabel \"{field.FalseLabel}\"");
-					if (!string.IsNullOrEmpty(field.GlobalOptionSetName))
-						script.Append($" --globalOptionSetName \"{field.GlobalOptionSetName}\"");
-					if (field.DefaultValue != null)
-						script.Append($" --defaultValue {field.DefaultValue}");
-					if (field.Options != null && field.Options.Any())
-					{
-						var options = string.Join(",", field.Options.Select(o => $"{o.Label}:{o.Value}"));
-						script.Append($" --options \"{options}\"");
-					}
-					commentedSection.AppendLine("# " + script.ToString());
-				}
-			}
 		}
 
 		private static void AppendStandardRelationships(StringBuilder commentedSection, IEnumerable<Extractor_RelationshipMetadata> relationships, List<string> customPrefixes, HashSet<string> customEntityNames, HashSet<string> allEntityNames, string? entityNameFilter = null)
@@ -286,8 +255,21 @@ namespace Greg.Xrm.Command.Commands.Script.Service
 			{
 				if (nnIntersectEntities.Contains(entity.SchemaName))
 					continue;
-				AppendCustomColumns(script, entity);
-				AppendStandardColumns(commentedSection, entity);
+				AppendCustomColumns(script, entity, prefixes);
+
+
+
+				var state = entity.Fields.OfType<StateAttributeMetadata>().FirstOrDefault();
+				var status = entity.Fields.OfType<StatusAttributeMetadata>().FirstOrDefault();
+
+				if (state != null && status != null)
+				{
+					var generator = new ColumnScriptGeneratorForStatus(status, state);
+					generator.GenerateScript(script);
+					script.AppendLine();
+				}
+
+				AppendStandardColumns(commentedSection, entity, prefixes);
 			}
 			script.AppendLine();
 			script.AppendLine("# 3. CREATE ALL RELATIONSHIPS");

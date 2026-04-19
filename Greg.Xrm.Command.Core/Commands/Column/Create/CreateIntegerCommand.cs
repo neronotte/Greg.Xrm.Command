@@ -18,9 +18,6 @@ namespace Greg.Xrm.Command.Commands.Column.Create
 		[Option("intFormat", "if", Order = 13, HelpText = "For whole number type columns indicates the integer format for the column.(default: None)")]
 		public IntegerFormat IntegerFormat { get; set; } = IntegerFormat.None;
 
-		[Option("imeMode", "ime", Order = 20, HelpText = "Indicates the input method editor (IME) mode for the column.", DefaultValue = ImeMode.Disabled)]
-		public ImeMode ImeMode { get; set; } = ImeMode.Disabled;
-
 		public void WriteUsageExamples(MarkdownWriter writer)
 		{
 			writer.WriteCodeBlock(@"# Creates a simple integer column
