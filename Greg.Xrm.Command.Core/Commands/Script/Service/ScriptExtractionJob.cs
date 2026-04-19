@@ -35,6 +35,9 @@ namespace Greg.Xrm.Command.Commands.Script.Service
 			this.preloadedEntities = preloadedEntities;
 		}
 
+
+
+
         public async Task<CommandResult> RunAsync()
         {
             List<Extractor_EntityMetadata> entities;
@@ -65,6 +68,9 @@ namespace Greg.Xrm.Command.Commands.Script.Service
                     output.WriteLine($"  - {rel.Name}: {rel.FirstEntity} <-> {rel.SecondEntity}");
             }
             output.WriteLine();
+
+
+
 
 			Directory.CreateDirectory(outputDir);
 
