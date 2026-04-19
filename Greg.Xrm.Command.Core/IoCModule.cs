@@ -35,10 +35,10 @@ namespace Greg.Xrm.Command
 			builder.RegisterType<SavedQuery.Repository>().As<ISavedQueryRepository>();
 			builder.RegisterType<UserQuery.Repository>().As<IUserQueryRepository>();
 			builder.RegisterType<ScriptExtractionService>().As<IScriptExtractionService>();
-      builder.RegisterType<ScriptMetadataExtractor>().As<IScriptMetadataExtractor>();
-      builder.RegisterType<ScriptBuilder>().As<IScriptBuilder>();
+			builder.RegisterType<ScriptMetadataExtractor>().As<IScriptMetadataExtractor>();
+			builder.RegisterType<ScriptBuilder>().As<IScriptBuilder>();
 			builder.RegisterType<ConstantsGeneratorService>().As<IConstantsGeneratorService>();
-      builder.RegisterType<Commands.Settings.Model.SettingDefinition.Repository>().As<Commands.Settings.Model.ISettingDefinitionRepository>();
+			builder.RegisterType<Commands.Settings.Model.SettingDefinition.Repository>().As<Commands.Settings.Model.ISettingDefinitionRepository>();
 			builder.RegisterType<Commands.Settings.Model.OrganizationSetting.Repository>().As<Commands.Settings.Model.IOrganizationSettingRepository>();
 			builder.RegisterType<Commands.Settings.Model.AppSetting.Repository>().As<Commands.Settings.Model.IAppSettingRepository>();
 			builder.RegisterType<Commands.Settings.Imports.ImportStrategyFactory>().As<Commands.Settings.Imports.IImportStrategyFactory>();
