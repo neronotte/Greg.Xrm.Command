@@ -18,6 +18,7 @@ namespace Greg.Xrm.Command
 		EntityKey = 14,
 		Privilege = 16,
 		PrivilegeObjectTypeCode = 17,
+		Index = 18,
 		Role = 20,
 		RolePrivilege = 21,
 		DisplayString = 22,
@@ -51,6 +52,9 @@ namespace Greg.Xrm.Command
 		SiteMap = 62,
 		ConnectionRole = 63,
 		ComplexControl = 64,
+		HierarchyRule = 65,
+		CustomControl = 66,
+		CustomControlDefaultConfig = 68,
 		FieldSecurityProfile = 70,
 		FieldPermission = 71,
 		AppModule = 80,
@@ -65,12 +69,9 @@ namespace Greg.Xrm.Command
 		SLAItem = 153,
 		ConvertRule = 154,
 		ConvertRuleItem = 155,
-		HierarchyRule = 65,
 		MobileOfflineProfile = 161,
 		MobileOfflineProfileItem = 162,
 		SimilarityRule = 165,
-		CustomControl = 66,
-		CustomControlDefaultConfig = 68,
 		DataSourceMapping = 166,
 		SDKMessage = 201,
 		SDKMessageFilter = 202,
@@ -80,7 +81,6 @@ namespace Greg.Xrm.Command
 		SdkMessageResponse = 206,
 		SdkMessageResponseField = 207,
 		WebWizard = 210,
-		Index = 18,
 		ImportMap = 208,
 		CanvasApp = 300,
 		Connector = 371,
@@ -93,10 +93,14 @@ namespace Greg.Xrm.Command
 		EntityAnalyticsConfiguration = 430,
 		AttributeImageConfiguration = 431,
 		EntityImageConfiguration = 432,
+		TeamTemplate = 511,
 		SettingDefinition = 10059,
 		/// <summary>
 		/// OrganizationSetting
 		/// </summary>
-		OrganizationSetting = 10058
+		OrganizationSetting = 10058,
+		SiteComponent = 10402,
+		Site = 10403,
+		SiteLanguage = 10404,
 	}
 }

@@ -53,6 +53,24 @@ namespace Greg.Xrm.Command.Model
 
 		public class Repository : ISolutionComponentRepository
 		{
+			public async Task<SolutionComponent?> GetBySolutionIdAndObjectIdAsync(IOrganizationServiceAsync2 crm, Guid solutionId, Guid objectId)
+			{
+				var query = new QueryExpression("solutioncomponent");
+				query.ColumnSet.AddColumns("componenttype", "rootsolutioncomponentid", "solutionid", "objectid", "ismetadata");
+				query.Criteria.AddCondition("solutionid", ConditionOperator.Equal, solutionId);
+				query.Criteria.AddCondition("objectid", ConditionOperator.Equal, objectId);
+
+				var link = query.AddLink("solutioncomponentdefinition", "componenttype", "solutioncomponenttype", JoinOperator.LeftOuter);
+				link.EntityAlias = "scd";
+				link.Columns.AddColumns("name", "primaryentityname", "objecttypecode");
+				query.TopCount = 1;
+
+				var result = await crm.RetrieveMultipleAsync(query);
+
+				var component = result.Entities.Select(e => new SolutionComponent(e)).FirstOrDefault();
+				return component;
+			}
+
 			public async Task<List<SolutionComponent>> GetBySolutionIdAsync(IOrganizationServiceAsync2 crm, Guid solutionId)
 			{
 				var query = new QueryExpression("solutioncomponent");

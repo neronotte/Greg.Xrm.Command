@@ -1,6 +1,5 @@
 using Greg.Xrm.Command.Services.Connection;
 using Microsoft.PowerPlatform.Dataverse.Client;
-using Moq;
 
 namespace Greg.Xrm.Command.Commands
 {
