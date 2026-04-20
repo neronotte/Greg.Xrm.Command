@@ -43,23 +43,6 @@ namespace Greg.Xrm.Command.Parsing
 
 
 			var commandDefinition = this.registry.Commands.FirstOrDefault(c => c.IsMatch(runArgs.Verbs));
-			if (commandDefinition is null
-				&& runArgs.Options.Count == 0
-				&& runArgs.Verbs.Count == 3
-				&& string.Equals(runArgs.Verbs[0], "usersettings", StringComparison.OrdinalIgnoreCase)
-				&& string.Equals(runArgs.Verbs[1], "changelanguage", StringComparison.OrdinalIgnoreCase)
-				&& int.TryParse(runArgs.Verbs[2], out _))
-			{
-				var verbs = new List<string> { runArgs.Verbs[0], runArgs.Verbs[1] };
-				var options = new Dictionary<string, string>
-				{
-					["--lcid"] = runArgs.Verbs[2]
-				};
-
-				runArgs = new CommandRunArgs(verbs, options);
-				commandDefinition = this.registry.Commands.FirstOrDefault(c => c.IsMatch(runArgs.Verbs));
-			}
-
 			if (commandDefinition is null)
 			{
 				var lastMatchingVerb = this.registry.Tree.FindNode(runArgs.Verbs);
