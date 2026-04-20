@@ -129,8 +129,8 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 	}
 
 	/// <summary>
-	/// Registry of all writable usersettings fields exposed by the 'pacx usersettings set' command.
-	/// Field descriptions are based on:
+	/// Registry of all usersettings fields exposed by the 'pacx usersettings set' and 'pacx usersettings list' commands.
+	/// Field names match the official Dataverse usersettings entity schema:
 	/// https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/reference/usersettings
 	/// </summary>
 	public static class UserSettingRegistry
@@ -198,20 +198,6 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 					MinValue = 0,
 					HelpText = "Windows time zone code. Common values: 85=UTC, 110=Romance (Paris/Rome/Madrid), 35=Eastern (US). See https://learn.microsoft.com/en-us/windows-hardware/manufacture/desktop/default-time-zones for codes."
 				},
-				["workdaysstarttime"] = new UserSettingDefinition()
-				{
-					FieldName = "workdaysstarttime",
-					DisplayName = "Work Day Start Time",
-					FieldType = UserSettingFieldType.Time,
-					HelpText = "Start of the user's work day in HH:mm format (e.g. 08:00)."
-				},
-				["workdaystoptime"] = new UserSettingDefinition()
-				{
-					FieldName = "workdaystoptime",
-					DisplayName = "Work Day Stop Time",
-					FieldType = UserSettingFieldType.Time,
-					HelpText = "End of the user's work day in HH:mm format (e.g. 17:00)."
-				},
 
 				// ── Full-name convention ──────────────────────────────────────────────────
 				["fullnameconventioncode"] = new UserSettingDefinition()
@@ -247,10 +233,10 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 					},
 					HelpText = "Number grouping style: 0=1,234  1=1.234  2=1 234  3=1'234."
 				},
-				["negativenumberformatcode"] = new UserSettingDefinition()
+				["negativeformatcode"] = new UserSettingDefinition()
 				{
-					FieldName = "negativenumberformatcode",
-					DisplayName = "Negative Number Format",
+					FieldName = "negativeformatcode",
+					DisplayName = "Negative Format",
 					FieldType = UserSettingFieldType.Picklist,
 					AllowedValues = new Dictionary<int, string>
 					{
@@ -421,47 +407,12 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 					FieldType = UserSettingFieldType.Boolean,
 					HelpText = "Whether to sync the parent account name to the Outlook contact Company field. Accepts true/false, 1/0, yes/no."
 				},
-				["usecrmformforappointment"] = new UserSettingDefinition()
+				["autocreatecontactonpromote"] = new UserSettingDefinition()
 				{
-					FieldName = "usecrmformforappointment",
-					DisplayName = "Use Dynamics 365 Form for Appointment",
+					FieldName = "autocreatecontactonpromote",
+					DisplayName = "Auto-create Contact on Promote",
 					FieldType = UserSettingFieldType.Boolean,
-					HelpText = "Open appointments using the Dynamics 365 form instead of the Outlook form. Accepts true/false, 1/0, yes/no."
-				},
-				["usecrmformforcontact"] = new UserSettingDefinition()
-				{
-					FieldName = "usecrmformforcontact",
-					DisplayName = "Use Dynamics 365 Form for Contact",
-					FieldType = UserSettingFieldType.Boolean,
-					HelpText = "Open contacts using the Dynamics 365 form instead of the Outlook form. Accepts true/false, 1/0, yes/no."
-				},
-				["usecrmformforemail"] = new UserSettingDefinition()
-				{
-					FieldName = "usecrmformforemail",
-					DisplayName = "Use Dynamics 365 Form for Email",
-					FieldType = UserSettingFieldType.Boolean,
-					HelpText = "Open emails using the Dynamics 365 form instead of the Outlook form. Accepts true/false, 1/0, yes/no."
-				},
-				["usecrmformfortask"] = new UserSettingDefinition()
-				{
-					FieldName = "usecrmformfortask",
-					DisplayName = "Use Dynamics 365 Form for Task",
-					FieldType = UserSettingFieldType.Boolean,
-					HelpText = "Open tasks using the Dynamics 365 form instead of the Outlook form. Accepts true/false, 1/0, yes/no."
-				},
-				["createcontactonresolve"] = new UserSettingDefinition()
-				{
-					FieldName = "createcontactonresolve",
-					DisplayName = "Create Contact on Email Resolve",
-					FieldType = UserSettingFieldType.Boolean,
-					HelpText = "Automatically create a contact when resolving an email from an unknown sender. Accepts true/false, 1/0, yes/no."
-				},
-				["autocreaterecontactsonresolve"] = new UserSettingDefinition()
-				{
-					FieldName = "autocreaterecontactsonresolve",
-					DisplayName = "Auto-create Related Contacts on Resolve",
-					FieldType = UserSettingFieldType.Boolean,
-					HelpText = "Automatically create related contacts when resolving an email from an unknown sender. Accepts true/false, 1/0, yes/no."
+					HelpText = "Automatically create a contact when an email is promoted to Dataverse. Accepts true/false, 1/0, yes/no."
 				},
 			};
 	}
