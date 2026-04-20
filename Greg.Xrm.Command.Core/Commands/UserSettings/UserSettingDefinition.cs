@@ -139,21 +139,21 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 			new Dictionary<string, UserSettingDefinition>(StringComparer.OrdinalIgnoreCase)
 			{
 				// ── Language / locale ─────────────────────────────────────────────────────
-				["uilanguageid"] = new()
+				["uilanguageid"] = new UserSettingDefinition()
 				{
 					FieldName = "uilanguageid",
 					DisplayName = "UI Language",
 					FieldType = UserSettingFieldType.Language,
 					HelpText = "LCID of the language shown in the user interface (e.g. 1033=English, 1040=Italian). The language must be provisioned in Dataverse."
 				},
-				["helplanguageid"] = new()
+				["helplanguageid"] = new UserSettingDefinition()
 				{
 					FieldName = "helplanguageid",
 					DisplayName = "Help Language",
 					FieldType = UserSettingFieldType.Language,
 					HelpText = "LCID of the language used for help content. The language must be provisioned in Dataverse."
 				},
-				["localeid"] = new()
+				["localeid"] = new UserSettingDefinition()
 				{
 					FieldName = "localeid",
 					DisplayName = "Locale",
@@ -162,7 +162,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 				},
 
 				// ── Date / time ───────────────────────────────────────────────────────────
-				["dateformatcode"] = new()
+				["dateformatcode"] = new UserSettingDefinition()
 				{
 					FieldName = "dateformatcode",
 					DisplayName = "Date Format",
@@ -178,7 +178,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 					},
 					HelpText = "Short date format: 0=MM/DD/YYYY, 1=DD/MM/YYYY, 2=DD-MMM-YYYY, 3=DD/MM/YYYY (locale), 4=YYYY/MM/DD, 5=YYYY-MM-DD."
 				},
-				["timeformatcode"] = new()
+				["timeformatcode"] = new UserSettingDefinition()
 				{
 					FieldName = "timeformatcode",
 					DisplayName = "Time Format",
@@ -190,7 +190,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 					},
 					HelpText = "Time display format: 0=12-hour (AM/PM), 1=24-hour."
 				},
-				["timezonecode"] = new()
+				["timezonecode"] = new UserSettingDefinition()
 				{
 					FieldName = "timezonecode",
 					DisplayName = "Time Zone",
@@ -198,14 +198,14 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 					MinValue = 0,
 					HelpText = "Windows time zone code. Common values: 85=UTC, 110=Romance (Paris/Rome/Madrid), 35=Eastern (US). See https://learn.microsoft.com/en-us/windows-hardware/manufacture/desktop/default-time-zones for codes."
 				},
-				["workdaysstarttime"] = new()
+				["workdaysstarttime"] = new UserSettingDefinition()
 				{
 					FieldName = "workdaysstarttime",
 					DisplayName = "Work Day Start Time",
 					FieldType = UserSettingFieldType.Time,
 					HelpText = "Start of the user's work day in HH:mm format (e.g. 08:00)."
 				},
-				["workdaystoptime"] = new()
+				["workdaystoptime"] = new UserSettingDefinition()
 				{
 					FieldName = "workdaystoptime",
 					DisplayName = "Work Day Stop Time",
@@ -214,7 +214,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 				},
 
 				// ── Full-name convention ──────────────────────────────────────────────────
-				["fullnameconventioncode"] = new()
+				["fullnameconventioncode"] = new UserSettingDefinition()
 				{
 					FieldName = "fullnameconventioncode",
 					DisplayName = "Full Name Convention",
@@ -233,7 +233,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 				},
 
 				// ── Number formatting ─────────────────────────────────────────────────────
-				["numberformatcode"] = new()
+				["numberformatcode"] = new UserSettingDefinition()
 				{
 					FieldName = "numberformatcode",
 					DisplayName = "Number Format",
@@ -247,7 +247,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 					},
 					HelpText = "Number grouping style: 0=1,234  1=1.234  2=1 234  3=1'234."
 				},
-				["negativenumberformatcode"] = new()
+				["negativenumberformatcode"] = new UserSettingDefinition()
 				{
 					FieldName = "negativenumberformatcode",
 					DisplayName = "Negative Number Format",
@@ -262,7 +262,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 					},
 					HelpText = "Negative number display: 0=(X)  1=-X  2=- X  3=X-  4=X -."
 				},
-				["decimalsymbol"] = new()
+				["decimalsymbol"] = new UserSettingDefinition()
 				{
 					FieldName = "decimalsymbol",
 					DisplayName = "Decimal Symbol",
@@ -270,7 +270,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 					MaxLength = 5,
 					HelpText = "Character used as the decimal separator (e.g. '.' or ',')."
 				},
-				["numberseparator"] = new()
+				["numberseparator"] = new UserSettingDefinition()
 				{
 					FieldName = "numberseparator",
 					DisplayName = "Number Separator (Thousands)",
@@ -278,7 +278,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 					MaxLength = 5,
 					HelpText = "Character used as the thousands separator (e.g. ',' or '.')."
 				},
-				["pricingdecimalprecision"] = new()
+				["pricingdecimalprecision"] = new UserSettingDefinition()
 				{
 					FieldName = "pricingdecimalprecision",
 					DisplayName = "Pricing Decimal Precision",
@@ -289,7 +289,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 				},
 
 				// ── Currency formatting ───────────────────────────────────────────────────
-				["currencyformatcode"] = new()
+				["currencyformatcode"] = new UserSettingDefinition()
 				{
 					FieldName = "currencyformatcode",
 					DisplayName = "Currency Format",
@@ -303,7 +303,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 					},
 					HelpText = "Currency symbol position: 0=$X  1=X$  2=$ X  3=X $."
 				},
-				["negativecurrencyformatcode"] = new()
+				["negativecurrencyformatcode"] = new UserSettingDefinition()
 				{
 					FieldName = "negativecurrencyformatcode",
 					DisplayName = "Negative Currency Format",
@@ -317,7 +317,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 					},
 					HelpText = "Negative currency display: 0=($X)  1=-$X  2=$-X  3=$X-."
 				},
-				["currencysymbol"] = new()
+				["currencysymbol"] = new UserSettingDefinition()
 				{
 					FieldName = "currencysymbol",
 					DisplayName = "Currency Symbol",
@@ -327,7 +327,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 				},
 
 				// ── Paging ────────────────────────────────────────────────────────────────
-				["paginglimit"] = new()
+				["paginglimit"] = new UserSettingDefinition()
 				{
 					FieldName = "paginglimit",
 					DisplayName = "Paging Limit",
@@ -337,7 +337,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 				},
 
 				// ── Email / tracking ─────────────────────────────────────────────────────
-				["incomingemailfilteringmethod"] = new()
+				["incomingemailfilteringmethod"] = new UserSettingDefinition()
 				{
 					FieldName = "incomingemailfilteringmethod",
 					DisplayName = "Incoming Email Filtering Method",
@@ -351,7 +351,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 					},
 					HelpText = "Which incoming emails to track: 0=All, 1=InResponse, 2=FromLeadsContactsAccounts, 3=None."
 				},
-				["ignoreunsolicitedemail"] = new()
+				["ignoreunsolicitedemail"] = new UserSettingDefinition()
 				{
 					FieldName = "ignoreunsolicitedemail",
 					DisplayName = "Ignore Unsolicited Email",
@@ -360,7 +360,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 				},
 
 				// ── Script errors ─────────────────────────────────────────────────────────
-				["reportscripterrors"] = new()
+				["reportscripterrors"] = new UserSettingDefinition()
 				{
 					FieldName = "reportscripterrors",
 					DisplayName = "Report Script Errors",
@@ -375,7 +375,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 				},
 
 				// ── Advanced Find ─────────────────────────────────────────────────────────
-				["advancedfindstartupmode"] = new()
+				["advancedfindstartupmode"] = new UserSettingDefinition()
 				{
 					FieldName = "advancedfindstartupmode",
 					DisplayName = "Advanced Find Startup Mode",
@@ -389,7 +389,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 				},
 
 				// ── Sync intervals ────────────────────────────────────────────────────────
-				["offlinesyncinterval"] = new()
+				["offlinesyncinterval"] = new UserSettingDefinition()
 				{
 					FieldName = "offlinesyncinterval",
 					DisplayName = "Offline Sync Interval",
@@ -397,7 +397,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 					MinValue = 0,
 					HelpText = "Offline synchronization interval in minutes (0 = no sync)."
 				},
-				["outlooksyncinterval"] = new()
+				["outlooksyncinterval"] = new UserSettingDefinition()
 				{
 					FieldName = "outlooksyncinterval",
 					DisplayName = "Outlook Sync Interval",
@@ -407,56 +407,56 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 				},
 
 				// ── Boolean settings ──────────────────────────────────────────────────────
-				["showweeknumber"] = new()
+				["showweeknumber"] = new UserSettingDefinition()
 				{
 					FieldName = "showweeknumber",
 					DisplayName = "Show Week Number",
 					FieldType = UserSettingFieldType.Boolean,
 					HelpText = "Whether to display ISO week numbers in calendars. Accepts true/false, 1/0, yes/no."
 				},
-				["synccontactcompany"] = new()
+				["synccontactcompany"] = new UserSettingDefinition()
 				{
 					FieldName = "synccontactcompany",
 					DisplayName = "Sync Contact Company",
 					FieldType = UserSettingFieldType.Boolean,
 					HelpText = "Whether to sync the parent account name to the Outlook contact Company field. Accepts true/false, 1/0, yes/no."
 				},
-				["usecrmformforappointment"] = new()
+				["usecrmformforappointment"] = new UserSettingDefinition()
 				{
 					FieldName = "usecrmformforappointment",
 					DisplayName = "Use Dynamics 365 Form for Appointment",
 					FieldType = UserSettingFieldType.Boolean,
 					HelpText = "Open appointments using the Dynamics 365 form instead of the Outlook form. Accepts true/false, 1/0, yes/no."
 				},
-				["usecrmformforcontact"] = new()
+				["usecrmformforcontact"] = new UserSettingDefinition()
 				{
 					FieldName = "usecrmformforcontact",
 					DisplayName = "Use Dynamics 365 Form for Contact",
 					FieldType = UserSettingFieldType.Boolean,
 					HelpText = "Open contacts using the Dynamics 365 form instead of the Outlook form. Accepts true/false, 1/0, yes/no."
 				},
-				["usecrmformforemail"] = new()
+				["usecrmformforemail"] = new UserSettingDefinition()
 				{
 					FieldName = "usecrmformforemail",
 					DisplayName = "Use Dynamics 365 Form for Email",
 					FieldType = UserSettingFieldType.Boolean,
 					HelpText = "Open emails using the Dynamics 365 form instead of the Outlook form. Accepts true/false, 1/0, yes/no."
 				},
-				["usecrmformfortask"] = new()
+				["usecrmformfortask"] = new UserSettingDefinition()
 				{
 					FieldName = "usecrmformfortask",
 					DisplayName = "Use Dynamics 365 Form for Task",
 					FieldType = UserSettingFieldType.Boolean,
 					HelpText = "Open tasks using the Dynamics 365 form instead of the Outlook form. Accepts true/false, 1/0, yes/no."
 				},
-				["createcontactonresolve"] = new()
+				["createcontactonresolve"] = new UserSettingDefinition()
 				{
 					FieldName = "createcontactonresolve",
 					DisplayName = "Create Contact on Email Resolve",
 					FieldType = UserSettingFieldType.Boolean,
 					HelpText = "Automatically create a contact when resolving an email from an unknown sender. Accepts true/false, 1/0, yes/no."
 				},
-				["autocreaterecontactsonresolve"] = new()
+				["autocreaterecontactsonresolve"] = new UserSettingDefinition()
 				{
 					FieldName = "autocreaterecontactsonresolve",
 					DisplayName = "Auto-create Related Contacts on Resolve",
