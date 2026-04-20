@@ -23,7 +23,13 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 			return (output, repoMock, crmMock);
 		}
 
-		// ── Happy path — integer field, current user ───────────────────────────────
+		private static SetCommand SinglePair(string key, string value, string? user = null)
+			=> new() { Keys = [key], Values = [value], UserDomainName = user };
+
+		private static SetCommand MultiPair(params (string Key, string Value)[] pairs)
+			=> new() { Keys = pairs.Select(p => p.Key).ToList(), Values = pairs.Select(p => p.Value).ToList() };
+
+		// ── Happy path — single integer field, current user ───────────────────────
 
 		[TestMethod]
 		public async Task ExecuteAsync_ShouldSucceed_IntegerField_CurrentUser()
@@ -48,9 +54,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 				.Returns(Task.CompletedTask);
 
 			var executor = new SetCommandExecutor(output, repoMock.Object);
-			var result = await executor.ExecuteAsync(
-				new SetCommand { Key = "paginglimit", Value = "100" },
-				CancellationToken.None);
+			var result = await executor.ExecuteAsync(SinglePair("paginglimit", "100"), CancellationToken.None);
 
 			Assert.IsTrue(result.IsSuccess, result.ErrorMessage);
 			Assert.IsNotNull(capturedUpdate);
@@ -60,7 +64,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 			crmMock.Verify(c => c.UpdateAsync(It.IsAny<Entity>()), Times.Once);
 		}
 
-		// ── Happy path — boolean field, current user ───────────────────────────────
+		// ── Happy path — single boolean field ─────────────────────────────────────
 
 		[TestMethod]
 		[DataRow("true", true)]
@@ -85,16 +89,14 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 				.Returns(Task.CompletedTask);
 
 			var executor = new SetCommandExecutor(output, repoMock.Object);
-			var result = await executor.ExecuteAsync(
-				new SetCommand { Key = "showweeknumber", Value = rawValue },
-				CancellationToken.None);
+			var result = await executor.ExecuteAsync(SinglePair("showweeknumber", rawValue), CancellationToken.None);
 
 			Assert.IsTrue(result.IsSuccess, result.ErrorMessage);
 			Assert.IsNotNull(capturedUpdate);
 			Assert.AreEqual(expected, capturedUpdate.GetAttributeValue<bool>("showweeknumber"));
 		}
 
-		// ── Happy path — language field, current user ──────────────────────────────
+		// ── Happy path — single language field ────────────────────────────────────
 
 		[TestMethod]
 		public async Task ExecuteAsync_ShouldSucceed_LanguageField_ValidatesDataverse()
@@ -123,9 +125,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 				.Returns(Task.CompletedTask);
 
 			var executor = new SetCommandExecutor(output, repoMock.Object);
-			var result = await executor.ExecuteAsync(
-				new SetCommand { Key = "uilanguageid", Value = "1040" },
-				CancellationToken.None);
+			var result = await executor.ExecuteAsync(SinglePair("uilanguageid", "1040"), CancellationToken.None);
 
 			Assert.IsTrue(result.IsSuccess, result.ErrorMessage);
 			Assert.IsNotNull(capturedUpdate);
@@ -133,7 +133,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 			crmMock.Verify(c => c.ExecuteAsync(It.IsAny<RetrieveAvailableLanguagesRequest>()), Times.Once);
 		}
 
-		// ── Happy path — specific user by domain name ──────────────────────────────
+		// ── Happy path — explicit user ────────────────────────────────────────────
 
 		[TestMethod]
 		public async Task ExecuteAsync_ShouldSucceed_WithExplicitUser()
@@ -157,7 +157,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 
 			var executor = new SetCommandExecutor(output, repoMock.Object);
 			var result = await executor.ExecuteAsync(
-				new SetCommand { UserDomainName = @"DOMAIN\john.doe", Key = "paginglimit", Value = "250" },
+				SinglePair("paginglimit", "250", @"DOMAIN\john.doe"),
 				CancellationToken.None);
 
 			Assert.IsTrue(result.IsSuccess, result.ErrorMessage);
@@ -165,6 +165,99 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 			Assert.AreEqual(userId, capturedUpdate.Id);
 			Assert.AreEqual(250, capturedUpdate.GetAttributeValue<int>("paginglimit"));
 			crmMock.Verify(c => c.ExecuteAsync(It.IsAny<WhoAmIRequest>()), Times.Never);
+		}
+
+		// ── Happy path — multiple key/value pairs ─────────────────────────────────
+
+		[TestMethod]
+		public async Task ExecuteAsync_ShouldSucceed_MultiplePairs_AllInOneUpdate()
+		{
+			var (output, repoMock, crmMock) = CreateMocks();
+			Entity? capturedUpdate = null;
+			var userId = Guid.NewGuid();
+
+			var langResponse = new RetrieveAvailableLanguagesResponse();
+			langResponse.Results["LocaleIds"] = new[] { 1033, 1040 };
+
+			var whoAmI = new WhoAmIResponse();
+			whoAmI.Results["UserId"] = userId;
+
+			crmMock
+				.Setup(c => c.ExecuteAsync(It.IsAny<OrganizationRequest>()))
+				.ReturnsAsync((OrganizationRequest r) =>
+				{
+					if (r is RetrieveAvailableLanguagesRequest) return langResponse;
+					if (r is WhoAmIRequest) return whoAmI;
+					throw new InvalidOperationException($"Unexpected request {r.GetType().Name}");
+				});
+			crmMock
+				.Setup(c => c.UpdateAsync(It.IsAny<Entity>()))
+				.Callback<Entity>(e => capturedUpdate = e)
+				.Returns(Task.CompletedTask);
+
+			var executor = new SetCommandExecutor(output, repoMock.Object);
+			var result = await executor.ExecuteAsync(
+				MultiPair(("uilanguageid", "1040"), ("helplanguageid", "1040"), ("localeid", "1040")),
+				CancellationToken.None);
+
+			Assert.IsTrue(result.IsSuccess, result.ErrorMessage);
+			Assert.IsNotNull(capturedUpdate);
+			Assert.AreEqual(3, capturedUpdate.Attributes.Count);
+			Assert.AreEqual(1040, capturedUpdate.GetAttributeValue<int>("uilanguageid"));
+			Assert.AreEqual(1040, capturedUpdate.GetAttributeValue<int>("helplanguageid"));
+			Assert.AreEqual(1040, capturedUpdate.GetAttributeValue<int>("localeid"));
+			// Language check happens once even though three language fields are set
+			crmMock.Verify(c => c.ExecuteAsync(It.IsAny<RetrieveAvailableLanguagesRequest>()), Times.Once);
+			// Only a single Update call regardless of how many fields
+			crmMock.Verify(c => c.UpdateAsync(It.IsAny<Entity>()), Times.Once);
+		}
+
+		[TestMethod]
+		public async Task ExecuteAsync_ShouldSucceed_MixedFields_SingleUpdate()
+		{
+			var (output, repoMock, crmMock) = CreateMocks();
+			Entity? capturedUpdate = null;
+			var userId = Guid.NewGuid();
+
+			var whoAmI = new WhoAmIResponse();
+			whoAmI.Results["UserId"] = userId;
+
+			crmMock.Setup(c => c.ExecuteAsync(It.IsAny<WhoAmIRequest>())).ReturnsAsync(whoAmI);
+			crmMock
+				.Setup(c => c.UpdateAsync(It.IsAny<Entity>()))
+				.Callback<Entity>(e => capturedUpdate = e)
+				.Returns(Task.CompletedTask);
+
+			var executor = new SetCommandExecutor(output, repoMock.Object);
+			var result = await executor.ExecuteAsync(
+				MultiPair(("paginglimit", "250"), ("showweeknumber", "true"), ("timeformatcode", "1")),
+				CancellationToken.None);
+
+			Assert.IsTrue(result.IsSuccess, result.ErrorMessage);
+			Assert.IsNotNull(capturedUpdate);
+			Assert.AreEqual(3, capturedUpdate.Attributes.Count);
+			Assert.AreEqual(250, capturedUpdate.GetAttributeValue<int>("paginglimit"));
+			Assert.AreEqual(true, capturedUpdate.GetAttributeValue<bool>("showweeknumber"));
+			Assert.AreEqual(1, capturedUpdate.GetAttributeValue<int>("timeformatcode"));
+			crmMock.Verify(c => c.UpdateAsync(It.IsAny<Entity>()), Times.Once);
+		}
+
+		// ── Failure: key/value count mismatch ─────────────────────────────────────
+
+		[TestMethod]
+		public async Task ExecuteAsync_ShouldFail_WhenKeyValueCountMismatch()
+		{
+			var (output, repoMock, crmMock) = CreateMocks();
+			var executor = new SetCommandExecutor(output, repoMock.Object);
+
+			var result = await executor.ExecuteAsync(
+				new SetCommand { Keys = ["paginglimit", "showweeknumber"], Values = ["100"] },
+				CancellationToken.None);
+
+			Assert.IsFalse(result.IsSuccess);
+			StringAssert.Contains(result.ErrorMessage, "2");
+			StringAssert.Contains(result.ErrorMessage, "1");
+			repoMock.Verify(r => r.GetCurrentConnectionAsync(), Times.Never);
 		}
 
 		// ── Failure: unknown key ───────────────────────────────────────────────────
@@ -175,9 +268,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 			var (output, repoMock, crmMock) = CreateMocks();
 			var executor = new SetCommandExecutor(output, repoMock.Object);
 
-			var result = await executor.ExecuteAsync(
-				new SetCommand { Key = "notafield", Value = "abc" },
-				CancellationToken.None);
+			var result = await executor.ExecuteAsync(SinglePair("notafield", "abc"), CancellationToken.None);
 
 			Assert.IsFalse(result.IsSuccess);
 			StringAssert.Contains(result.ErrorMessage, "notafield");
@@ -186,7 +277,22 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 			crmMock.Verify(c => c.UpdateAsync(It.IsAny<Entity>()), Times.Never);
 		}
 
-		// ── Failure: invalid value for picklist ────────────────────────────────────
+		[TestMethod]
+		public async Task ExecuteAsync_ShouldFail_WhenSecondKeyIsUnknown()
+		{
+			var (output, repoMock, crmMock) = CreateMocks();
+			var executor = new SetCommandExecutor(output, repoMock.Object);
+
+			var result = await executor.ExecuteAsync(
+				MultiPair(("paginglimit", "100"), ("notafield", "abc")),
+				CancellationToken.None);
+
+			Assert.IsFalse(result.IsSuccess);
+			StringAssert.Contains(result.ErrorMessage, "notafield");
+			repoMock.Verify(r => r.GetCurrentConnectionAsync(), Times.Never);
+		}
+
+		// ── Failure: invalid picklist value ───────────────────────────────────────
 
 		[TestMethod]
 		public async Task ExecuteAsync_ShouldFail_WhenPicklistValueIsInvalid()
@@ -194,9 +300,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 			var (output, repoMock, crmMock) = CreateMocks();
 			var executor = new SetCommandExecutor(output, repoMock.Object);
 
-			var result = await executor.ExecuteAsync(
-				new SetCommand { Key = "timeformatcode", Value = "99" },
-				CancellationToken.None);
+			var result = await executor.ExecuteAsync(SinglePair("timeformatcode", "99"), CancellationToken.None);
 
 			Assert.IsFalse(result.IsSuccess);
 			StringAssert.Contains(result.ErrorMessage, "99");
@@ -212,9 +316,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 			var (output, repoMock, crmMock) = CreateMocks();
 			var executor = new SetCommandExecutor(output, repoMock.Object);
 
-			var result = await executor.ExecuteAsync(
-				new SetCommand { Key = "paginglimit", Value = "abc" },
-				CancellationToken.None);
+			var result = await executor.ExecuteAsync(SinglePair("paginglimit", "abc"), CancellationToken.None);
 
 			Assert.IsFalse(result.IsSuccess);
 			StringAssert.Contains(result.ErrorMessage, "abc");
@@ -229,9 +331,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 			var (output, repoMock, crmMock) = CreateMocks();
 			var executor = new SetCommandExecutor(output, repoMock.Object);
 
-			var result = await executor.ExecuteAsync(
-				new SetCommand { Key = "showweeknumber", Value = "maybe" },
-				CancellationToken.None);
+			var result = await executor.ExecuteAsync(SinglePair("showweeknumber", "maybe"), CancellationToken.None);
 
 			Assert.IsFalse(result.IsSuccess);
 			StringAssert.Contains(result.ErrorMessage, "maybe");
@@ -246,9 +346,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 			var (output, repoMock, crmMock) = CreateMocks();
 			var executor = new SetCommandExecutor(output, repoMock.Object);
 
-			var result = await executor.ExecuteAsync(
-				new SetCommand { Key = "uilanguageid", Value = "-1" },
-				CancellationToken.None);
+			var result = await executor.ExecuteAsync(SinglePair("uilanguageid", "-1"), CancellationToken.None);
 
 			Assert.IsFalse(result.IsSuccess);
 			StringAssert.Contains(result.ErrorMessage, "-1");
@@ -274,9 +372,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 				});
 
 			var executor = new SetCommandExecutor(output, repoMock.Object);
-			var result = await executor.ExecuteAsync(
-				new SetCommand { Key = "uilanguageid", Value = "1040" },
-				CancellationToken.None);
+			var result = await executor.ExecuteAsync(SinglePair("uilanguageid", "1040"), CancellationToken.None);
 
 			Assert.IsFalse(result.IsSuccess);
 			StringAssert.Contains(result.ErrorMessage, "1040");
@@ -297,7 +393,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 
 			var executor = new SetCommandExecutor(output, repoMock.Object);
 			var result = await executor.ExecuteAsync(
-				new SetCommand { UserDomainName = @"DOMAIN\ghost", Key = "paginglimit", Value = "50" },
+				SinglePair("paginglimit", "50", @"DOMAIN\ghost"),
 				CancellationToken.None);
 
 			Assert.IsFalse(result.IsSuccess);
@@ -318,9 +414,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 					new OrganizationServiceFault(), "Simulated fault"));
 
 			var executor = new SetCommandExecutor(output, repoMock.Object);
-			var result = await executor.ExecuteAsync(
-				new SetCommand { Key = "paginglimit", Value = "50" },
-				CancellationToken.None);
+			var result = await executor.ExecuteAsync(SinglePair("paginglimit", "50"), CancellationToken.None);
 
 			Assert.IsFalse(result.IsSuccess);
 			Assert.IsFalse(string.IsNullOrWhiteSpace(result.ErrorMessage));
