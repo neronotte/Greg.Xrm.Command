@@ -5,7 +5,9 @@ namespace Greg.Xrm.Command.Commands.ElasticTable
 	[Command("elastic-table", "manage", HelpText = "Manage Elastic Table retention policies and scaling.")]
 	public class ElasticTableManageCommand
 	{
-		[Option("table", "t", Order = 1, Required = true, HelpText = "Elastic table logical name.")]
+		[Option("table", "t", Order = 1, HelpText = "Elastic table logical name.")]
+
+		[Required]
 		public string TableLogicalName { get; set; } = "";
 
 		[Option("retention", "r", Order = 2, HelpText = "Retention period (e.g., '90d', '6m', '1y').")]
@@ -24,3 +26,4 @@ namespace Greg.Xrm.Command.Commands.ElasticTable
 		public string Format { get; set; } = "table";
 	}
 }
+

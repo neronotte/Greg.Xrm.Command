@@ -5,10 +5,12 @@ namespace Greg.Xrm.Command.Commands.VirtualTable
 	[Command("virtual-table", "scaffold", HelpText = "Scaffold virtual table definitions from external data sources.")]
 	public class VirtualTableScaffoldCommand
 	{
-		[Option("datasource", "d", Order = 1, Required = true, HelpText = "External data source type: SqlServer, OData, SharePoint.")]
+		[Option("datasource", "d", Order = 1, HelpText = "External data source type: SqlServer, OData, SharePoint.")]
+		[Required]
 		public string DataSourceType { get; set; } = "";
 
-		[Option("connection", "c", Order = 2, Required = true, HelpText = "Connection string or connection name.")]
+		[Option("connection", "c", Order = 2, HelpText = "Connection string or connection name.")]
+		[Required]
 		public string ConnectionString { get; set; } = "";
 
 		[Option("tables", "t", Order = 3, HelpText = "Comma-separated list of external table names to scaffold.")]

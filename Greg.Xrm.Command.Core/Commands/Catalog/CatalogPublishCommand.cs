@@ -5,7 +5,9 @@ namespace Greg.Xrm.Command.Commands.Catalog
 	[Command("catalog", "publish-item", HelpText = "Publish an item to the Dataverse Catalog for Business Events.")]
 	public class CatalogPublishCommand
 	{
-		[Option("name", "n", Order = 1, Required = true, HelpText = "Name of the catalog item.")]
+		[Option("name", "n", Order = 1, HelpText = "Name of the catalog item.")]
+
+		[Required]
 		public string Name { get; set; } = "";
 
 		[Option("type", "t", Order = 2, DefaultValue = "BusinessEvent", HelpText = "Catalog item type: BusinessEvent, ApiDefinition.")]
@@ -24,3 +26,4 @@ namespace Greg.Xrm.Command.Commands.Catalog
 		public bool DryRun { get; set; }
 	}
 }
+

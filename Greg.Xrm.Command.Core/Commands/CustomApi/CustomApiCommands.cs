@@ -5,7 +5,9 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 	[Command("custom-api", "create", HelpText = "Create a Custom API (Custom Action) in Dataverse.")]
 	public class CustomApiCreateCommand
 	{
-		[Option("name", "n", Order = 1, Required = true, HelpText = "Unique name of the Custom API.")]
+		[Option("name", "n", Order = 1, HelpText = "Unique name of the Custom API.")]
+
+		[Required]
 		public string Name { get; set; } = "";
 
 		[Option("display-name", Order = 2, HelpText = "Display name. Defaults to the unique name.")]
@@ -49,7 +51,10 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 	[Command("custom-api", "delete", HelpText = "Delete a Custom API from Dataverse.")]
 	public class CustomApiDeleteCommand
 	{
-		[Option("name", "n", Order = 1, Required = true, HelpText = "Unique name of the Custom API to delete.")]
+		[Option("name", "n", Order = 1, HelpText = "Unique name of the Custom API to delete.")]
+
+		[Required]
 		public string Name { get; set; } = "";
 	}
 }
+
