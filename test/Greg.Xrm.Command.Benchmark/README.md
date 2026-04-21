@@ -47,7 +47,7 @@ Measures service resolution time:
 ### 3. StartupBenchmarks
 Measures overall startup time:
 - **Full Startup (help command)**: Complete startup simulating `pacx help`
-- **Full Startup (table create)**: Complete startup simulating `pacx table create`
+- **Full Startup (nop command)**: Complete startup simulating `pacx nop`
 - **Command Registry Initialization**: Time to scan assemblies and build command tree
 - **Command Parsing Only**: Parsing time with pre-built registry
 
