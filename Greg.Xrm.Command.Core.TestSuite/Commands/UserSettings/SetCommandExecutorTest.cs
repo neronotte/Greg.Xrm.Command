@@ -19,7 +19,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 			var output = new OutputToMemory();
 			var crmMock = new Mock<IOrganizationServiceAsync2>();
 			var repoMock = new Mock<IOrganizationServiceRepository>();
-			repoMock.Setup(r => r.GetCurrentConnectionAsync()).ReturnsAsync(crmMock.Object);
+			repoMock.Setup(r => r.GetCurrentConnectionAsync(It.IsAny<CancellationToken>())).ReturnsAsync(crmMock.Object);
 			return (output, repoMock, crmMock);
 		}
 
@@ -257,7 +257,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 			Assert.IsFalse(result.IsSuccess);
 			StringAssert.Contains(result.ErrorMessage, "2");
 			StringAssert.Contains(result.ErrorMessage, "1");
-			repoMock.Verify(r => r.GetCurrentConnectionAsync(), Times.Never);
+			repoMock.Verify(r => r.GetCurrentConnectionAsync(It.IsAny<CancellationToken>()), Times.Never);
 		}
 
 		// ── Failure: unknown key ───────────────────────────────────────────────────
@@ -273,7 +273,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 			Assert.IsFalse(result.IsSuccess);
 			StringAssert.Contains(result.ErrorMessage, "notafield");
 			StringAssert.Contains(result.ErrorMessage, "supported");
-			repoMock.Verify(r => r.GetCurrentConnectionAsync(), Times.Never);
+			repoMock.Verify(r => r.GetCurrentConnectionAsync(It.IsAny<CancellationToken>()), Times.Never);
 			crmMock.Verify(c => c.UpdateAsync(It.IsAny<Entity>()), Times.Never);
 		}
 
@@ -289,7 +289,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 
 			Assert.IsFalse(result.IsSuccess);
 			StringAssert.Contains(result.ErrorMessage, "notafield");
-			repoMock.Verify(r => r.GetCurrentConnectionAsync(), Times.Never);
+			repoMock.Verify(r => r.GetCurrentConnectionAsync(It.IsAny<CancellationToken>()), Times.Never);
 		}
 
 		// ── Failure: invalid picklist value ───────────────────────────────────────
@@ -305,7 +305,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 			Assert.IsFalse(result.IsSuccess);
 			StringAssert.Contains(result.ErrorMessage, "99");
 			StringAssert.Contains(result.ErrorMessage, "Allowed values");
-			repoMock.Verify(r => r.GetCurrentConnectionAsync(), Times.Never);
+			repoMock.Verify(r => r.GetCurrentConnectionAsync(It.IsAny<CancellationToken>()), Times.Never);
 		}
 
 		// ── Failure: non-integer value for integer field ───────────────────────────
@@ -320,7 +320,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 
 			Assert.IsFalse(result.IsSuccess);
 			StringAssert.Contains(result.ErrorMessage, "abc");
-			repoMock.Verify(r => r.GetCurrentConnectionAsync(), Times.Never);
+			repoMock.Verify(r => r.GetCurrentConnectionAsync(It.IsAny<CancellationToken>()), Times.Never);
 		}
 
 		// ── Failure: invalid boolean ───────────────────────────────────────────────
@@ -335,7 +335,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 
 			Assert.IsFalse(result.IsSuccess);
 			StringAssert.Contains(result.ErrorMessage, "maybe");
-			repoMock.Verify(r => r.GetCurrentConnectionAsync(), Times.Never);
+			repoMock.Verify(r => r.GetCurrentConnectionAsync(It.IsAny<CancellationToken>()), Times.Never);
 		}
 
 		// ── Failure: invalid LCID ─────────────────────────────────────────────────
@@ -350,7 +350,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 
 			Assert.IsFalse(result.IsSuccess);
 			StringAssert.Contains(result.ErrorMessage, "-1");
-			repoMock.Verify(r => r.GetCurrentConnectionAsync(), Times.Never);
+			repoMock.Verify(r => r.GetCurrentConnectionAsync(It.IsAny<CancellationToken>()), Times.Never);
 		}
 
 		// ── Failure: language not available in Dataverse ───────────────────────────

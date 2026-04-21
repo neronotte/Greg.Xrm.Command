@@ -8,10 +8,12 @@ namespace Greg.Xrm.Command.Services.Connection
 
 		Task<ConnectionSetting> GetAllConnectionDefinitionsAsync();
 
-		Task<IOrganizationServiceAsync2> GetCurrentConnectionAsync();
+		Task<IOrganizationServiceAsync2> GetCurrentConnectionAsync(CancellationToken cancellationToken = default);
 		Task<IOrganizationServiceAsync2> GetConnectionByName(string connectionName);
 
 		Task<string?> GetEnvironmentFromConnectioStringAsync(string connectionName);
+
+		Task<string?> GetConnectionStringAsync(string? connectionName = null);
 
 		Task SetConnectionAsync(string name, string connectionString);
 		Task DeleteConnectionAsync(string name);

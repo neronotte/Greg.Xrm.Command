@@ -1,4 +1,5 @@
 using Greg.Xrm.Command.Parsing;
+using System.ComponentModel.DataAnnotations;
 
 namespace Greg.Xrm.Command.Commands.AiBuilder
 {

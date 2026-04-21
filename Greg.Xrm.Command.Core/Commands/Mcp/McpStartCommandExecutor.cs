@@ -38,7 +38,7 @@ namespace Greg.Xrm.Command.Commands.Mcp
 					case "stdio":
 					default:
 						output.WriteLine("Starting STDIO transport...", ConsoleColor.Green);
-						var handler = new McpServerHandler(commandRegistry, new Storage());
+						var handler = new McpServerHandler(commandRegistry, new Greg.Xrm.Command.Services.Storage());
 						await handler.RunAsync(cancellationToken);
 						break;
 				}

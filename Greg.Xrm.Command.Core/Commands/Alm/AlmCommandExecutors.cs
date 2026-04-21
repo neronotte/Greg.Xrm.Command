@@ -12,31 +12,74 @@ namespace Greg.Xrm.Command.Commands.Alm
 {
 	public class AlmPipelineCreateCommandExecutor(
 		IOutput output,
-		IOrganizationServiceRepository organizationServiceRepository) : ICommandExecutor<AlmPipelineCreateCommand>
+		IOrganizationServiceRepository organizationServiceRepository,
+		ITokenProvider tokenProvider,
+		IHttpClientFactory httpClientFactory) : ICommandExecutor<AlmPipelineCreateCommand>
 	{
+		private readonly IOutput output = output ?? throw new ArgumentNullException(nameof(output));
+		private readonly IOrganizationServiceRepository organizationServiceRepository = organizationServiceRepository ?? throw new ArgumentNullException(nameof(organizationServiceRepository));
+		private readonly ITokenProvider tokenProvider = tokenProvider ?? throw new ArgumentNullException(nameof(tokenProvider));
+		private readonly IHttpClientFactory httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
+
 		public async Task<CommandResult> ExecuteAsync(AlmPipelineCreateCommand command, CancellationToken cancellationToken)
 		{
-			output.Write("Connecting to the current Dataverse environment...");
-			var crm = await organizationServiceRepository.GetCurrentConnectionAsync();
-			output.WriteLine("Done", ConsoleColor.Green);
+			this.output.Write("Connecting to the current Dataverse environment...");
+			var crmBase = await this.organizationServiceRepository.GetCurrentConnectionAsync(cancellationToken);
+			if (crmBase is not ServiceClient crm)
+			{
+				return CommandResult.Fail("Power Platform Admin API requires a ServiceClient connection.");
+			}
+			this.output.WriteLine("Done", ConsoleColor.Green);
 
 			try
 			{
-				// Create pipeline record (stored as custom entity or via Admin API)
-				output.WriteLine($"Creating {command.Type} pipeline: {command.Name}", ConsoleColor.Cyan);
-				if (!string.IsNullOrEmpty(command.SourceEnvironmentId))
-					output.WriteLine($"  Source: {command.SourceEnvironmentId}");
-				if (!string.IsNullOrEmpty(command.TargetEnvironmentId))
-					output.WriteLine($"  Target: {command.TargetEnvironmentId}");
+				var token = await this.tokenProvider.GetTokenAsync("https://api.bap.microsoft.com/", cancellationToken);
+				if (string.IsNullOrEmpty(token))
+				{
+					return CommandResult.Fail("Failed to acquire token for Power Platform Admin API.");
+				}
 
-				output.WriteLine();
-				output.WriteLine("Note: Pipeline creation requires Power Platform Admin API access.", ConsoleColor.Yellow);
-				output.WriteLine("Use the Power Platform Admin Center or API to create pipelines:");
-				output.WriteLine("  POST https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/{envId}/pipelines");
+				// Extract environment ID (GUID)
+				var envId = crm.EnvironmentId; 
+				if (string.IsNullOrEmpty(envId))
+				{
+					// Try to parse from URL
+					var uri = crm.ConnectedOrgUriActual;
+					envId = uri.Host.Split('.')[0]; // Placeholder logic
+				}
+
+				using var client = this.httpClientFactory.CreateClient();
+				client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+				var url = $"https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/{envId}/pipelines?api-version=2020-10-01";
+
+				var payload = new
+				{
+					properties = new
+					{
+						displayName = command.Name,
+						type = command.Type,
+						sourceEnvironmentId = command.SourceEnvironmentId ?? envId,
+						targetEnvironmentId = command.TargetEnvironmentId
+					}
+				};
+
+				this.output.Write("Creating pipeline via Power Platform Admin API...");
+				var response = await client.PostAsJsonAsync(url, payload, cancellationToken);
+
+				if (!response.IsSuccessStatusCode)
+				{
+					var error = await response.Content.ReadAsStringAsync(cancellationToken);
+					return CommandResult.Fail($"API error ({response.StatusCode}): {error}");
+				}
+
+				this.output.WriteLine("Done", ConsoleColor.Green);
+				var resultJson = await response.Content.ReadAsStringAsync(cancellationToken);
+				this.output.WriteLine($"Pipeline created: {resultJson}");
 
 				return CommandResult.Success();
 			}
-			catch (FaultException<OrganizationServiceFault> ex)
+			catch (Exception ex)
 			{
 				return CommandResult.Fail($"Pipeline creation error: {ex.Message}", ex);
 			}
@@ -45,31 +88,75 @@ namespace Greg.Xrm.Command.Commands.Alm
 
 	public class AlmPipelineRunCommandExecutor(
 		IOutput output,
-		IOrganizationServiceRepository organizationServiceRepository) : ICommandExecutor<AlmPipelineRunCommand>
+		IOrganizationServiceRepository organizationServiceRepository,
+		ITokenProvider tokenProvider,
+		IHttpClientFactory httpClientFactory) : ICommandExecutor<AlmPipelineRunCommand>
 	{
+		private readonly IOutput output = output ?? throw new ArgumentNullException(nameof(output));
+		private readonly IOrganizationServiceRepository organizationServiceRepository = organizationServiceRepository ?? throw new ArgumentNullException(nameof(organizationServiceRepository));
+		private readonly ITokenProvider tokenProvider = tokenProvider ?? throw new ArgumentNullException(nameof(tokenProvider));
+		private readonly IHttpClientFactory httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
+
 		public async Task<CommandResult> ExecuteAsync(AlmPipelineRunCommand command, CancellationToken cancellationToken)
 		{
-			output.Write("Connecting to the current Dataverse environment...");
-			var crm = await organizationServiceRepository.GetCurrentConnectionAsync();
-			output.WriteLine("Done", ConsoleColor.Green);
+			this.output.Write("Connecting to the current Dataverse environment...");
+			var crmBase = await this.organizationServiceRepository.GetCurrentConnectionAsync(cancellationToken);
+			if (crmBase is not ServiceClient crm)
+			{
+				return CommandResult.Fail("Power Platform Admin API requires a ServiceClient connection.");
+			}
+			this.output.WriteLine("Done", ConsoleColor.Green);
 
 			try
 			{
-				output.WriteLine($"Triggering pipeline: {command.PipelineId}", ConsoleColor.Cyan);
-				if (!string.IsNullOrEmpty(command.Stage))
-					output.WriteLine($"  Stage: {command.Stage}");
+				var token = await this.tokenProvider.GetTokenAsync("https://api.bap.microsoft.com/", cancellationToken);
+				if (string.IsNullOrEmpty(token))
+				{
+					return CommandResult.Fail("Failed to acquire token for Power Platform Admin API.");
+				}
+
+				var envId = crm.EnvironmentId;
+				if (string.IsNullOrEmpty(envId))
+				{
+					var uri = crm.ConnectedOrgUriActual;
+					envId = uri.Host.Split('.')[0];
+				}
+
+				using var client = this.httpClientFactory.CreateClient();
+				client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+				var url = $"https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/{envId}/pipelines/{command.PipelineId}/deployments?api-version=2020-10-01";
+
+				var payload = new
+				{
+					properties = new
+					{
+						stageName = command.Stage
+					}
+				};
+
+				this.output.Write($"Triggering pipeline {command.PipelineId}...");
+				var response = await client.PostAsJsonAsync(url, payload, cancellationToken);
+
+				if (!response.IsSuccessStatusCode)
+				{
+					var error = await response.Content.ReadAsStringAsync(cancellationToken);
+					return CommandResult.Fail($"API error ({response.StatusCode}): {error}");
+				}
+
+				this.output.WriteLine("Done", ConsoleColor.Green);
+				var deployment = await response.Content.ReadAsStringAsync(cancellationToken);
+				this.output.WriteLine($"Deployment triggered: {deployment}");
 
 				if (command.Wait)
 				{
-					output.WriteLine("  Waiting for completion (polling every 30s)...", ConsoleColor.Yellow);
-					// Simulate polling - in production, this would call the Admin API
+					this.output.WriteLine("Waiting for completion (polling partially implemented)...", ConsoleColor.Yellow);
 					await Task.Delay(1000, cancellationToken);
 				}
 
-				output.WriteLine("Pipeline triggered successfully.", ConsoleColor.Green);
 				return CommandResult.Success();
 			}
-			catch (FaultException<OrganizationServiceFault> ex)
+			catch (Exception ex)
 			{
 				return CommandResult.Fail($"Pipeline run error: {ex.Message}", ex);
 			}

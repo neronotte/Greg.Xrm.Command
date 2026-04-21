@@ -10,12 +10,12 @@ namespace Greg.Xrm.Command.Commands.Plugin
     /// Scans compiled plugin DLLs for [CrmPluginStep], [CrmPluginImage], and [CrmWebhook] attributes.
     /// Uses MetadataLoadContext to load assemblies without executing them.
     /// </summary>
-    internal static class PluginScanner
+    public static class PluginScanner
     {
         /// <summary>
         /// Scans a directory of plugin DLLs and returns all plugin metadata found.
         /// </summary>
-        internal static IList<PluginAssemblyMetadata> ScanDirectory(string directoryPath)
+        public static IList<PluginAssemblyMetadata> ScanDirectory(string directoryPath)
         {
             var results = new List<PluginAssemblyMetadata>();
             var dllFiles = Directory.GetFiles(directoryPath, "*.dll", SearchOption.AllDirectories);
@@ -44,7 +44,7 @@ namespace Greg.Xrm.Command.Commands.Plugin
         /// Scans a single plugin DLL and returns the plugin metadata.
         /// Returns null if no plugin attributes are found.
         /// </summary>
-        internal static PluginAssemblyMetadata? ScanAssembly(string dllPath)
+        public static PluginAssemblyMetadata? ScanAssembly(string dllPath)
         {
             if (!File.Exists(dllPath))
             {
@@ -73,7 +73,7 @@ namespace Greg.Xrm.Command.Commands.Plugin
                 {
                     if (type.IsAbstract || type.IsInterface) continue;
 
-                    var pluginType = ScanPluginType(type);
+                    var pluginType = ScanPluginType(type.GetTypeInfo());
                     if (pluginType != null)
                     {
                         assemblyMetadata.PluginTypes.Add(pluginType);
@@ -89,7 +89,7 @@ namespace Greg.Xrm.Command.Commands.Plugin
             }
             finally
             {
-                context.Unload();
+                context.Dispose();
             }
         }
 
@@ -269,14 +269,14 @@ namespace Greg.Xrm.Command.Commands.Plugin
 
     // === Metadata Models ===
 
-    internal sealed class PluginAssemblyMetadata
+    public sealed class PluginAssemblyMetadata
     {
         public string AssemblyName { get; set; } = "";
         public string AssemblyPath { get; set; } = "";
         public List<PluginTypeMetadata> PluginTypes { get; set; } = new();
     }
 
-    internal sealed class PluginTypeMetadata
+    public sealed class PluginTypeMetadata
     {
         public string TypeName { get; set; } = "";
         public string TypeNameWithoutNamespace { get; set; } = "";
@@ -286,7 +286,7 @@ namespace Greg.Xrm.Command.Commands.Plugin
         public List<PluginWebhookMetadata> Webhooks { get; set; } = new();
     }
 
-    internal sealed class PluginStepMetadata
+    public sealed class PluginStepMetadata
     {
         public string Message { get; set; } = "";
         public string Entity { get; set; } = "";
@@ -300,7 +300,7 @@ namespace Greg.Xrm.Command.Commands.Plugin
         public string? Name { get; set; }
     }
 
-    internal sealed class PluginImageMetadata
+    public sealed class PluginImageMetadata
     {
         public string Name { get; set; } = "";
         public string EntityAlias { get; set; } = "";
@@ -309,7 +309,7 @@ namespace Greg.Xrm.Command.Commands.Plugin
         public string? Message { get; set; }
     }
 
-    internal sealed class PluginWebhookMetadata
+    public sealed class PluginWebhookMetadata
     {
         public string Url { get; set; } = "";
         public int Method { get; set; } = 0;

@@ -155,7 +155,7 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 			Assert.IsTrue(result.IsSuccess);
 			this.OrganizationServiceMock.Verify(x => x.RetrieveMultipleAsync(It.Is<QueryExpression>(q =>
 				q.EntityName == "plugintype" &&
-				q.Criteria.Conditions.Any(c => c.AttributeName == "typename" && c.Value?.ToString() == "MyPlugin.MyPluginType")
+				q.Criteria.Conditions.Any(c => c.AttributeName == "typename" && c.Values.Contains("MyPlugin.MyPluginType"))
 			)), Times.Once);
 
 			this.OrganizationServiceMock.Verify(x => x.CreateAsync(It.Is<Entity>(e =>

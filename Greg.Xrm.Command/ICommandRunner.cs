@@ -1,6 +1,6 @@
 namespace Greg.Xrm.Command
 {
-	interface ICommandRunner
+	public interface ICommandRunner
 	{
 		Task<int> RunCommandAsync(CancellationToken cancellationToken);
 	}

@@ -25,7 +25,7 @@ namespace Greg.Xrm.Command.Commands.Plugin.Type
 			var repoMock = new Mock<IOrganizationServiceRepository>();
 
 			repoMock
-				.Setup(r => r.GetCurrentConnectionAsync())
+				.Setup(r => r.GetCurrentConnectionAsync(It.IsAny<CancellationToken>()))
 				.ReturnsAsync(crmMock.Object);
 
 			crmMock

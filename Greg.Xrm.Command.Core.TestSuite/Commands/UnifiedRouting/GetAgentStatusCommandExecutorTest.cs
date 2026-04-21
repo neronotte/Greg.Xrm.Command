@@ -14,7 +14,7 @@ namespace Greg.Xrm.Command.Commands.UnifiedRouting
 		public async Task TestQuery()
 		{
 			var agentPrimaryEmail = "francesco.catino@avanade.com";
-			var storage = new Storage();
+			var storage = new Greg.Xrm.Command.Services.Storage();
 			var output = new OutputToConsole();
 			var settingsRepository = new SettingsRepository(storage);
 			var pacxProjectRepository = new PacxProjectRepository(Mock.Of<ILogger<PacxProjectRepository>>());

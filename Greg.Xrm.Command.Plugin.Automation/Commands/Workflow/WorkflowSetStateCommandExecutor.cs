@@ -61,10 +61,15 @@ namespace Greg.Xrm.Command.Commands.Workflow
 				var stateName = targetState == 1 ? "activated" : "deactivated";
 				output.Write($"Setting workflow '{workflow.GetAttributeValue<string>("name")}' to {stateName}...");
 
+				if (!Guid.TryParse(command.WorkflowId, out var workflowId))
+				{
+					return CommandResult.Fail($"Invalid workflow ID '{command.WorkflowId}'. Must be a GUID.");
+				}
+
 				// Use SetStateRequest to change workflow state
 				var setStateRequest = new SetStateRequest
 				{
-					EntityMoniker = new EntityReference("workflow", command.WorkflowId),
+					EntityMoniker = new EntityReference("workflow", workflowId),
 					State = new OptionSetValue(targetState),
 					Status = new OptionSetValue(targetState == 1 ? 2 : 1), // 2=Activated, 1=Deactivated
 				};

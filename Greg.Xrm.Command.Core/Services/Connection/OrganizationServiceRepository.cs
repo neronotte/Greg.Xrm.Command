@@ -104,7 +104,7 @@ namespace Greg.Xrm.Command.Services.Connection
 
 
 
-		public async Task<IOrganizationServiceAsync2> GetCurrentConnectionAsync()
+		public async Task<IOrganizationServiceAsync2> GetCurrentConnectionAsync(CancellationToken cancellationToken = default)
 		{
 			var connectionStrings = await GetConnectionSettingAsync()
 				?? throw new CommandException(CommandException.ConnectionNotSet, "Dataverse connection has not been set yet.");
@@ -146,6 +146,34 @@ namespace Greg.Xrm.Command.Services.Connection
 			return await this.CreateServiceClientAsync(connectionName, connectionString!);
 		}
 
+
+
+
+		public async Task<string?> GetConnectionStringAsync(string? connectionName = null)
+		{
+			var connectionStrings = await GetConnectionSettingAsync();
+			if (connectionStrings == null) return null;
+
+			if (string.IsNullOrEmpty(connectionName))
+			{
+				var project = await this.pacxProjectRepository.GetCurrentProjectAsync();
+				if (project != null && !project.IsSuspended)
+				{
+					connectionName = project.AuthProfileName;
+				}
+				else
+				{
+					connectionName = connectionStrings.CurrentConnectionStringKey;
+				}
+			}
+
+			if (string.IsNullOrEmpty(connectionName)) return null;
+
+			if (!connectionStrings.TryGetConnectionString(connectionName, GetAesKey(), GetAesIV(), out var connectionString))
+				return null;
+
+			return connectionString;
+		}
 
 
 

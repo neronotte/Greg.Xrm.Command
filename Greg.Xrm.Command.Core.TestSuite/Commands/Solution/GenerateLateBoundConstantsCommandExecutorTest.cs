@@ -22,7 +22,7 @@ namespace Greg.Xrm.Command.Commands.Solution
 			var serviceMock = new Mock<IConstantsGeneratorService>();
 
 			repoMock
-				.Setup(r => r.GetCurrentConnectionAsync())
+				.Setup(r => r.GetCurrentConnectionAsync(It.IsAny<CancellationToken>()))
 				.ReturnsAsync(crmMock.Object);
 
 			return (output, repoMock, crmMock, serviceMock);

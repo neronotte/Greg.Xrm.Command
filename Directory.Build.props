@@ -51,13 +51,15 @@
     <!-- Dataverse SDK — every project communicates with Dataverse -->
     <PackageReference Include="Microsoft.PowerPlatform.Dataverse.Client" Version="1.2.10" />
     <!-- JSON serialization — Core, Interfaces, TestSuite, exe, SamplePlugin -->
-    <PackageReference Include="System.Text.Json" Version="10.0.3" />
+    <PackageReference Include="System.Text.Json" Version="10.0.6" />
     <!-- Excel handling — exe, Core, TestSuite, SamplePlugin, Interfaces -->
     <PackageReference Include="ClosedXML" Version="0.105.0" />
     <!-- Regex stdlib patch — exe, Core, TestSuite, SamplePlugin, Interfaces -->
     <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
     <!-- DI container — all projects use Autofac -->
-    <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="10.0.0" />
+    <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="11.0.0" />
+    <!-- DataAnnotations — needed for [Required] attributes -->
+    <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
     <!-- Static analysis — SonarAnalyzer for C# best practices and security -->
     <PackageReference Include="SonarAnalyzer.CSharp" Version="10.6.0.109712">
       <PrivateAssets>all</PrivateAssets>

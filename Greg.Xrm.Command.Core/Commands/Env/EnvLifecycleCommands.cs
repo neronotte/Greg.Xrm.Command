@@ -11,7 +11,7 @@ namespace Greg.Xrm.Command.Commands.Env
 		[Option("type", "t", Order = 2, DefaultValue = "full", HelpText = "Reset type: full (data + customizations), customizations-only, data-only.")]
 		public string ResetType { get; set; } = "full";
 
-		[Option("force", "f", Order = 3, HelpText = "Skip confirmation prompt.")]
+		[Option("force", "y", Order = 3, HelpText = "Skip confirmation prompt.")]
 		public bool Force { get; set; }
 
 		[Option("wait", Order = 4, HelpText = "Wait for reset operation to complete.")]
@@ -49,7 +49,7 @@ namespace Greg.Xrm.Command.Commands.Env
 		[Option("backup-id", Order = 2, Required = true, HelpText = "Backup operation ID to restore from.")]
 		public string BackupId { get; set; } = "";
 
-		[Option("force", "f", Order = 3, HelpText = "Skip confirmation prompt.")]
+		[Option("force", "y", Order = 3, HelpText = "Skip confirmation prompt.")]
 		public bool Force { get; set; }
 
 		[Option("wait", Order = 4, HelpText = "Wait for restore to complete.")]

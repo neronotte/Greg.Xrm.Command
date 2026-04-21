@@ -24,7 +24,7 @@ namespace Greg.Xrm.Command.Commands.Table
 				.ReturnsAsync(new DeleteEntityResponse());
 
 			organizationServiceRepository
-				.Setup(organizationServiceRepository => organizationServiceRepository.GetCurrentConnectionAsync())
+				.Setup(organizationServiceRepository => organizationServiceRepository.GetCurrentConnectionAsync(It.IsAny<CancellationToken>()))
 				.ReturnsAsync(organizationService.Object);
 
 			var executor = new DeleteCommandExecutor(output, organizationServiceRepository.Object);
@@ -34,7 +34,7 @@ namespace Greg.Xrm.Command.Commands.Table
 				SchemaName = tableName
 			}, new CancellationToken()).Wait();
 
-			organizationServiceRepository.Verify(x => x.GetCurrentConnectionAsync(), Times.Once);
+			organizationServiceRepository.Verify(x => x.GetCurrentConnectionAsync(It.IsAny<CancellationToken>()), Times.Once);
 			organizationService.Verify(x => x.ExecuteAsync(It.IsAny<DeleteEntityRequest>()), Times.Once);
 
 			Assert.IsNotNull(requestToServer);

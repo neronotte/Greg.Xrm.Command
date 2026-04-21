@@ -133,6 +133,9 @@ namespace Greg.Xrm.Command.Commands.Data
 		IOutput output,
 		IOrganizationServiceRepository organizationServiceRepository) : ICommandExecutor<DataImportCommand>
 	{
+		private readonly IOutput output = output ?? throw new ArgumentNullException(nameof(output));
+		private readonly IOrganizationServiceRepository organizationServiceRepository = organizationServiceRepository ?? throw new ArgumentNullException(nameof(organizationServiceRepository));
+
 		public async Task<CommandResult> ExecuteAsync(DataImportCommand command, CancellationToken cancellationToken)
 		{
 			try
@@ -142,36 +145,94 @@ namespace Greg.Xrm.Command.Commands.Data
 					return CommandResult.Fail($"Input path not found: {command.InputPath}");
 				}
 
-				output.Write("Connecting to Dataverse...");
-				var crm = await organizationServiceRepository.GetCurrentConnectionAsync();
-				output.WriteLine(" Done", ConsoleColor.Green);
+				this.output.Write("Connecting to Dataverse...");
+				var crm = await this.organizationServiceRepository.GetCurrentConnectionAsync(cancellationToken);
+				this.output.WriteLine(" Done", ConsoleColor.Green);
 
 				if (command.DryRun)
 				{
-					output.WriteLine("[DRY RUN] Would import data from:", ConsoleColor.Yellow);
-					output.WriteLine($"  Input: {command.InputPath}");
-					output.WriteLine($"  Format: {command.Format}");
-					output.WriteLine($"  Mode: {command.Mode}");
+					this.output.WriteLine("[DRY RUN] Would import data from:", ConsoleColor.Yellow);
+					this.output.WriteLine($"  Input: {command.InputPath}");
+					this.output.WriteLine($"  Format: {command.Format}");
+					this.output.WriteLine($"  Mode: {command.Mode}");
 					return CommandResult.Success();
 				}
 
-				output.WriteLine($"Importing data from {command.InputPath}", ConsoleColor.Cyan);
-				output.WriteLine($"  Format: {command.Format}");
-				output.WriteLine($"  Mode: {command.Mode}");
-				output.WriteLine($"  Batch size: {command.BatchSize}");
-				output.WriteLine();
+				this.output.WriteLine($"Importing data from {command.InputPath}", ConsoleColor.Cyan);
+				
+				var files = new List<string>();
+				if (Directory.Exists(command.InputPath))
+				{
+					files.AddRange(Directory.GetFiles(command.InputPath, $"*.{command.Format}"));
+				}
+				else
+				{
+					files.Add(command.InputPath);
+				}
 
-				// For now, this is a structural implementation — full import logic
-				// would parse the data files and create/update records in Dataverse
-				output.WriteLine("Note: Full data import requires parsing and mapping source data to target schema.", ConsoleColor.Yellow);
-				output.WriteLine("Use the existing `pac data` commands or Configuration Migration Tool for production imports.");
+				foreach (var file in files)
+				{
+					var tableName = command.TargetTable ?? Path.GetFileNameWithoutExtension(file);
+					this.output.Write($"  Importing {tableName}...");
+					
+					var content = await File.ReadAllTextAsync(file, cancellationToken);
+					var records = JsonSerializer.Deserialize<List<Dictionary<string, JsonElement>>>(content);
+					
+					if (records == null) continue;
+
+					var count = 0;
+					foreach (var record in records)
+					{
+						var entity = new Entity(tableName);
+						foreach (var kvp in record)
+						{
+							entity[kvp.Key] = DeserializeValue(kvp.Value);
+						}
+						
+						if (command.Mode == "upsert" && entity.Attributes.ContainsKey(tableName + "id"))
+						{
+							// Upsert logic
+							entity.Id = (Guid)entity[tableName + "id"];
+							await crm.UpdateAsync(entity, cancellationToken);
+						}
+						else
+						{
+							await crm.CreateAsync(entity, cancellationToken);
+						}
+						count++;
+					}
+					this.output.WriteLine($" {count} records", ConsoleColor.Green);
+				}
 
 				return CommandResult.Success();
 			}
-			catch (FaultException<OrganizationServiceFault> ex)
+			catch (Exception ex)
 			{
 				return CommandResult.Fail($"Error importing data: {ex.Message}", ex);
 			}
+		}
+
+		private static object? DeserializeValue(JsonElement element)
+		{
+			return element.ValueKind switch
+			{
+				JsonValueKind.String => element.GetString(),
+				JsonValueKind.Number => element.GetDecimal(),
+				JsonValueKind.True => true,
+				JsonValueKind.False => false,
+				JsonValueKind.Null => null,
+				JsonValueKind.Object => DeserializeObject(element),
+				_ => element.GetRawText()
+			};
+		}
+
+		private static object? DeserializeObject(JsonElement element)
+		{
+			if (element.TryGetProperty("Id", out var idProp) && element.TryGetProperty("LogicalName", out var nameProp))
+			{
+				return new EntityReference(nameProp.GetString(), idProp.GetGuid());
+			}
+			return element.GetRawText();
 		}
 	}
 }

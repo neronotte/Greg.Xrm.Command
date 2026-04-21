@@ -13,7 +13,7 @@ namespace Greg.Xrm.Command.Commands.Solution
 		[TestCategory("Integration")]
 		public async Task TestQuery()
 		{
-			var storage = new Storage();
+			var storage = new Greg.Xrm.Command.Services.Storage();
 			var output = new OutputToConsole();
 			var settingsRepository = new SettingsRepository(storage);
 			var pacxProjectRepository = new PacxProjectRepository(Mock.Of<ILogger<PacxProjectRepository>>());

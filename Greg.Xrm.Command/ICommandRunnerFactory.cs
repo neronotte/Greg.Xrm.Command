@@ -1,6 +1,6 @@
 namespace Greg.Xrm.Command
 {
-	interface ICommandRunnerFactory
+	public interface ICommandRunnerFactory
 	{
 		ICommandRunner CreateCommandRunner();
 	}

@@ -1,6 +1,3 @@
-using Greg.Xrm.Command.Commands.Auth;
-using Greg.Xrm.Command.Commands.Plugin;
-using Greg.Xrm.Command.Commands.Solution;
 using Greg.Xrm.Command.Parsing;
 using Microsoft.Extensions.Logging.Abstractions;
 using System;
@@ -21,7 +18,7 @@ namespace Greg.Xrm.Command.TestSuite
 		{
 			var log = NullLogger<CommandRegistry>.Instance;
 			var output = new OutputToMemory();
-			var storage = new Storage();
+			var storage = new Greg.Xrm.Command.Services.Storage();
 			return new CommandRegistry(log, output, storage);
 		}
 
@@ -31,21 +28,21 @@ namespace Greg.Xrm.Command.TestSuite
 		public void InitializeFromAssembly_ShouldDiscoverAllCoreCommands()
 		{
 			var registry = CreateRegistry();
-			registry.InitializeFromAssembly(typeof(HelpCommand).Assembly);
+			registry.InitializeFromAssembly(typeof(Greg.Xrm.Command.Commands.Help.HelpCommand).Assembly);
 
 			Assert.IsTrue(registry.Commands.Count > 0, "No commands were discovered from the core assembly.");
 
 			// Verify specific core commands are found
 			var commandTypes = registry.Commands.Select(c => c.CommandType).ToList();
-			Assert.IsTrue(commandTypes.Any(t => t == typeof(ListCommand)), "ListCommand not discovered.");
-			Assert.IsTrue(commandTypes.Any(t => typeof(CreateCommand).IsAssignableFrom(t)), "CreateCommand not discovered.");
+			Assert.IsTrue(commandTypes.Any(t => t == typeof(Greg.Xrm.Command.Commands.Auth.ListCommand)), "ListCommand not discovered.");
+			Assert.IsTrue(commandTypes.Any(t => typeof(Greg.Xrm.Command.Commands.Auth.CreateCommand).IsAssignableFrom(t)), "CreateCommand not discovered.");
 		}
 
 		[TestMethod]
 		public void ScanForModules_ShouldDiscoverAutofacModules()
 		{
 			var registry = CreateRegistry();
-			registry.InitializeFromAssembly(typeof(HelpCommand).Assembly);
+			registry.InitializeFromAssembly(typeof(Greg.Xrm.Command.Commands.Help.HelpCommand).Assembly);
 
 			// The core assembly should have at least the IoCModule
 			Assert.IsTrue(registry.Modules.Count > 0, "No Autofac modules were discovered from the core assembly.");
@@ -56,7 +53,7 @@ namespace Greg.Xrm.Command.TestSuite
 		public void ScanForCommands_ShouldMatchCommandExecutorPairs()
 		{
 			var registry = CreateRegistry();
-			registry.InitializeFromAssembly(typeof(HelpCommand).Assembly);
+			registry.InitializeFromAssembly(typeof(Greg.Xrm.Command.Commands.Help.HelpCommand).Assembly);
 
 			// Every discovered command should have a matching executor
 			foreach (var command in registry.Commands)
@@ -76,7 +73,7 @@ namespace Greg.Xrm.Command.TestSuite
 			// This test verifies that the registry throws on duplicate command definitions.
 			// Since the core assembly has no duplicates, we verify the scan completes without error.
 			var registry = CreateRegistry();
-			registry.InitializeFromAssembly(typeof(HelpCommand).Assembly);
+			registry.InitializeFromAssembly(typeof(Greg.Xrm.Command.Commands.Help.HelpCommand).Assembly);
 
 			// Verify no duplicate command definitions exist
 			var verbGroups = registry.Commands
@@ -92,7 +89,7 @@ namespace Greg.Xrm.Command.TestSuite
 		public void ScanForNamespaceHelpers_ShouldDiscoverHelpers()
 		{
 			var registry = CreateRegistry();
-			registry.InitializeFromAssembly(typeof(HelpCommand).Assembly);
+			registry.InitializeFromAssembly(typeof(Greg.Xrm.Command.Commands.Help.HelpCommand).Assembly);
 
 			// Verify namespace helpers are discovered (at minimum, the empty helper from plugin scanning)
 			Assert.IsNotNull(registry.Tree, "Command tree was not built.");
@@ -102,7 +99,7 @@ namespace Greg.Xrm.Command.TestSuite
 		public void CreateVerbTree_ShouldBuildHierarchicalVerbTree()
 		{
 			var registry = CreateRegistry();
-			registry.InitializeFromAssembly(typeof(HelpCommand).Assembly);
+			registry.InitializeFromAssembly(typeof(Greg.Xrm.Command.Commands.Help.HelpCommand).Assembly);
 
 			// Verify the tree has root nodes
 			Assert.IsTrue(registry.Tree.Count > 0, "Command tree has no root nodes.");
@@ -125,9 +122,9 @@ namespace Greg.Xrm.Command.TestSuite
 		public void ScanPluginsFolder_WithNonExistentFolder_ShouldNotThrow()
 		{
 			var registry = CreateRegistry();
-			registry.InitializeFromAssembly(typeof(HelpCommand).Assembly);
+			registry.InitializeFromAssembly(typeof(Greg.Xrm.Command.Commands.Help.HelpCommand).Assembly);
 
-			var args = new CommandLineArguments(new[] { "help" });
+			var args = new Greg.Xrm.Command.Parsing.CommandLineArguments(new[] { "help" });
 			registry.ScanPluginsFolder(args);
 
 			// Should complete without error even with no plugins folder
@@ -138,7 +135,7 @@ namespace Greg.Xrm.Command.TestSuite
 		public void ScanPluginsFolder_WithEmptyPluginsFolder_ShouldNotAddCommands()
 		{
 			var registry = CreateRegistry();
-			registry.InitializeFromAssembly(typeof(HelpCommand).Assembly);
+			registry.InitializeFromAssembly(typeof(Greg.Xrm.Command.Commands.Help.HelpCommand).Assembly);
 			var initialCount = registry.Commands.Count;
 
 			var tempDir = Path.Combine(Path.GetTempPath(), $"pacx_test_plugins_empty_{Guid.NewGuid()}");
@@ -146,9 +143,9 @@ namespace Greg.Xrm.Command.TestSuite
 
 			try
 			{
-				var storage = new Storage();
+				var storage = new Greg.Xrm.Command.Services.Storage();
 				// Point storage to temp dir (simulated)
-				var args = new CommandLineArguments(new[] { "help" });
+				var args = new Greg.Xrm.Command.Parsing.CommandLineArguments(new[] { "help" });
 				registry.ScanPluginsFolder(args);
 
 				// Should not add any commands from empty folder
@@ -165,7 +162,7 @@ namespace Greg.Xrm.Command.TestSuite
 		public void ScanForCommands_ShouldSkipAbstractCommandTypes()
 		{
 			var registry = CreateRegistry();
-			registry.InitializeFromAssembly(typeof(HelpCommand).Assembly);
+			registry.InitializeFromAssembly(typeof(Greg.Xrm.Command.Commands.Help.HelpCommand).Assembly);
 
 			// No abstract types should be in the command list
 			foreach (var command in registry.Commands)
@@ -179,7 +176,7 @@ namespace Greg.Xrm.Command.TestSuite
 		public void ScanForCommands_ShouldSkipCommandsWithoutParameterlessConstructor()
 		{
 			var registry = CreateRegistry();
-			registry.InitializeFromAssembly(typeof(HelpCommand).Assembly);
+			registry.InitializeFromAssembly(typeof(Greg.Xrm.Command.Commands.Help.HelpCommand).Assembly);
 
 			// All discovered commands should have a parameterless constructor
 			foreach (var command in registry.Commands)
@@ -195,7 +192,7 @@ namespace Greg.Xrm.Command.TestSuite
 		public void ScanForCommands_ShouldSkipObsoleteCommandTypes()
 		{
 			var registry = CreateRegistry();
-			registry.InitializeFromAssembly(typeof(HelpCommand).Assembly);
+			registry.InitializeFromAssembly(typeof(Greg.Xrm.Command.Commands.Help.HelpCommand).Assembly);
 
 			// No obsolete types should be in the command list
 			foreach (var command in registry.Commands)
@@ -214,10 +211,10 @@ namespace Greg.Xrm.Command.TestSuite
 		public void InitializeFromAssembly_WithMultipleCalls_ShouldNotDuplicateCommands()
 		{
 			var registry = CreateRegistry();
-			registry.InitializeFromAssembly(typeof(HelpCommand).Assembly);
+			registry.InitializeFromAssembly(typeof(Greg.Xrm.Command.Commands.Help.HelpCommand).Assembly);
 			var firstCount = registry.Commands.Count;
 
-			registry.InitializeFromAssembly(typeof(HelpCommand).Assembly);
+			registry.InitializeFromAssembly(typeof(Greg.Xrm.Command.Commands.Help.HelpCommand).Assembly);
 			var secondCount = registry.Commands.Count;
 
 			// Second call should add more commands (since it's a new registration)
@@ -239,7 +236,7 @@ namespace Greg.Xrm.Command.TestSuite
 		public void CommandTree_ShouldSupportMultiLevelVerbHierarchy()
 		{
 			var registry = CreateRegistry();
-			registry.InitializeFromAssembly(typeof(HelpCommand).Assembly);
+			registry.InitializeFromAssembly(typeof(Greg.Xrm.Command.Commands.Help.HelpCommand).Assembly);
 
 			// Verify multi-level verbs exist (e.g., "env create", "alm pipeline create")
 			var hasMultiLevel = registry.Commands.Any(c => c.Verbs.Count >= 3);
@@ -252,9 +249,9 @@ namespace Greg.Xrm.Command.TestSuite
 		public void GetExecutorTypeFor_ShouldReturnCorrectExecutorType()
 		{
 			var registry = CreateRegistry();
-			registry.InitializeFromAssembly(typeof(HelpCommand).Assembly);
+			registry.InitializeFromAssembly(typeof(Greg.Xrm.Command.Commands.Help.HelpCommand).Assembly);
 
-			var listCommandType = typeof(ListCommand);
+			var listCommandType = typeof(Greg.Xrm.Command.Commands.Auth.ListCommand);
 			var executorType = registry.GetExecutorTypeFor(listCommandType);
 
 			Assert.IsNotNull(executorType, "No executor type found for ListCommand.");
@@ -267,7 +264,7 @@ namespace Greg.Xrm.Command.TestSuite
 		public void GetExecutorTypeFor_WithUnknownType_ShouldReturnNull()
 		{
 			var registry = CreateRegistry();
-			registry.InitializeFromAssembly(typeof(HelpCommand).Assembly);
+			registry.InitializeFromAssembly(typeof(Greg.Xrm.Command.Commands.Help.HelpCommand).Assembly);
 
 			var unknownType = typeof(string);
 			var executorType = registry.GetExecutorTypeFor(unknownType);
@@ -279,9 +276,9 @@ namespace Greg.Xrm.Command.TestSuite
 		public void ScanPluginsFolder_WithToolArgument_ShouldAttemptToLoadDll()
 		{
 			var registry = CreateRegistry();
-			registry.InitializeFromAssembly(typeof(HelpCommand).Assembly);
+			registry.InitializeFromAssembly(typeof(Greg.Xrm.Command.Commands.Help.HelpCommand).Assembly);
 
-			var args = new CommandLineArguments(new[] { "help", "--tool", "C:\\nonexistent\\plugin.dll" });
+			var args = new Greg.Xrm.Command.Parsing.CommandLineArguments(new[] { "help", "--tool", "C:\\nonexistent\\plugin.dll" });
 			registry.ScanPluginsFolder(args);
 
 			// Should handle non-existent file gracefully without throwing
@@ -292,9 +289,9 @@ namespace Greg.Xrm.Command.TestSuite
 		public void ScanPluginsFolder_WithNonDllFile_ShouldSkip()
 		{
 			var registry = CreateRegistry();
-			registry.InitializeFromAssembly(typeof(HelpCommand).Assembly);
+			registry.InitializeFromAssembly(typeof(Greg.Xrm.Command.Commands.Help.HelpCommand).Assembly);
 
-			var args = new CommandLineArguments(new[] { "help", "--tool", "C:\\temp\\readme.txt" });
+			var args = new Greg.Xrm.Command.Parsing.CommandLineArguments(new[] { "help", "--tool", "C:\\temp\\readme.txt" });
 			registry.ScanPluginsFolder(args);
 
 			// Should skip non-DLL file gracefully

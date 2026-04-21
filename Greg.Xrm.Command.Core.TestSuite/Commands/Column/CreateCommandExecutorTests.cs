@@ -15,7 +15,7 @@ namespace Greg.Xrm.Command.Commands.Column
 		[TestCategory("Integration")]
 		public void Integration_CreateGlobalOptionSetField()
 		{
-			var storage = new Storage();
+			var storage = new Greg.Xrm.Command.Services.Storage();
 			var output = new OutputToMemory();
 			var settingsRepository = new SettingsRepository(storage);
 			var pacxProjectRepository = new PacxProjectRepository(Mock.Of<ILogger<PacxProjectRepository>>());

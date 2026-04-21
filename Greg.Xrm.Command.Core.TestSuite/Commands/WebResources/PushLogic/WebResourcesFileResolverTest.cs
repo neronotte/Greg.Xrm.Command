@@ -17,7 +17,7 @@ namespace Greg.Xrm.Command.Commands.WebResources.PushLogic
 		[TestMethod]
 		public void Resolve_WithNullPrefix_ThrowsException()
 		{
-			Assert.ThrowsExactly<ArgumentNullException>(() =>
+			Assert.ThrowsException<ArgumentNullException>(() =>
 			{
 #pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
 				resolver.ResolveFiles(null);

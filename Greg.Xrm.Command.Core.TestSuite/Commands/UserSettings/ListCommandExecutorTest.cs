@@ -19,7 +19,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 			var output = new OutputToMemory();
 			var crmMock = new Mock<IOrganizationServiceAsync2>();
 			var repoMock = new Mock<IOrganizationServiceRepository>();
-			repoMock.Setup(r => r.GetCurrentConnectionAsync()).ReturnsAsync(crmMock.Object);
+			repoMock.Setup(r => r.GetCurrentConnectionAsync(It.IsAny<CancellationToken>())).ReturnsAsync(crmMock.Object);
 			return (output, repoMock, crmMock);
 		}
 

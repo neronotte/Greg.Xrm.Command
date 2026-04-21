@@ -37,8 +37,8 @@ namespace Greg.Xrm.Command.Commands.Solution
 				q.Criteria.Conditions.Any(c => 
 					c.AttributeName == "uniquename" && 
 					c.Operator == ConditionOperator.NotIn && 
-					((object[])c.Values).Contains("MicrosoftCorporation") &&
-					((object[])c.Values).Contains("microsoftfirstparty")
+					c.Values.Contains("MicrosoftCorporation") &&
+					c.Values.Contains("microsoftfirstparty")
 				)
 			), It.IsAny<CancellationToken>()), Times.Once);
 		}
@@ -60,8 +60,8 @@ namespace Greg.Xrm.Command.Commands.Solution
 				q.Criteria.Conditions.Any(c => 
 					c.AttributeName == "uniquename" && 
 					c.Operator == ConditionOperator.NotIn && 
-					((object[])c.Values).Contains("Custom1") &&
-					((object[])c.Values).Contains("Custom2")
+					c.Values.Contains("Custom1") &&
+					c.Values.Contains("Custom2")
 				)
 			), It.IsAny<CancellationToken>()), Times.Once);
 		}

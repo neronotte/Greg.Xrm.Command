@@ -1,10 +1,10 @@
 using Greg.Xrm.Command.Parsing;
 
-namespace Greg.Xrm.Command
+namespace Greg.Xrm.Command.Parsing
 {
 	public class CommandLineArguments : List<string>, ICommandLineArguments
 	{
-		public CommandLineArguments(string[] args) : base(args)
+		public CommandLineArguments(IEnumerable<string> args) : base(args)
 		{
 		}
 	}

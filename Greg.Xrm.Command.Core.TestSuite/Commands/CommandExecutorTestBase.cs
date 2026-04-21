@@ -14,7 +14,7 @@ namespace Greg.Xrm.Command.Commands
 			this.OrganizationServiceMock = new Mock<IOrganizationServiceAsync2>();
 			this.OrganizationServiceRepositoryMock = new Mock<IOrganizationServiceRepository>();
 			this.OrganizationServiceRepositoryMock
-				.Setup(m => m.GetCurrentConnectionAsync())
+				.Setup(m => m.GetCurrentConnectionAsync(It.IsAny<CancellationToken>()))
 				.ReturnsAsync(this.OrganizationServiceMock.Object);
 
 			this.Output = new OutputToMemory();

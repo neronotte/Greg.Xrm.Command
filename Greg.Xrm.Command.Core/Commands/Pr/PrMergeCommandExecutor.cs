@@ -75,7 +75,7 @@ namespace Greg.Xrm.Command.Commands.Pr
 						output.Write($"Deleting branch {pr.Head.Ref}...");
 						try
 						{
-							await client.GitDatabase.Reference.Delete(owner, name, $"heads/{pr.Head.Ref}");
+							await client.Git.Reference.Delete(owner, name, $"heads/{pr.Head.Ref}");
 							output.WriteLine(" Done", ConsoleColor.Green);
 						}
 						catch

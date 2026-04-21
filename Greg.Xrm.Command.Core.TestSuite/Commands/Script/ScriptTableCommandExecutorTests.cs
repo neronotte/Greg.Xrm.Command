@@ -38,7 +38,7 @@ namespace Greg.Xrm.Command.Commands.Script
 				.ReturnsAsync(mockEntity);
 
 			mockServiceRepository
-				.Setup(x => x.GetCurrentConnectionAsync())
+				.Setup(x => x.GetCurrentConnectionAsync(It.IsAny<CancellationToken>()))
 				.ReturnsAsync(mockOrganizationService.Object);
 
 			var extractionService = new ScriptExtractionService(
@@ -135,7 +135,7 @@ namespace Greg.Xrm.Command.Commands.Script
 			var output = new OutputToMemory(); // Or use OutputToConsole for debugging
 			var mockServiceRepository = new Mock<IOrganizationServiceRepository>();
 			mockServiceRepository
-				.Setup(x => x.GetCurrentConnectionAsync())
+				.Setup(x => x.GetCurrentConnectionAsync(It.IsAny<CancellationToken>()))
 				.ReturnsAsync(serviceClient);
 
 			var scriptBuilder = new ScriptBuilder();

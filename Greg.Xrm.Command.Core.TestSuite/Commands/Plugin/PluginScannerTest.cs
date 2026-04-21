@@ -1,3 +1,4 @@
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.IO;
 
@@ -22,7 +23,7 @@ namespace Greg.Xrm.Command.Commands.Plugin
 		public void ScanAssembly_WithInvalidPath_ShouldNotThrow()
 		{
 			// Should handle non-existent files gracefully
-			Assert.ThrowsException<FileNotFoundException>(() =>
+			Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ThrowsException<FileNotFoundException>(() =>
 				PluginScanner.ScanAssembly("C:\\nonexistent\\plugin.dll"));
 		}
 

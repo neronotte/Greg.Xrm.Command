@@ -76,7 +76,7 @@ namespace Greg.Xrm.Command.Commands.WebResources
 				var solutionId = Guid.Empty;
 				if (!string.IsNullOrEmpty(command.SolutionUniqueName))
 				{
-					var solution = await solutionRepository.GetByNameAsync(command.SolutionUniqueName, cancellationToken);
+					var solution = await solutionRepository.GetByUniqueNameAsync(crm, command.SolutionUniqueName);
 					if (solution == null)
 					{
 						return CommandResult.Fail($"Solution '{command.SolutionUniqueName}' not found.");

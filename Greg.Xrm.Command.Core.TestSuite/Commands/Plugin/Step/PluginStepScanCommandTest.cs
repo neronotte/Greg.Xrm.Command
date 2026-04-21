@@ -56,8 +56,8 @@ namespace Greg.Xrm.Command.Commands.Plugin.Step
 
 			var result = await executor.ExecuteAsync(command, CancellationToken.None);
 
-			Assert.IsFalse(result.Success);
-			Assert.IsTrue(output.CapturedOutput.Contains("Path not found"));
+			Assert.IsFalse(result.IsSuccess);
+			Assert.IsTrue(output.ToString().Contains("Path not found"));
 		}
 
 		[TestMethod]
@@ -77,7 +77,7 @@ namespace Greg.Xrm.Command.Commands.Plugin.Step
 
 				var result = await executor.ExecuteAsync(command, CancellationToken.None);
 
-				Assert.IsTrue(result.Success);
+				Assert.IsTrue(result.IsSuccess);
 			}
 			finally
 			{

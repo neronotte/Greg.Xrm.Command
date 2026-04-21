@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Greg.Xrm.Command
 {
-	sealed class Bootstrapper(
+	public sealed class Bootstrapper(
 		ILogger<Bootstrapper> logger,
 		IOutput output,
 		ICommandRegistry registry,

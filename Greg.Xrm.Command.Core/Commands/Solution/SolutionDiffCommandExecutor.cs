@@ -1,5 +1,6 @@
 using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
+using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;
 using System;
 using System.Collections.Generic;
@@ -57,7 +58,7 @@ namespace Greg.Xrm.Command.Commands.Solution
 					output.WriteTable(changes,
 						() => new[] { "Change", "Type", "Name" },
 						c => new[] { c.Type, c.ComponentType, c.Name },
-						c => c.Type == "Added" ? ConsoleColor.Green : ConsoleColor.Red
+						(i, c) => c.Type == "Added" ? ConsoleColor.Green : ConsoleColor.Red
 					);
 				}
 

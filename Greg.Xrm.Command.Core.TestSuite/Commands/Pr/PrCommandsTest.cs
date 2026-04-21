@@ -135,9 +135,9 @@ namespace Greg.Xrm.Command.Commands.Pr
 
 			var result = await executor.ExecuteAsync(command, CancellationToken.None);
 
-			Assert.IsTrue(result.Success);
-			Assert.IsTrue(output.CapturedOutput.Contains("[DRY RUN]"));
-			Assert.IsTrue(output.CapturedOutput.Contains("Test PR"));
+			Assert.IsTrue(result.IsSuccess);
+			Assert.IsTrue(output.ToString().Contains("[DRY RUN]"));
+			Assert.IsTrue(output.ToString().Contains("Test PR"));
 		}
 
 		[TestMethod]
@@ -153,7 +153,7 @@ namespace Greg.Xrm.Command.Commands.Pr
 
 			var result = await executor.ExecuteAsync(command, CancellationToken.None);
 
-			Assert.IsFalse(result.Success);
+			Assert.IsFalse(result.IsSuccess);
 		}
 
 		#endregion
@@ -173,8 +173,8 @@ namespace Greg.Xrm.Command.Commands.Pr
 
 			var result = await executor.ExecuteAsync(command, CancellationToken.None);
 
-			Assert.IsFalse(result.Success);
-			Assert.IsTrue(output.CapturedOutput.Contains("Unable to determine repository"));
+			Assert.IsFalse(result.IsSuccess);
+			Assert.IsTrue(output.ToString().Contains("Unable to determine repository"));
 		}
 
 		[TestMethod]
@@ -193,7 +193,7 @@ namespace Greg.Xrm.Command.Commands.Pr
 			// This will throw NotFoundException from Octokit since the PR doesn't exist
 			var result = await executor.ExecuteAsync(command, CancellationToken.None);
 
-			Assert.IsFalse(result.Success);
+			Assert.IsFalse(result.IsSuccess);
 		}
 
 		#endregion
@@ -233,8 +233,8 @@ namespace Greg.Xrm.Command.Commands.Pr
 
 			var result = await executor.ExecuteAsync(command, CancellationToken.None);
 
-			Assert.IsFalse(result.Success);
-			Assert.IsTrue(output.CapturedOutput.Contains("Unable to determine repository"));
+			Assert.IsFalse(result.IsSuccess);
+			Assert.IsTrue(output.ToString().Contains("Unable to determine repository"));
 		}
 
 		#endregion

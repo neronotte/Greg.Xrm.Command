@@ -33,11 +33,13 @@ internal class Program
 		serviceCollection.AddSingleton<IAutoUpdater, AutoUpdater>();
 		serviceCollection.AddTransient<IPacxProjectRepository, PacxProjectRepository>();
 		serviceCollection.AddSingleton<IOrganizationServiceRepository, OrganizationServiceRepository>();
+		serviceCollection.AddSingleton<ITokenProvider, TokenProvider>();
 		serviceCollection.AddSingleton<IOutput, OutputToConsole>();
 		serviceCollection.AddTransient<IHistoryTracker, HistoryTracker>();
 		serviceCollection.AddTransient<Bootstrapper>();
 		serviceCollection.AddSingleton(AnsiConsole.Console);
 
+		serviceCollection.AddHttpClient();
 		serviceCollection.AddAutofac();
 		serviceCollection.AddLogging(logging =>
 		{

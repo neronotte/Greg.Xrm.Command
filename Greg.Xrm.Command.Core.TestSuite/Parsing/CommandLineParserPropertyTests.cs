@@ -16,7 +16,7 @@ namespace Greg.Xrm.Command.Parsing
 		{
 			var log = NullLogger<CommandRegistry>.Instance;
 			var output = new OutputToMemory();
-			var storage = new Storage();
+			var storage = new Greg.Xrm.Command.Services.Storage();
 			var registry = new CommandRegistry(log, output, storage);
 			registry.InitializeFromAssembly(typeof(ListCommand).Assembly);
 			return registry;

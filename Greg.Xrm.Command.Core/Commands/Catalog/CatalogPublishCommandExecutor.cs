@@ -17,7 +17,7 @@ namespace Greg.Xrm.Command.Commands.Catalog
 		public async Task<CommandResult> ExecuteAsync(CatalogPublishCommand command, CancellationToken cancellationToken)
 		{
 			output.Write("Connecting to the current Dataverse environment...");
-			var crm = await organizationServiceRepository.GetCurrentConnectionAsync();
+			var crm = await organizationServiceRepository.GetCurrentConnectionAsync(cancellationToken);
 			output.WriteLine("Done", ConsoleColor.Green);
 
 			if (command.DryRun)
@@ -36,17 +36,34 @@ namespace Greg.Xrm.Command.Commands.Catalog
 				item["uniquename"] = command.Name;
 				item["displayname"] = command.Name;
 				item["description"] = command.Description ?? "";
-				item["statecode"] = 0; // Draft
+				item["version"] = command.Version ?? "1.0.0";
+				
+				// Set to Published state (1), not Draft (0)
+				item["statecode"] = new OptionSetValue(1);
 
 				if (command.Type == "BusinessEvent")
 				{
 					item["catalogitemtype"] = new OptionSetValue(1);
 				}
+				else if (command.Type == "ApiDefinition")
+				{
+					item["catalogitemtype"] = new OptionSetValue(2);
+				}
 
-				output.Write($"Publishing catalog item '{command.Name}'...");
+				output.Write($"Creating catalog item '{command.Name}'...");
 				var itemId = await crm.CreateAsync(item, cancellationToken);
 				output.WriteLine(" Done", ConsoleColor.Green);
-				output.WriteLine($"Catalog item created with ID: {itemId}", ConsoleColor.Green);
+
+				output.Write($"Publishing catalog item '{command.Name}'...");
+				var request = new OrganizationRequest("PublishCatalogItem")
+				{
+					["CatalogItemId"] = itemId
+				};
+				await crm.ExecuteAsync(request, cancellationToken);
+				output.WriteLine(" Done", ConsoleColor.Green);
+				output.WriteLine($"Catalog item published with ID: {itemId}", ConsoleColor.Green);
+				output.WriteLine($"Type: {command.Type}", ConsoleColor.Cyan);
+				output.WriteLine($"State: Published", ConsoleColor.Cyan);
 
 				return CommandResult.Success();
 			}

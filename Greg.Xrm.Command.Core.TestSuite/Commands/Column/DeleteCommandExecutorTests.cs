@@ -15,17 +15,17 @@ namespace Greg.Xrm.Command.Commands.Column
 		[TestCategory("Integration")]
 		public void Integration_ForceDelete()
 		{
-			var storage = new Storage();
+			var storage = new Greg.Xrm.Command.Services.Storage();
 			var output = new OutputToMemory();
 			var settingsRepository = new SettingsRepository(storage);
 			var pacxProjectRepository = new PacxProjectRepository(Mock.Of<ILogger<PacxProjectRepository>>());
 			var repository = new OrganizationServiceRepository(output, settingsRepository, pacxProjectRepository);
 
-			var dependencyRepository = new Dependency.Repository(Mock.Of<ILogger<Dependency.Repository>>());
-			var workflowRepository = new Workflow.Repository();
-			var processTriggerRepository = new ProcessTrigger.Repository();
-			var savedQueryRepository = new SavedQuery.Repository();
-			var userQueryRepository = new UserQuery.Repository();
+			var dependencyRepository = new Greg.Xrm.Command.Model.Dependency.Repository(Mock.Of<ILogger<Greg.Xrm.Command.Model.Dependency.Repository>>());
+			var workflowRepository = new Greg.Xrm.Command.Model.Workflow.Repository();
+			var processTriggerRepository = new Greg.Xrm.Command.Model.ProcessTrigger.Repository();
+			var savedQueryRepository = new Greg.Xrm.Command.Model.SavedQuery.Repository();
+			var userQueryRepository = new Greg.Xrm.Command.Model.UserQuery.Repository();
 			var attributeDeletionService = new AttributeDeletionService(output, []);
 
 

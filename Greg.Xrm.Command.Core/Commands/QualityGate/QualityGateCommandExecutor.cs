@@ -95,7 +95,7 @@ namespace Greg.Xrm.Command.Commands.QualityGate
 			}
 		}
 
-		private static ConsoleColor ColorPicker(QualityIssue issue, int rowIndex)
+		private static ConsoleColor? ColorPicker(int rowIndex, QualityIssue issue)
 		{
 			return issue.Severity switch
 			{
