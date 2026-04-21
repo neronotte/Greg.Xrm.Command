@@ -44,7 +44,6 @@ public class ServiceResolutionBenchmarks
         serviceCollection.AddSingleton<IOrganizationServiceRepository, OrganizationServiceRepository>();
         serviceCollection.AddSingleton<IOutput, OutputToMemory>();
         serviceCollection.AddTransient<IHistoryTracker, HistoryTracker>();
-        serviceCollection.AddTransient<Bootstrapper>();
 
         serviceCollection.AddAutofac();
         serviceCollection.AddLogging(logging =>
@@ -89,12 +88,6 @@ public class ServiceResolutionBenchmarks
     public IHistoryTracker ResolveHistoryTracker()
     {
         return _scope.Resolve<IHistoryTracker>();
-    }
-
-    [Benchmark(Description = "Resolve Complex (Bootstrapper)")]
-    public Bootstrapper ResolveBootstrapper()
-    {
-        return _scope.Resolve<Bootstrapper>();
     }
 
     [Benchmark(Description = "Resolve ICommandExecutorFactory")]

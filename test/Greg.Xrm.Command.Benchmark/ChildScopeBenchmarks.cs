@@ -34,7 +34,7 @@ public class ChildScopeBenchmarks
         var serviceCollection = new ServiceCollection();
         
         serviceCollection.AddSingleton<IStorage>(new Storage());
-        serviceCollection.AddSingleton<ICommandLineArguments>(new CommandLineArguments(Array.Empty<string>()));
+        serviceCollection.AddSingleton<ICommandLineArguments>(new CommandLineArguments([]));
         serviceCollection.AddSingleton<ICommandRegistry, CommandRegistry>();
         serviceCollection.AddSingleton<ICommandParser, CommandParser>();
         serviceCollection.RegisterCommandExecutors(typeof(CommandAttribute).Assembly);
@@ -45,7 +45,6 @@ public class ChildScopeBenchmarks
         serviceCollection.AddSingleton<IOrganizationServiceRepository, OrganizationServiceRepository>();
         serviceCollection.AddSingleton<IOutput, OutputToMemory>();
         serviceCollection.AddTransient<IHistoryTracker, HistoryTracker>();
-        serviceCollection.AddTransient<Bootstrapper>();
 
         serviceCollection.AddAutofac();
         serviceCollection.AddLogging(logging =>
@@ -105,14 +104,11 @@ public class ChildScopeBenchmarks
     {
         var assembly = typeof(HelpCommand).Assembly;
         
-        using var scope = _container.BeginLifetimeScope("executor", builder =>
-        {
-            builder
-                .RegisterAssemblyTypes(assembly)
-                .Where(t => t.GetInterfaces().Any(x => x.IsGenericType && x.GetGenericTypeDefinition() == typeof(ICommandExecutor<>)))
-                .AsSelf()
-                .AsImplementedInterfaces();
-        });
+        using var scope = _container.BeginLifetimeScope("executor", builder => builder
+				.RegisterAssemblyTypes(assembly)
+				.Where(t => t.GetInterfaces().Any(x => x.IsGenericType && x.GetGenericTypeDefinition() == typeof(ICommandExecutor<>)))
+				.AsSelf()
+				.AsImplementedInterfaces());
     }
 
     /// <summary>

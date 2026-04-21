@@ -46,7 +46,6 @@ public class ContainerBuildBenchmarks
         serviceCollection.AddSingleton<IOrganizationServiceRepository, OrganizationServiceRepository>();
         serviceCollection.AddSingleton<IOutput, OutputToMemory>();
         serviceCollection.AddTransient<IHistoryTracker, HistoryTracker>();
-        serviceCollection.AddTransient<Bootstrapper>();
 
         serviceCollection.AddAutofac();
         serviceCollection.AddLogging(logging =>
