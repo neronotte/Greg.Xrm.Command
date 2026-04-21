@@ -17,36 +17,20 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 
 		public async Task<CommandResult> ExecuteAsync(SetCommand command, CancellationToken cancellationToken)
 		{
-			// ── 1. Validate key/value count match ────────────────────────────────────
-			if (command.Keys.Count != command.Values.Count)
-				return CommandResult.Fail(
-					$"The number of --key arguments ({command.Keys.Count}) must match the number of --value arguments ({command.Values.Count}).");
-
-			if (command.Keys.Count == 0)
-				return CommandResult.Fail("At least one --key / --value pair must be provided.");
-
-			// ── 2. Validate all keys and values locally (before connecting) ──────────
-			var pairs = new List<(UserSettingDefinition FieldDef, object ParsedValue)>(command.Keys.Count);
-			for (int i = 0; i < command.Keys.Count; i++)
+			// ── 1. Validate key ──────────────────────────────────────────────────────
+			if (!UserSettingRegistry.Fields.TryGetValue(command.Key, out var fieldDef))
 			{
-				var key = command.Keys[i];
-				var rawValue = command.Values[i];
-
-				if (!UserSettingRegistry.Fields.TryGetValue(key, out var fieldDef))
-				{
-					var supportedKeys = string.Join(", ", UserSettingRegistry.Fields.Keys.OrderBy(k => k));
-					return CommandResult.Fail(
-						$"'{key}' is not a supported usersettings field. " +
-						$"Supported fields: {supportedKeys}. " +
-						$"See https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/reference/usersettings for details.");
-				}
-
-				var (isValid, validationError, parsedValue) = fieldDef.Validate(rawValue);
-				if (!isValid)
-					return CommandResult.Fail(validationError!);
-
-				pairs.Add((fieldDef, parsedValue!));
+				var supportedKeys = string.Join(", ", UserSettingRegistry.Fields.Keys.OrderBy(k => k));
+				return CommandResult.Fail(
+					$"'{command.Key}' is not a supported usersettings field. " +
+					$"Supported fields: {supportedKeys}. " +
+					$"See https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/reference/usersettings for details.");
 			}
+
+			// ── 2. Validate value locally ────────────────────────────────────────────
+			var (isValid, validationError, parsedValue) = fieldDef.Validate(command.Value);
+			if (!isValid)
+				return CommandResult.Fail(validationError!);
 
 			// ── 3. Connect ───────────────────────────────────────────────────────────
 			output.Write("Connecting to the current Dataverse environment...");
@@ -55,24 +39,19 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 
 			try
 			{
-				// ── 4. Extra validation for language fields (fetch available languages once) ──
-				var languagePairs = pairs.Where(p => p.FieldDef.FieldType == UserSettingFieldType.Language).ToList();
-				if (languagePairs.Count > 0)
+				// ── 4. Extra validation for language fields (Dataverse availability) ──
+				if (fieldDef.FieldType == UserSettingFieldType.Language)
 				{
-					output.Write("Validating language LCID(s) in Dataverse...");
+					var lcid = (int)parsedValue!;
+					output.Write($"Validating language LCID {lcid} in Dataverse...");
 					var langResponse = (RetrieveAvailableLanguagesResponse)await crm.ExecuteAsync(new RetrieveAvailableLanguagesRequest());
 					var available = langResponse.LocaleIds ?? [];
-
-					foreach (var (fieldDef, parsedValue) in languagePairs)
+					if (!available.Contains(lcid))
 					{
-						var lcid = (int)parsedValue;
-						if (!available.Contains(lcid))
-						{
-							output.WriteLine("Failed", ConsoleColor.Red);
-							return CommandResult.Fail(
-								$"LCID {lcid} (field '{fieldDef.FieldName}') is not available in this Dataverse environment. " +
-								$"Use 'pacx org language list' to see the provisioned languages.");
-						}
+						output.WriteLine("Failed", ConsoleColor.Red);
+						return CommandResult.Fail(
+							$"LCID {lcid} is not available in this Dataverse environment. " +
+							$"Use 'pacx org language list' to see the provisioned languages.");
 					}
 					output.WriteLine("Done", ConsoleColor.Green);
 				}
@@ -106,21 +85,18 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 					output.WriteLine("Done", ConsoleColor.Green);
 				}
 
-				// ── 6. Apply all updates in a single call ────────────────────────────
-				var fieldNames = string.Join(", ", pairs.Select(p => $"'{p.FieldDef.FieldName}'"));
-				output.Write($"Setting {pairs.Count} field(s) ({fieldNames})...");
+				// ── 6. Apply update ──────────────────────────────────────────────────
+				output.Write($"Setting '{fieldDef.DisplayName}' ({fieldDef.FieldName}) to '{command.Value}'...");
 				var userSettings = new Entity(UserSettingsTableName) { Id = targetUserId };
-				foreach (var (fieldDef, parsedValue) in pairs)
-					userSettings[fieldDef.FieldName] = parsedValue;
+				userSettings[fieldDef.FieldName] = parsedValue;
 
 				await crm.UpdateAsync(userSettings);
 				output.WriteLine("Done", ConsoleColor.Green);
 
 				var result = CommandResult.Success();
 				result["SystemUserId"] = targetUserId;
-				result["Fields"] = string.Join(", ", pairs.Select(p => p.FieldDef.FieldName));
-				for (int i = 0; i < command.Keys.Count; i++)
-					result[command.Keys[i]] = command.Values[i];
+				result["Key"] = fieldDef.FieldName;
+				result["Value"] = command.Value;
 				return result;
 			}
 			catch (FaultException<OrganizationServiceFault> ex)

@@ -99,13 +99,6 @@ namespace Greg.Xrm.Command.Parsing
 					throw new CommandException(CommandException.CommandRequiredArgumentNotProvided, $"You must specify a value for the option --{option.LongName}.");
 
 
-				if (propertyType == typeof(List<string>))
-				{
-					var values = optionValue.Split('\x1F').ToList();
-					property.SetValue(command, values);
-					continue;
-				}
-
 				var propertyValue = Convert(optionValue, propertyType, option.LongName, optionDef.IsRequired, option.DefaultValue);
 
 				property.SetValue(command, propertyValue);

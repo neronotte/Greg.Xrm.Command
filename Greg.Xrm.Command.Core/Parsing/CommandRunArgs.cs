@@ -45,8 +45,7 @@ namespace Greg.Xrm.Command.Parsing
 					var optionName = arg;
 					if (i + 1 >= args.Length)
 					{
-						if (!options.ContainsKey(optionName))
-							options.Add(optionName, string.Empty);
+						options.Add(optionName, string.Empty);
 						continue;
 					}
 
@@ -54,15 +53,11 @@ namespace Greg.Xrm.Command.Parsing
 					var optionValue = args[i + 1];
 					if (IsOption(optionValue))
 					{
-						if (!options.ContainsKey(optionName))
-							options.Add(optionName, string.Empty);
+						options.Add(optionName, string.Empty);
 						continue;
 					}
 
-					if (options.ContainsKey(optionName))
-						options[optionName] = options[optionName] + "\x1F" + optionValue;
-					else
-						options.Add(optionName, optionValue);
+					options.Add(optionName, optionValue);
 					i++; // need to advance by two
 				}
 				else
