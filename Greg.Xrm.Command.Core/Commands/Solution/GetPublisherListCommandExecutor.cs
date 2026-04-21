@@ -2,10 +2,6 @@ using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;
-using System;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Greg.Xrm.Command.Commands.Solution
 {
@@ -23,12 +19,12 @@ namespace Greg.Xrm.Command.Commands.Solution
 
 				string[] blackListPublisher = { "MicrosoftCorporation", "microsoftfirstparty" };
 
-				if (!string.IsNullOrEmpty(command.publisherBlacklist))
+				if(!string.IsNullOrEmpty(command.publisherBlacklist))
 					blackListPublisher = command.publisherBlacklist.Split(',', StringSplitOptions.TrimEntries);
 
 				var query = new QueryExpression("publisher");
 				query.NoLock = true;
-
+				
 				query.ColumnSet.AddColumns(
 					"friendlyname",
 					"customizationprefix",
@@ -42,8 +38,8 @@ namespace Greg.Xrm.Command.Commands.Solution
 
 				if (blackListPublisher.Length > 0)
 					query.Criteria.AddCondition("uniquename", ConditionOperator.NotIn, blackListPublisher);
-
-				var listPublisher = (await crm.RetrieveMultipleAsync(query)).Entities;
+				
+				var listPublisher = (await crm.RetrieveMultipleAsync(query, cancellationToken)).Entities;
 
 
 				output.WriteTable(listPublisher,
@@ -68,7 +64,7 @@ namespace Greg.Xrm.Command.Commands.Solution
 
 		}
 
-		private static Func<string[]> publisherListColumns(bool verbose)
+		private Func<string[]> publisherListColumns(bool verbose)
 		{
 			string[] columns = {
 				"Unique name",
@@ -88,7 +84,7 @@ namespace Greg.Xrm.Command.Commands.Solution
 
 			return () => columns;
 		}
-		private static Func<Entity, string[]> publisherListData(bool verbose)
+		private Func<Entity, string[]> publisherListData(bool verbose)
 		{
 			return (user) =>
 			{
@@ -104,7 +100,7 @@ namespace Greg.Xrm.Command.Commands.Solution
 						user.GetFormattedValue("customizationoptionvalueprefix") ?? string.Empty,
 						user.GetAttributeValue<DateTime?>("createdon").GetValueOrDefault().ToLocalTime().ToString() ?? string.Empty,
 						user.GetFormattedValue("createdby") ?? string.Empty,
-						user.GetAttributeValue<string>("description") ?? string.Empty
+						user.GetAttributeValue<string>("description") ?? string.Empty						
 					}).ToArray();
 				}
 
