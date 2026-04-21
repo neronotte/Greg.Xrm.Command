@@ -40,7 +40,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 					if (userResult.Entities.Count == 0)
 					{
 						output.WriteLine("Failed", ConsoleColor.Red);
-						return CommandResult.Fail($"No active user found with domain name '{command.UserDomainName}'.");
+						return CommandResult.Fail($"No user found with domain name '{command.UserDomainName}'.");
 					}
 
 					targetUserId = userResult.Entities[0].Id;
