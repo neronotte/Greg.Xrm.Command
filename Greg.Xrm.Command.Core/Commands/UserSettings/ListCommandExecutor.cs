@@ -58,7 +58,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 
 				// ── 3. Retrieve usersettings ─────────────────────────────────────────
 				output.Write("Retrieving user settings...");
-				var fieldNames = UserSettingRegistry.Fields.Keys.ToArray();
+				var fieldNames = UserSettingRegistry.Fields.Select(f => f.FieldName).ToArray();
 				var query = new QueryExpression(UserSettingsTableName);
 				query.ColumnSet.AddColumns(fieldNames);
 				query.Criteria.AddCondition("systemuserid", ConditionOperator.Equal, targetUserId);
@@ -76,18 +76,17 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 
 				// ── 4. Display table ─────────────────────────────────────────────────
 				output.WriteLine();
-				var rows = UserSettingRegistry.Fields.Values
+				var rows = UserSettingRegistry.Fields
 					.OrderBy(d => d.FieldName)
 					.ToList();
 
 				output.WriteTable(
 					rows,
-					() => ["Key", "Display Name", "Type", "Value"],
+					() => ["Key", "Display Name", "Value"],
 					row =>
 					[
 						row.FieldName,
 						row.DisplayName,
-						row.FieldType.ToString(),
 						FormatValue(row, settings)
 					]);
 
@@ -109,24 +108,35 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 			}
 		}
 
-		private static string FormatValue(UserSettingDefinition def, Entity settings)
+		private static string FormatValue(UserSettingField field, Entity settings)
 		{
-			if (!settings.Contains(def.FieldName))
+			if (!settings.Contains(field.FieldName))
 				return string.Empty;
 
-			var raw = settings[def.FieldName];
+			var raw = settings[field.FieldName];
 			if (raw == null)
 				return string.Empty;
 
-			return def.FieldType switch
+			// Dataverse returns optionset-typed columns as OptionSetValue; normalise to int.
+			int? intVal = raw switch
 			{
-				UserSettingFieldType.Language => raw.ToString() ?? string.Empty,
-				UserSettingFieldType.Picklist when raw is int intVal && def.AllowedValues != null =>
-					def.AllowedValues.TryGetValue(intVal, out var label)
-						? $"{intVal} ({label})"
-						: intVal.ToString(),
-				UserSettingFieldType.Boolean => raw is bool b ? b.ToString().ToLowerInvariant() : raw.ToString() ?? string.Empty,
-				_ => raw.ToString() ?? string.Empty
+				OptionSetValue osv => osv.Value,
+				int i => i,
+				_ => null
+			};
+
+			// Picklist fields carry an enum type: render "<code> (<Name>)" when the code is known.
+			if (field.EnumType is not null && intVal.HasValue)
+			{
+				return Enum.IsDefined(field.EnumType, intVal.Value)
+					? $"{intVal.Value} ({Enum.GetName(field.EnumType, intVal.Value)})"
+					: intVal.Value.ToString();
+			}
+
+			return raw switch
+			{
+				bool b => b ? "true" : "false",
+				_ => intVal?.ToString() ?? raw.ToString() ?? string.Empty
 			};
 		}
 	}

@@ -23,7 +23,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 			return (output, repoMock, crmMock);
 		}
 
-		// ── Happy path — integer field, current user ───────────────────────────────
+		// ?? Happy path � integer field, current user ???????????????????????????????
 
 		[TestMethod]
 		public async Task ExecuteAsync_ShouldSucceed_IntegerField_CurrentUser()
@@ -49,7 +49,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 
 			var executor = new SetCommandExecutor(output, repoMock.Object);
 			var result = await executor.ExecuteAsync(
-				new SetCommand { Key = "paginglimit", Value = "100" },
+				new SetCommand { PagingLimit = 100 },
 				CancellationToken.None);
 
 			Assert.IsTrue(result.IsSuccess, result.ErrorMessage);
@@ -60,16 +60,12 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 			crmMock.Verify(c => c.UpdateAsync(It.IsAny<Entity>()), Times.Once);
 		}
 
-		// ── Happy path — boolean field, current user ───────────────────────────────
+		// ?? Happy path � boolean field, current user ???????????????????????????????
 
 		[TestMethod]
-		[DataRow("true", true)]
-		[DataRow("false", false)]
-		[DataRow("1", true)]
-		[DataRow("0", false)]
-		[DataRow("yes", true)]
-		[DataRow("no", false)]
-		public async Task ExecuteAsync_ShouldSucceed_BooleanField(string rawValue, bool expected)
+		[DataRow(true)]
+		[DataRow(false)]
+		public async Task ExecuteAsync_ShouldSucceed_BooleanField(bool value)
 		{
 			var (output, repoMock, crmMock) = CreateMocks();
 			Entity? capturedUpdate = null;
@@ -86,15 +82,43 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 
 			var executor = new SetCommandExecutor(output, repoMock.Object);
 			var result = await executor.ExecuteAsync(
-				new SetCommand { Key = "showweeknumber", Value = rawValue },
+				new SetCommand { ShowWeekNumber = value },
 				CancellationToken.None);
 
 			Assert.IsTrue(result.IsSuccess, result.ErrorMessage);
 			Assert.IsNotNull(capturedUpdate);
-			Assert.AreEqual(expected, capturedUpdate.GetAttributeValue<bool>("showweeknumber"));
+			Assert.AreEqual(value, capturedUpdate.GetAttributeValue<bool>("showweeknumber"));
 		}
 
-		// ── Happy path — language field, current user ──────────────────────────────
+		// ?? Happy path � picklist via enum ?????????????????????????????????????????
+
+		[TestMethod]
+		public async Task ExecuteAsync_ShouldSucceed_EnumPicklistField()
+		{
+			var (output, repoMock, crmMock) = CreateMocks();
+			Entity? capturedUpdate = null;
+			var userId = Guid.NewGuid();
+
+			var whoAmI = new WhoAmIResponse();
+			whoAmI.Results["UserId"] = userId;
+
+			crmMock.Setup(c => c.ExecuteAsync(It.IsAny<WhoAmIRequest>())).ReturnsAsync(whoAmI);
+			crmMock
+				.Setup(c => c.UpdateAsync(It.IsAny<Entity>()))
+				.Callback<Entity>(e => capturedUpdate = e)
+				.Returns(Task.CompletedTask);
+
+			var executor = new SetCommandExecutor(output, repoMock.Object);
+			var result = await executor.ExecuteAsync(
+				new SetCommand { TimeFormatCodeValue = SetCommand.TimeFormat.TwentyFourHour },
+				CancellationToken.None);
+
+			Assert.IsTrue(result.IsSuccess, result.ErrorMessage);
+			Assert.IsNotNull(capturedUpdate);
+			Assert.AreEqual(1, capturedUpdate.GetAttributeValue<int>("timeformatcode"));
+		}
+
+		// ?? Happy path � language field triggers Dataverse availability check ?????
 
 		[TestMethod]
 		public async Task ExecuteAsync_ShouldSucceed_LanguageField_ValidatesDataverse()
@@ -124,7 +148,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 
 			var executor = new SetCommandExecutor(output, repoMock.Object);
 			var result = await executor.ExecuteAsync(
-				new SetCommand { Key = "uilanguageid", Value = "1040" },
+				new SetCommand { UILanguageId = 1040 },
 				CancellationToken.None);
 
 			Assert.IsTrue(result.IsSuccess, result.ErrorMessage);
@@ -133,7 +157,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 			crmMock.Verify(c => c.ExecuteAsync(It.IsAny<RetrieveAvailableLanguagesRequest>()), Times.Once);
 		}
 
-		// ── Happy path — specific user by domain name ──────────────────────────────
+		// ?? Happy path � specific user by domain name ??????????????????????????????
 
 		[TestMethod]
 		public async Task ExecuteAsync_ShouldSucceed_WithExplicitUser()
@@ -157,7 +181,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 
 			var executor = new SetCommandExecutor(output, repoMock.Object);
 			var result = await executor.ExecuteAsync(
-				new SetCommand { UserDomainName = @"DOMAIN\john.doe", Key = "paginglimit", Value = "250" },
+				new SetCommand { UserDomainName = @"DOMAIN\john.doe", PagingLimit = 250 },
 				CancellationToken.None);
 
 			Assert.IsTrue(result.IsSuccess, result.ErrorMessage);
@@ -167,95 +191,74 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 			crmMock.Verify(c => c.ExecuteAsync(It.IsAny<WhoAmIRequest>()), Times.Never);
 		}
 
-		// ── Failure: unknown key ───────────────────────────────────────────────────
+		// ?? Happy path: multiple fields in a single call ???????????????????????????
 
 		[TestMethod]
-		public async Task ExecuteAsync_ShouldFail_WhenKeyIsUnknown()
+		public async Task ExecuteAsync_ShouldSucceed_WithMultipleSettings()
+		{
+			var (output, repoMock, crmMock) = CreateMocks();
+			Entity? capturedUpdate = null;
+			var userId = Guid.NewGuid();
+
+			var langResponse = new RetrieveAvailableLanguagesResponse();
+			langResponse.Results["LocaleIds"] = new[] { 1033, 1040 };
+
+			var whoAmI = new WhoAmIResponse();
+			whoAmI.Results["UserId"] = userId;
+
+			crmMock
+				.Setup(c => c.ExecuteAsync(It.IsAny<OrganizationRequest>()))
+				.ReturnsAsync((OrganizationRequest r) =>
+				{
+					if (r is RetrieveAvailableLanguagesRequest) return langResponse;
+					if (r is WhoAmIRequest) return whoAmI;
+					throw new InvalidOperationException($"Unexpected request {r.GetType().Name}");
+				});
+			crmMock
+				.Setup(c => c.UpdateAsync(It.IsAny<Entity>()))
+				.Callback<Entity>(e => capturedUpdate = e)
+				.Returns(Task.CompletedTask);
+
+			var executor = new SetCommandExecutor(output, repoMock.Object);
+			var result = await executor.ExecuteAsync(
+				new SetCommand
+				{
+					UILanguageId = 1040,
+					HelpLanguageId = 1033,
+					PagingLimit = 250,
+					ShowWeekNumber = true
+				},
+				CancellationToken.None);
+
+			Assert.IsTrue(result.IsSuccess, result.ErrorMessage);
+			Assert.IsNotNull(capturedUpdate);
+			Assert.AreEqual(1040, capturedUpdate.GetAttributeValue<int>("uilanguageid"));
+			Assert.AreEqual(1033, capturedUpdate.GetAttributeValue<int>("helplanguageid"));
+			Assert.AreEqual(250, capturedUpdate.GetAttributeValue<int>("paginglimit"));
+			Assert.AreEqual(true, capturedUpdate.GetAttributeValue<bool>("showweeknumber"));
+			crmMock.Verify(c => c.UpdateAsync(It.IsAny<Entity>()), Times.Once);
+			crmMock.Verify(c => c.ExecuteAsync(It.IsAny<RetrieveAvailableLanguagesRequest>()), Times.Once);
+		}
+
+		// ?? Failure: no settings provided (defensive � Validate() normally catches this) ??
+
+		[TestMethod]
+		public async Task ExecuteAsync_ShouldFail_WhenNoSettingsProvided()
 		{
 			var (output, repoMock, crmMock) = CreateMocks();
 			var executor = new SetCommandExecutor(output, repoMock.Object);
 
 			var result = await executor.ExecuteAsync(
-				new SetCommand { Key = "notafield", Value = "abc" },
+				new SetCommand(),
 				CancellationToken.None);
 
 			Assert.IsFalse(result.IsSuccess);
-			StringAssert.Contains(result.ErrorMessage, "notafield");
-			StringAssert.Contains(result.ErrorMessage, "supported");
+			StringAssert.Contains(result.ErrorMessage, "No user setting");
 			repoMock.Verify(r => r.GetCurrentConnectionAsync(), Times.Never);
 			crmMock.Verify(c => c.UpdateAsync(It.IsAny<Entity>()), Times.Never);
 		}
 
-		// ── Failure: invalid value for picklist ────────────────────────────────────
-
-		[TestMethod]
-		public async Task ExecuteAsync_ShouldFail_WhenPicklistValueIsInvalid()
-		{
-			var (output, repoMock, crmMock) = CreateMocks();
-			var executor = new SetCommandExecutor(output, repoMock.Object);
-
-			var result = await executor.ExecuteAsync(
-				new SetCommand { Key = "timeformatcode", Value = "99" },
-				CancellationToken.None);
-
-			Assert.IsFalse(result.IsSuccess);
-			StringAssert.Contains(result.ErrorMessage, "99");
-			StringAssert.Contains(result.ErrorMessage, "Allowed values");
-			repoMock.Verify(r => r.GetCurrentConnectionAsync(), Times.Never);
-		}
-
-		// ── Failure: non-integer value for integer field ───────────────────────────
-
-		[TestMethod]
-		public async Task ExecuteAsync_ShouldFail_WhenIntegerValueIsNotNumeric()
-		{
-			var (output, repoMock, crmMock) = CreateMocks();
-			var executor = new SetCommandExecutor(output, repoMock.Object);
-
-			var result = await executor.ExecuteAsync(
-				new SetCommand { Key = "paginglimit", Value = "abc" },
-				CancellationToken.None);
-
-			Assert.IsFalse(result.IsSuccess);
-			StringAssert.Contains(result.ErrorMessage, "abc");
-			repoMock.Verify(r => r.GetCurrentConnectionAsync(), Times.Never);
-		}
-
-		// ── Failure: invalid boolean ───────────────────────────────────────────────
-
-		[TestMethod]
-		public async Task ExecuteAsync_ShouldFail_WhenBooleanValueIsInvalid()
-		{
-			var (output, repoMock, crmMock) = CreateMocks();
-			var executor = new SetCommandExecutor(output, repoMock.Object);
-
-			var result = await executor.ExecuteAsync(
-				new SetCommand { Key = "showweeknumber", Value = "maybe" },
-				CancellationToken.None);
-
-			Assert.IsFalse(result.IsSuccess);
-			StringAssert.Contains(result.ErrorMessage, "maybe");
-			repoMock.Verify(r => r.GetCurrentConnectionAsync(), Times.Never);
-		}
-
-		// ── Failure: invalid LCID ─────────────────────────────────────────────────
-
-		[TestMethod]
-		public async Task ExecuteAsync_ShouldFail_WhenLcidIsInvalid()
-		{
-			var (output, repoMock, crmMock) = CreateMocks();
-			var executor = new SetCommandExecutor(output, repoMock.Object);
-
-			var result = await executor.ExecuteAsync(
-				new SetCommand { Key = "uilanguageid", Value = "-1" },
-				CancellationToken.None);
-
-			Assert.IsFalse(result.IsSuccess);
-			StringAssert.Contains(result.ErrorMessage, "-1");
-			repoMock.Verify(r => r.GetCurrentConnectionAsync(), Times.Never);
-		}
-
-		// ── Failure: language not available in Dataverse ───────────────────────────
+		// ?? Failure: language not available in Dataverse ???????????????????????????
 
 		[TestMethod]
 		public async Task ExecuteAsync_ShouldFail_WhenLanguageNotAvailableInDataverse()
@@ -275,7 +278,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 
 			var executor = new SetCommandExecutor(output, repoMock.Object);
 			var result = await executor.ExecuteAsync(
-				new SetCommand { Key = "uilanguageid", Value = "1040" },
+				new SetCommand { UILanguageId = 1040 },
 				CancellationToken.None);
 
 			Assert.IsFalse(result.IsSuccess);
@@ -284,7 +287,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 			crmMock.Verify(c => c.UpdateAsync(It.IsAny<Entity>()), Times.Never);
 		}
 
-		// ── Failure: user not found by domain name ─────────────────────────────────
+		// ?? Failure: user not found by domain name ?????????????????????????????????
 
 		[TestMethod]
 		public async Task ExecuteAsync_ShouldFail_WhenUserNotFound()
@@ -297,7 +300,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 
 			var executor = new SetCommandExecutor(output, repoMock.Object);
 			var result = await executor.ExecuteAsync(
-				new SetCommand { UserDomainName = @"DOMAIN\ghost", Key = "paginglimit", Value = "50" },
+				new SetCommand { UserDomainName = @"DOMAIN\ghost", PagingLimit = 50 },
 				CancellationToken.None);
 
 			Assert.IsFalse(result.IsSuccess);
@@ -305,7 +308,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 			crmMock.Verify(c => c.UpdateAsync(It.IsAny<Entity>()), Times.Never);
 		}
 
-		// ── Failure: Dataverse fault ───────────────────────────────────────────────
+		// ?? Failure: Dataverse fault ???????????????????????????????????????????????
 
 		[TestMethod]
 		public async Task ExecuteAsync_ShouldFail_WhenDataverseThrowsFault()
@@ -319,7 +322,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 
 			var executor = new SetCommandExecutor(output, repoMock.Object);
 			var result = await executor.ExecuteAsync(
-				new SetCommand { Key = "paginglimit", Value = "50" },
+				new SetCommand { PagingLimit = 50 },
 				CancellationToken.None);
 
 			Assert.IsFalse(result.IsSuccess);

@@ -17,46 +17,49 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 
 		public async Task<CommandResult> ExecuteAsync(SetCommand command, CancellationToken cancellationToken)
 		{
-			// ── 1. Validate key ──────────────────────────────────────────────────────
-			if (!UserSettingRegistry.Fields.TryGetValue(command.Key, out var fieldDef))
+			// ?? 1. Collect provided settings (already typed + validated by the parser
+			//       and SetCommand DataAnnotations / IValidatableObject) ?????????????????
+			var provided = command.GetProvidedSettings();
+			if (provided.Count == 0)
 			{
-				var supportedKeys = string.Join(", ", UserSettingRegistry.Fields.Keys.OrderBy(k => k));
 				return CommandResult.Fail(
-					$"'{command.Key}' is not a supported usersettings field. " +
-					$"Supported fields: {supportedKeys}. " +
-					$"See https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/reference/usersettings for details.");
+					"No user setting was specified. Provide at least one option, e.g. --uilanguageid 1033. " +
+					"Run 'pacx help usersettings set' to see the full list of supported options.");
 			}
 
-			// ── 2. Validate value locally ────────────────────────────────────────────
-			var (isValid, validationError, parsedValue) = fieldDef.Validate(command.Value);
-			if (!isValid)
-				return CommandResult.Fail(validationError!);
-
-			// ── 3. Connect ───────────────────────────────────────────────────────────
+			// ?? 2. Connect ???????????????????????????????????????????????????????????
 			output.Write("Connecting to the current Dataverse environment...");
 			var crm = await organizationServiceRepository.GetCurrentConnectionAsync();
 			output.WriteLine("Done", ConsoleColor.Green);
 
 			try
 			{
-				// ── 4. Extra validation for language fields (Dataverse availability) ──
-				if (fieldDef.FieldType == UserSettingFieldType.Language)
+				// ?? 3. Language availability in Dataverse ?????????????????????????????
+				var providedLanguages = provided
+					.Where(p => UserSettingRegistry.LanguageFieldNames.Contains(p.Key))
+					.Select(p => new { FieldName = p.Key, Lcid = (int)p.Value })
+					.ToList();
+
+				if (providedLanguages.Count > 0)
 				{
-					var lcid = (int)parsedValue!;
-					output.Write($"Validating language LCID {lcid} in Dataverse...");
+					output.Write("Validating language LCIDs in Dataverse...");
 					var langResponse = (RetrieveAvailableLanguagesResponse)await crm.ExecuteAsync(new RetrieveAvailableLanguagesRequest());
 					var available = langResponse.LocaleIds ?? [];
-					if (!available.Contains(lcid))
+					var missing = providedLanguages
+						.Where(p => !available.Contains(p.Lcid))
+						.Select(p => $"{p.Lcid} ({p.FieldName})")
+						.ToList();
+					if (missing.Count > 0)
 					{
 						output.WriteLine("Failed", ConsoleColor.Red);
 						return CommandResult.Fail(
-							$"LCID {lcid} is not available in this Dataverse environment. " +
-							$"Use 'pacx org language list' to see the provisioned languages.");
+							$"The following LCID(s) are not available in this Dataverse environment: {string.Join(", ", missing)}. " +
+							"Use 'pacx org language list' to see the provisioned languages.");
 					}
 					output.WriteLine("Done", ConsoleColor.Green);
 				}
 
-				// ── 5. Resolve target user ───────────────────────────────────────────
+				// ?? 4. Resolve target user ???????????????????????????????????????????
 				Guid targetUserId;
 				if (!string.IsNullOrWhiteSpace(command.UserDomainName))
 				{
@@ -85,18 +88,24 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 					output.WriteLine("Done", ConsoleColor.Green);
 				}
 
-				// ── 6. Apply update ──────────────────────────────────────────────────
-				output.Write($"Setting '{fieldDef.DisplayName}' ({fieldDef.FieldName}) to '{command.Value}'...");
+				// ?? 5. Apply update (single request for all settings) ????????????????
+				output.WriteLine($"Updating {provided.Count} user setting(s):");
 				var userSettings = new Entity(UserSettingsTableName) { Id = targetUserId };
-				userSettings[fieldDef.FieldName] = parsedValue;
+				foreach (var (fieldName, value) in provided)
+				{
+					var displayName = UserSettingRegistry.TryGet(fieldName, out var def) ? def.DisplayName : fieldName;
+					output.WriteLine($"  - {displayName} ({fieldName}) = {value}");
+					userSettings[fieldName] = value;
+				}
 
+				output.Write("Applying changes...");
 				await crm.UpdateAsync(userSettings);
 				output.WriteLine("Done", ConsoleColor.Green);
 
 				var result = CommandResult.Success();
 				result["SystemUserId"] = targetUserId;
-				result["Key"] = fieldDef.FieldName;
-				result["Value"] = command.Value;
+				foreach (var (fieldName, value) in provided)
+					result[fieldName] = value;
 				return result;
 			}
 			catch (FaultException<OrganizationServiceFault> ex)

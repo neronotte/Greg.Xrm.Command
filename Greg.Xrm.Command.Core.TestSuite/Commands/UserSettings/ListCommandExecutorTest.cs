@@ -125,7 +125,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 			var (output, repoMock, crmMock) = CreateMocks();
 			var userId = Guid.NewGuid();
 
-			// timeformatcode = 1 → "24-hour"
+			// timeformatcode = 1 → "1 (TwentyFourHour)" via the enum on SetCommand.TimeFormat
 			var settings = new Entity("usersettings") { Id = userId };
 			settings["timeformatcode"] = 1;
 
@@ -139,7 +139,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 			var result = await executor.ExecuteAsync(new ListCommand(), CancellationToken.None);
 
 			Assert.IsTrue(result.IsSuccess, result.ErrorMessage);
-			StringAssert.Contains(result["timeformatcode"]?.ToString(), "24-hour");
+			StringAssert.Contains(result["timeformatcode"]?.ToString(), "TwentyFourHour");
 		}
 
 		// ── Happy path — boolean field rendered as lowercase string ───────────
