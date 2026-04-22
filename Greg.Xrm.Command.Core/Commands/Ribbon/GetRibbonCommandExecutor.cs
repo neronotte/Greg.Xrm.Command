@@ -99,7 +99,8 @@ namespace Greg.Xrm.Command.Commands.Ribbon
 			// Create the request to retrieve entity ribbon
 			var request = new RetrieveEntityRibbonRequest
 			{
-				EntityName = entityName
+				EntityName = entityName,
+				RibbonLocationFilter = RibbonLocationFilters.All
 			};
 
 			// Execute the request
