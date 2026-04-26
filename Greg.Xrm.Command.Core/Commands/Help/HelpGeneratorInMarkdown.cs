@@ -50,15 +50,15 @@ namespace Greg.Xrm.Command.Commands.Help
 
 			using var writer = new MarkdownWriter(fileName);
 
-			writer.WriteTitle1("Greg.Xrm.Command ⁓ aka PACX");
-
 			writer.WriteParagraph("PACX is a command line tool to interact with Dynamics 365 and Power Platform environments. It can be used to automate tasks that would otherwise require a lot of manual work. It can be also used to perform tasks that are not yet available in the official Dataverse/Power Platform user interface.");
 
-			writer.WriteTitle2("Command Groups");
 
-			var childNamespaces = this.commandTree.Where(x => x.Command is null && !x.IsHidden).ToList();
-			writer.WriteTable(childNamespaces,
-				() => ["Command group", "Description"],
+			var rootNamespaces = this.commandTree.Where(x => x.Command is null && !x.IsHidden).ToList();
+
+			writer.WriteParagraph($"It contains more than 100 commands, which are organized in a hierarchical structure (**namespaces** or **command groups**). There are **{rootNamespaces.Count} root namespaces**.");
+
+			writer.WriteTable(rootNamespaces,
+				() => ["Namespace (command group)", "Description"],
 				child => [ $"[**{assemblyName} {child}**]({assemblyName}-{child.ToString().Replace(" ", "-")})",
 				Clean(child.Help ?? string.Empty) ]);
 
