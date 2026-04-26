@@ -4,23 +4,15 @@ using Greg.Xrm.Command.Services.Output;
 
 namespace Greg.Xrm.Command.Commands.Help
 {
-	public class HelpCommandExecutor : ICommandExecutor<HelpCommand>
+	public class HelpCommandExecutor(IOutput output) : ICommandExecutor<HelpCommand>
 	{
-		private readonly IOutput output;
-
-		public HelpCommandExecutor(IOutput output)
-		{
-			this.output = output;
-		}
-
-
 		public Task<CommandResult> ExecuteAsync(HelpCommand command, CancellationToken cancellationToken)
 		{
 			if (command.ExportHelp)
 			{
-				this.output.WriteLine("Generating help files...");
+				output.WriteLine("Generating help files...");
 
-				var generator = new HelpGeneratorInMarkdown(this.output, command.CommandTree, command.ExportHelpPath);
+				var generator = new HelpGeneratorInMarkdown(output, command.CommandTree, command.ExportHelpPath);
 				generator.GenerateMarkdownHelp();
 
 				return Task.FromResult(CommandResult.Success());
@@ -31,7 +23,7 @@ namespace Greg.Xrm.Command.Commands.Help
 				if (command.LastMatchingVerb.Command is not null)
 					return GenerateHelpForCommand(command.LastMatchingVerb.Command);
 
-				var generator = new HelpGeneratorForVerb(this.output, command.LastMatchingVerb);
+				var generator = new HelpGeneratorForVerb(output, command.LastMatchingVerb);
 				generator.GenerateHelp();
 
 				return Task.FromResult(CommandResult.Success());
@@ -39,7 +31,7 @@ namespace Greg.Xrm.Command.Commands.Help
 
 			if (command.CommandDefinition is null)
 			{
-				var generator = new HelpGeneratorGeneric(this.output, command.CommandList, command.CommandTree);
+				var generator = new HelpGeneratorGeneric(output, command.CommandList, command.CommandTree);
 				generator.GenerateHelp2();
 
 				return Task.FromResult(CommandResult.Success());

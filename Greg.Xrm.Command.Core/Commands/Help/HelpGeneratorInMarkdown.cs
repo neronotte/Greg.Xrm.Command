@@ -56,7 +56,7 @@ namespace Greg.Xrm.Command.Commands.Help
 
 			writer.WriteTitle2("Command Groups");
 
-			var childNamespaces = this.commandTree.Where(x => x.Command is null).ToList();
+			var childNamespaces = this.commandTree.Where(x => x.Command is null && !x.IsHidden).ToList();
 			writer.WriteTable(childNamespaces,
 				() => ["Command group", "Description"],
 				child => [ $"[**{assemblyName} {child}**]({assemblyName}-{child.ToString().Replace(" ", "-")})",
