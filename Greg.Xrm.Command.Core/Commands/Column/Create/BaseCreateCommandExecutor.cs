@@ -2,6 +2,7 @@ using System.ServiceModel;
 using System.Text;
 using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
+using Greg.Xrm.Command.Services.Settings;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Messages;
@@ -13,7 +14,8 @@ namespace Greg.Xrm.Command.Commands.Column.Create
 {
 	public abstract class BaseCreateCommandExecutor<TCommand>(
 			IOutput output,
-			IOrganizationServiceRepository organizationServiceRepository)
+			IOrganizationServiceRepository organizationServiceRepository,
+			ISettingsRepository settingsRepository)
 		where TCommand : BaseCreateCommand
 	{
 		protected enum Limit { Max, Min }
@@ -162,11 +164,11 @@ namespace Greg.Xrm.Command.Commands.Column.Create
 
 
 
-		protected void SetCommonProperties(AttributeMetadata attribute, BaseCreateCommand command, int languageCode, string publisherPrefix)
+		protected async Task SetCommonProperties(AttributeMetadata attribute, BaseCreateCommand command, int languageCode, string publisherPrefix)
 		{
 			attribute.Description = GetDescription(command.Description, languageCode);
 			attribute.DisplayName = GetDisplayName(command.DisplayName, languageCode);
-			attribute.LogicalName = GetSchemaName(command.DisplayName, command.SchemaName, publisherPrefix);
+			attribute.LogicalName = await GetSchemaName(command.DisplayName, command.SchemaName, publisherPrefix);
 			attribute.RequiredLevel = new AttributeRequiredLevelManagedProperty(command.RequiredLevel);
 			attribute.SchemaName = attribute.LogicalName;
 			attribute.IsAuditEnabled = new BooleanManagedProperty(command.IsAuditEnabled);
@@ -190,7 +192,6 @@ namespace Greg.Xrm.Command.Commands.Column.Create
 
 		protected virtual Label GetDisplayName(string? displayName, int defaultLanguageCode)
 		{
-
 			if (string.IsNullOrWhiteSpace(displayName))
 				throw new CommandException(CommandException.CommandRequiredArgumentNotProvided, $"The display name is required");
 
@@ -204,7 +205,7 @@ namespace Greg.Xrm.Command.Commands.Column.Create
 		}
 
 
-		protected virtual string GetSchemaName(string? displayName, string? schemaName, string publisherPrefix)
+		protected virtual async Task<string> GetSchemaName(string? displayName, string? schemaName, string publisherPrefix)
 		{
 			if (!string.IsNullOrWhiteSpace(schemaName))
 			{
@@ -214,9 +215,29 @@ namespace Greg.Xrm.Command.Commands.Column.Create
 				return schemaName;
 			}
 
+
 			if (!string.IsNullOrWhiteSpace(displayName))
 			{
-				var namePart = displayName.OnlyLettersNumbersOrUnderscore();
+				var conventions = await settingsRepository.GetAsync<Conventions.ColumnConventions>(Conventions.ColumnConventions.StorageKey) ?? new Conventions.ColumnConventions();
+
+				string namePart;
+				if (conventions.Casing == Conventions.CasingStyle.Pascal)
+				{
+					namePart = displayName.OnlyPascalCaseLettersNumbersOrUnderscore();
+				}
+				else if (conventions.Casing == Conventions.CasingStyle.Camel)
+				{
+					namePart = displayName.OnlyCamelCaseLettersNumbersOrUnderscore();
+				}
+				else if (conventions.Casing == Conventions.CasingStyle.Upper)
+				{
+					namePart = displayName.OnlyLettersNumbersOrUnderscore().ToUpper();
+				}
+				else // if (conventions.Casing == Conventions.CasingStyle.Lower)
+				{
+					namePart = displayName.OnlyLowercaseLettersNumbersOrUnderscore();
+				}
+
 				if (string.IsNullOrWhiteSpace(namePart))
 					throw new CommandException(CommandException.CommandRequiredArgumentNotProvided, $"Is not possible to infer the primary attribute schema name from the display name, please explicit a primary attribute schema name");
 

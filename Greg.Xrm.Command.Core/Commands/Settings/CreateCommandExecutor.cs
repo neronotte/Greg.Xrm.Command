@@ -44,7 +44,7 @@ namespace Greg.Xrm.Command.Commands.Settings
 			var settingName = command.Name;
 			if (string.IsNullOrWhiteSpace(settingName))
 			{
-				var namePart = command.DisplayName.OnlyLettersNumbersOrUnderscore();
+				var namePart = command.DisplayName.OnlyLowercaseLettersNumbersOrUnderscore();
 				if (string.IsNullOrWhiteSpace(namePart))
 					return CommandResult.Fail($"Is not possible to infer the setting name from the display name, please explicit a setting name.");
 

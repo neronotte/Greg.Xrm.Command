@@ -203,7 +203,7 @@ namespace Greg.Xrm.Command.Commands.Relationship
 			}
 			else
 			{
-				var suffix = command.LookupAttributeDisplayName.OnlyLettersNumbersOrUnderscore();
+				var suffix = command.LookupAttributeDisplayName.OnlyLowercaseLettersNumbersOrUnderscore();
 
 				sb.Append('_');
 				sb.Append(suffix);
@@ -223,7 +223,7 @@ namespace Greg.Xrm.Command.Commands.Relationship
 			}
 
 
-			var namePart = command.LookupAttributeDisplayName.OnlyLettersNumbersOrUnderscore();
+			var namePart = command.LookupAttributeDisplayName.OnlyLowercaseLettersNumbersOrUnderscore();
 			if (string.IsNullOrWhiteSpace(namePart))
 				throw new CommandException(CommandException.CommandRequiredArgumentNotProvided, $"Is not possible to infer the primary attribute schema name from the display name, please explicit a primary attribute schema name");
 

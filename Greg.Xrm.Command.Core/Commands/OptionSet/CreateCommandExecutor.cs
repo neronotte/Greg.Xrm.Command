@@ -99,7 +99,7 @@ namespace Greg.Xrm.Command.Commands.OptionSet
 
 			if (!string.IsNullOrWhiteSpace(displayName))
 			{
-				var namePart = displayName.OnlyLettersNumbersOrUnderscore();
+				var namePart = displayName.OnlyLowercaseLettersNumbersOrUnderscore();
 				if (string.IsNullOrWhiteSpace(namePart))
 					throw new CommandException(CommandException.CommandRequiredArgumentNotProvided, $"Is not possible to infer the primary attribute schema name from the display name, please explicit a primary attribute schema name");
 

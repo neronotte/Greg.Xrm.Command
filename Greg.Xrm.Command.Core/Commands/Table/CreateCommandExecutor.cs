@@ -1,7 +1,10 @@
 using System.ServiceModel;
+using DocumentFormat.OpenXml.Spreadsheet;
+using Greg.Xrm.Command.Commands.Column.Conventions;
 using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
 using Greg.Xrm.Command.Services.Pluralization;
+using Greg.Xrm.Command.Services.Settings;
 using Microsoft.Crm.Sdk.Messages;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Messages;
@@ -10,27 +13,17 @@ using Microsoft.Xrm.Sdk.Query;
 
 namespace Greg.Xrm.Command.Commands.Table
 {
-	public class CreateCommandExecutor : ICommandExecutor<CreateCommand>
+	public class CreateCommandExecutor(
+		IOutput output,
+		IOrganizationServiceRepository organizationServiceRepository,
+		ISettingsRepository settingsRepository,
+		IPluralizationFactory pluralizationFactory) : ICommandExecutor<CreateCommand>
 	{
-		private readonly IOutput output;
-		private readonly IOrganizationServiceRepository organizationServiceRepository;
-		private readonly IPluralizationFactory pluralizationFactory;
-
-		public CreateCommandExecutor(
-			IOutput output,
-			IOrganizationServiceRepository organizationServiceRepository,
-			IPluralizationFactory pluralizationFactory)
-		{
-			this.output = output;
-			this.organizationServiceRepository = organizationServiceRepository;
-			this.pluralizationFactory = pluralizationFactory;
-		}
-
 		public async Task<CommandResult> ExecuteAsync(CreateCommand command, CancellationToken cancellationToken)
 		{
-			this.output.Write($"Connecting to the current dataverse environment...");
-			var crm = await this.organizationServiceRepository.GetCurrentConnectionAsync();
-			this.output.WriteLine("Done", ConsoleColor.Green);
+			output.Write($"Connecting to the current dataverse environment...");
+			var crm = await organizationServiceRepository.GetCurrentConnectionAsync();
+			output.WriteLine("Done", ConsoleColor.Green);
 
 			try
 			{
@@ -76,16 +69,20 @@ namespace Greg.Xrm.Command.Commands.Table
 					return CommandResult.Fail("Unable to retrieve the publisher prefix. Please report a bug to the project GitHub page.");
 				}
 
+				var conventions = await settingsRepository.GetAsync<ColumnConventions>(ColumnConventions.StorageKey) ?? new ColumnConventions();
 
 
 				output.Write("Setting up CreateEntityRequest...");
+
+
+				var schemaName = SetTableSchemaName(command, publisherPrefix, conventions);
 
 				var entityMetadata = new EntityMetadata
 				{
 					DisplayName = SetTableDisplayName(command, defaultLanguageCode),
 					DisplayCollectionName = await SetTableDisplayCollectionNameAsync(command, defaultLanguageCode),
 					Description = SetTableDescription(command, defaultLanguageCode),
-					SchemaName = SetTableSchemaName(command, publisherPrefix),
+					SchemaName = schemaName,
 					OwnershipType = command.Ownership,
 					IsActivity = command.IsActivity,
 					IsAvailableOffline = command.IsAvailableOffline || command.IsActivity,
@@ -109,7 +106,7 @@ namespace Greg.Xrm.Command.Commands.Table
 					AutoNumberFormat = SetPrimaryAttributeAutoNumberFormat(command),
 					FormatName = StringFormatName.Text
 				};
-				primaryAttribute.SchemaName = SetPrimaryAttributeSchemaName(command, primaryAttribute.DisplayName, publisherPrefix, command.IsActivity);
+				primaryAttribute.SchemaName = SetPrimaryAttributeSchemaName(command, primaryAttribute.DisplayName, publisherPrefix, command.IsActivity, conventions);
 
 				output.WriteLine(" Done", ConsoleColor.Green);
 
@@ -154,7 +151,7 @@ namespace Greg.Xrm.Command.Commands.Table
 			return new BooleanManagedProperty(command.IsAuditEnabled);
 		}
 
-		private static string SetTableSchemaName(CreateCommand command, string publisherPrefix)
+		private static string SetTableSchemaName(CreateCommand command, string publisherPrefix, ColumnConventions conventions)
 		{
 			if (!string.IsNullOrWhiteSpace(command.SchemaName))
 			{
@@ -166,11 +163,31 @@ namespace Greg.Xrm.Command.Commands.Table
 
 
 
+
+
 			var displayName = command.DisplayName;
 			if (string.IsNullOrWhiteSpace(displayName))
 				throw new ArgumentException($"Is not possible to infer the table schema name from the display name, please explicit a table schema name");
 
-			var namePart = displayName.OnlyLettersNumbersOrUnderscore();
+			string namePart;
+			if (conventions.Casing == CasingStyle.Pascal)
+			{
+				namePart = displayName.OnlyPascalCaseLettersNumbersOrUnderscore();
+			}
+			else if (conventions.Casing == CasingStyle.Camel)
+			{
+				namePart = displayName.OnlyCamelCaseLettersNumbersOrUnderscore();
+			}
+			else if (conventions.Casing == CasingStyle.Upper)
+			{
+				namePart = displayName.OnlyLettersNumbersOrUnderscore().ToUpper();
+			}
+			else // if (conventions.Casing == CasingStyle.Lower)
+			{
+				namePart = displayName.OnlyLowercaseLettersNumbersOrUnderscore();
+			}
+
+
 			if (string.IsNullOrWhiteSpace(namePart))
 				throw new ArgumentException($"Is not possible to infer the table schema name from the display name, please explicit a table schema name");
 
@@ -268,7 +285,7 @@ namespace Greg.Xrm.Command.Commands.Table
 
 
 
-		private static string SetPrimaryAttributeSchemaName(CreateCommand command, Label displayNameLabel, string publisherPrefix, bool isActivity = false)
+		private static string SetPrimaryAttributeSchemaName(CreateCommand command, Label displayNameLabel, string publisherPrefix, bool isActivity = false, ColumnConventions conventions = null)
 		{
 			if (isActivity)
 				return "Subject";
@@ -284,7 +301,23 @@ namespace Greg.Xrm.Command.Commands.Table
 			var displayName = displayNameLabel.LocalizedLabels[0].Label;
 			if (!string.IsNullOrWhiteSpace(displayName))
 			{
-				var namePart = displayName.OnlyLettersNumbersOrUnderscore();
+				string namePart;
+				if (conventions.Casing == CasingStyle.Pascal)
+				{
+					namePart = displayName.OnlyPascalCaseLettersNumbersOrUnderscore();
+				}
+				else if (conventions.Casing == CasingStyle.Camel)
+				{
+					namePart = displayName.OnlyCamelCaseLettersNumbersOrUnderscore();
+				}
+				else if (conventions.Casing == CasingStyle.Upper)
+				{
+					namePart = displayName.OnlyLettersNumbersOrUnderscore().ToUpper();
+				}
+				else // if (conventions.Casing == CasingStyle.Lower)
+				{
+					namePart = displayName.OnlyLowercaseLettersNumbersOrUnderscore();
+				}
 				if (string.IsNullOrWhiteSpace(namePart))
 					throw new ArgumentException($"Is not possible to infer the primary attribute schema name from the display name, please explicit a primary attribute schema name");
 

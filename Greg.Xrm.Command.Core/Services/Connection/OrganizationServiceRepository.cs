@@ -343,6 +343,15 @@ namespace Greg.Xrm.Command.Services.Connection
 
 		public async Task<string?> GetCurrentDefaultSolutionAsync()
 		{
+			if (_environmentOverride != null)
+			{
+				var (overrideName, _) = await TryResolveOverrideConnectionAsync();
+				var overrideConnections = await GetConnectionSettingAsync()
+					?? throw new CommandException(CommandException.ConnectionInvalid, "No connection has been set yet.");
+				overrideConnections.DefaultSolutions.TryGetValue(overrideName, out var overrideSolution);
+				return overrideSolution;
+			}
+
 			var project = await this.pacxProjectRepository.GetCurrentProjectAsync();
 			if (project != null && !project.IsSuspended)
 			{

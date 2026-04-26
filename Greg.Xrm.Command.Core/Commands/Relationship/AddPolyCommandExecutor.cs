@@ -197,7 +197,7 @@ namespace Greg.Xrm.Command.Commands.Relationship
 			}
 			else
 			{
-				var suffix = lookupDisplayName.OnlyLettersNumbersOrUnderscore();
+				var suffix = lookupDisplayName.OnlyLowercaseLettersNumbersOrUnderscore();
 
 				sb.Append('_');
 				sb.Append(suffix);

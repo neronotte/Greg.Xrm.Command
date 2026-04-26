@@ -1,5 +1,6 @@
 using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
+using Greg.Xrm.Command.Services.Settings;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk.Metadata;
 
@@ -7,8 +8,9 @@ namespace Greg.Xrm.Command.Commands.Column.Create
 {
 	public class CreateMemoCommandExecutor(
 			IOutput output,
-			IOrganizationServiceRepository organizationServiceRepository)
-	 : BaseCreateCommandExecutor<CreateMemoCommand>(output, organizationServiceRepository)
+			IOrganizationServiceRepository organizationServiceRepository,
+			ISettingsRepository settingsRepository)
+	 : BaseCreateCommandExecutor<CreateMemoCommand>(output, organizationServiceRepository, settingsRepository)
 		, ICommandExecutor<CreateMemoCommand>
 	{
 		public async Task<CommandResult> ExecuteAsync(CreateMemoCommand command, CancellationToken cancellationToken)
@@ -17,7 +19,7 @@ namespace Greg.Xrm.Command.Commands.Column.Create
 		}
 
 
-		public Task<AttributeMetadata> CreateFromAsync(
+		public async Task<AttributeMetadata> CreateFromAsync(
 			IOrganizationServiceAsync2 crm,
 			CreateMemoCommand command,
 			int languageCode,
@@ -25,7 +27,7 @@ namespace Greg.Xrm.Command.Commands.Column.Create
 			int customizationOptionValuePrefix)
 		{
 			var attribute = new MemoAttributeMetadata();
-			SetCommonProperties(attribute, command, languageCode, publisherPrefix);
+			await SetCommonProperties(attribute, command, languageCode, publisherPrefix);
 
 			// Set extended properties
 			//overridden of default values of commands in common with Text command
@@ -34,7 +36,7 @@ namespace Greg.Xrm.Command.Commands.Column.Create
 			attribute.ImeMode = command.ImeMode == ImeMode.Disabled ? ImeMode.Auto : command.ImeMode;
 			attribute.MaxLength = GetMaxLength(command.MaxLength);
 
-			return Task.FromResult((AttributeMetadata)attribute);
+			return attribute;
 		}
 
 		private static StringFormat GetFormat(MemoFormatName1 memoFormatName1)

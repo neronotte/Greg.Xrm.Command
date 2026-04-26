@@ -1,5 +1,6 @@
 using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
+using Greg.Xrm.Command.Services.Settings;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk.Metadata;
 
@@ -7,8 +8,9 @@ namespace Greg.Xrm.Command.Commands.Column.Create
 {
 	public class CreateDoubleCommandExecutor(
 			IOutput output,
-			IOrganizationServiceRepository organizationServiceRepository)
-	 : BaseCreateCommandExecutor<CreateDoubleCommand>(output, organizationServiceRepository)
+			IOrganizationServiceRepository organizationServiceRepository,
+			ISettingsRepository settingsRepository)
+	 : BaseCreateCommandExecutor<CreateDoubleCommand>(output, organizationServiceRepository, settingsRepository)
 		, ICommandExecutor<CreateDoubleCommand>
 	{
 		public async Task<CommandResult> ExecuteAsync(CreateDoubleCommand command, CancellationToken cancellationToken)
@@ -17,7 +19,7 @@ namespace Greg.Xrm.Command.Commands.Column.Create
 		}
 
 
-		public Task<AttributeMetadata> CreateFromAsync(
+		public async Task<AttributeMetadata> CreateFromAsync(
 			IOrganizationServiceAsync2 crm,
 			CreateDoubleCommand command,
 			int languageCode,
@@ -25,7 +27,7 @@ namespace Greg.Xrm.Command.Commands.Column.Create
 			int customizationOptionValuePrefix)
 		{
 			var attribute = new DoubleAttributeMetadata();
-			SetCommonProperties(attribute, command, languageCode, publisherPrefix);
+			await SetCommonProperties(attribute, command, languageCode, publisherPrefix);
 
 			// Set extended properties
 			attribute.MinValue = GetDoubleValue(command.MinValue, Limit.Min);
@@ -34,7 +36,7 @@ namespace Greg.Xrm.Command.Commands.Column.Create
 			attribute.Precision = command.Precision; // 2
 			attribute.ImeMode = command.ImeMode; // ImeMode.Disabled
 
-			return Task.FromResult((AttributeMetadata)attribute);
+			return attribute;
 		}
 	}
 }

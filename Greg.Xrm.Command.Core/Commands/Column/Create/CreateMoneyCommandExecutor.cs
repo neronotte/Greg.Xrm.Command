@@ -1,5 +1,6 @@
 using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
+using Greg.Xrm.Command.Services.Settings;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk.Metadata;
 
@@ -7,8 +8,9 @@ namespace Greg.Xrm.Command.Commands.Column.Create
 {
 	public class CreateMoneyCommandExecutor(
 			IOutput output,
-			IOrganizationServiceRepository organizationServiceRepository)
-	 : BaseCreateCommandExecutor<CreateMoneyCommand>(output, organizationServiceRepository)
+			IOrganizationServiceRepository organizationServiceRepository,
+			ISettingsRepository settingsRepository)
+	 : BaseCreateCommandExecutor<CreateMoneyCommand>(output, organizationServiceRepository, settingsRepository)
 		, ICommandExecutor<CreateMoneyCommand>
 	{
 		public async Task<CommandResult> ExecuteAsync(CreateMoneyCommand command, CancellationToken cancellationToken)
@@ -17,7 +19,7 @@ namespace Greg.Xrm.Command.Commands.Column.Create
 		}
 
 
-		public Task<AttributeMetadata> CreateFromAsync(
+		public async Task<AttributeMetadata> CreateFromAsync(
 			IOrganizationServiceAsync2 crm,
 			CreateMoneyCommand command,
 			int languageCode,
@@ -25,7 +27,7 @@ namespace Greg.Xrm.Command.Commands.Column.Create
 			int customizationOptionValuePrefix)
 		{
 			var attribute = new MoneyAttributeMetadata();
-			SetCommonProperties(attribute, command, languageCode, publisherPrefix);
+			await SetCommonProperties(attribute, command, languageCode, publisherPrefix);
 
 			// Set extended properties
 			attribute.MinValue = GetDoubleValue(command.MinValue, Limit.Min);
@@ -41,7 +43,7 @@ namespace Greg.Xrm.Command.Commands.Column.Create
 			}
 
 
-			return Task.FromResult((AttributeMetadata)attribute);
+			return attribute;
 		}
 	}
 }

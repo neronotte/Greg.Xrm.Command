@@ -39,7 +39,51 @@ namespace Greg.Xrm.Command
 			return sb.ToString();
 		}
 
-		public static string OnlyLettersNumbersOrUnderscore(this string? text)
+
+		public static string OnlyPascalCaseLettersNumbersOrUnderscore(this string? text)
+		{
+			if (string.IsNullOrWhiteSpace(text)) return string.Empty;
+
+
+			text = text.SplitNameInPartsByCapitalLetters();
+			var sb = new StringBuilder();
+			foreach (var c in text)
+			{
+				if (char.IsLetterOrDigit(c) || c == '_')
+				{
+					sb.Append(c.ToString());
+				}
+			}
+			return sb.ToString();
+		}
+
+
+		public static string OnlyCamelCaseLettersNumbersOrUnderscore(this string? text)
+		{
+			if (string.IsNullOrWhiteSpace(text)) return string.Empty;
+
+
+			text = text.SplitNameInPartsByCapitalLetters();
+			var sb = new StringBuilder();
+			for (var i = 0; i < text.Length; i++)
+			{
+				var c = text[i];
+				if (char.IsLetterOrDigit(c) || c == '_')
+				{
+					if (c == 0 && char.IsUpper(c))
+					{
+						sb.Append(char.ToLowerInvariant(c));
+					}
+					else
+					{
+						sb.Append(c);
+					}
+				}
+			}
+			return sb.ToString();
+		}
+
+		public static string OnlyLowercaseLettersNumbersOrUnderscore(this string? text)
 		{
 			if (string.IsNullOrWhiteSpace(text)) return string.Empty;
 
@@ -49,6 +93,21 @@ namespace Greg.Xrm.Command
 				if (char.IsLetterOrDigit(c) || c == '_')
 				{
 					sb.Append(c.ToString().ToLowerInvariant());
+				}
+			}
+			return sb.ToString();
+		}
+
+		public static string OnlyLettersNumbersOrUnderscore(this string? text)
+		{
+			if (string.IsNullOrWhiteSpace(text)) return string.Empty;
+
+			var sb = new StringBuilder();
+			foreach (var c in text)
+			{
+				if (char.IsLetterOrDigit(c) || c == '_')
+				{
+					sb.Append(c.ToString());
 				}
 			}
 			return sb.ToString();

@@ -1,5 +1,6 @@
 using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
+using Greg.Xrm.Command.Services.Settings;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk.Metadata;
 
@@ -7,8 +8,9 @@ namespace Greg.Xrm.Command.Commands.Column.Create
 {
 	public class CreateImageCommandExecutor(
 			IOutput output,
-			IOrganizationServiceRepository organizationServiceRepository)
-	 : BaseCreateCommandExecutor<CreateImageCommand>(output, organizationServiceRepository)
+			IOrganizationServiceRepository organizationServiceRepository,
+			ISettingsRepository settingsRepository)
+	 : BaseCreateCommandExecutor<CreateImageCommand>(output, organizationServiceRepository, settingsRepository)
 		, ICommandExecutor<CreateImageCommand>
 	{
 		public async Task<CommandResult> ExecuteAsync(CreateImageCommand command, CancellationToken cancellationToken)
@@ -17,7 +19,7 @@ namespace Greg.Xrm.Command.Commands.Column.Create
 		}
 
 
-		public Task<AttributeMetadata> CreateFromAsync(
+		public async Task<AttributeMetadata> CreateFromAsync(
 			IOrganizationServiceAsync2 crm,
 			CreateImageCommand command,
 			int languageCode,
@@ -25,7 +27,7 @@ namespace Greg.Xrm.Command.Commands.Column.Create
 			int customizationOptionValuePrefix)
 		{
 			var attribute = new ImageAttributeMetadata();
-			SetCommonProperties(attribute, command, languageCode, publisherPrefix);
+			await SetCommonProperties(attribute, command, languageCode, publisherPrefix);
 
 			attribute.MaxSizeInKB = GetMaxSizeKb(command.MaxSizeInKB);
 
@@ -33,7 +35,7 @@ namespace Greg.Xrm.Command.Commands.Column.Create
 			// or if the "store thumbnail" is set to false
 			attribute.CanStoreFullImage = !command.StoreThumbnail.HasValue || !command.StoreThumbnail.Value;
 
-			return Task.FromResult((AttributeMetadata)attribute);
+			return attribute;
 		}
 
 		public static int GetMaxSizeKb(int? maxSizeKb)
