@@ -18,39 +18,50 @@ namespace Greg.Xrm.Command.Commands.Auth
 			}
 
 			var project = await pacxProjectRepository.GetCurrentProjectAsync();
-
+			var overrideName = await organizationServiceRepository.GetCurrentEnvironmentOverrideNameAsync();
 
 			output.WriteLine("The following authentication profiles are stored on this computer:");
 
 			var padding = connections.ConnectionStringKeys.Max(x => x.Length) + 4;
 
-			bool defaultFound = false, projectFound = false;
+			bool defaultFound = false, projectFound = false, overrideFound = false;
 			foreach (var item in connections.ConnectionStringKeys)
 			{
+				var isDefault  = item.Equals(connections.CurrentConnectionStringKey, StringComparison.InvariantCultureIgnoreCase);
+				var isProject  = item.Equals(project?.AuthProfileName, StringComparison.InvariantCultureIgnoreCase);
+				var isOverride = overrideName != null && item.Equals(overrideName, StringComparison.OrdinalIgnoreCase);
+
 				var name = item;
-				if (name.Equals(connections.CurrentConnectionStringKey, StringComparison.InvariantCultureIgnoreCase))
-				{
-					name += "*";
-					defaultFound = true;
-				}
-				if (name.Equals(project?.AuthProfileName, StringComparison.InvariantCultureIgnoreCase))
-				{
-					name += "+";
-					projectFound = true;
-				}
+				if (isDefault)  { name += "*"; defaultFound  = true; }
+				if (isProject)  { name += "+"; projectFound  = true; }
+				if (isOverride) { name += "!"; overrideFound = true; }
 				name = name.PadRight(padding);
 
-				output.Write("  ");
-				output.Write(name);
-
+				// Override > default > project > plain
+				ConsoleColor? rowColor = isOverride ? ConsoleColor.DarkYellow
+									   : isDefault  ? ConsoleColor.Cyan
+									   : isProject  ? ConsoleColor.Green
+									   : null;
 
 				var environmentName = await organizationServiceRepository.GetEnvironmentFromConnectioStringAsync(item);
-				output.WriteLine(environmentName);
+
+				output.Write("  ");
+				if (rowColor.HasValue)
+				{
+					output.Write(name, rowColor.Value);
+					output.WriteLine(environmentName, rowColor.Value);
+				}
+				else
+				{
+					output.Write(name);
+					output.WriteLine(environmentName);
+				}
 			}
 
-			if (defaultFound || projectFound) output.WriteLine();
-			if (defaultFound) output.WriteLine("* identifies the default authentication profile.");
-			if (projectFound) output.WriteLine("+ identifies the authentication profile used by the current project.");
+			if (defaultFound || projectFound || overrideFound) output.WriteLine();
+			if (defaultFound)  output.WriteLine("* identifies the global default authentication profile.", ConsoleColor.Cyan);
+			if (projectFound)  output.WriteLine("+ identifies the authentication profile used by the current project.", ConsoleColor.Green);
+			if (overrideFound) output.WriteLine("! identifies the authentication profile used for this command (--environment override).", ConsoleColor.DarkYellow);
 
 			return CommandResult.Success();
 		}

@@ -64,7 +64,26 @@ namespace Greg.Xrm.Command.Parsing
 				return (new HelpCommand(commandDefinition), runArgs);
 			}
 
-			var command = commandDefinition.CreateCommand(runArgs.Options);
+			// If the matched command does not declare --environment / -env, strip those
+			// tokens from the options dict before binding — they are global flags consumed
+			// by the bootstrapper and must not cause a "unknown option" DataException.
+			var optionsForCommand = runArgs.Options;
+			var commandDeclaresEnvironment = commandDefinition.Options.Any(o =>
+				string.Equals(o.Option.LongName, "environment", StringComparison.OrdinalIgnoreCase) ||
+				string.Equals(o.Option.ShortName, "env", StringComparison.OrdinalIgnoreCase));
+
+			if (!commandDeclaresEnvironment)
+			{
+				var filtered = runArgs.Options
+					.Where(kv => !string.Equals(kv.Key, "--environment", StringComparison.OrdinalIgnoreCase)
+							  && !string.Equals(kv.Key, "-env", StringComparison.OrdinalIgnoreCase))
+					.ToDictionary(kv => kv.Key, kv => kv.Value);
+
+				if (filtered.Count != runArgs.Options.Count)
+					optionsForCommand = filtered;
+			}
+
+			var command = commandDefinition.CreateCommand(optionsForCommand);
 			return (command, runArgs);
 		}
 	}

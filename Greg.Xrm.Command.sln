@@ -7,8 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Greg.Xrm.Command", "Greg.Xr
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Greg.Xrm.Command.Core", "Greg.Xrm.Command.Core\Greg.Xrm.Command.Core.csproj", "{6B5120AF-1186-431C-9B60-3F9A5C39987E}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Greg.Xrm.Command.Core.TestSuite", "Greg.Xrm.Command.Core.TestSuite\Greg.Xrm.Command.Core.TestSuite.csproj", "{AF14C156-444F-4AC2-A117-3F8AC77E8FBD}"
-EndProject
+
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Greg.Xrm.Command.Interfaces", "Greg.Xrm.Command.Interfaces\Greg.Xrm.Command.Interfaces.csproj", "{53666122-2ED9-4880-BD1E-1EF755E19509}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{00E14068-A467-4EDC-8A52-55F8EF6238EC}"
@@ -18,6 +17,8 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "sample", "sample", "{9FD810C9-B0F7-467B-804F-5F703C9249D6}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SamplePlugin", "sample\SamplePlugin\SamplePlugin.csproj", "{1ECDFAD5-2094-46F2-87C2-A23F9C060CB3}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Greg.Xrm.Command.Core.TestSuite", "test\Greg.Xrm.Command.Core.TestSuite\Greg.Xrm.Command.Core.TestSuite.csproj", "{AF14C156-444F-4AC2-A117-3F8AC77E8FBD}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Greg.Xrm.Command.Benchmark", "test\Greg.Xrm.Command.Benchmark\Greg.Xrm.Command.Benchmark.csproj", "{AB9CE895-A444-EFD3-F796-A5ECF93B077A}"
 EndProject

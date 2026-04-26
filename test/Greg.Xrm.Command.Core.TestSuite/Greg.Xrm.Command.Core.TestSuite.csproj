@@ -37,7 +37,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Greg.Xrm.Command.Core\Greg.Xrm.Command.Core.csproj" />
+    <ProjectReference Include="..\..\Greg.Xrm.Command.Core\Greg.Xrm.Command.Core.csproj" />
+    <ProjectReference Include="..\..\Greg.Xrm.Command\Greg.Xrm.Command.csproj" />
   </ItemGroup>
 
 </Project>

@@ -6,7 +6,7 @@ namespace Greg.Xrm.Command.Parsing
 	{
 		internal CommandRunArgs(params string[] verbs)
 		{
-			this.Verbs = new List<string>(verbs);
+			this.Verbs = [.. verbs];
 			this.Options = new Dictionary<string, string>();
 		}
 

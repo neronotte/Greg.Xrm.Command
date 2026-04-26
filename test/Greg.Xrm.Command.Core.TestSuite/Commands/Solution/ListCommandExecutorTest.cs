@@ -1,13 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.ServiceModel;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;
-using Moq;
 
 namespace Greg.Xrm.Command.Commands.Solution
 {
@@ -47,7 +40,7 @@ namespace Greg.Xrm.Command.Commands.Solution
 
 		private void SetupMockData(params Entity[] solutions)
 		{
-			var collection = new EntityCollection(new List<Entity>(solutions));
+			var collection = new EntityCollection(solutions);
 			this.OrganizationServiceMock
 				.Setup(x => x.RetrieveMultipleAsync(It.IsAny<QueryBase>()))
 				.ReturnsAsync(collection);
@@ -131,15 +124,14 @@ namespace Greg.Xrm.Command.Commands.Solution
 		}
 
 		[TestMethod]
-		public async Task ExecuteAsync_Sorting_OutputsFormatCorrectly()
+		public async Task ExecuteAsync_Sorting_ByCreatedOn_ShouldOrderNewestFirst()
 		{
-			// Verifying sorting and formatting is easiest by executing and checking output
+			// Z_Managed was created in 2023, A_Unmanaged in 2024
 			SetupMockData(
 				CreateSolution("Z_Managed", true, true, new DateTime(2023, 1, 1), new DateTime(2023, 1, 1)),
 				CreateSolution("A_Unmanaged", false, true, new DateTime(2024, 1, 1), new DateTime(2024, 1, 1))
 			);
 
-			// Json format testing output content and ordering
 			var command = new ListCommand { Format = ListCommand.OutputFormat.Json, OrderBy = ListCommand.OutputOrder.CreatedOn };
 			var result = await executor.ExecuteAsync(command, CancellationToken.None);
 
@@ -153,7 +145,32 @@ namespace Greg.Xrm.Command.Commands.Solution
 
 			Assert.IsTrue(managedIndex >= 0, "Expected JSON output to contain solution 'Z_Managed'.");
 			Assert.IsTrue(unmanagedIndex >= 0, "Expected JSON output to contain solution 'A_Unmanaged'.");
-			Assert.IsTrue(managedIndex < unmanagedIndex, "Expected solutions to be ordered by CreatedOn in the JSON output.");
+			// Sorting by CreatedOn is descending: A_Unmanaged (2024) must appear before Z_Managed (2023)
+			Assert.IsTrue(unmanagedIndex < managedIndex, "Expected solutions to be ordered by CreatedOn descending (newest first).");
+		}
+
+		[TestMethod]
+		public async Task ExecuteAsync_Sorting_ByName_ShouldOrderAlphabetically()
+		{
+			SetupMockData(
+				CreateSolution("Z_Managed", true, true, new DateTime(2023, 1, 1), new DateTime(2023, 1, 1)),
+				CreateSolution("A_Unmanaged", false, true, new DateTime(2024, 1, 1), new DateTime(2024, 1, 1))
+			);
+
+			var command = new ListCommand { Format = ListCommand.OutputFormat.Json, OrderBy = ListCommand.OutputOrder.Name };
+			var result = await executor.ExecuteAsync(command, CancellationToken.None);
+
+			Assert.IsTrue(result.IsSuccess);
+
+			var output = this.Output.ToString();
+
+			var managedIndex = output.IndexOf("Z_Managed", StringComparison.Ordinal);
+			var unmanagedIndex = output.IndexOf("A_Unmanaged", StringComparison.Ordinal);
+
+			Assert.IsTrue(managedIndex >= 0, "Expected JSON output to contain solution 'Z_Managed'.");
+			Assert.IsTrue(unmanagedIndex >= 0, "Expected JSON output to contain solution 'A_Unmanaged'.");
+			// Sorting by Name ascending: A_Unmanaged must appear before Z_Managed
+			Assert.IsTrue(unmanagedIndex < managedIndex, "Expected solutions to be ordered by name ascending.");
 		}
 	}
 }

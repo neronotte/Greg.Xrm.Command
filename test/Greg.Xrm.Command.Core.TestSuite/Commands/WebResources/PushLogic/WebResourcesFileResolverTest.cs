@@ -1,5 +1,7 @@
 namespace Greg.Xrm.Command.Commands.WebResources.PushLogic
 {
+	using Utils = Greg.Xrm.Command.Utility;
+
 	[TestClass]
 	public class WebResourcesFileResolverTest
 	{
@@ -40,7 +42,7 @@ namespace Greg.Xrm.Command.Commands.WebResources.PushLogic
 				var folders = new WebResourceFolders(root, root, "greg");
 				var files = resolver.ResolveFiles(folders);
 				Assert.IsNotNull(files);
-				Assert.AreEqual(1, files.Count);
+				Assert.HasCount(1, files);
 
 				var file = files[0];
 				Assert.AreEqual(Path.Combine(root, filename), file.LocalPath);
@@ -68,7 +70,7 @@ namespace Greg.Xrm.Command.Commands.WebResources.PushLogic
 				var folders = new WebResourceFolders(root, root, "greg");
 				var files = resolver.ResolveFiles(folders);
 				Assert.IsNotNull(files);
-				Assert.AreEqual(2, files.Count);
+				Assert.HasCount(2, files);
 
 				var file = files[0];
 				Assert.AreEqual(Path.Combine(root, filenames[0]), file.LocalPath);
@@ -99,7 +101,7 @@ namespace Greg.Xrm.Command.Commands.WebResources.PushLogic
 				var folders = new WebResourceFolders(root, root, "greg");
 				var files = resolver.ResolveFiles(folders);
 				Assert.IsNotNull(files);
-				Assert.AreEqual(1, files.Count);
+				Assert.HasCount(1, files);
 
 				var file = files[0];
 				Assert.AreEqual(Path.Combine(root, filename), file.LocalPath);
@@ -126,7 +128,7 @@ namespace Greg.Xrm.Command.Commands.WebResources.PushLogic
 				var folders = new WebResourceFolders(root, root, "greg");
 				var files = resolver.ResolveFiles(folders);
 				Assert.IsNotNull(files);
-				Assert.AreEqual(1, files.Count);
+				Assert.HasCount(1, files);
 
 				var file = files[0];
 				Assert.AreEqual(Path.Combine(root, filename), file.LocalPath);
@@ -160,7 +162,7 @@ namespace Greg.Xrm.Command.Commands.WebResources.PushLogic
 				var folders = new WebResourceFolders(root, Path.Combine(root, "greg_\\pages"), "greg");
 				var files = resolver.ResolveFiles(folders);
 				Assert.IsNotNull(files);
-				Assert.AreEqual(3, files.Count);
+				Assert.HasCount(3, files);
 
 				var file = files[0];
 				Assert.AreEqual(Path.Combine(root, "greg_\\pages\\index.css"), file.LocalPath);
@@ -199,7 +201,7 @@ namespace Greg.Xrm.Command.Commands.WebResources.PushLogic
 				var folders = new WebResourceFolders(root, Path.Combine(root, "greg_\\pages\\*.html"), "greg");
 				var files = resolver.ResolveFiles(folders);
 				Assert.IsNotNull(files);
-				Assert.AreEqual(2, files.Count);
+				Assert.HasCount(2, files);
 
 				var file = files[0];
 				Assert.AreEqual(Path.Combine(root, "greg_\\pages\\home.html"), file.LocalPath);
@@ -229,7 +231,7 @@ namespace Greg.Xrm.Command.Commands.WebResources.PushLogic
 				var folders = new WebResourceFolders(root, Path.Combine(root, "greg_\\**\\*.html"), "greg");
 				var files = resolver.ResolveFiles(folders);
 				Assert.IsNotNull(files);
-				Assert.AreEqual(2, files.Count);
+				Assert.HasCount(2, files);
 
 				var file = files[0];
 				Assert.AreEqual(Path.Combine(root, "greg_\\folder1\\index.html"), file.LocalPath);
@@ -261,7 +263,7 @@ namespace Greg.Xrm.Command.Commands.WebResources.PushLogic
 				var folders = new WebResourceFolders(root, Path.Combine(root, "greg_\\**\\*.html"), "greg");
 				var files = resolver.ResolveFiles(folders);
 				Assert.IsNotNull(files);
-				Assert.AreEqual(4, files.Count);
+				Assert.HasCount(4, files);
 
 				var file = files[0];
 				Assert.AreEqual(Path.Combine(root, "greg_\\folder1\\subfolder\\subfolder\\index.html"), file.LocalPath);
@@ -302,7 +304,7 @@ namespace Greg.Xrm.Command.Commands.WebResources.PushLogic
 				var folders = new WebResourceFolders(root, Path.Combine(root, "**\\*.html"), "greg");
 				var files = resolver.ResolveFiles(folders);
 				Assert.IsNotNull(files);
-				Assert.AreEqual(5, files.Count);
+				Assert.HasCount(5, files);
 
 				var file = files[0];
 				Assert.AreEqual(Path.Combine(root, "greg_\\folder1\\subfolder\\subfolder\\index.html"), file.LocalPath);
