@@ -202,7 +202,7 @@ namespace Greg.Xrm.Command.Commands.Relationship
 
 			if (!string.IsNullOrWhiteSpace(command.LookupAttributeDisplayName))
 			{
-				var namePart = command.LookupAttributeDisplayName.OnlyLettersNumbersOrUnderscore();
+				var namePart = command.LookupAttributeDisplayName.OnlyLowercaseLettersNumbersOrUnderscore();
 				if (string.IsNullOrWhiteSpace(namePart))
 					throw new CommandException(CommandException.CommandRequiredArgumentNotProvided, $"Is not possible to infer the primary attribute schema name from the display name, please explicit a primary attribute schema name");
 

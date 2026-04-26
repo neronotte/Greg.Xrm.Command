@@ -1,5 +1,4 @@
 using System.Reflection;
-using System.Xml.Linq;
 using Greg.Xrm.Command.Parsing;
 using Greg.Xrm.Command.Services;
 using Greg.Xrm.Command.Services.Output;
@@ -45,7 +44,7 @@ namespace Greg.Xrm.Command.Commands.Help
 		private void CreateReadme(DirectoryInfo directory)
 		{
 			var assemblyName = Assembly.GetEntryAssembly()?.GetName().Name ?? string.Empty;
-			var fileName = Path.Combine(directory.FullName, $"Home.md");
+			var fileName = Path.Combine(directory.FullName, $"Command-Directory.md");
 
 			this.output.Write($"Generating {fileName}...");
 
@@ -59,9 +58,9 @@ namespace Greg.Xrm.Command.Commands.Help
 
 			var childNamespaces = this.commandTree.Where(x => x.Command is null).ToList();
 			writer.WriteTable(childNamespaces,
-				() => new[] { "Command group", "Description" },
-				child => new[] { $"[**{assemblyName} {child}**]({assemblyName}-{child.ToString().Replace(" ", "-")})",
-				Clean(child.Help ?? string.Empty) });
+				() => ["Command group", "Description"],
+				child => [ $"[**{assemblyName} {child}**]({assemblyName}-{child.ToString().Replace(" ", "-")})",
+				Clean(child.Help ?? string.Empty) ]);
 
 			writer.WriteLine();
 		}

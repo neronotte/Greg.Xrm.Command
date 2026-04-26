@@ -2,6 +2,7 @@ using System.ServiceModel;
 using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.OptionSet;
 using Greg.Xrm.Command.Services.Output;
+using Greg.Xrm.Command.Services.Settings;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Messages;
@@ -12,9 +13,10 @@ namespace Greg.Xrm.Command.Commands.Column.Create
 	public class CreatePicklistCommandExecutor(
 			IOutput output,
 			IOrganizationServiceRepository organizationServiceRepository,
+			ISettingsRepository settingsRepository,
 			IOptionSetParser optionSetParser)
 #pragma warning disable CS9107 // Parameter is captured into the state of the enclosing type and its value is also passed to the base constructor. The value might be captured by the base class as well.
-	 : BaseCreateCommandExecutor<CreatePicklistCommand>(output, organizationServiceRepository)
+	 : BaseCreateCommandExecutor<CreatePicklistCommand>(output, organizationServiceRepository, settingsRepository)
 #pragma warning restore CS9107 // Parameter is captured into the state of the enclosing type and its value is also passed to the base constructor. The value might be captured by the base class as well.
 		, ICommandExecutor<CreatePicklistCommand>
 	{
@@ -32,15 +34,14 @@ namespace Greg.Xrm.Command.Commands.Column.Create
 			int customizationOptionValuePrefix)
 		{
 			EnumAttributeMetadata attribute = command.Multiselect ? new MultiSelectPicklistAttributeMetadata() : new PicklistAttributeMetadata();
-			SetCommonProperties(attribute, command, languageCode, publisherPrefix);
+			await SetCommonProperties(attribute, command, languageCode, publisherPrefix);
+			attribute.SchemaName = await GetNewSchemaName(command.DisplayName, command.SchemaName, publisherPrefix, command.Multiselect);
 
-
-
-
-
-			var optionSet = new OptionSetMetadata();
-			optionSet.DisplayName = attribute.DisplayName;
-			optionSet.Description = attribute.Description;
+			var optionSet = new OptionSetMetadata
+			{
+				DisplayName = attribute.DisplayName,
+				Description = attribute.Description
+			};
 
 			IReadOnlyCollection<OptionMetadata> options;
 
@@ -131,13 +132,17 @@ namespace Greg.Xrm.Command.Commands.Column.Create
 			return $"{entityName}_{schemaName}";
 		}
 
-		protected override string GetSchemaName(string? displayName, string? schemaName, string publisherPrefix)
+		protected async Task<string> GetNewSchemaName(string? displayName, string? schemaName, string publisherPrefix, bool multiselect)
 		{
-			var newSchemaName = base.GetSchemaName(displayName, schemaName, publisherPrefix);
+			var conventions = await settingsRepository.GetAsync<Conventions.ColumnConventions>(Conventions.ColumnConventions.StorageKey) ?? new Conventions.ColumnConventions();
 
-			if (!newSchemaName.EndsWith("code"))
+			var suffix = multiselect ? conventions.MultiselectOptionSetSuffix: conventions.SimpleOptionSetSuffix;
+
+			var newSchemaName = await base.GetSchemaName(displayName, schemaName, publisherPrefix);
+
+			if (!newSchemaName.EndsWith(suffix))
 			{
-				newSchemaName += "code";
+				newSchemaName += suffix;
 			}
 
 			return newSchemaName;

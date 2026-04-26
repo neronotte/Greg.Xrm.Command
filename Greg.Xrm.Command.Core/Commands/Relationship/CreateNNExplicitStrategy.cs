@@ -1,5 +1,7 @@
 using System.Text;
+using Greg.Xrm.Command.Commands.Column.Conventions;
 using Greg.Xrm.Command.Services.Output;
+using Greg.Xrm.Command.Services.Settings;
 using Microsoft.Crm.Sdk.Messages;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
@@ -8,18 +10,10 @@ using Microsoft.Xrm.Sdk.Metadata;
 
 namespace Greg.Xrm.Command.Commands.Relationship
 {
-	public class CreateNNExplicitStrategy : ICreateNNStrategy
+	public class CreateNNExplicitStrategy(IOutput output, IOrganizationServiceAsync2 crm, ISettingsRepository settingsRepository) : ICreateNNStrategy
 	{
-		private readonly IOutput output;
-		private readonly IOrganizationServiceAsync2 crm;
-
-		public CreateNNExplicitStrategy(IOutput output, IOrganizationServiceAsync2 crm)
-		{
-			this.output = output ?? throw new ArgumentNullException(nameof(output));
-			this.crm = crm ?? throw new ArgumentNullException(nameof(crm));
-		}
-
-
+		private readonly IOutput output = output ?? throw new ArgumentNullException(nameof(output));
+		private readonly IOrganizationServiceAsync2 crm = crm ?? throw new ArgumentNullException(nameof(crm));
 
 
 
@@ -47,12 +41,15 @@ namespace Greg.Xrm.Command.Commands.Relationship
 
 			output.Write("Setting up CreateEntityRequest...");
 
+
+			var conventions = await settingsRepository.GetAsync<ColumnConventions>(ColumnConventions.StorageKey) ?? new ColumnConventions();
+
 			var entityMetadata = new EntityMetadata
 			{
 				DisplayName = SetTableDisplayName(command, table1, table2, defaultLanguageCode),
 				DisplayCollectionName = SetTableDisplayCollectionName(command, table1, table2, defaultLanguageCode),
 				Description = SetTableDescription(command, defaultLanguageCode),
-				SchemaName = SetTableSchemaName(command, publisherPrefix),
+				SchemaName = SetTableSchemaName(command, publisherPrefix), // we do not apply conventions here because it takes the names of the related tables
 				OwnershipType = command.Ownership,
 				IsActivity = false,
 				IsAuditEnabled = SetTableIsAuditEnabled(command)
@@ -67,7 +64,7 @@ namespace Greg.Xrm.Command.Commands.Relationship
 				AutoNumberFormat = SetPrimaryAttributeAutoNumberFormat(command, table1, table2, defaultLanguageCode),
 				FormatName = StringFormatName.Text
 			};
-			primaryAttribute.SchemaName = SetPrimaryAttributeSchemaName(command, primaryAttribute.DisplayName, publisherPrefix);
+			primaryAttribute.SchemaName = SetPrimaryAttributeSchemaName(command, primaryAttribute.DisplayName, publisherPrefix, conventions);
 
 			output.WriteLine(" Done", ConsoleColor.Green);
 
@@ -312,7 +309,7 @@ namespace Greg.Xrm.Command.Commands.Relationship
 			return new Label(command.PrimaryAttributeDisplayName, defaultLanguageCode);
 		}
 
-		private static string SetPrimaryAttributeSchemaName(CreateNNCommand command, Label displayNameLabel, string publisherPrefix)
+		private static string SetPrimaryAttributeSchemaName(CreateNNCommand command, Label displayNameLabel, string publisherPrefix, ColumnConventions conventions)
 		{
 			if (!string.IsNullOrWhiteSpace(command.PrimaryAttributeSchemaName))
 			{
@@ -325,7 +322,23 @@ namespace Greg.Xrm.Command.Commands.Relationship
 			var displayName = displayNameLabel.LocalizedLabels[0].Label;
 			if (!string.IsNullOrWhiteSpace(displayName))
 			{
-				var namePart = displayName.OnlyLettersNumbersOrUnderscore();
+				string namePart;
+				if (conventions.Casing == CasingStyle.Pascal)
+				{
+					namePart = displayName.OnlyPascalCaseLettersNumbersOrUnderscore();
+				}
+				else if (conventions.Casing == CasingStyle.Camel)
+				{
+					namePart = displayName.OnlyCamelCaseLettersNumbersOrUnderscore();
+				}
+				else if (conventions.Casing == CasingStyle.Upper)
+				{
+					namePart = displayName.OnlyLettersNumbersOrUnderscore().ToUpper();
+				}
+				else // if (conventions.Casing == CasingStyle.Lower)
+				{
+					namePart = displayName.OnlyLowercaseLettersNumbersOrUnderscore();
+				}
 				if (string.IsNullOrWhiteSpace(namePart))
 					throw new ArgumentException($"Is not possible to infer the primary attribute schema name from the display name, please explicit a primary attribute schema name");
 
@@ -408,7 +421,7 @@ namespace Greg.Xrm.Command.Commands.Relationship
 
 			if (!string.IsNullOrWhiteSpace(displayName))
 			{
-				var namePart = displayName.OnlyLettersNumbersOrUnderscore();
+				var namePart = displayName.OnlyLowercaseLettersNumbersOrUnderscore();
 				if (string.IsNullOrWhiteSpace(namePart))
 					throw new CommandException(CommandException.CommandRequiredArgumentNotProvided, $"Is not possible to infer the primary attribute schema name from the display name, please explicit a primary attribute schema name");
 

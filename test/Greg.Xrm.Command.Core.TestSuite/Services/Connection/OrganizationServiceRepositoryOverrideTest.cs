@@ -196,5 +196,116 @@ namespace Greg.Xrm.Command.Services.Connection
 
 			Assert.AreEqual("AcnBpo-DEV", name);
 		}
+
+		// ── Default solution respects override ────────────────────────────────
+
+		private static OrganizationServiceRepository CreateSutWithSolutions(
+			string currentConnectionStringKey,
+			Dictionary<string, string> plaintextConnections,
+			Dictionary<string, string> defaultSolutions)
+		{
+			var connectionStringsJson = string.Join(",\n",
+				plaintextConnections.Select(kv => $"\"{kv.Key}\": \"{kv.Value}\""));
+
+			var defaultSolutionsJson = string.Join(",\n",
+				defaultSolutions.Select(kv => $"\"{kv.Key}\": \"{kv.Value}\""));
+
+			var json = $$"""
+				{
+					"ConnectionStrings": { {{connectionStringsJson}} },
+					"CurrentConnectionStringKey": "{{currentConnectionStringKey}}",
+					"DefaultSolutions": { {{defaultSolutionsJson}} },
+					"IsSecured": false
+				}
+				""";
+
+			var setting = JsonConvert.DeserializeObject<ConnectionSetting>(json)!;
+
+			var settingsMock = new Mock<ISettingsRepository>();
+			settingsMock
+				.Setup(s => s.GetAsync<ConnectionSetting>("connections"))
+				.ReturnsAsync(setting);
+			settingsMock
+				.Setup(s => s.SetAsync(It.IsAny<string>(), It.IsAny<ConnectionSetting>()))
+				.Returns(Task.CompletedTask);
+
+			var projectMock = new Mock<IPacxProjectRepository>();
+			projectMock
+				.Setup(p => p.GetCurrentProjectAsync())
+				.ReturnsAsync((PacxProjectDefinition?)null);
+
+			var output = new OutputToMemory();
+			return new OrganizationServiceRepository(output, settingsMock.Object, projectMock.Object);
+		}
+
+		[TestMethod]
+		public async Task GetCurrentDefaultSolution_WhenOverrideIsSet_ShouldReturnOverrideProfileSolution()
+		{
+			var repo = CreateSutWithSolutions(
+				currentConnectionStringKey: "Prod",
+				plaintextConnections: new Dictionary<string, string>
+				{
+					["Prod"] = "Url=https://prod.crm.dynamics.com;AuthType=OAuth",
+					["Dev"]  = "Url=https://dev.crm.dynamics.com;AuthType=OAuth",
+				},
+				defaultSolutions: new Dictionary<string, string>
+				{
+					["Prod"] = "ProdSolution",
+					["Dev"]  = "DevSolution",
+				});
+
+			repo.SetEnvironmentOverride("Dev");
+
+			var solution = await repo.GetCurrentDefaultSolutionAsync();
+
+			Assert.AreEqual("DevSolution", solution,
+				"When --environment override is set, the default solution for the override profile should be returned.");
+		}
+
+		[TestMethod]
+		public async Task GetCurrentDefaultSolution_WhenOverrideIsSetButNoSolutionConfigured_ShouldReturnNull()
+		{
+			var repo = CreateSutWithSolutions(
+				currentConnectionStringKey: "Prod",
+				plaintextConnections: new Dictionary<string, string>
+				{
+					["Prod"] = "Url=https://prod.crm.dynamics.com;AuthType=OAuth",
+					["Dev"]  = "Url=https://dev.crm.dynamics.com;AuthType=OAuth",
+				},
+				defaultSolutions: new Dictionary<string, string>
+				{
+					["Prod"] = "ProdSolution",
+					// Dev has no default solution configured
+				});
+
+			repo.SetEnvironmentOverride("Dev");
+
+			var solution = await repo.GetCurrentDefaultSolutionAsync();
+
+			Assert.IsNull(solution,
+				"When --environment override profile has no default solution, null should be returned.");
+		}
+
+		[TestMethod]
+		public async Task GetCurrentDefaultSolution_WhenNoOverride_ShouldReturnGlobalDefaultSolution()
+		{
+			var repo = CreateSutWithSolutions(
+				currentConnectionStringKey: "Prod",
+				plaintextConnections: new Dictionary<string, string>
+				{
+					["Prod"] = "Url=https://prod.crm.dynamics.com;AuthType=OAuth",
+					["Dev"]  = "Url=https://dev.crm.dynamics.com;AuthType=OAuth",
+				},
+				defaultSolutions: new Dictionary<string, string>
+				{
+					["Prod"] = "ProdSolution",
+					["Dev"]  = "DevSolution",
+				});
+
+			// No SetEnvironmentOverride call — should fall back to global default (Prod)
+			var solution = await repo.GetCurrentDefaultSolutionAsync();
+
+			Assert.AreEqual("ProdSolution", solution);
+		}
 	}
 }

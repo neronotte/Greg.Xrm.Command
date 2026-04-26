@@ -217,7 +217,7 @@ namespace Greg.Xrm.Command.Commands.Solution
 
 
 			prefix = (command.PublisherUniqueName ?? command.PublisherFriendlyName)
-				.OnlyLettersNumbersOrUnderscore()
+				.OnlyLowercaseLettersNumbersOrUnderscore()
 				.Replace("_", "");
 
 			if (string.IsNullOrWhiteSpace(prefix))
@@ -245,7 +245,7 @@ namespace Greg.Xrm.Command.Commands.Solution
 
 			if (!string.IsNullOrWhiteSpace(command.PublisherFriendlyName))
 			{
-				var uniqueName = command.PublisherFriendlyName.OnlyLettersNumbersOrUnderscore();
+				var uniqueName = command.PublisherFriendlyName.OnlyLowercaseLettersNumbersOrUnderscore();
 				if (!string.IsNullOrWhiteSpace(uniqueName))
 					return uniqueName;
 			}
@@ -269,9 +269,9 @@ namespace Greg.Xrm.Command.Commands.Solution
 		private static string GetUniqueName(CreateCommand command)
 		{
 			if (!string.IsNullOrWhiteSpace(command.UniqueName))
-				return command.UniqueName.OnlyLettersNumbersOrUnderscore();
+				return command.UniqueName.OnlyLowercaseLettersNumbersOrUnderscore();
 
-			return command.DisplayName.OnlyLettersNumbersOrUnderscore();
+			return command.DisplayName.OnlyLowercaseLettersNumbersOrUnderscore();
 		}
 	}
 

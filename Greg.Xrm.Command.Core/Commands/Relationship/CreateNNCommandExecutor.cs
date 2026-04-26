@@ -1,28 +1,19 @@
 using System.ServiceModel;
 using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
+using Greg.Xrm.Command.Services.Settings;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;
 
 namespace Greg.Xrm.Command.Commands.Relationship
 {
-	public class CreateNNCommandExecutor : ICommandExecutor<CreateNNCommand>
+	public class CreateNNCommandExecutor(IOutput output, IOrganizationServiceRepository organizationServiceRepository, ISettingsRepository settingsRepository) : ICommandExecutor<CreateNNCommand>
 	{
-		private readonly IOutput output;
-		private readonly IOrganizationServiceRepository organizationServiceRepository;
-
-		public CreateNNCommandExecutor(IOutput output, IOrganizationServiceRepository organizationServiceRepository)
-		{
-			this.output = output;
-			this.organizationServiceRepository = organizationServiceRepository;
-		}
-
-
 		public async Task<CommandResult> ExecuteAsync(CreateNNCommand command, CancellationToken cancellationToken)
 		{
-			this.output.Write($"Connecting to the current dataverse environment...");
-			var crm = await this.organizationServiceRepository.GetCurrentConnectionAsync();
-			this.output.WriteLine("Done", ConsoleColor.Green);
+			output.Write($"Connecting to the current dataverse environment...");
+			var crm = await organizationServiceRepository.GetCurrentConnectionAsync();
+			output.WriteLine("Done", ConsoleColor.Green);
 
 			try
 			{
@@ -73,7 +64,7 @@ namespace Greg.Xrm.Command.Commands.Relationship
 				ICreateNNStrategy strategy;
 				if (command.Explicit)
 				{
-					strategy = new CreateNNExplicitStrategy(output, crm);
+					strategy = new CreateNNExplicitStrategy(output, crm, settingsRepository);
 				}
 				else
 				{

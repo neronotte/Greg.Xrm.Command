@@ -253,7 +253,7 @@ namespace Greg.Xrm.Command.Commands.Forms
 					continue;
 				}
 
-				tabName = "tab_" + tabName.OnlyLettersNumbersOrUnderscore();
+				tabName = "tab_" + tabName.OnlyLowercaseLettersNumbersOrUnderscore();
 
 				if (currentTabNames.Contains(tabName))
 				{
@@ -333,7 +333,7 @@ namespace Greg.Xrm.Command.Commands.Forms
 				}
 
 				var tabName = section.Parent?.Parent?.Parent?.Parent?.Attribute("name")?.Value ?? string.Empty;
-				sectionName = tabName + "_sec_" + sectionName.OnlyLettersNumbersOrUnderscore();
+				sectionName = tabName + "_sec_" + sectionName.OnlyLowercaseLettersNumbersOrUnderscore();
 				if (currentSectionNames.Contains(sectionName))
 				{
 					if (isFirstComment)

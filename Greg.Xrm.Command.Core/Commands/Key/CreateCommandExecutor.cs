@@ -129,10 +129,10 @@ namespace Greg.Xrm.Command.Commands.Key
 
 			if (displayName.StartsWith(publisherPrefix + "_", StringComparison.InvariantCultureIgnoreCase))
 			{
-				return displayName.OnlyLettersNumbersOrUnderscore();
+				return displayName.OnlyLowercaseLettersNumbersOrUnderscore();
 			}
 
-			return $"{publisherPrefix}_{displayName.OnlyLettersNumbersOrUnderscore()}";
+			return $"{publisherPrefix}_{displayName.OnlyLowercaseLettersNumbersOrUnderscore()}";
 		}
 	}
 }

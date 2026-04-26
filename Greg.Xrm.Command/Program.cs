@@ -33,7 +33,7 @@ internal class Program
 		serviceCollection.AddSingleton<IAutoUpdater, AutoUpdater>();
 		serviceCollection.AddTransient<IPacxProjectRepository, PacxProjectRepository>();
 		serviceCollection.AddSingleton<IOrganizationServiceRepository, OrganizationServiceRepository>();
-		serviceCollection.AddSingleton<IOutput, OutputToConsole>();
+		serviceCollection.AddSingleton<IOutput, OutputToAnsiConsole>();
 		serviceCollection.AddTransient<IHistoryTracker, HistoryTracker>();
 		serviceCollection.AddTransient<Bootstrapper>();
 		serviceCollection.AddSingleton(AnsiConsole.Console);
