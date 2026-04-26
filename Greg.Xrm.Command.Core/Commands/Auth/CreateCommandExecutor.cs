@@ -24,6 +24,11 @@ namespace Greg.Xrm.Command.Commands.Auth
 
 			if (!connectionString.HasData())
 			{
+				if (string.IsNullOrWhiteSpace(command.EnvironmentUrl))
+				{
+					return CommandResult.Fail("You must specify either a connection string or an environment URL to create an authentication profile.");
+				}
+
 				if (!command.ApplicationId.HasData())
 				{
 					connectionString = OAUTH_CONNECTION_STRING_TEMPLATE.Replace("{0}", command.EnvironmentUrl?.TrimEnd('/'));

@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using System.Drawing.Text;
 using System.ServiceModel;
 using Greg.Xrm.Command.Services.Output;
 using Greg.Xrm.Command.Services.Project;
@@ -33,6 +32,20 @@ namespace Greg.Xrm.Command.Services.Connection
 
 
 		private ConnectionSetting? cache = null;
+
+		private string? _environmentOverride = null;
+
+		public void SetEnvironmentOverride(string nameOrUrl)
+		{
+			_environmentOverride = nameOrUrl;
+		}
+
+		public async Task<string?> GetCurrentEnvironmentOverrideNameAsync()
+		{
+			if (_environmentOverride == null) return null;
+			var (name, _) = await TryResolveOverrideConnectionAsync();
+			return name;
+		}
 
 
 
@@ -103,11 +116,64 @@ namespace Greg.Xrm.Command.Services.Connection
 
 
 
-		public async Task<string> GetCurrentConnectionNameAsync()
+		/// <summary>
+		/// Resolves the connection name and connection string for the current environment override.
+		/// Tries profile name first, then URL match.
+		/// </summary>
+		private async Task<(string connectionName, string connectionString)> TryResolveOverrideConnectionAsync()
 		{
 			var connectionStrings = await GetConnectionSettingAsync()
+				?? throw new CommandException(CommandException.ConnectionNotSet, $"No authentication profile found for environment '{_environmentOverride}'.");
+
+			// 1. Try case-insensitive name match
+			var matchedName = connectionStrings.ConnectionStringKeys
+				.FirstOrDefault(k => string.Equals(k, _environmentOverride, StringComparison.OrdinalIgnoreCase));
+
+			if (matchedName != null
+				&& connectionStrings.TryGetConnectionString(matchedName, GetAesKey(), GetAesIV(), out var connectionString)
+				&& !string.IsNullOrWhiteSpace(connectionString))
+			{
+				return (matchedName, connectionString!);
+			}
+
+			// 2. Try URL match
+			var normalizedOverride = _environmentOverride!.TrimEnd('/').ToUpperInvariant();
+			foreach (var name in connectionStrings.ConnectionStringKeys)
+			{
+				if (!connectionStrings.TryGetConnectionString(name, GetAesKey(), GetAesIV(), out var cs) || string.IsNullOrWhiteSpace(cs))
+					continue;
+
+				var parts = cs!.Split(';').ToList();
+				var urlToken = parts.Find(p => p.StartsWith("Url", StringComparison.OrdinalIgnoreCase))
+								?? parts.Find(p => p.StartsWith("ServiceUri", StringComparison.OrdinalIgnoreCase))
+								?? parts.Find(p => p.StartsWith("Service Uri", StringComparison.OrdinalIgnoreCase))
+								?? parts.Find(p => p.StartsWith("Server", StringComparison.OrdinalIgnoreCase));
+
+				if (string.IsNullOrWhiteSpace(urlToken)) continue;
+
+				var eqIdx = urlToken.IndexOf('=');
+				if (eqIdx < 0) continue;
+
+				var storedUrl = urlToken[(eqIdx + 1)..].Trim().TrimEnd('/');
+				if (storedUrl.Equals(normalizedOverride, StringComparison.OrdinalIgnoreCase))
+					return (name, cs!);
+			}
+
+			throw new CommandException(CommandException.ConnectionNotSet, $"No authentication profile found for environment '{_environmentOverride}'.");
+		}
+
+
+		public async Task<string> GetCurrentConnectionNameAsync()
+		{
+			if (_environmentOverride != null)
+			{
+				var (name, _) = await TryResolveOverrideConnectionAsync();
+				return name;
+			}
+
+			var connectionStrings = await GetConnectionSettingAsync()
 				?? throw new CommandException(CommandException.ConnectionNotSet, "Dataverse connection has not been set yet.");
-				
+
 			bool found;
 			string? connectionName;
 			var project = await this.pacxProjectRepository.GetCurrentProjectAsync();
@@ -131,6 +197,12 @@ namespace Greg.Xrm.Command.Services.Connection
 
 		public async Task<IOrganizationServiceAsync2> GetCurrentConnectionAsync()
 		{
+			if (_environmentOverride != null)
+			{
+				var (overrideName, overrideConnectionString) = await TryResolveOverrideConnectionAsync();
+				return await this.CreateServiceClientAsync(overrideName, overrideConnectionString);
+			}
+
 			var connectionStrings = await GetConnectionSettingAsync()
 				?? throw new CommandException(CommandException.ConnectionNotSet, "Dataverse connection has not been set yet.");
 

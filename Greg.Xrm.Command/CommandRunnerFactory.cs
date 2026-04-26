@@ -18,14 +18,29 @@ namespace Greg.Xrm.Command
 	{
 		public ICommandRunner CreateCommandRunner()
 		{
-			if (args.Count == 0)
+			// Count --environment / -env tokens so they don't inflate the arg count
+			// and incorrectly block --interactive when used together.
+			var envArgCount = 0;
+			for (int i = 0; i < args.Count; i++)
+			{
+				if (args[i] == "--environment" || args[i] == "-env")
+				{
+					envArgCount = (i + 1 < args.Count && !args[i + 1].StartsWith("-", StringComparison.Ordinal))
+						? 2 : 1;
+					break;
+				}
+			}
+
+			var effectiveCount = args.Count - envArgCount;
+
+			if (effectiveCount == 0)
 			{
 				return Cli();
 			}
 
 			if (args.Contains("--interactive"))
 			{
-				if (args.Count == 1)
+				if (effectiveCount == 1)
 				{
 					return Interactive();
 				}

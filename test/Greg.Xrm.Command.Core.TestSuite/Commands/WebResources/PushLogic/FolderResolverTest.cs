@@ -1,7 +1,7 @@
-using Microsoft.Xrm.Sdk;
-
 namespace Greg.Xrm.Command.Commands.WebResources.PushLogic
 {
+	using Utils = Greg.Xrm.Command.Utility;
+
 	[TestClass]
 	public class FolderResolverTest
 	{

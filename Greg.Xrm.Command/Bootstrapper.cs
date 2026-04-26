@@ -21,6 +21,12 @@ namespace Greg.Xrm.Command
 		public async Task<int> StartAsync(CancellationToken cancellationToken)
 		{
 			await updater.CheckForUpdatesAsync();
+
+			// Apply the global --environment / -env override before printing the
+			// title banner so that "Current Environment" reflects the override.
+			// Tokens are removed from args so downstream components see a clean arg list.
+			ApplyEnvironmentOverride();
+
 			await ShowTitleBanner();
 
 			log.LogTrace("1. StartAsync has been called.");
@@ -37,6 +43,23 @@ namespace Greg.Xrm.Command
 
 
 
+
+
+
+		private void ApplyEnvironmentOverride()
+		{
+			for (int i = 0; i < args.Count; i++)
+			{
+				if (args[i] == "--environment" || args[i] == "-env")
+				{
+					if (i + 1 < args.Count && !args[i + 1].StartsWith("-", StringComparison.Ordinal))
+					{
+						organizationServiceRepository.SetEnvironmentOverride(args[i + 1]);
+					}
+					break;
+				}
+			}
+		}
 
 
 

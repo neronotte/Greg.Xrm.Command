@@ -37,6 +37,10 @@ namespace Greg.Xrm.Command.Commands.Script
 				.Setup(x => x.GetTableAsync(tableName, It.IsAny<List<string>>()))
 				.ReturnsAsync(mockEntity);
 
+			mockMetadataExtractor
+				.Setup(x => x.GetRelationshipsAsync(It.IsAny<List<string>>(), It.IsAny<List<Extractor_EntityMetadata>>()))
+				.ReturnsAsync([]);
+
 			mockServiceRepository
 				.Setup(x => x.GetCurrentConnectionAsync())
 				.ReturnsAsync(mockOrganizationService.Object);
@@ -112,68 +116,68 @@ namespace Greg.Xrm.Command.Commands.Script
 		/// Set [Ignore] attribute to skip during normal test runs
 		/// Remove [Ignore] when you want to debug locally
 		/// </summary>
-		[TestMethod]
-		[TestCategory("Integration")]
-		public async Task ExecuteAsync_Integration_WithRealConnection()
-		{
-			// Arrange
-			var tableName = "";
-			var customPrefixes = "";
-			var outputDir = TestConfiguration.GetTestOutputDirectory();
-			var scriptFileName = "";
-			var stateFileName = "";
+		//[TestMethod]
+		//[TestCategory("Integration")]
+		//public async Task ExecuteAsync_Integration_WithRealConnection()
+		//{
+		//	// Arrange
+		//	var tableName = "";
+		//	var customPrefixes = "";
+		//	var outputDir = TestConfiguration.GetTestOutputDirectory();
+		//	var scriptFileName = "";
+		//	var stateFileName = "";
 
-			// Alternative: Use explicit parameters
-			var serviceClient = TestConfiguration.CreateServiceClient(
-				url: "",
-				clientId: "",
-				clientSecret: ""
-			);
+		//	// Alternative: Use explicit parameters
+		//	var serviceClient = TestConfiguration.CreateServiceClient(
+		//		url: "",
+		//		clientId: "",
+		//		clientSecret: ""
+		//	);
 
-			Assert.IsTrue(serviceClient.IsReady, $"Failed to connect to Dataverse: {serviceClient.LastError}");
+		//	Assert.IsTrue(serviceClient.IsReady, $"Failed to connect to Dataverse: {serviceClient.LastError}");
 
-			var output = new OutputToMemory(); // Or use OutputToConsole for debugging
-			var mockServiceRepository = new Mock<IOrganizationServiceRepository>();
-			mockServiceRepository
-				.Setup(x => x.GetCurrentConnectionAsync())
-				.ReturnsAsync(serviceClient);
+		//	var output = new OutputToMemory(); // Or use OutputToConsole for debugging
+		//	var mockServiceRepository = new Mock<IOrganizationServiceRepository>();
+		//	mockServiceRepository
+		//		.Setup(x => x.GetCurrentConnectionAsync())
+		//		.ReturnsAsync(serviceClient);
 
-			var scriptBuilder = new ScriptBuilder();
-			var metadataExtractor = new ScriptMetadataExtractor(
-				mockServiceRepository.Object,
-				scriptBuilder);
+		//	var scriptBuilder = new ScriptBuilder();
+		//	var metadataExtractor = new ScriptMetadataExtractor(
+		//		mockServiceRepository.Object,
+		//		scriptBuilder);
 
-			var extractionService = new ScriptExtractionService(
-				output,
-				metadataExtractor);
+		//	var extractionService = new ScriptExtractionService(
+		//		output,
+		//		metadataExtractor);
 
-			var executor = new ScriptTableCommandExecutor(extractionService);
+		//	var executor = new ScriptTableCommandExecutor(extractionService);
 
-			var command = new ScriptTableCommand
-			{
-				TableName = tableName,
-				CustomPrefixes = customPrefixes,
-				OutputDir = outputDir,
-				PacxScriptName = scriptFileName,
-				StateFieldsDefinitionName = stateFileName,
-				WithStateFieldsDefinition = true
-			};
+		//	var command = new ScriptTableCommand
+		//	{
+		//		TableName = tableName,
+		//		CustomPrefixes = customPrefixes,
+		//		OutputDir = outputDir,
+		//		PacxScriptName = scriptFileName,
+		//		StateFieldsDefinitionName = stateFileName,
+		//		WithStateFieldsDefinition = true
+		//	};
 
-			// Act
-			var result = await executor.ExecuteAsync(command, CancellationToken.None);
+		//	// Act
+		//	var result = await executor.ExecuteAsync(command, CancellationToken.None);
 
-			// Assert
-			Assert.IsTrue(result.IsSuccess, $"Command failed: {result.ErrorMessage}");
+		//	// Assert
+		//	Assert.IsTrue(result.IsSuccess, $"Command failed: {result.ErrorMessage}");
 
-			// Verify output files were created
-			var scriptFilePath = Path.Combine(outputDir, scriptFileName);
-			Assert.IsTrue(File.Exists(scriptFilePath), $"Script file not created at {scriptFilePath}");
+		//	// Verify output files were created
+		//	var scriptFilePath = Path.Combine(outputDir, scriptFileName);
+		//	Assert.IsTrue(File.Exists(scriptFilePath), $"Script file not created at {scriptFilePath}");
 
-			var stateFilePath = Path.Combine(outputDir, stateFileName);
-			Assert.IsTrue(File.Exists(stateFilePath), $"State file not created at {stateFilePath}");
+		//	var stateFilePath = Path.Combine(outputDir, stateFileName);
+		//	Assert.IsTrue(File.Exists(stateFilePath), $"State file not created at {stateFilePath}");
 
-			// Clean up
-			serviceClient.Dispose();
-		}
+		//	// Clean up
+		//	serviceClient.Dispose();
+		//}
 	}
 }

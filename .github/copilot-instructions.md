@@ -25,13 +25,13 @@ dotnet pack Greg.Xrm.Command.Interfaces\Greg.Xrm.Command.Interfaces.csproj --con
 
 ## Project Layout
 
-| Project | Role |
-|---|---|
-| `Greg.Xrm.Command` | CLI entry point — DI setup, bootstrapping, command runners |
-| `Greg.Xrm.Command.Core` | Core engine — all built-in commands, parsing, services |
-| `Greg.Xrm.Command.Interfaces` | Public NuGet API — interfaces and attributes for plugins |
-| `Greg.Xrm.Command.Core.TestSuite` | MSTest unit tests using Moq |
-| `sample/` | Reference plugin implementation |
+| Project                           | Role                                                       |
+| --------------------------------- | ---------------------------------------------------------- |
+| `Greg.Xrm.Command`                | CLI entry point — DI setup, bootstrapping, command runners |
+| `Greg.Xrm.Command.Core`           | Core engine — all built-in commands, parsing, services     |
+| `Greg.Xrm.Command.Interfaces`     | Public NuGet API — interfaces and attributes for plugins   |
+| `Greg.Xrm.Command.Core.TestSuite` | MSTest unit tests using Moq                                |
+| `sample/`                         | Reference plugin implementation                            |
 
 ## Architecture
 
@@ -92,12 +92,12 @@ Plugins are DLLs placed in `%appdata%/PACX/Plugins/`. They reference `Greg.Xrm.C
 
 ### Attributes
 
-| Attribute | Target | Notes |
-|---|---|---|
-| `[Command(verb1, verb2, ...)]` | Class | Multi-verb commands (e.g., `"auth", "select"`) |
-| `[Option("long-name", "s")]` | Property | `s` = single-char short name; `Order` controls help display order |
-| `[Required]` | Property | Enforced by `CommandDefinition.CreateCommand()` |
-| `[Alias("alt-verb")]` | Class | Alternative verb sequence for the same command |
+| Attribute                      | Target   | Notes                                                             |
+| ------------------------------ | -------- | ----------------------------------------------------------------- |
+| `[Command(verb1, verb2, ...)]` | Class    | Multi-verb commands (e.g., `"auth", "select"`)                    |
+| `[Option("long-name", "s")]`   | Property | `s` = single-char short name; `Order` controls help display order |
+| `[Required]`                   | Property | Enforced by `CommandDefinition.CreateCommand()`                   |
+| `[Alias("alt-verb")]`          | Class    | Alternative verb sequence for the same command                    |
 
 ### Option naming
 
@@ -139,3 +139,12 @@ Return `CommandResult.Success()` or `CommandResult.Fail("message")` from executo
 ### Output
 
 Inject `IOutput` for all console writing. Never write directly to `Console`. `IOutput` supports color/style via Spectre.Console under the hood.
+
+## Bug fixing rules
+
+Follow these rules when fixing bugs:
+
+1. If it's not already present, write a unit test that reproduces the bug. Run the test and assert the expected behavior. This ensures the bug is properly captured and prevents regressions.
+2. Implement the fix in the production code to make the test pass. Ensure that the fix addresses the root cause of the bug and does not introduce new issues.
+3. Refactor the code if necessary to improve readability, maintainability, or performance, while ensuring that all tests continue to pass. This step is optional and should be done with caution to avoid breaking existing functionality.
+4. Run the full test suite to confirm that the fix does not cause any regressions or break existing functionality. This step is crucial to maintain the integrity of the codebase.
