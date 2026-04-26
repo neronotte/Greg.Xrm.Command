@@ -103,6 +103,31 @@ namespace Greg.Xrm.Command.Services.Connection
 
 
 
+		public async Task<string> GetCurrentConnectionNameAsync()
+		{
+			var connectionStrings = await GetConnectionSettingAsync()
+				?? throw new CommandException(CommandException.ConnectionNotSet, "Dataverse connection has not been set yet.");
+				
+			bool found;
+			string? connectionName;
+			var project = await this.pacxProjectRepository.GetCurrentProjectAsync();
+			if (project != null && !project.IsSuspended)
+			{
+				connectionName = project.AuthProfileName;
+				found = connectionStrings.TryGetConnectionString(project.AuthProfileName, GetAesKey(), GetAesIV(), out _);
+				if (!found)
+					throw new CommandException(CommandException.ConnectionNotSet, $"Unable to find an authentication profile called {project.AuthProfileName}.");
+			}
+			else
+			{
+				connectionName = connectionStrings.CurrentConnectionStringKey;
+				found = connectionStrings.TryGetCurrentConnectionString(GetAesKey(), GetAesIV(), out _);
+				if (!found)
+					throw new CommandException(CommandException.ConnectionNotSet, "Dataverse connection has not been set yet.");
+			}
+
+			return connectionName!;
+		}
 
 		public async Task<IOrganizationServiceAsync2> GetCurrentConnectionAsync()
 		{
