@@ -88,10 +88,16 @@ namespace Greg.Xrm.Command
 			output.Write("Online documentation: ").WriteLine("https://github.com/neronotte/Greg.Xrm.Command/wiki");
 			output.Write("Feedback, Suggestions, Issues: ").WriteLine("https://github.com/neronotte/Greg.Xrm.Command/discussions");
 
-			var connectionName = await organizationServiceRepository.GetCurrentConnectionNameAsync();
-			output.Write("Current Environment: ")
-				.Write(connectionName, ConsoleColor.Cyan)
-				.WriteLine();
+			try
+			{
+				var connectionName = await organizationServiceRepository.GetCurrentConnectionNameAsync();
+				output.Write("Current Environment: ")
+					.Write(connectionName, ConsoleColor.Cyan)
+					.WriteLine();
+			}
+			catch (CommandException)
+			{
+			}
 
 			output.WriteLine();
 		}
