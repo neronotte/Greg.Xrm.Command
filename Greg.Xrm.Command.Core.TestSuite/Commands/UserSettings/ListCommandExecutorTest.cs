@@ -125,9 +125,9 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 			var (output, repoMock, crmMock) = CreateMocks();
 			var userId = Guid.NewGuid();
 
-			// timeformatcode = 1 → "1 (TwentyFourHour)" via the enum on SetCommand.TimeFormat
+			// entityformmode = 2 → "2 (Edit)" via the enum on SetCommand.FormMode
 			var settings = new Entity("usersettings") { Id = userId };
-			settings["timeformatcode"] = 1;
+			settings["entityformmode"] = new OptionSetValue(2);
 
 			var whoAmI = new WhoAmIResponse();
 			whoAmI.Results["UserId"] = userId;
@@ -139,7 +139,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 			var result = await executor.ExecuteAsync(new ListCommand(), CancellationToken.None);
 
 			Assert.IsTrue(result.IsSuccess, result.ErrorMessage);
-			StringAssert.Contains(result["timeformatcode"]?.ToString(), "TwentyFourHour");
+			StringAssert.Contains(result["entityformmode"]?.ToString(), "Edit");
 		}
 
 		// ── Happy path — boolean field rendered as lowercase string ───────────

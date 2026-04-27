@@ -110,12 +110,12 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 
 			var executor = new SetCommandExecutor(output, repoMock.Object);
 			var result = await executor.ExecuteAsync(
-				new SetCommand { TimeFormatCodeValue = SetCommand.TimeFormat.TwentyFourHour },
+				new SetCommand { EntityFormModeValue = SetCommand.FormMode.Edit },
 				CancellationToken.None);
 
 			Assert.IsTrue(result.IsSuccess, result.ErrorMessage);
 			Assert.IsNotNull(capturedUpdate);
-			Assert.AreEqual(1, capturedUpdate.GetAttributeValue<int>("timeformatcode"));
+			Assert.AreEqual(2, capturedUpdate.GetAttributeValue<OptionSetValue>("entityformmode").Value);
 		}
 
 		// ?? Happy path — language field triggers Dataverse availability check ?????

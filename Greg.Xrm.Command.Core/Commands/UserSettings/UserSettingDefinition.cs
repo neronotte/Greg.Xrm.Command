@@ -37,7 +37,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 			new("dateformatstring", "Date Format String"),
 			new("dateseparator", "Date Separator"),
 			new("longdateformatcode", "Long Date Format Code"),
-			new("timeformatcode", "Time Format Code", typeof(SetCommand.TimeFormat)),
+			new("timeformatcode", "Time Format Code"),
 			new("timeformatstring", "Time Format String"),
 			new("timeseparator", "Time Separator"),
 			new("amdesignator", "AM Designator"),
@@ -71,11 +71,11 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 			new("addressbooksyncinterval", "Address Book Sync Interval"),
 
 			// Full-name convention
-			new("fullnameconventioncode", "Full Name Convention", typeof(SetCommand.FullNameConvention)),
+			new("fullnameconventioncode", "Full Name Convention"),
 
 			// Number formatting
 			new("numbergroupformat", "Number Group Format"),
-			new("negativeformatcode", "Negative Format", typeof(SetCommand.NegativeNumberFormat)),
+			new("negativeformatcode", "Negative Format"),
 			new("decimalsymbol", "Decimal Symbol"),
 			new("numberseparator", "Number Separator (Thousands)"),
 			new("pricingdecimalprecision", "Pricing Decimal Precision"),
@@ -84,7 +84,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 			new("autocaptureuserstatus", "Auto Capture User Status"),
 
 			// Currency formatting
-			new("currencyformatcode", "Currency Format", typeof(SetCommand.CurrencySymbolPosition)),
+			new("currencyformatcode", "Currency Format"),
 			new("negativecurrencyformatcode", "Negative Currency Format"),
 			new("currencysymbol", "Currency Symbol"),
 			new("currencydecimalprecision", "Currency Decimal Precision"),

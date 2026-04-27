@@ -18,40 +18,14 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 	[Command("usersettings", "set", HelpText = "Sets one or more user setting properties for the specified or currently logged-in user.")]
 	public class SetCommand : ICanProvideUsageExample, IValidatableObject
 	{
-		// ?? Nested enums ?????????????????????????????????????????????????????????????
+		// ?? Nested enums for the actual Dataverse Picklist columns ??????????????
 		// Same pattern as Solution.ListCommand. Underlying numeric values match the
 		// Dataverse option codes, so users can pass the name or the number
-		// (e.g. --timeformatcode TwentyFourHour  or  --timeformatcode 1).
-
-		public enum TimeFormat { TwelveHour = 0, TwentyFourHour = 1 }
-
-		public enum FullNameConvention
-		{
-			LastFirst = 0,
-			FirstLast = 1,
-			LastFirstMI = 2,
-			FirstMILast = 3,
-			LastFirstMIAlt = 4,
-			FILast = 5,
-			LastFI = 6
-		}
-
-		public enum NegativeNumberFormat
-		{
-			Parentheses = 0,
-			MinusPrefix = 1,
-			MinusPrefixWithSpace = 2,
-			MinusSuffix = 3,
-			MinusSuffixWithSpace = 4
-		}
-
-		public enum CurrencySymbolPosition
-		{
-			SymbolBeforeAmount = 0,
-			SymbolAfterAmount = 1,
-			SymbolBeforeAmountWithSpace = 2,
-			SymbolAfterAmountWithSpace = 3
-		}
+		// (e.g. --entityformmode Edit  or  --entityformmode 2).
+		// Only fields whose schema 'Type' is 'Picklist' get an enum here; integer
+		// columns with conventional codes (timeformatcode, fullnameconventioncode,
+		// negativeformatcode, currencyformatcode) stay as plain int? since Dataverse
+		// stores them as System.Int32 and rejects an OptionSetValue payload.
 
 		public enum IncomingEmailFilter
 		{
@@ -118,8 +92,8 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 		[Option("longdateformatcode", Order = 23, HelpText = "Information that specifies how Long Date is displayed.")]
 		public int? LongDateFormatCode { get; set; }
 
-		[Option("timeformatcode", Order = 24, HelpText = "Time display format.")]
-		public TimeFormat? TimeFormatCodeValue { get; set; }
+		[Option("timeformatcode", Order = 24, HelpText = "Time display format (Integer code, e.g. 0=12-hour, 1=24-hour).")]
+		public int? TimeFormatCode { get; set; }
 
 		[StringLength(255)]
 		[Option("timeformatstring", Order = 25, HelpText = "Text for how time is displayed (e.g. 'hh:mm tt', 'HH:mm').")]
@@ -192,10 +166,12 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 		[Option("timezonestandardyear", Order = 46, HelpText = "Year when standard time starts.")]
 		public int? TimeZoneStandardYear { get; set; }
 
-		// Workday — HH:mm format validated in IValidatableObject.Validate.
+		// Workday — 5-char strings on Dataverse, HH:mm format validated in IValidatableObject.Validate.
+		[StringLength(5)]
 		[Option("workdaystarttime", Order = 50, HelpText = "Workday start time in HH:mm format (e.g. 08:00).")]
 		public string? WorkdayStartTime { get; set; }
 
+		[StringLength(5)]
 		[Option("workdaystoptime", Order = 51, HelpText = "Workday stop time in HH:mm format (e.g. 17:00).")]
 		public string? WorkdayStopTime { get; set; }
 
@@ -210,16 +186,16 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 		public int? AddressBookSyncInterval { get; set; }
 
 		// Full-name convention
-		[Option("fullnameconventioncode", Order = 70, HelpText = "How full names are displayed.")]
-		public FullNameConvention? FullNameConventionCodeValue { get; set; }
+		[Option("fullnameconventioncode", Order = 70, HelpText = "How full names are displayed (Integer code: 0=Last First, 1=First Last, 2=Last First MI, 3=First MI Last, 4=Last First MI alt, 5=FI Last, 6=Last FI).")]
+		public int? FullNameConventionCode { get; set; }
 
 		// Number formatting
 		[StringLength(25)]
 		[Option("numbergroupformat", Order = 80, HelpText = "How numbers are grouped (e.g. '3' for thousands grouping).")]
 		public string? NumberGroupFormat { get; set; }
 
-		[Option("negativeformatcode", Order = 81, HelpText = "Negative number display.")]
-		public NegativeNumberFormat? NegativeFormatCodeValue { get; set; }
+		[Option("negativeformatcode", Order = 81, HelpText = "Negative number display (Integer code: 0=(X), 1=-X, 2=- X, 3=X-, 4=X -).")]
+		public int? NegativeFormatCode { get; set; }
 
 		[StringLength(5)]
 		[Option("decimalsymbol", Order = 82, HelpText = "Character used as the decimal separator (e.g. '.' or ',').")]
@@ -243,8 +219,8 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 		public int? AutoCaptureUserStatus { get; set; }
 
 		// Currency formatting
-		[Option("currencyformatcode", Order = 90, HelpText = "Currency symbol position.")]
-		public CurrencySymbolPosition? CurrencyFormatCodeValue { get; set; }
+		[Option("currencyformatcode", Order = 90, HelpText = "Currency symbol position (Integer code: 0=$X, 1=X$, 2=$ X, 3=X $).")]
+		public int? CurrencyFormatCode { get; set; }
 
 		[Range(0, 15)]
 		[Option("negativecurrencyformatcode", Order = 91, HelpText = "How negative currency values are displayed (0–15).")]
@@ -343,8 +319,8 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 		[Option("synccontactcompany", Order = 211, HelpText = "Sync the parent account name to the Outlook contact Company field.")]
 		public bool? SyncContactCompany { get; set; }
 
-		[Option("autocreatecontactonpromote", Order = 212, HelpText = "Auto-create contact on client promote.")]
-		public bool? AutoCreateContactOnPromote { get; set; }
+		[Option("autocreatecontactonpromote", Order = 212, HelpText = "Auto-create contact on client promote (Integer flag: 0=No, 1=Yes).")]
+		public int? AutoCreateContactOnPromote { get; set; }
 
 		[Option("getstartedpanecontentenabled", Order = 213, HelpText = "Enable the Get Started pane in lists.")]
 		public bool? GetStartedPaneContentEnabled { get; set; }
@@ -417,11 +393,9 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 				var value = property.GetValue(this);
 				if (value is null) continue;
 
-				// Enum ? underlying int (Dataverse picklist value).
 				if (value is Enum e)
 					value = ((IConvertible)e).ToInt32(CultureInfo.InvariantCulture);
 
-				// Trim whitespace-only strings and skip empty ones.
 				if (value is string s)
 				{
 					if (string.IsNullOrWhiteSpace(s)) continue;
@@ -498,8 +472,8 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 			writer.WriteParagraph("Set the time zone for another user (by domain name):");
 			writer.WriteCodeBlock("pacx usersettings set --user DOMAIN\\\\john.doe --timezonecode 85", "Powershell");
 
-			writer.WriteParagraph("Switch to 24-hour time format (by enum name) and raise the paging limit:");
-			writer.WriteCodeBlock("pacx usersettings set --timeformatcode TwentyFourHour --paginglimit 250", "Powershell");
+			writer.WriteParagraph("Switch the form mode to Read-optimized (by enum name) and raise the paging limit:");
+			writer.WriteCodeBlock("pacx usersettings set --entityformmode ReadOptimized --paginglimit 250", "Powershell");
 
 			writer.WriteParagraph("Show week numbers in the calendar:");
 			writer.WriteCodeBlock("pacx usersettings set --showweeknumber true", "Powershell");

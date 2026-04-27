@@ -31,9 +31,9 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 		{
 			var command = Utility.TestParseCommand<SetCommand>(
 				"usersettings", "set",
-				"--timeformatcode", "TwentyFourHour");
+				"--entityformmode", "ReadOptimized");
 
-			Assert.AreEqual(SetCommand.TimeFormat.TwentyFourHour, command.TimeFormatCodeValue);
+			Assert.AreEqual(SetCommand.FormMode.ReadOptimized, command.EntityFormModeValue);
 		}
 
 		[TestMethod]
@@ -41,9 +41,9 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 		{
 			var command = Utility.TestParseCommand<SetCommand>(
 				"usersettings", "set",
-				"--timeformatcode", "1");
+				"--entityformmode", "1");
 
-			Assert.AreEqual(SetCommand.TimeFormat.TwentyFourHour, command.TimeFormatCodeValue);
+			Assert.AreEqual(SetCommand.FormMode.ReadOptimized, command.EntityFormModeValue);
 		}
 
 		// ?? Multiple settings in a single call ???????????????????????????????????
@@ -71,11 +71,11 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 		[TestMethod]
 		public void GetProvidedSettingsNormalisesEnumToItsNumericCode()
 		{
-			var command = new SetCommand { TimeFormatCodeValue = SetCommand.TimeFormat.TwentyFourHour };
+			var command = new SetCommand { EntityFormModeValue = SetCommand.FormMode.Edit };
 			var provided = command.GetProvidedSettings();
 
 			Assert.AreEqual(1, provided.Count);
-			Assert.AreEqual(1, provided["timeformatcode"]);
+			Assert.AreEqual(2, provided["entityformmode"]);
 		}
 
 		[TestMethod]

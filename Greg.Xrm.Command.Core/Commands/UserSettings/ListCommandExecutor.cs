@@ -17,14 +17,12 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 
 		public async Task<CommandResult> ExecuteAsync(ListCommand command, CancellationToken cancellationToken)
 		{
-			// ── 1. Connect ───────────────────────────────────────────────────────────
 			output.Write("Connecting to the current Dataverse environment...");
 			var crm = await organizationServiceRepository.GetCurrentConnectionAsync();
 			output.WriteLine("Done", ConsoleColor.Green);
 
 			try
 			{
-				// ── 2. Resolve target user ───────────────────────────────────────────
 				Guid targetUserId;
 				string targetUserName;
 
@@ -56,7 +54,6 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 					output.WriteLine("Done", ConsoleColor.Green);
 				}
 
-				// ── 3. Retrieve usersettings ─────────────────────────────────────────
 				output.Write("Retrieving user settings...");
 				var fieldNames = UserSettingRegistry.Fields.Select(f => f.FieldName).ToArray();
 				var query = new QueryExpression(UserSettingsTableName);
@@ -74,7 +71,6 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 				var settings = settingsResult.Entities[0];
 				output.WriteLine("Done", ConsoleColor.Green);
 
-				// ── 4. Display table ─────────────────────────────────────────────────
 				output.WriteLine();
 				var rows = UserSettingRegistry.Fields
 					.OrderBy(d => d.FieldName)
@@ -117,7 +113,6 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 			if (raw == null)
 				return string.Empty;
 
-			// Dataverse returns optionset-typed columns as OptionSetValue; normalise to int.
 			int? intVal = raw switch
 			{
 				OptionSetValue osv => osv.Value,
@@ -125,7 +120,6 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 				_ => null
 			};
 
-			// Picklist fields carry an enum type: render "<code> (<Name>)" when the code is known.
 			if (field.EnumType is not null && intVal.HasValue)
 			{
 				return Enum.IsDefined(field.EnumType, intVal.Value)

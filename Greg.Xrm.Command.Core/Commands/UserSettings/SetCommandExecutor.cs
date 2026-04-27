@@ -17,8 +17,6 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 
 		public async Task<CommandResult> ExecuteAsync(SetCommand command, CancellationToken cancellationToken)
 		{
-			// ?? 1. Collect provided settings (already typed + validated by the parser
-			//       and SetCommand DataAnnotations / IValidatableObject) ?????????????????
 			var provided = command.GetProvidedSettings();
 			if (provided.Count == 0)
 			{
@@ -27,14 +25,12 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 					"Run 'pacx help usersettings set' to see the full list of supported options.");
 			}
 
-			// ?? 2. Connect ???????????????????????????????????????????????????????????
 			output.Write("Connecting to the current Dataverse environment...");
 			var crm = await organizationServiceRepository.GetCurrentConnectionAsync();
 			output.WriteLine("Done", ConsoleColor.Green);
 
 			try
 			{
-				// ?? 3. Language availability in Dataverse ?????????????????????????????
 				var providedLanguages = provided
 					.Where(p => UserSettingRegistry.LanguageFieldNames.Contains(p.Key))
 					.Select(p => new { FieldName = p.Key, Lcid = (int)p.Value })
@@ -59,7 +55,6 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 					output.WriteLine("Done", ConsoleColor.Green);
 				}
 
-				// ?? 4. Resolve target user ???????????????????????????????????????????
 				Guid targetUserId;
 				if (!string.IsNullOrWhiteSpace(command.UserDomainName))
 				{
@@ -88,14 +83,18 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 					output.WriteLine("Done", ConsoleColor.Green);
 				}
 
-				// ?? 5. Apply update (single request for all settings) ????????????????
 				output.WriteLine($"Updating {provided.Count} user setting(s):");
 				var userSettings = new Entity(UserSettingsTableName) { Id = targetUserId };
 				foreach (var (fieldName, value) in provided)
 				{
-					var displayName = UserSettingRegistry.TryGet(fieldName, out var def) ? def.DisplayName : fieldName;
-					output.WriteLine($"  - {displayName} ({fieldName}) = {value}");
-					userSettings[fieldName] = value;
+					if (UserSettingRegistry.TryGet(fieldName, out var def))
+					{
+						output.WriteLine($"  - {def.DisplayName} ({fieldName}) = {value}");
+						if (def.EnumType is not null && value is int intCode)
+							userSettings[fieldName] = new OptionSetValue(intCode);
+						else 
+							userSettings[fieldName] = value;
+					}
 				}
 
 				output.Write("Applying changes...");
