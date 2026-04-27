@@ -439,8 +439,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 			if (GetProvidedSettings().Count == 0)
 			{
 				yield return new ValidationResult(
-					"At least one user setting option must be provided (e.g. --uilanguageid 1033). " +
-					"Run 'pacx help usersettings set' to see the full list of supported options.");
+					"At least one user setting option must be provided (e.g. --uilanguageid 1033). ");
 			}
 
 			// Language fields — must be a recognised Windows LCID. Dataverse provisioning
