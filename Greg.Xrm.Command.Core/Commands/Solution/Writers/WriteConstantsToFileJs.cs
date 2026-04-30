@@ -66,8 +66,9 @@ namespace Greg.Xrm.Command.Commands.Solution.Writers
 			WriteLine(Environment.NewLine + NameSpaceJsName + "." + entityConstants.EntityLogicalName + " = {");
 			WriteLine("\t///" + entityConstants.EntityDisplayName + " constants.");
 			if (entityConstants.EntityLogicalName == "EntityGenericConstants") return;
-			WriteLine("\tlogicalName: \"" + entityConstants.EntityLogicalName + "\",");
-			WriteLine("\tdisplayName: \"" + entityConstants.EntityDisplayName + "\",");
+				WriteLine("\tlogicalName: \"" + entityConstants.EntityLogicalName + "\",");
+				WriteLine("\tdisplayName: \"" + entityConstants.EntityDisplayName + "\",");
+				WriteLine("\tentitySetName: \"" + entityConstants.EntitySetName + "\",");
 		}
 
 		public override void WriteAttributes(EntityMetadataManager entityConstants, string lastAttribute)
