@@ -90,7 +90,7 @@ namespace Greg.Xrm.Command.Commands.Solution.Service
 
 				var label = entMetadata.DisplayName.LocalizedLabels.FirstOrDefault()?.Label ?? string.Empty;
 				output.WriteLine($"    {label}", ConsoleColor.Gray);
-				var entityManager = new EntityMetadataManager(label, entMetadata.LogicalName, entMetadata.IsActivity == true, EntityCommonFields.ToList());
+				var entityManager = new EntityMetadataManager(label, entMetadata.LogicalName, entMetadata.EntitySetName ?? string.Empty, entMetadata.IsActivity == true, EntityCommonFields.ToList());
 
 				foreach (var attribute in entMetadata.Attributes)
 				{
@@ -117,8 +117,8 @@ namespace Greg.Xrm.Command.Commands.Solution.Service
 					.Where(a => EntityCommonFields.Contains(a.LogicalName))
 					.ToList();
 
-				entityCommonAttributes = new EntityMetadataManager("Entity Generic", "EntityGenericConstants", false, new List<string>());
-				foreach (var attr in commonAttrList)
+				entityCommonAttributes = new EntityMetadataManager("Entity Generic", "EntityGenericConstants", string.Empty, false, new List<string>());
+					foreach (var attr in commonAttrList)
 				{
 					if (attr.DisplayName.LocalizedLabels.Count <= 0)
 						continue;
@@ -127,7 +127,7 @@ namespace Greg.Xrm.Command.Commands.Solution.Service
 			}
 			else
 			{
-				entityCommonAttributes = new EntityMetadataManager("Entity Generic", "EntityGenericConstants", false, new List<string>());
+				entityCommonAttributes = new EntityMetadataManager("Entity Generic", "EntityGenericConstants", string.Empty, false, new List<string>());
 			}
 			entityData.Insert(0, entityCommonAttributes);
 

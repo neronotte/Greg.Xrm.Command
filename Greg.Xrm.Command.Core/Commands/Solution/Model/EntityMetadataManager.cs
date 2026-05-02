@@ -7,12 +7,14 @@ namespace Greg.Xrm.Command.Commands.Solution.Model
 		public EntityMetadataManager(
 			string entityDisplayName,
 			string entityLogicalName,
+			string entitySetName,
 			bool isActivity,
 			List<string> commonFields)
 		{
 			EntityDisplayName = entityDisplayName;
 			EntityDisplayNameWithoutSpecialChar = entityDisplayName.Replace(" ", string.Empty).RemoveSpecialCharacters();
 			EntityLogicalName = entityLogicalName;
+			EntitySetName = entitySetName;
 			IsActivity = isActivity;
 			Attributes = new List<AttributeMetadataManager>();
 			OptionSetAttributes = new List<AttributeMetadataManagerForPicklist>();
@@ -22,6 +24,7 @@ namespace Greg.Xrm.Command.Commands.Solution.Model
 		public string EntityDisplayName { get; }
 		public string EntityDisplayNameWithoutSpecialChar { get; }
 		public string EntityLogicalName { get; }
+		public string EntitySetName { get; }
 		public bool IsActivity { get; }
 		public List<AttributeMetadataManagerForPicklist> OptionSetAttributes { get; set; }
 		public AttributeMetadataManagerForStatus? StatusAttribute { get; set; }

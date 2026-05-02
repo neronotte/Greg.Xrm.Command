@@ -125,6 +125,10 @@ namespace Greg.Xrm.Command.Commands.Solution.Writers
 			WriteLine("\t\t/// " + entityConstants.EntityDisplayName);
 			WriteLine("\t\t/// </summary>");
 			WriteLine("\t\tpublic static string displayName => \"" + entityConstants.EntityDisplayName + "\";" + Environment.NewLine);
+			WriteLine("\t\t/// <summary>");
+			WriteLine("\t\t/// " + entityConstants.EntitySetName);
+			WriteLine("\t\t/// </summary>");
+			WriteLine("\t\tpublic static string entitySetName => \"" + entityConstants.EntitySetName + "\";" + Environment.NewLine);
 		}
 
 		public override void WriteAttributes(EntityMetadataManager manager, string lastAttribute)
