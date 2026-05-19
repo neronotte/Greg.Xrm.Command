@@ -59,11 +59,12 @@ namespace Greg.Xrm.Command.Commands.WebResources
 					["value"] = "new_/themes/theme.xml"
 				}]));
 
-			Entity? capturedUpdate = null;
 			crmMock
 				.Setup(c => c.UpdateAsync(It.IsAny<Entity>()))
-				.Callback<Entity>(e => capturedUpdate = e)
 				.Returns(Task.CompletedTask);
+			crmMock
+				.Setup(c => c.CreateAsync(It.IsAny<Entity>()))
+				.ReturnsAsync(Guid.NewGuid());
 
 			crmMock
 				.Setup(c => c.ExecuteAsync(It.IsAny<OrganizationRequest>()))
@@ -78,8 +79,7 @@ namespace Greg.Xrm.Command.Commands.WebResources
 				CancellationToken.None);
 
 			Assert.IsTrue(result.IsSuccess, result.ErrorMessage);
-			Assert.IsNotNull(capturedUpdate);
-			var updatedContentBase64 = capturedUpdate.GetAttributeValue<string>("content");
+			var updatedContentBase64 = theme.content;
 			Assert.IsFalse(string.IsNullOrWhiteSpace(updatedContentBase64));
 			var updatedXml = Encoding.UTF8.GetString(Convert.FromBase64String(updatedContentBase64));
 			StringAssert.Contains(updatedXml, "webresource:new_logo.png");

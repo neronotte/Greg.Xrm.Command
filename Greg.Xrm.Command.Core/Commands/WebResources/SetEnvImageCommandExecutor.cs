@@ -149,7 +149,8 @@ namespace Greg.Xrm.Command.Commands.WebResources
 				}
 				else
 				{
-					themeWebResourceName = $"{solution.PublisherCustomizationPrefix}_/themes/{ThemeFileName}";
+					var publisherFolderName = GetPublisherFolderName(solution.PublisherCustomizationPrefix);
+					themeWebResourceName = $"{publisherFolderName}/themes/{ThemeFileName}";
 					themeXml = CreateNewThemeXml(command.WebResourceUniqueName);
 					await TrySaveLocalThemeFileAsync(solution.PublisherCustomizationPrefix, themeXml, cancellationToken);
 				}
@@ -395,7 +396,7 @@ namespace Greg.Xrm.Command.Commands.WebResources
 				return;
 			}
 
-			var filePath = Path.Combine(root.FullName, $"{publisherPrefix}_", "themes", ThemeFileName);
+			var filePath = Path.Combine(root.FullName, GetPublisherFolderName(publisherPrefix), "themes", ThemeFileName);
 			Directory.CreateDirectory(Path.GetDirectoryName(filePath)!);
 			await SaveLocalThemeContentAsync(filePath, content, cancellationToken);
 		}
@@ -404,7 +405,7 @@ namespace Greg.Xrm.Command.Commands.WebResources
 		{
 			var fullPath = Path.GetFullPath(filePath);
 			var normalized = fullPath.Replace('\\', '/');
-			var prefixSegment = $"{publisherPrefix}_/";
+			var prefixSegment = $"{GetPublisherFolderName(publisherPrefix)}/";
 
 			var root = FolderTree.RecurseBackFolderContainingFile(".wr.pacx", new DirectoryInfo(Path.GetDirectoryName(fullPath)!));
 			if (root != null)
@@ -423,6 +424,11 @@ namespace Greg.Xrm.Command.Commands.WebResources
 			}
 
 			return null;
+		}
+
+		private static string GetPublisherFolderName(string publisherPrefix)
+		{
+			return publisherPrefix.Trim().TrimEnd('_') + "_";
 		}
 
 		private sealed record AppContext(Guid Id, string UniqueName);
