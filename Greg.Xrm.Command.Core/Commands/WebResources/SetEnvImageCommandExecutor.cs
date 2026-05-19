@@ -1,6 +1,8 @@
 using System.ServiceModel;
 using System.Text;
 using System.Xml.Linq;
+using Greg.Xrm.Command.Commands.Settings.Model;
+using Greg.Xrm.Command.Commands.WebResources.PushLogic;
 using Greg.Xrm.Command.Model;
 using Greg.Xrm.Command.Services;
 using Greg.Xrm.Command.Services.Connection;
@@ -16,6 +18,10 @@ namespace Greg.Xrm.Command.Commands.WebResources
 		IOutput output,
 		IOrganizationServiceRepository organizationServiceRepository,
 		IWebResourceRepository webResourceRepository,
+		ISettingDefinitionRepository settingDefinitionRepository,
+		IAppSettingRepository appSettingRepository,
+		IOrganizationSettingRepository organizationSettingRepository,
+		IPublishXmlBuilder publishXmlBuilder,
 		ISolutionRepository solutionRepository) : ICommandExecutor<SetEnvImageCommand>
 	{
 		private const string CustomThemeDefinitionSettingName = "CustomThemeDefinition";
@@ -32,7 +38,7 @@ namespace Greg.Xrm.Command.Commands.WebResources
 			WebResource logo;
 			try
 			{
-				var webResourceList = await webResourceRepository.GetByNameAsync(crm, new[] { command.WebResourceUniqueName }, false);
+				var webResourceList = await webResourceRepository.GetByNameAsync(crm, [command.WebResourceUniqueName], false);
 
 				if (webResourceList.Count == 0)
 				{
@@ -74,22 +80,16 @@ namespace Greg.Xrm.Command.Commands.WebResources
 
 
 			output.Write("Retrieving CustomThemeDefinition setting definition...");
-			Guid settingDefinitionId;
+			SettingDefinition? settingDefinition = null;
 			try
 			{
-				var query = new QueryExpression("settingdefinition");
-				query.ColumnSet.AddColumn("settingdefinitionid");
-				query.Criteria.AddCondition("uniquename", ConditionOperator.Equal, CustomThemeDefinitionSettingName);
-				query.TopCount = 1;
-				var result = await crm.RetrieveMultipleAsync(query);
-				var settingDefinition = result.Entities.FirstOrDefault();
+				settingDefinition = await settingDefinitionRepository.GetByUniqueNameAsync(crm, CustomThemeDefinitionSettingName);
 				if (settingDefinition == null)
 				{
 					output.WriteLine("FAILED", ConsoleColor.Red);
 					return CommandResult.Fail($"Setting definition '{CustomThemeDefinitionSettingName}' was not found.");
 				}
 
-				settingDefinitionId = settingDefinition.Id;
 				output.WriteLine("Done", ConsoleColor.Green);
 			}
 			catch (FaultException<OrganizationServiceFault> ex)
@@ -103,7 +103,7 @@ namespace Greg.Xrm.Command.Commands.WebResources
 			string? currentThemeWebResourceName;
 			try
 			{
-				currentThemeWebResourceName = await GetThemeWebResourceNameFromSettingAsync(crm, settingDefinitionId, appContext?.Id);
+				currentThemeWebResourceName = await GetThemeWebResourceNameFromSettingAsync(crm, appSettingRepository, organizationSettingRepository, settingDefinition, appContext?.Id);
 				output.WriteLine("Done", ConsoleColor.Green);
 			}
 			catch (FaultException<OrganizationServiceFault> ex)
@@ -114,12 +114,16 @@ namespace Greg.Xrm.Command.Commands.WebResources
 
 
 			WebResource themeWebResource;
-			var currentSolutionName = await organizationServiceRepository.GetCurrentDefaultSolutionAsync();
+			var currentSolutionName = command.SolutionName;
+			if (string.IsNullOrWhiteSpace(currentSolutionName))
+			{
+				currentSolutionName = await organizationServiceRepository.GetCurrentDefaultSolutionAsync();
+			}
 			if (string.IsNullOrWhiteSpace(currentThemeWebResourceName))
 			{
 				if (string.IsNullOrWhiteSpace(currentSolutionName))
 				{
-					return CommandResult.Fail("No current default solution found. Please set a default solution first.");
+					return CommandResult.Fail("No solution name provided and no current default solution found. Please set a default solution or use --solution.");
 				}
 
 				var solution = await solutionRepository.GetByUniqueNameAsync(crm, currentSolutionName);
@@ -129,35 +133,42 @@ namespace Greg.Xrm.Command.Commands.WebResources
 				}
 
 				string themeXml;
-				string themeWebResourceName;
-				if (!string.IsNullOrWhiteSpace(command.LocalThemeFile))
-				{
-					if (!File.Exists(command.LocalThemeFile))
+					string themeWebResourceName;
+					if (!string.IsNullOrWhiteSpace(command.LocalThemeFile))
 					{
-						return CommandResult.Fail($"Local theme file '{command.LocalThemeFile}' does not exist.");
+						if (!File.Exists(command.LocalThemeFile))
+						{
+							return CommandResult.Fail($"Local theme file '{command.LocalThemeFile}' does not exist.");
+						}
+
+						themeXml = await File.ReadAllTextAsync(command.LocalThemeFile, cancellationToken);
+						themeXml = UpdateThemeLogo(themeXml, command.WebResourceUniqueName);
+
+						themeWebResourceName = TryResolveWebResourceNameFromFile(command.LocalThemeFile, solution.PublisherCustomizationPrefix) ?? string.Empty;
+						if (string.IsNullOrWhiteSpace(themeWebResourceName))
+						{
+							return CommandResult.Fail($"Unable to infer webresource unique name from '{command.LocalThemeFile}'.");
+						}
+					}
+					else
+					{
+						var publisherFolderName = GetPublisherFolderName(solution.PublisherCustomizationPrefix);
+						themeWebResourceName = $"{publisherFolderName}/themes/{ThemeFileName}";
+						themeXml = CreateNewThemeXml(command.WebResourceUniqueName);
 					}
 
-					themeXml = await File.ReadAllTextAsync(command.LocalThemeFile, cancellationToken);
-					themeXml = UpdateThemeLogo(themeXml, command.WebResourceUniqueName);
-					await SaveLocalThemeContentAsync(command.LocalThemeFile, themeXml, cancellationToken);
+					themeWebResource = await UpsertThemeWebResourceAsync(crm, themeWebResourceName, themeXml);
+					await AddThemeToSolutionAsync(crm, solution, themeWebResource);
+					await SaveSettingValueAsync(crm, currentSolutionName, appContext?.UniqueName, themeWebResource.name);
 
-					themeWebResourceName = TryResolveWebResourceNameFromFile(command.LocalThemeFile, solution.PublisherCustomizationPrefix) ?? string.Empty;
-					if (string.IsNullOrWhiteSpace(themeWebResourceName))
+					if (!string.IsNullOrWhiteSpace(command.LocalThemeFile))
 					{
-						return CommandResult.Fail($"Unable to infer webresource unique name from '{command.LocalThemeFile}'.");
+						await SaveLocalThemeContentAsync(command.LocalThemeFile, themeXml, cancellationToken);
 					}
-				}
-				else
-				{
-					var publisherFolderName = GetPublisherFolderName(solution.PublisherCustomizationPrefix);
-					themeWebResourceName = $"{publisherFolderName}/themes/{ThemeFileName}";
-					themeXml = CreateNewThemeXml(command.WebResourceUniqueName);
-					await TrySaveLocalThemeFileAsync(solution.PublisherCustomizationPrefix, themeXml, cancellationToken);
-				}
-
-				themeWebResource = await UpsertThemeWebResourceAsync(crm, themeWebResourceName, themeXml);
-				await AddThemeToSolutionAsync(crm, solution, themeWebResource);
-				await SaveSettingValueAsync(crm, currentSolutionName, appContext?.UniqueName, themeWebResource.name);
+					else
+					{
+						await TrySaveLocalThemeFileAsync(solution.PublisherCustomizationPrefix, themeXml, cancellationToken);
+					}
 			}
 			else
 			{
@@ -186,10 +197,8 @@ namespace Greg.Xrm.Command.Commands.WebResources
 			output.Write("Publishing updated webresource...");
 			try
 			{
-				var publish = new PublishXmlRequest
-				{
-					ParameterXml = $"<importexportxml><webresources><webresource>{themeWebResource.Id}</webresource></webresources></importexportxml>"
-				};
+				publishXmlBuilder.AddWebResource(themeWebResource.Id);
+				var publish = publishXmlBuilder.Build();
 				await crm.ExecuteAsync(publish);
 				output.WriteLine("Done", ConsoleColor.Green);
 			}
@@ -217,58 +226,42 @@ namespace Greg.Xrm.Command.Commands.WebResources
 		private static string CreateNewThemeXml(string logoWebResourceName)
 		{
 			var document = new XDocument(
-				new XElement("CustomThemeDefinition",
-					new XElement("Theme",
-						new XElement("Logo", BuildLogoValue(logoWebResourceName)))));
+				new XElement("CustomTheme",
+					new XAttribute("logoWebResource", logoWebResourceName)
+				)
+			);
 			return document.ToString();
 		}
 
 		private static string UpdateThemeLogo(string themeXml, string logoWebResourceName)
 		{
 			var document = XDocument.Parse(themeXml, LoadOptions.PreserveWhitespace);
-			var logoNode = document.Descendants()
-				.FirstOrDefault(x =>
-					string.Equals(x.Name.LocalName, "logo", StringComparison.OrdinalIgnoreCase) ||
-					string.Equals(x.Name.LocalName, "appheaderlogo", StringComparison.OrdinalIgnoreCase) ||
-					string.Equals(x.Name.LocalName, "applogo", StringComparison.OrdinalIgnoreCase))
-				?? document.Descendants()
-					.FirstOrDefault(x => x.Name.LocalName.Contains("logo", StringComparison.OrdinalIgnoreCase) && !x.HasElements);
-
-			if (logoNode == null)
+			if (document.Root == null)
 			{
-				var parent = document.Descendants().FirstOrDefault(x => string.Equals(x.Name.LocalName, "Theme", StringComparison.OrdinalIgnoreCase))
-					?? document.Root
-					?? throw new InvalidOperationException("Invalid theme xml: root element not found.");
-
-				logoNode = new XElement("Logo");
-				parent.Add(logoNode);
+				throw new InvalidOperationException("Invalid theme xml: root element not found.");
+			}
+			if (!"CustomTheme".Equals(document.Root.Name.LocalName, StringComparison.OrdinalIgnoreCase)
+				&& !"AppHeaderColors".Equals(document.Root.Name.LocalName, StringComparison.OrdinalIgnoreCase))
+			{
+				throw new InvalidOperationException("Invalid theme xml: root element should be 'CustomTheme' or 'AppHeaderColors'.");
 			}
 
-			logoNode.Value = BuildLogoValue(logoWebResourceName);
-			return document.ToString();
-		}
-
-		private static string BuildLogoValue(string webResourceName)
-		{
-			if (string.IsNullOrWhiteSpace(webResourceName))
+			if ("CustomTheme".Equals(document.Root.Name.LocalName, StringComparison.OrdinalIgnoreCase))
 			{
-				return "webresource:";
+				document.Root.SetAttributeValue("logoWebResource", logoWebResourceName);
+				return document.ToString();
 			}
 
-			return $"webresource:{webResourceName}";
-		}
-
-		private static string? NormalizeThemeWebResourceName(string? settingValue)
-		{
-			if (string.IsNullOrWhiteSpace(settingValue))
-			{
-				return null;
-			}
-
-			settingValue = settingValue.Trim();
-			return settingValue.StartsWith("webresource:", StringComparison.OrdinalIgnoreCase)
-				? settingValue["webresource:".Length..].Trim()
-				: settingValue;
+			//if ("AppHeaderColors".Equals(document.Root.Name.LocalName, StringComparison.OrdinalIgnoreCase))
+			//{
+				var document2 = new XDocument(
+					new XElement("CustomTheme",
+						new XAttribute("logoWebResource", logoWebResourceName)
+					)
+				);
+				document2.Root!.Add(document.Root);
+				return document2.ToString();
+			//}
 		}
 
 		private async Task<AppContext?> ResolveAppContextAsync(IOrganizationServiceAsync2 crm, SetEnvImageCommand command)
@@ -315,28 +308,23 @@ namespace Greg.Xrm.Command.Commands.WebResources
 			return new AppContext(app.Id, uniqueName);
 		}
 
-		private async Task<string?> GetThemeWebResourceNameFromSettingAsync(IOrganizationServiceAsync2 crm, Guid settingDefinitionId, Guid? appId)
+		private async Task<string?> GetThemeWebResourceNameFromSettingAsync(
+			IOrganizationServiceAsync2 crm,
+			IAppSettingRepository appSettingRepository,
+			IOrganizationSettingRepository organizationSettingRepository,
+			SettingDefinition settingDefinition,
+			Guid? appId)
 		{
 			if (appId.HasValue)
 			{
-				var appQuery = new QueryExpression("appsetting");
-				appQuery.ColumnSet.AddColumn("value");
-				appQuery.Criteria.AddCondition("settingdefinitionid", ConditionOperator.Equal, settingDefinitionId);
-				appQuery.Criteria.AddCondition("parentappmoduleid", ConditionOperator.Equal, appId.Value);
-				appQuery.TopCount = 1;
-
-				var result = await crm.RetrieveMultipleAsync(appQuery);
-				return NormalizeThemeWebResourceName(result.Entities.FirstOrDefault()?.GetAttributeValue<string>("value"));
+				var appSetting = await appSettingRepository.GetByAppAndDefinitionAsync(crm, settingDefinition, appId.Value);
+				return appSetting?.value;
 			}
 			else
 			{
-				var orgQuery = new QueryExpression("organizationsetting");
-				orgQuery.ColumnSet.AddColumn("value");
-				orgQuery.Criteria.AddCondition("settingdefinitionid", ConditionOperator.Equal, settingDefinitionId);
-				orgQuery.TopCount = 1;
-
-				var result = await crm.RetrieveMultipleAsync(orgQuery);
-				return NormalizeThemeWebResourceName(result.Entities.FirstOrDefault()?.GetAttributeValue<string>("value"));
+				var orgSettingList = await organizationSettingRepository.GetByDefinitionsAsync(crm, [settingDefinition]);
+				var orgSetting = orgSettingList.FirstOrDefault();
+				return orgSetting?.value;
 			}
 		}
 
@@ -393,6 +381,7 @@ namespace Greg.Xrm.Command.Commands.WebResources
 			var root = FolderTree.RecurseBackFolderContainingFile(".wr.pacx");
 			if (root == null)
 			{
+				output.WriteLine("No .wr.pacx file found in the folder tree, skipping local theme file save.", ConsoleColor.Yellow);
 				return;
 			}
 
