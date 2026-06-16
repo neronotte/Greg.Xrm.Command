@@ -119,7 +119,7 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 							if (!bound) output.Write("  (unbound)", ConsoleColor.Yellow);
 							output.WriteLine();
 							output.Write("  ");
-							CustomApiSignatureWriter.WriteSignature(output, uniqueName, inputParams, outputParams);
+							CustomApiSignatureWriter.WriteSignature(output, inputParams, outputParams);
 							output.WriteLine();
 						if (!string.Equals(uniqueName, displayName, StringComparison.OrdinalIgnoreCase))
 						{

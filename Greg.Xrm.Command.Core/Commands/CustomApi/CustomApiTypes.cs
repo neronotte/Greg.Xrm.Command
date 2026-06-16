@@ -112,44 +112,43 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 
 	/// <summary>
 	/// Writes a colorized Custom API signature to <see cref="IOutput"/>.
-	/// API name = White, punctuation = DarkGray, arg names = Cyan, arg types = Green.
+	/// Punctuation = White, required arg names = Cyan / types = Green, optional = DarkCyan / DarkGreen.
+	/// Does NOT write the API name — callers are responsible for that.
 	/// </summary>
 	public static class CustomApiSignatureWriter
 	{
 		public static void WriteSignature(
 			IOutput output,
-			string apiName,
 			IEnumerable<(string name, string type, bool optional)> inputParams,
 			IEnumerable<(string name, string type)> outputParams)
 		{
-			output.Write(apiName, ConsoleColor.White);
-			output.Write("(", ConsoleColor.DarkGray);
+			output.Write("(", ConsoleColor.White);
 
 			bool first = true;
 			foreach (var (name, type, optional) in inputParams)
 			{
-				if (!first) output.Write(", ", ConsoleColor.DarkGray);
+				if (!first) output.Write(", ", ConsoleColor.White);
 				first = false;
-				if (optional) output.Write("[", ConsoleColor.DarkGray);
-				output.Write(name, ConsoleColor.Cyan);
-				output.Write(": ", ConsoleColor.DarkGray);
-				output.Write(type, ConsoleColor.Green);
-				if (optional) output.Write("]", ConsoleColor.DarkGray);
+				if (optional) output.Write("[", ConsoleColor.White);
+				output.Write(name, optional ? ConsoleColor.DarkCyan  : ConsoleColor.Cyan);
+				output.Write(": ", ConsoleColor.White);
+				output.Write(type, optional ? ConsoleColor.DarkGreen : ConsoleColor.Green);
+				if (optional) output.Write("]", ConsoleColor.White);
 			}
 
-			output.Write(")", ConsoleColor.DarkGray);
+			output.Write(")", ConsoleColor.White);
 
 			var outputs = outputParams.ToList();
 			if (outputs.Count > 0)
 			{
-				output.Write(" -> ", ConsoleColor.DarkGray);
+				output.Write(" -> ", ConsoleColor.White);
 				bool firstOut = true;
 				foreach (var (name, type) in outputs)
 				{
-					if (!firstOut) output.Write(", ", ConsoleColor.DarkGray);
+					if (!firstOut) output.Write(", ", ConsoleColor.White);
 					firstOut = false;
 					output.Write(name, ConsoleColor.Cyan);
-					output.Write(": ", ConsoleColor.DarkGray);
+					output.Write(": ", ConsoleColor.White);
 					output.Write(type, ConsoleColor.Green);
 				}
 			}
