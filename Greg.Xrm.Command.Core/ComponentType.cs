@@ -102,5 +102,8 @@ namespace Greg.Xrm.Command
 		SiteComponent = 10402,
 		Site = 10403,
 		SiteLanguage = 10404,
+		CustomAPI = 10036,
+		CustomAPIRequestParameter = 10037,
+		CustomAPIResponseProperty = 10038,
 	}
 }

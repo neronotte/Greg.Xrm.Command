@@ -46,6 +46,10 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Greg.Xrm.Command.Core\Greg.Xrm.Command.Core.csproj" />
+    <!-- Build-order-only reference: ensures PacxIntegrationPlugin.dll is built before the CLI launches (integration test). -->
+    <ProjectReference Include="..\test\PacxIntegrationPlugin\PacxIntegrationPlugin.csproj"
+                      ReferenceOutputAssembly="false"
+                      SkipGetTargetFrameworkProperties="true" />
   </ItemGroup>
 
   <ItemGroup>
