@@ -30,8 +30,8 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 
 				var apiQ = new QueryExpression("customapi") { NoLock = true, TopCount = 1 };
 				apiQ.ColumnSet.AddColumns("customapiid", "uniquename", "displayname", "description",
-					"isfunction", "isprivate", "bindingtype", "allowedcustomprocessingsteptype",
-					"executeprivilegename", "plugintypeid");
+						"isfunction", "isprivate", "bindingtype", "boundentitylogicalname",
+						"allowedcustomprocessingsteptype", "executeprivilegename", "plugintypeid");
 				apiQ.Criteria.AddCondition("uniquename", ConditionOperator.Equal, command.UniqueName);
 
 				var apiResult = await crm.RetrieveMultipleAsync(apiQ);
@@ -62,39 +62,55 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 				// ── Print header ──────────────────────────────────────────────────────
 				output.WriteLine();
 
-				var uniqueName  = api.GetAttributeValue<string>("uniquename") ?? "";
-				var displayName = api.GetAttributeValue<string>("displayname") ?? "";
-				var description = api.GetAttributeValue<string>("description");
-				var isFunction  = api.GetAttributeValue<bool>("isfunction");
-				var isPrivate   = api.GetAttributeValue<bool>("isprivate");
-				var bindingType = BindingTypeLabel(api.GetAttributeValue<OptionSetValue>("bindingtype"));
-				var stepType    = StepTypeLabel(api.GetAttributeValue<OptionSetValue>("allowedcustomprocessingsteptype"));
-				var privilege   = api.GetAttributeValue<string>("executeprivilegename");
-				var pluginRef   = api.GetAttributeValue<EntityReference>("plugintypeid");
+				var uniqueName        = api.GetAttributeValue<string>("uniquename") ?? "";
+					var displayName       = api.GetAttributeValue<string>("displayname") ?? "";
+					var description       = api.GetAttributeValue<string>("description");
+					var isFunction        = api.GetAttributeValue<bool>("isfunction");
+					var isPrivate         = api.GetAttributeValue<bool>("isprivate");
+					var bindingTypeValue  = api.GetAttributeValue<OptionSetValue>("bindingtype")?.Value ?? 0;
+					var bindingType       = BindingTypeLabel(api.GetAttributeValue<OptionSetValue>("bindingtype"));
+					var boundEntity       = api.GetAttributeValue<string>("boundentitylogicalname");
+					var stepType          = StepTypeLabel(api.GetAttributeValue<OptionSetValue>("allowedcustomprocessingsteptype"));
+					var privilege         = api.GetAttributeValue<string>("executeprivilegename");
+					var pluginRef         = api.GetAttributeValue<EntityReference>("plugintypeid");
 
-				output.WriteLine($"Custom API:   ", ConsoleColor.DarkGray);
-				output.Write("  Unique Name:  "); output.WriteLine(uniqueName, ConsoleColor.White);
-				output.Write("  Display Name: "); output.WriteLine(displayName, ConsoleColor.White);
-				output.Write("  Type:         "); output.WriteLine(isFunction ? "Function (GET)" : "Action (POST)", isFunction ? ConsoleColor.Cyan : ConsoleColor.Green);
-				output.Write("  Binding:      "); output.WriteLine(bindingType, ConsoleColor.White);
-				output.Write("  Private:      "); output.WriteLine(isPrivate ? "Yes" : "No", isPrivate ? ConsoleColor.Yellow : ConsoleColor.White);
-				output.Write("  Step Types:   "); output.WriteLine(stepType, ConsoleColor.White);
-				output.Write("  Privilege:    "); output.WriteLine(string.IsNullOrWhiteSpace(privilege) ? "(none)" : privilege, ConsoleColor.White);
-				output.Write("  Plugin:       "); output.WriteLine(pluginRef?.Name ?? "(unbound)", pluginRef != null ? ConsoleColor.Green : ConsoleColor.Yellow);
-				if (!string.IsNullOrWhiteSpace(description))
-				{
-					output.Write("  Description:  "); output.WriteLine(description, ConsoleColor.White);
-				}
+					// implicit Target param for bound APIs (Entity=1 → EntityReference, EntityCollection=2 → EntityCollection)
+					var targetParam = bindingTypeValue switch
+					{
+						1 => (name: "Target", type: "EntityReference", opt: false),
+						2 => (name: "Target", type: "EntityCollection", opt: false),
+						_ => ((string name, string type, bool opt)?)null
+					};
 
-				// ── Signature line ────────────────────────────────────────────────────
+					var bindingLabel = string.IsNullOrWhiteSpace(boundEntity) ? bindingType : $"{bindingType}:{boundEntity}";
+
+					output.WriteLine($"Custom API:   ", ConsoleColor.DarkGray);
+					output.Write("  Unique Name:  "); output.WriteLine(uniqueName, ConsoleColor.White);
+					output.Write("  Display Name: "); output.WriteLine(displayName, ConsoleColor.White);
+					output.Write("  Type:         "); output.WriteLine(isFunction ? "Function (GET)" : "Action (POST)", isFunction ? ConsoleColor.Cyan : ConsoleColor.Green);
+					output.Write("  Binding:      "); output.WriteLine(bindingLabel, ConsoleColor.White);
+					output.Write("  Private:      "); output.WriteLine(isPrivate ? "Yes" : "No", isPrivate ? ConsoleColor.Yellow : ConsoleColor.White);
+					output.Write("  Step Types:   "); output.WriteLine(stepType, ConsoleColor.White);
+					output.Write("  Privilege:    "); output.WriteLine(string.IsNullOrWhiteSpace(privilege) ? "(none)" : privilege, ConsoleColor.White);
+					output.Write("  Plugin:       "); output.WriteLine(pluginRef?.Name ?? "(unbound)", pluginRef != null ? ConsoleColor.Green : ConsoleColor.Yellow);
+					if (!string.IsNullOrWhiteSpace(description))
+					{
+						output.Write("  Description:  "); output.WriteLine(description, ConsoleColor.White);
+					}
+
+					// ── Signature line ────────────────────────────────────────────────────
 					output.WriteLine();
 
-					var inputParams = paramResult.Entities
+					var explicitParams = paramResult.Entities
 							.OrderBy(p => p.GetAttributeValue<bool>("isoptional"))
 							.Select(p => (
 								name: ParamName(p),
 								type: TypeLabel(p.GetAttributeValue<OptionSetValue>("type")),
 								opt:  p.GetAttributeValue<bool>("isoptional")));
+
+					var inputParams = targetParam.HasValue
+						? explicitParams.Prepend(targetParam.Value)
+						: explicitParams;
 
 					var outputParams = respResult.Entities
 							.Select(r => (
@@ -161,7 +177,7 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 						var inputPath = string.IsNullOrWhiteSpace(command.GenerateInputFile)
 							? $"{uniqueName}-input.json"
 							: command.GenerateInputFile;
-						var inputJson = BuildSampleInput(paramResult.Entities);
+						var inputJson = BuildSampleInput(paramResult.Entities, targetParam, boundEntity);
 						await File.WriteAllTextAsync(inputPath, JsonSerializer.Serialize(inputJson, IndentedJson), cancellationToken);
 						output.WriteLine();
 						output.Write("  Sample input written to: ");
@@ -174,7 +190,7 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 						var schemaPath = string.IsNullOrWhiteSpace(command.GenerateSchemaFile)
 							? $"{uniqueName}-schema.json"
 							: command.GenerateSchemaFile;
-						var schema = BuildJsonSchema(uniqueName, description, paramResult.Entities);
+						var schema = BuildJsonSchema(uniqueName, description, paramResult.Entities, targetParam, bindingTypeValue);
 						await File.WriteAllTextAsync(schemaPath, JsonSerializer.Serialize(schema, IndentedJson), cancellationToken);
 						output.WriteLine();
 						output.Write("  JSON Schema written to: ");
@@ -201,57 +217,76 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 		/// Produces a sample JSON object with one representative value per parameter.
 		/// All parameters (required and optional) are included so the user can see every option.
 		/// </summary>
-		private static JsonObject BuildSampleInput(IEnumerable<Entity> parameters)
-		{
-			var obj = new JsonObject();
-			foreach (var p in parameters)
+		private static JsonObject BuildSampleInput(
+				IEnumerable<Entity> parameters,
+				(string name, string type, bool opt)? targetParam,
+				string? boundEntityLogicalName)
 			{
-				var pName    = ParamName(p);
-				var typeCode = p.GetAttributeValue<OptionSetValue>("type")?.Value ?? -1;
-				obj[pName] = SampleValue(typeCode);
+				var obj = new JsonObject();
+				if (targetParam.HasValue)
+				{
+					obj["Target"] = targetParam.Value.type == "EntityCollection"
+						? (JsonNode)new JsonArray { EntityObject(boundEntityLogicalName) }
+						: EntityObject(boundEntityLogicalName);
+				}
+				foreach (var p in parameters)
+				{
+					var pName    = ParamName(p);
+					var typeCode = p.GetAttributeValue<OptionSetValue>("type")?.Value ?? -1;
+					obj[pName] = SampleValue(typeCode);
+				}
+				return obj;
 			}
-			return obj;
-		}
 
 		/// <summary>
 		/// Produces a JSON Schema (draft 2020-12) for the input parameters of the Custom API.
 		/// </summary>
-		private static JsonObject BuildJsonSchema(string apiUniqueName, string? apiDescription, IEnumerable<Entity> parameters)
-		{
-			var schema = new JsonObject
+		private static JsonObject BuildJsonSchema(
+				string apiUniqueName, string? apiDescription,
+				IEnumerable<Entity> parameters,
+				(string name, string type, bool opt)? targetParam,
+				int bindingTypeValue)
 			{
-				["$schema"]     = "https://json-schema.org/draft/2020-12/schema",
-				["title"]       = $"{apiUniqueName} — input parameters",
-				["description"] = apiDescription ?? $"Input parameters for the {apiUniqueName} Custom API.",
-				["type"]        = "object"
-			};
+				var schema = new JsonObject
+				{
+					["$schema"]     = "https://json-schema.org/draft/2020-12/schema",
+					["title"]       = $"{apiUniqueName} — input parameters",
+					["description"] = apiDescription ?? $"Input parameters for the {apiUniqueName} Custom API.",
+					["type"]        = "object"
+				};
 
-			var properties = new JsonObject();
-			var required   = new JsonArray();
+				var properties = new JsonObject();
+				var required   = new JsonArray();
 
-			foreach (var p in parameters)
-			{
+				if (targetParam.HasValue)
+				{
+					properties["Target"] = bindingTypeValue == 2
+						? new JsonObject { ["type"] = "array", ["items"] = EntitySchema(), ["description"] = "Target entity collection" }
+						: new JsonObject(EntitySchema()) { ["description"] = "Target entity reference" };
+					required.Add("Target");
+				}
+
+				foreach (var p in parameters)
+				{
 					var pName      = ParamName(p);
-				var typeCode   = p.GetAttributeValue<OptionSetValue>("type")?.Value ?? -1;
-				var isOptional = p.GetAttributeValue<bool>("isoptional");
-				var desc       = p.GetAttributeValue<string>("description");
+					var typeCode   = p.GetAttributeValue<OptionSetValue>("type")?.Value ?? -1;
+					var isOptional = p.GetAttributeValue<bool>("isoptional");
+					var desc       = p.GetAttributeValue<string>("description");
 
-				var propSchema = TypeSchema(typeCode);
-				if (!string.IsNullOrWhiteSpace(desc))
-					propSchema["description"] = desc;
+					var propSchema = TypeSchema(typeCode);
+					if (!string.IsNullOrWhiteSpace(desc))
+						propSchema["description"] = desc;
 
 					properties[pName] = propSchema;
+					if (!isOptional) required.Add(pName);
+				}
 
-				if (!isOptional)
-						required.Add(pName);
+				schema["properties"] = properties;
+				if (required.Count > 0)
+					schema["required"] = required;
+
+				return schema;
 			}
-
-			schema["properties"] = properties;
-			if (required.Count > 0)
-				schema["required"] = required;
-
-			return schema;
-		}
 
 		private static JsonNode SampleValue(int typeCode) => typeCode switch
 		{
@@ -289,9 +324,9 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 			_  => new JsonObject { ["type"] = "string" }
 		};
 
-		private static JsonObject EntityObject() => new()
+		private static JsonObject EntityObject(string? logicalName = null) => new()
 		{
-			["logicalname"] = "account",
+				["logicalname"] = logicalName ?? "account",
 			["id"]          = "00000000-0000-0000-0000-000000000000"
 		};
 

@@ -26,7 +26,7 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 				output.Write("'...");
 
 				var apiQ = new QueryExpression("customapi") { NoLock = true, TopCount = 1 };
-				apiQ.ColumnSet.AddColumns("customapiid", "uniquename", "isfunction", "plugintypeid");
+					apiQ.ColumnSet.AddColumns("customapiid", "uniquename", "isfunction", "bindingtype", "boundentitylogicalname", "plugintypeid");
 				apiQ.Criteria.AddCondition("uniquename", ConditionOperator.Equal, command.UniqueName);
 				var apiResult = await crm.RetrieveMultipleAsync(apiQ);
 				if (apiResult.Entities.Count == 0)
@@ -34,9 +34,11 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 					output.WriteLine("Not found", ConsoleColor.Red);
 					return CommandResult.Fail($"Custom API '{command.UniqueName}' not found.");
 				}
-				var apiId      = apiResult.Entities[0].Id;
-				var pluginRef  = apiResult.Entities[0].GetAttributeValue<EntityReference>("plugintypeid");
-				output.WriteLine("Done", ConsoleColor.Green);
+				var apiId         = apiResult.Entities[0].Id;
+					var pluginRef     = apiResult.Entities[0].GetAttributeValue<EntityReference>("plugintypeid");
+					var bindingType   = apiResult.Entities[0].GetAttributeValue<OptionSetValue>("bindingtype")?.Value ?? 0;
+					var isBound       = bindingType is 1 or 2;
+					output.WriteLine("Done", ConsoleColor.Green);
 
 				if (pluginRef == null)
 					output.WriteLine("  Warning: this Custom API has no plugin bound — execution may fail.", ConsoleColor.Yellow);
@@ -53,8 +55,17 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 
 				// ── 4. Validate required params and build the request ─────────────────
 					var apiUniqueName = command.UniqueName!;
-
 					var request = new OrganizationRequest(apiUniqueName);
+
+					// Handle implicit Target for bound APIs
+					if (isBound)
+					{
+						if (!userInput.HasValue || !TryFindKey(userInput.Value, "Target", out var targetEl))
+							return CommandResult.Fail("Required parameter 'Target' is missing from the input (this is a bound Custom API).");
+						request["Target"] = bindingType == 2
+							? (object)ToEntityCollection(targetEl)
+							: ToEntityReference(targetEl);
+					}
 
 					foreach (var p in paramMeta)
 					{
@@ -79,6 +90,7 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 						var knownKeys = paramMeta
 							.Select(p => p.GetAttributeValue<string>("uniquename") ?? "")
 							.ToHashSet(StringComparer.OrdinalIgnoreCase);
+							if (isBound) knownKeys.Add("Target");
 
 						foreach (var key in userInput.Value.EnumerateObject().Select(p => p.Name))
 						{
