@@ -8,14 +8,14 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 		HelpText = "Creates a Dataverse Custom API with optional request parameters and response properties.")]
 	public class CreateCustomApiCommand : IValidatableObject, ICanProvideUsageExample
 	{
-		[Option("unique-name", "n", Order = 1,
-			HelpText = "Unique name of the Custom API, including publisher prefix (e.g. nn_GregSum).")]
+		[Option("display-name", "d", Order = 1,
+			HelpText = "Human-readable name of the Custom API (e.g. 'Greg Sum').")]
 		[Required]
-		public string? UniqueName { get; set; }
-
-		[Option("display-name", "d", Order = 2,
-			HelpText = "Display name. Defaults to the unique name without prefix, split on camel-case.")]
 		public string? DisplayName { get; set; }
+
+		[Option("unique-name", "n", Order = 2,
+			HelpText = "Unique name including publisher prefix (e.g. nn_GregSum). Inferred from --display-name and the solution publisher prefix if omitted.")]
+		public string? UniqueName { get; set; }
 
 		[Option("description", "desc", Order = 3, DefaultValue = "",
 			HelpText = "Description of the Custom API.")]
@@ -51,6 +51,11 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 
 		public IEnumerable<ValidationResult> Validate(ValidationContext context)
 		{
+			if (!string.IsNullOrWhiteSpace(UniqueName) && !UniqueName.Contains('_'))
+				yield return new ValidationResult(
+					"--unique-name must include a publisher prefix separated by '_' (e.g. nn_GregSum).",
+					new[] { nameof(UniqueName) });
+
 			foreach (var p in SplitSpecs(Params))
 				if (!CustomApiParamSpec.TryParse(p, out _, out var err))
 					yield return new ValidationResult($"Invalid --param '{p}': {err}");
@@ -67,12 +72,23 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 
 		public void WriteUsageExamples(MarkdownWriter writer)
 		{
-			writer.WriteParagraph("Create a minimal Custom API (API record only):");
-			writer.WriteCodeBlock("pacx customapi create -n nn_GregSum", "Powershell");
-			writer.WriteParagraph("Create with request parameters and a response property (comma-separated):");
-			writer.WriteCodeBlock("pacx customapi create -n nn_GregSum -p \"Addend1:Integer, Addend2:Integer\" -r Result:Integer", "Powershell");
-			writer.WriteParagraph("Create and add all components to a specific solution:");
-			writer.WriteCodeBlock("pacx customapi create -n nn_GregSum -p \"Addend1:Integer, Addend2:Integer\" -r Result:Integer -s MySolution", "Powershell");
+			writer.WriteParagraph("Create a minimal Custom API (unique name inferred from display name + solution publisher prefix):");
+			writer.WriteCodeBlock("pacx customapi create -d \"Greg Sum\" -s MySolution", "Powershell");
+
+			writer.WriteParagraph("Create with an explicit unique name:");
+			writer.WriteCodeBlock("pacx customapi create -d \"Greg Sum\" -n nn_GregSum -s MySolution", "Powershell");
+
+			writer.WriteParagraph("Create with request parameters and a response property:");
+			writer.WriteCodeBlock("pacx customapi create -d \"Greg Sum\" -p \"Addend1:Integer, Addend2:Integer\" -r Result:Integer -s MySolution", "Powershell");
+
+			writer.WriteParagraph("Naming conventions applied automatically:");
+			writer.WriteParagraph(
+				"- **Unique name** (when omitted): `{publisherPrefix}_{DisplayNameWithoutSpaces}` — e.g. display name 'Greg Sum' with prefix 'nn' becomes `nn_GregSum`.\n" +
+				"- **Request parameter unique names**: `{customApiUniqueName}-in-{parameterName}` — e.g. `nn_GregSum-in-Addend1`.\n" +
+				"- **Response property unique names**: `{customApiUniqueName}-out-{propertyName}` — e.g. `nn_GregSum-out-Result`.\n" +
+				"- **Display names** for parameters/responses: inferred from the name by splitting on capital-letter boundaries — e.g. `Addend1` becomes 'Addend 1'.\n" +
+				"- **Publisher prefix validation**: if `--unique-name` is provided, its prefix (before `_`) must match the solution publisher prefix; mismatches are rejected."
+			);
 		}
 	}
 }

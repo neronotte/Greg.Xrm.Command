@@ -28,6 +28,7 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 			// Solution has a protected ctor; use reflection to create an instance for tests.
 			var solEntity = new Entity("solution") { Id = Guid.NewGuid() };
 			solEntity["ismanaged"] = false;
+			solEntity["publisher.customizationprefix"] = new AliasedValue("publisher", "customizationprefix", "nn");
 			var sol = (Greg.Xrm.Command.Model.Solution)Activator.CreateInstance(
 				typeof(Greg.Xrm.Command.Model.Solution),
 				System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance,
@@ -77,7 +78,7 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 			SetupCreateReturnsNewId("customapi");
 
 			var result = await executor.ExecuteAsync(
-				new CreateCustomApiCommand { UniqueName = "nn_GregSum" },
+				new CreateCustomApiCommand { DisplayName = "Greg Sum", UniqueName = "nn_GregSum" },
 				CancellationToken.None);
 
 			Assert.IsTrue(result.IsSuccess, result.ErrorMessage);
@@ -93,7 +94,7 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 			SetupCreateReturnsNewId("customapi");
 
 			var result = await executor.ExecuteAsync(
-				new CreateCustomApiCommand { UniqueName = "nn_GregSum" },
+				new CreateCustomApiCommand { DisplayName = "Greg Sum", UniqueName = "nn_GregSum" },
 				CancellationToken.None);
 
 			Assert.IsTrue(result.IsSuccess, result.ErrorMessage);
@@ -113,7 +114,7 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 			SetupCreateReturnsNewId("customapi");
 
 			var result = await executor.ExecuteAsync(
-				new CreateCustomApiCommand { UniqueName = "nn_GregSum", SolutionName = "MySolution" },
+				new CreateCustomApiCommand { DisplayName = "Greg Sum", UniqueName = "nn_GregSum", SolutionName = "MySolution" },
 				CancellationToken.None);
 
 			Assert.IsTrue(result.IsSuccess, result.ErrorMessage);
@@ -132,7 +133,7 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 				.ReturnsAsync((Greg.Xrm.Command.Model.Solution?)null);
 
 			var result = await executor.ExecuteAsync(
-				new CreateCustomApiCommand { UniqueName = "nn_GregSum" },
+				new CreateCustomApiCommand { DisplayName = "Greg Sum", UniqueName = "nn_GregSum" },
 				CancellationToken.None);
 
 			Assert.IsFalse(result.IsSuccess);
@@ -163,9 +164,10 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 			var result = await executor.ExecuteAsync(
 				new CreateCustomApiCommand
 				{
-					UniqueName = "nn_GregSum",
-					Params     = "Addend1:Integer,Addend2:Integer",
-					Responses  = "Result:Integer"
+					DisplayName = "Greg Sum",
+					UniqueName  = "nn_GregSum",
+					Params      = "Addend1:Integer,Addend2:Integer",
+					Responses   = "Result:Integer"
 				},
 				CancellationToken.None);
 
@@ -195,7 +197,7 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 				.ReturnsAsync(new EntityCollection(new List<Entity> { existing }));
 
 			var result = await executor.ExecuteAsync(
-				new CreateCustomApiCommand { UniqueName = "nn_GregSum" },
+				new CreateCustomApiCommand { DisplayName = "Greg Sum", UniqueName = "nn_GregSum" },
 				CancellationToken.None);
 
 			Assert.IsTrue(result.IsSuccess);
@@ -205,21 +207,36 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 		}
 
 		[TestMethod]
-		public async Task ExecuteAsync_ShouldInferDisplayName_WhenNotProvided()
+		public async Task ExecuteAsync_ShouldInferUniqueName_WhenNotProvided()
 		{
 			SetupNoExistingApi();
 
-			string? capturedDisplayName = null;
+			string? capturedUniqueName = null;
 			this.OrganizationServiceMock
 				.Setup(x => x.CreateAsync(It.Is<Entity>(e => e.LogicalName == "customapi")))
-				.Callback<Entity>(e => capturedDisplayName = e.GetAttributeValue<string>("displayname"))
+				.Callback<Entity>(e => capturedUniqueName = e.GetAttributeValue<string>("uniquename"))
 				.ReturnsAsync(Guid.NewGuid());
 
 			await executor.ExecuteAsync(
-				new CreateCustomApiCommand { UniqueName = "nn_GregSum" },
+				new CreateCustomApiCommand { DisplayName = "Greg Sum" },
 				CancellationToken.None);
 
-			Assert.AreEqual("Greg Sum", capturedDisplayName);
+			// publisher prefix is "nn" (set in constructor); "Greg Sum" -> "nn_GregSum"
+			Assert.AreEqual("nn_GregSum", capturedUniqueName);
+		}
+
+		[TestMethod]
+		public async Task ExecuteAsync_ShouldFail_WhenUniqueNamePrefixMismatchesSolution()
+		{
+			SetupNoExistingApi();
+
+			var result = await executor.ExecuteAsync(
+				new CreateCustomApiCommand { DisplayName = "Greg Sum", UniqueName = "wrong_GregSum" },
+				CancellationToken.None);
+
+			Assert.IsFalse(result.IsSuccess);
+			StringAssert.Contains(result.ErrorMessage, "wrong");
+			StringAssert.Contains(result.ErrorMessage, "nn");
 		}
 
 		[TestMethod]
@@ -230,7 +247,7 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 				.ReturnsAsync((string?)null);
 
 			var result = await executor.ExecuteAsync(
-				new CreateCustomApiCommand { UniqueName = "nn_GregSum" },
+				new CreateCustomApiCommand { DisplayName = "Greg Sum", UniqueName = "nn_GregSum" },
 				CancellationToken.None);
 
 			Assert.IsFalse(result.IsSuccess);
@@ -248,7 +265,7 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 					new OrganizationServiceFault(), "Simulated fault"));
 
 			var result = await executor.ExecuteAsync(
-				new CreateCustomApiCommand { UniqueName = "nn_GregSum" },
+				new CreateCustomApiCommand { DisplayName = "Greg Sum", UniqueName = "nn_GregSum" },
 				CancellationToken.None);
 
 			Assert.IsFalse(result.IsSuccess);

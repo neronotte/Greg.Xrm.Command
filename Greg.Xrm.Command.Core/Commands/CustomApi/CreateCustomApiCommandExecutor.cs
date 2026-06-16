@@ -47,8 +47,26 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 				}
 				output.WriteLine("Done", ConsoleColor.Green);
 
-				var uniqueName  = command.UniqueName!;
-				var displayName = command.DisplayName ?? CustomApiDisplayNameHelper.InferDisplayName(uniqueName);
+				// ── Resolve publisher prefix from solution ────────────────────────────
+				var publisherPrefix = solution.PublisherCustomizationPrefix;
+
+				var displayName = command.DisplayName!;
+				string uniqueName;
+				if (!string.IsNullOrWhiteSpace(command.UniqueName))
+				{
+					// Validate the provided prefix matches the solution publisher
+					var underscoreIdx = command.UniqueName.IndexOf('_');
+					var providedPrefix = underscoreIdx > 0 ? command.UniqueName[..underscoreIdx] : command.UniqueName;
+					if (publisherPrefix != null && !string.Equals(providedPrefix, publisherPrefix, StringComparison.OrdinalIgnoreCase))
+						return CommandResult.Fail($"Unique name prefix '{providedPrefix}' does not match the solution publisher prefix '{publisherPrefix}'.");
+					uniqueName = command.UniqueName;
+				}
+				else
+				{
+					if (string.IsNullOrWhiteSpace(publisherPrefix))
+						return CommandResult.Fail("Cannot infer unique name: solution publisher customization prefix is not available.");
+					uniqueName = CustomApiDisplayNameHelper.InferUniqueName(displayName, publisherPrefix);
+				}
 
 				// Idempotency check
 				output.Write($"Checking if Custom API '");

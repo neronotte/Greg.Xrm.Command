@@ -6,14 +6,14 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 		[TestMethod]
 		public void ParseWithLongNameShouldWork()
 		{
-			var command = Utility.TestParseCommand<CreateCustomApiCommand>("customapi", "create", "--unique-name", "nn_GregSum");
+			var command = Utility.TestParseCommand<CreateCustomApiCommand>("customapi", "create", "-d", "Greg Sum", "--unique-name", "nn_GregSum");
 			Assert.AreEqual("nn_GregSum", command.UniqueName);
 		}
 
 		[TestMethod]
 		public void ParseWithShortNameShouldWork()
 		{
-			var command = Utility.TestParseCommand<CreateCustomApiCommand>("customapi", "create", "-n", "nn_GregSum");
+				var command = Utility.TestParseCommand<CreateCustomApiCommand>("customapi", "create", "-d", "Greg Sum", "-n", "nn_GregSum");
 			Assert.AreEqual("nn_GregSum", command.UniqueName);
 		}
 
@@ -34,21 +34,21 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 		[TestMethod]
 		public void ParseBindingTypeShouldWork()
 		{
-			var command = Utility.TestParseCommand<CreateCustomApiCommand>("customapi", "create", "-n", "nn_GregSum", "-b", "Entity");
+			var command = Utility.TestParseCommand<CreateCustomApiCommand>("customapi", "create", "-d", "Greg Sum", "-n", "nn_GregSum", "-b", "Entity");
 			Assert.AreEqual(CustomApiBindingType.Entity, command.BindingType);
 		}
 
 		[TestMethod]
 		public void ParseTypeFunctionShouldWork()
 		{
-			var command = Utility.TestParseCommand<CreateCustomApiCommand>("customapi", "create", "-n", "nn_GregSum", "-t", "Function");
+			var command = Utility.TestParseCommand<CreateCustomApiCommand>("customapi", "create", "-d", "Greg Sum", "-n", "nn_GregSum", "-t", "Function");
 			Assert.AreEqual(CustomApiType.Function, command.Type);
 		}
 
 		[TestMethod]
 		public void ParseAllowedStepTypeShouldWork()
 		{
-			var command = Utility.TestParseCommand<CreateCustomApiCommand>("customapi", "create", "-n", "nn_GregSum", "-ast", "AsyncOnly");
+			var command = Utility.TestParseCommand<CreateCustomApiCommand>("customapi", "create", "-d", "Greg Sum", "-n", "nn_GregSum", "-ast", "AsyncOnly");
 			Assert.AreEqual(CustomApiAllowedStepType.AsyncOnly, command.AllowedStepType);
 		}
 
@@ -59,7 +59,7 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 		public void ParseParamsShouldWork()
 		{
 			var command = Utility.TestParseCommand<CreateCustomApiCommand>(
-				"customapi", "create", "-n", "nn_GregSum",
+					"customapi", "create", "-d", "Greg Sum", "-n", "nn_GregSum",
 				"-p", "nn_Addend1:Integer,nn_Addend2:Integer");
 
 			Assert.AreEqual("nn_Addend1:Integer,nn_Addend2:Integer", command.Params);
@@ -69,7 +69,7 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 		public void ParseResponsesShouldWork()
 		{
 			var command = Utility.TestParseCommand<CreateCustomApiCommand>(
-				"customapi", "create", "-n", "nn_GregSum",
+					"customapi", "create", "-d", "Greg Sum", "-n", "nn_GregSum",
 				"-r", "nn_Result:Integer");
 
 			Assert.AreEqual("nn_Result:Integer", command.Responses);
@@ -78,9 +78,10 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 		[TestMethod]
 		public void DefaultValuesShouldBeSetCorrectly()
 		{
-			var command = Utility.TestParseCommand<CreateCustomApiCommand>("customapi", "create", "-n", "nn_GregSum");
+			var command = Utility.TestParseCommand<CreateCustomApiCommand>("customapi", "create", "-d", "Greg Sum");
 
-			Assert.IsNull(command.DisplayName);
+			Assert.IsNull(command.UniqueName);
+			Assert.AreEqual("Greg Sum", command.DisplayName);
 			Assert.AreEqual(string.Empty, command.Description);
 			Assert.AreEqual(CustomApiBindingType.Global, command.BindingType);
 			Assert.AreEqual(CustomApiType.Action, command.Type);
@@ -88,6 +89,19 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 			Assert.AreEqual(string.Empty, command.ExecutePrivilegeName);
 			Assert.IsNull(command.Params);
 			Assert.IsNull(command.Responses);
+		}
+
+		[TestMethod]
+		public void Validate_ShouldFail_WhenUniqueNameHasNoPublisherPrefix()
+		{
+			var command = new CreateCustomApiCommand
+			{
+				DisplayName = "Greg Sum",
+				UniqueName  = "GregSumNoPrefix"
+			};
+			var results = command.Validate(new System.ComponentModel.DataAnnotations.ValidationContext(command)).ToList();
+			Assert.AreEqual(1, results.Count);
+			StringAssert.Contains(results[0].ErrorMessage, "_");
 		}
 
 		[TestMethod]
@@ -141,3 +155,4 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 		}
 	}
 }
+

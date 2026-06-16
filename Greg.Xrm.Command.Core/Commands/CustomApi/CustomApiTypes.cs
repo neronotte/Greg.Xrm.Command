@@ -71,5 +71,16 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 			var namePart = underscoreIdx >= 0 ? uniqueName[(underscoreIdx + 1)..] : uniqueName;
 			return namePart.SplitNameInPartsByCapitalLetters().Trim();
 		}
+
+		/// <summary>
+		/// Infers a unique name from a display name and publisher prefix by removing spaces
+		/// and prepending the prefix.
+		/// Example: "Greg Sum", "nn" -> "nn_GregSum"
+		/// </summary>
+		public static string InferUniqueName(string displayName, string publisherPrefix)
+		{
+			var namePart = string.Concat(displayName.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+			return $"{publisherPrefix}_{namePart}";
+		}
 	}
 }
