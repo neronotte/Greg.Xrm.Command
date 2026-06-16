@@ -14,7 +14,7 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 		public string? ApiUniqueName { get; set; }
 
 		[Option("param", "p", Order = 2,
-			HelpText = "Parameter spec as Name:Type (required) or Name?:Type (optional). Name must not include publisher prefix — the unique name is built as {api}-in-{name}.")]
+			HelpText = "Parameter spec as Name:Type (required) or Name?:Type (optional). Name must not include publisher prefix — the name is built as {api}-in-{name}.")]
 		[Required]
 		public string? Param { get; set; }
 

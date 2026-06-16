@@ -87,9 +87,10 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 				output.Write("'...");
 				var api = new Model.CustomApi
 				{
-					uniquename   = uniqueName,
+						name         = displayName,
+						uniquename   = uniqueName,
 					displayname  = displayName,
-					description  = string.IsNullOrWhiteSpace(command.Description) ? null : command.Description,
+					description  = command.Description ?? string.Empty,
 					bindingtype  = new OptionSetValue((int)command.BindingType),
 					isfunction   = command.Type == CustomApiType.Function,
 					allowedcustomprocessingsteptype = new OptionSetValue((int)command.AllowedStepType),
@@ -98,7 +99,7 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 				await api.SaveOrUpdateAsync(crm);
 				output.WriteLine("Done", ConsoleColor.Green);
 
-				await AddToSolutionAsync(crm, solutionName, ComponentType.CustomAPI, api.Id, cancellationToken);
+				await AddToSolutionAsync(crm, output, solutionName, ComponentType.CustomAPI, api.Id, cancellationToken);
 
 				var createdParams    = new List<string>();
 				var createdResponses = new List<string>();
@@ -126,14 +127,15 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 						name         = spec.UniqueName,
 						uniquename   = paramUniqueName,
 						displayname  = paramDisplayName,
-						type         = new OptionSetValue(spec.TypeCode),
-						isoptional   = spec.IsOptional,
-						customapiid  = new EntityReference("customapi", api.Id)
-					};
+							description  = string.Empty,
+							type         = new OptionSetValue(spec.TypeCode),
+							isoptional   = spec.IsOptional,
+							customapiid  = new EntityReference("customapi", api.Id)
+						};
 					await param.SaveOrUpdateAsync(crm);
 					output.WriteLine("Done", ConsoleColor.Green);
 
-					await AddToSolutionAsync(crm, solutionName, ComponentType.CustomAPIRequestParameter, param.Id, cancellationToken);
+					await AddToSolutionAsync(crm, output, solutionName, ComponentType.CustomAPIRequestParameter, param.Id, cancellationToken);
 					createdParams.Add($"{paramUniqueName} ({spec.Type}{(spec.IsOptional ? ", optional" : "")})");
 				}
 
@@ -160,13 +162,14 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 							name        = spec.UniqueName,
 							uniquename  = respUniqueName,
 						displayname = respDisplayName,
-						type        = new OptionSetValue(spec.TypeCode),
-						customapiid = new EntityReference("customapi", api.Id)
-					};
+							description = string.Empty,
+							type        = new OptionSetValue(spec.TypeCode),
+							customapiid = new EntityReference("customapi", api.Id)
+						};
 					await resp.SaveOrUpdateAsync(crm);
 					output.WriteLine("Done", ConsoleColor.Green);
 
-					await AddToSolutionAsync(crm, solutionName, ComponentType.CustomAPIResponseProperty, resp.Id, cancellationToken);
+					await AddToSolutionAsync(crm, output, solutionName, ComponentType.CustomAPIResponseProperty, resp.Id, cancellationToken);
 					createdResponses.Add($"{respUniqueName} ({spec.Type})");
 				}
 
@@ -191,18 +194,25 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 			}
 		}
 
-		private static async Task AddToSolutionAsync(IOrganizationServiceAsync2 crm, string solutionName, ComponentType componentType, Guid componentId, CancellationToken cancellationToken)
+		private async Task AddToSolutionAsync(IOrganizationServiceAsync2 crm, IOutput output, string solutionName, ComponentType componentType, Guid componentId, CancellationToken cancellationToken)
 		{
-			var req = new AddSolutionComponentRequest
+				try
 			{
-				SolutionUniqueName       = solutionName,
-				ComponentType            = (int)componentType,
-				ComponentId              = componentId,
-				AddRequiredComponents    = false,
-				DoNotIncludeSubcomponents = true,
-			};
-			await crm.ExecuteAsync(req, cancellationToken);
-		}
+					var req = new AddSolutionComponentRequest
+					{
+						SolutionUniqueName        = solutionName,
+						ComponentType             = (int)componentType,
+						ComponentId               = componentId,
+						AddRequiredComponents     = false,
+						DoNotIncludeSubcomponents = true,
+					};
+					await crm.ExecuteAsync(req, cancellationToken);
+				}
+				catch (FaultException<OrganizationServiceFault> ex)
+				{
+					output.WriteLine($"  Warning: could not add component to solution '{solutionName}': {ex.Message}", ConsoleColor.Yellow);
+				}
+			}
 
 		private static async Task<Entity?> QueryCustomApiByNameAsync(IOrganizationServiceAsync2 crm, string uniqueName)
 		{

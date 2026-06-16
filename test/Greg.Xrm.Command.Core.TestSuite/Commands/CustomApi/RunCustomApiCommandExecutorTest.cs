@@ -109,8 +109,8 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 
 			Assert.IsTrue(result.IsSuccess, result.ErrorMessage);
 			Assert.IsNotNull(captured);
-			Assert.AreEqual(5, captured["Addend1"]);
-			Assert.AreEqual(3, captured["Addend2"]);
+			Assert.AreEqual(5, captured["nn_GregSum-in-Addend1"]);
+			Assert.AreEqual(3, captured["nn_GregSum-in-Addend2"]);
 		}
 
 		[TestMethod]
@@ -237,7 +237,7 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 				CancellationToken.None);
 
 			Assert.IsTrue(result.IsSuccess, result.ErrorMessage);
-			Assert.AreEqual("hello", captured!["Label"]);
+			Assert.AreEqual("hello", captured!["nn_GregSum-in-Label"]);
 		}
 
 		[TestMethod]

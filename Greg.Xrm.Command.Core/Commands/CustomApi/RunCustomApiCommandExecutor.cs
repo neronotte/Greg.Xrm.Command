@@ -59,13 +59,13 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 
 				foreach (var p in paramMeta)
 				{
-					var fullName   = p.GetAttributeValue<string>("uniquename") ?? "";
+					var sdkKey     = p.GetAttributeValue<string>("uniquename") ?? "";
 					var paramName  = p.GetAttributeValue<string>("name")
-						?? (fullName.StartsWith(inPrefix, StringComparison.OrdinalIgnoreCase) ? fullName[inPrefix.Length..] : fullName);
+						?? (sdkKey.StartsWith(inPrefix, StringComparison.OrdinalIgnoreCase) ? sdkKey[inPrefix.Length..] : sdkKey);
 					var isOptional = p.GetAttributeValue<bool>("isoptional");
 					var typeCode   = p.GetAttributeValue<OptionSetValue>("type")?.Value ?? -1;
 
-					// Find matching key in user input (case-insensitive on param name)
+					// User input keys match the short name; Dataverse request key is the uniquename
 					JsonElement element = default;
 					var found = userInput.HasValue && TryFindKey(userInput.Value, paramName, out element);
 
@@ -73,7 +73,7 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 						return CommandResult.Fail($"Required parameter '{paramName}' is missing from the input.");
 
 					if (found)
-						request[paramName] = ConvertValue(element, typeCode, paramName);
+						request[sdkKey] = ConvertValue(element, typeCode, paramName);
 				}
 
 				// Warn about keys in user input that don't match any parameter
@@ -82,9 +82,9 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 					var knownNames = paramMeta
 						.Select(p =>
 						{
-							var fullName = p.GetAttributeValue<string>("uniquename") ?? "";
+							var sdkKey = p.GetAttributeValue<string>("uniquename") ?? "";
 							return p.GetAttributeValue<string>("name")
-								?? (fullName.StartsWith(inPrefix, StringComparison.OrdinalIgnoreCase) ? fullName[inPrefix.Length..] : fullName);
+								?? (sdkKey.StartsWith(inPrefix, StringComparison.OrdinalIgnoreCase) ? sdkKey[inPrefix.Length..] : sdkKey);
 						})
 						.ToHashSet(StringComparer.OrdinalIgnoreCase);
 

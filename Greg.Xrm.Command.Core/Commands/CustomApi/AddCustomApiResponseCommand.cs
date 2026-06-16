@@ -14,7 +14,7 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 		public string? ApiUniqueName { get; set; }
 
 		[Option("response", "r", Order = 2,
-			HelpText = "Response property spec as Name:Type. Name must not include publisher prefix — the unique name is built as {api}-out-{name}.")]
+			HelpText = "Response property spec as Name:Type. Name must not include publisher prefix — the name is built as {api}-out-{name}.")]
 		[Required]
 		public string? Response { get; set; }
 

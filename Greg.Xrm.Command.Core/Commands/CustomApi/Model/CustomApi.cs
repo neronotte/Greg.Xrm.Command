@@ -11,6 +11,12 @@ namespace Greg.Xrm.Command.Commands.CustomApi.Model
 
 		public CustomApi(Guid id) : base(new Entity("customapi", id)) { }
 
+		public string? name
+		{
+			get => Get<string>();
+			set => SetValue(value);
+		}
+
 		public string? uniquename
 		{
 			get => Get<string>();

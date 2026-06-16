@@ -6,6 +6,8 @@
 	<RootNamespace>PacxIntegration</RootNamespace>
 	<Nullable>enable</Nullable>
 	<LangVersion>9.0</LangVersion>
+	<SignAssembly>true</SignAssembly>
+	<AssemblyOriginatorKeyFile>PacxIntegration.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
   <ItemGroup>

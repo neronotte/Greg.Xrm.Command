@@ -53,7 +53,7 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 						name        = spec.UniqueName,
 						uniquename  = respUniqueName,
 					displayname = displayName,
-					description = string.IsNullOrWhiteSpace(command.Description) ? null : command.Description,
+					description = command.Description ?? string.Empty,
 					type = new OptionSetValue(spec.TypeCode),
 					customapiid = new EntityReference("customapi", apiId)
 				};
