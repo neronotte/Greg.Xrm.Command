@@ -210,12 +210,12 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 				CancellationToken.None);
 
 			var plain = StripColors(Output.ToString());
-			// Required first, no brackets
+				// Required arg — no brackets
 			StringAssert.Contains(plain, "X: Integer");
-			// Optional with [] notation
+				// Optional arg — with [] brackets
 			StringAssert.Contains(plain, "[Note: String]");
-			// Arrow separator for response
-			StringAssert.Contains(plain, "->");
+				// Response with arrow
+				StringAssert.Contains(plain, "-> Result: Integer");
 		}
 
 		private static string StripColors(string text)
