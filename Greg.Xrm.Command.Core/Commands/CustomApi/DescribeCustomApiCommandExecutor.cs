@@ -47,14 +47,14 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 
 				// Retrieve request parameters
 				var paramQ = new QueryExpression("customapirequestparameter") { NoLock = true };
-				paramQ.ColumnSet.AddColumns("uniquename", "displayname", "description", "type", "isoptional");
+				paramQ.ColumnSet.AddColumns("name", "uniquename", "displayname", "description", "type", "isoptional");
 				paramQ.Criteria.AddCondition("customapiid", ConditionOperator.Equal, apiId);
 				paramQ.AddOrder("uniquename", OrderType.Ascending);
 				var paramResult = await crm.RetrieveMultipleAsync(paramQ);
 
 				// Retrieve response properties
 				var respQ = new QueryExpression("customapiresponseproperty") { NoLock = true };
-				respQ.ColumnSet.AddColumns("uniquename", "displayname", "description", "type");
+				respQ.ColumnSet.AddColumns("name", "uniquename", "displayname", "description", "type");
 				respQ.Criteria.AddCondition("customapiid", ConditionOperator.Equal, apiId);
 				respQ.AddOrder("uniquename", OrderType.Ascending);
 				var respResult = await crm.RetrieveMultipleAsync(respQ);
@@ -93,7 +93,7 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 
 				var paramSigs = paramResult.Entities.Select(p =>
 				{
-					var pName = ShortName(p.GetAttributeValue<string>("uniquename") ?? "", inPrefix);
+					var pName = ParamName(p, inPrefix);
 					var pType = TypeLabel(p.GetAttributeValue<OptionSetValue>("type"));
 					var pOpt  = p.GetAttributeValue<bool>("isoptional");
 					return pOpt ? $"[{pName}?: {pType}]" : $"{pName}: {pType}";
@@ -101,7 +101,7 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 
 				var respSigs = respResult.Entities.Select(r =>
 				{
-					var rName = ShortName(r.GetAttributeValue<string>("uniquename") ?? "", outPrefix);
+					var rName = ParamName(r, outPrefix);
 					var rType = TypeLabel(r.GetAttributeValue<OptionSetValue>("type"));
 					return $"{rName}: {rType}";
 				});
@@ -122,7 +122,7 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 						paramResult.Entities,
 						() => ["Name", "Type", "Required", "Description"],
 						row => [
-							ShortName(row.GetAttributeValue<string>("uniquename") ?? "", inPrefix),
+							ParamName(row, inPrefix),
 							TypeLabel(row.GetAttributeValue<OptionSetValue>("type")),
 							row.GetAttributeValue<bool>("isoptional") ? "No" : "Yes",
 							row.GetAttributeValue<string>("description") ?? ""
@@ -145,7 +145,7 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 						respResult.Entities,
 						() => ["Name", "Type", "Description"],
 						row => [
-							ShortName(row.GetAttributeValue<string>("uniquename") ?? "", outPrefix),
+							ParamName(row, outPrefix),
 							TypeLabel(row.GetAttributeValue<OptionSetValue>("type")),
 							row.GetAttributeValue<string>("description") ?? ""
 						],
@@ -208,9 +208,9 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 			var obj = new JsonObject();
 			foreach (var p in parameters)
 			{
-				var shortName = ShortName(p.GetAttributeValue<string>("uniquename") ?? "", inPrefix);
-				var typeCode  = p.GetAttributeValue<OptionSetValue>("type")?.Value ?? -1;
-				obj[shortName] = SampleValue(typeCode);
+				var pName    = ParamName(p, inPrefix);
+				var typeCode = p.GetAttributeValue<OptionSetValue>("type")?.Value ?? -1;
+				obj[pName] = SampleValue(typeCode);
 			}
 			return obj;
 		}
@@ -233,7 +233,7 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 
 			foreach (var p in parameters)
 			{
-				var shortName  = ShortName(p.GetAttributeValue<string>("uniquename") ?? "", inPrefix);
+					var pName      = ParamName(p, inPrefix);
 				var typeCode   = p.GetAttributeValue<OptionSetValue>("type")?.Value ?? -1;
 				var isOptional = p.GetAttributeValue<bool>("isoptional");
 				var desc       = p.GetAttributeValue<string>("description");
@@ -242,10 +242,10 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 				if (!string.IsNullOrWhiteSpace(desc))
 					propSchema["description"] = desc;
 
-				properties[shortName] = propSchema;
+					properties[pName] = propSchema;
 
 				if (!isOptional)
-					required.Add(shortName);
+						required.Add(pName);
 			}
 
 			schema["properties"] = properties;
@@ -310,7 +310,18 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 
 		// ── Label helpers ─────────────────────────────────────────────────────────
 
-		private static string ShortName(string uniqueName, string prefix)
+			/// <summary>
+			/// Returns the user-facing parameter name: the stored 'name' attribute when available,
+			/// otherwise falls back to stripping the API prefix from 'uniquename'.
+			/// </summary>
+			private static string ParamName(Entity e, string prefix)
+			{
+				var name = e.GetAttributeValue<string>("name");
+				if (!string.IsNullOrWhiteSpace(name)) return name;
+				return ShortName(e.GetAttributeValue<string>("uniquename") ?? "", prefix);
+			}
+
+			private static string ShortName(string uniqueName, string prefix)
 			=> uniqueName.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)
 				? uniqueName[prefix.Length..]
 				: uniqueName;

@@ -92,7 +92,7 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 					new AddCustomApiParamCommand { ApiUniqueName = "nn_GregSum", Param = "X:Integer" },
 					CancellationToken.None);
 
-				Assert.AreEqual("nn_GregSum-in-X", capturedName);
+				Assert.AreEqual("X", capturedName);
 			}
 
 		[TestMethod]

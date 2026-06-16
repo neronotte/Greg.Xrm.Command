@@ -47,6 +47,7 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 			var entities = defs.Select(d =>
 			{
 				var e = new Entity("customapirequestparameter") { Id = Guid.NewGuid() };
+				e["name"]        = d.shortName;
 				e["uniquename"]  = $"nn_GregSum-in-{d.shortName}";
 				e["type"]        = new OptionSetValue(d.typeCode);
 				e["isoptional"]  = d.isOptional;
@@ -108,8 +109,8 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 
 			Assert.IsTrue(result.IsSuccess, result.ErrorMessage);
 			Assert.IsNotNull(captured);
-			Assert.AreEqual(5, captured["nn_GregSum-in-Addend1"]);
-			Assert.AreEqual(3, captured["nn_GregSum-in-Addend2"]);
+			Assert.AreEqual(5, captured["Addend1"]);
+			Assert.AreEqual(3, captured["Addend2"]);
 		}
 
 		[TestMethod]
@@ -236,7 +237,7 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 				CancellationToken.None);
 
 			Assert.IsTrue(result.IsSuccess, result.ErrorMessage);
-			Assert.AreEqual("hello", captured!["nn_GregSum-in-Label"]);
+			Assert.AreEqual("hello", captured!["Label"]);
 		}
 
 		[TestMethod]

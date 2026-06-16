@@ -123,7 +123,7 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 
 					var param = new CustomApiRequestParameter
 					{
-						name         = paramUniqueName,
+						name         = spec.UniqueName,
 						uniquename   = paramUniqueName,
 						displayname  = paramDisplayName,
 						type         = new OptionSetValue(spec.TypeCode),
@@ -157,7 +157,7 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 
 					var resp = new CustomApiResponseProperty
 					{
-							name        = respUniqueName,
+							name        = spec.UniqueName,
 							uniquename  = respUniqueName,
 						displayname = respDisplayName,
 						type        = new OptionSetValue(spec.TypeCode),

@@ -43,7 +43,7 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 
 				// ── 2. Load parameter metadata ────────────────────────────────────────
 				var paramQ = new QueryExpression("customapirequestparameter") { NoLock = true };
-				paramQ.ColumnSet.AddColumns("uniquename", "type", "isoptional");
+				paramQ.ColumnSet.AddColumns("name", "uniquename", "type", "isoptional");
 				paramQ.Criteria.AddCondition("customapiid", ConditionOperator.Equal, apiId);
 				var paramMeta = (await crm.RetrieveMultipleAsync(paramQ)).Entities;
 
@@ -59,35 +59,38 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 
 				foreach (var p in paramMeta)
 				{
-					var fullName  = p.GetAttributeValue<string>("uniquename") ?? "";
-					var shortName = fullName.StartsWith(inPrefix, StringComparison.OrdinalIgnoreCase)
-						? fullName[inPrefix.Length..]
-						: fullName;
+					var fullName   = p.GetAttributeValue<string>("uniquename") ?? "";
+					var paramName  = p.GetAttributeValue<string>("name")
+						?? (fullName.StartsWith(inPrefix, StringComparison.OrdinalIgnoreCase) ? fullName[inPrefix.Length..] : fullName);
 					var isOptional = p.GetAttributeValue<bool>("isoptional");
 					var typeCode   = p.GetAttributeValue<OptionSetValue>("type")?.Value ?? -1;
 
-					// Find matching key in user input (case-insensitive on short name)
+					// Find matching key in user input (case-insensitive on param name)
 					JsonElement element = default;
-					var found = userInput.HasValue && TryFindKey(userInput.Value, shortName, out element);
+					var found = userInput.HasValue && TryFindKey(userInput.Value, paramName, out element);
 
 					if (!found && !isOptional)
-						return CommandResult.Fail($"Required parameter '{shortName}' is missing from the input.");
+						return CommandResult.Fail($"Required parameter '{paramName}' is missing from the input.");
 
 					if (found)
-						request[fullName] = ConvertValue(element, typeCode, shortName);
+						request[paramName] = ConvertValue(element, typeCode, paramName);
 				}
 
 				// Warn about keys in user input that don't match any parameter
 				if (userInput.HasValue)
 				{
-					var knownShortNames = paramMeta
-						.Select(p => p.GetAttributeValue<string>("uniquename") ?? "")
-						.Select(n => n.StartsWith(inPrefix, StringComparison.OrdinalIgnoreCase) ? n[inPrefix.Length..] : n)
+					var knownNames = paramMeta
+						.Select(p =>
+						{
+							var fullName = p.GetAttributeValue<string>("uniquename") ?? "";
+							return p.GetAttributeValue<string>("name")
+								?? (fullName.StartsWith(inPrefix, StringComparison.OrdinalIgnoreCase) ? fullName[inPrefix.Length..] : fullName);
+						})
 						.ToHashSet(StringComparer.OrdinalIgnoreCase);
 
 					foreach (var key in userInput.Value.EnumerateObject().Select(p => p.Name))
 					{
-						if (!knownShortNames.Contains(key))
+						if (!knownNames.Contains(key))
 							output.WriteLine($"  Warning: input key '{key}' does not match any declared parameter — ignored.", ConsoleColor.Yellow);
 					}
 				}
