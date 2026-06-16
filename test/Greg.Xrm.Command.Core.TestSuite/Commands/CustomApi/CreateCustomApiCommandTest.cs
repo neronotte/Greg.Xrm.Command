@@ -46,13 +46,6 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 		}
 
 		[TestMethod]
-		public void ParseIsPrivateShouldWork()
-		{
-			var command = Utility.TestParseCommand<CreateCustomApiCommand>("customapi", "create", "-n", "nn_GregSum", "--is-private");
-			Assert.IsTrue(command.IsPrivate);
-		}
-
-		[TestMethod]
 		public void ParseAllowedStepTypeShouldWork()
 		{
 			var command = Utility.TestParseCommand<CreateCustomApiCommand>("customapi", "create", "-n", "nn_GregSum", "-ast", "AsyncOnly");
@@ -91,7 +84,6 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 			Assert.AreEqual(string.Empty, command.Description);
 			Assert.AreEqual(CustomApiBindingType.Global, command.BindingType);
 			Assert.AreEqual(CustomApiType.Action, command.Type);
-			Assert.IsFalse(command.IsPrivate);
 			Assert.AreEqual(CustomApiAllowedStepType.SyncAndAsync, command.AllowedStepType);
 			Assert.AreEqual(string.Empty, command.ExecutePrivilegeName);
 			Assert.IsNull(command.Params);

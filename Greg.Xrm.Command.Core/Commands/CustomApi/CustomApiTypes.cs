@@ -63,7 +63,7 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 		/// Infers a display name from a unique name: strips the publisher prefix
 		/// (everything up to and including the first '_'), then inserts spaces before
 		/// each capital letter boundary.
-		/// Example: nn_GregSum → "Greg Sum"
+		/// Example: nn_GregSum -> "Greg Sum"
 		/// </summary>
 		public static string InferDisplayName(string uniqueName)
 		{

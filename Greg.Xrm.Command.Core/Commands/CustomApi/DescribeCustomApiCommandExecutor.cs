@@ -108,7 +108,7 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 
 				var sigParams = string.Join(", ", paramSigs);
 				var sigResp   = string.Join(", ", respSigs);
-				var arrow     = respResult.Entities.Count > 0 ? $" → {sigResp}" : "";
+				var arrow     = respResult.Entities.Count > 0 ? $" -> {sigResp}" : "";
 
 				output.Write("  Signature:    ", ConsoleColor.DarkGray);
 				output.WriteLine($"{uniqueName}({sigParams}){arrow}", ConsoleColor.White);

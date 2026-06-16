@@ -213,7 +213,7 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 			// Required params appear without brackets
 			StringAssert.Contains(text, "X: Integer");
 			// Arrow separator for response
-			StringAssert.Contains(text, "→");
+			StringAssert.Contains(text, "->");
 		}
 
 		[TestMethod]

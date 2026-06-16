@@ -43,7 +43,6 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 					description = string.IsNullOrWhiteSpace(command.Description) ? null : command.Description,
 					bindingtype = new OptionSetValue((int)command.BindingType),
 					isfunction = command.Type == CustomApiType.Function,
-					isprivate = command.IsPrivate,
 					allowedcustomprocessingsteptype = new OptionSetValue((int)command.AllowedStepType),
 					executeprivilegename = string.IsNullOrWhiteSpace(command.ExecutePrivilegeName) ? null : command.ExecutePrivilegeName
 				};

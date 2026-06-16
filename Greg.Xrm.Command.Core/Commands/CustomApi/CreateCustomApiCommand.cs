@@ -29,11 +29,7 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 			HelpText = "Action (POST) or Function (GET).")]
 		public CustomApiType Type { get; set; } = CustomApiType.Action;
 
-		[Option("is-private", Order = 6, DefaultValue = false,
-			HelpText = "Whether the Custom API is private.")]
-		public bool IsPrivate { get; set; } = false;
-
-		[Option("allowed-step-type", "ast", Order = 7, DefaultValue = CustomApiAllowedStepType.SyncAndAsync,
+		[Option("allowed-step-type", "ast", Order = 6, DefaultValue = CustomApiAllowedStepType.SyncAndAsync,
 			HelpText = "Allowed processing step type: None, AsyncOnly, or SyncAndAsync.")]
 		public CustomApiAllowedStepType AllowedStepType { get; set; } = CustomApiAllowedStepType.SyncAndAsync;
 
