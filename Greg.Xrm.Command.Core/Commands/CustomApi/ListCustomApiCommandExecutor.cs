@@ -22,7 +22,7 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 				output.Write("Retrieving Custom APIs...");
 
 				var q = new QueryExpression("customapi") { NoLock = true };
-				q.ColumnSet.AddColumns("customapiid", "uniquename", "displayname", "description", "isfunction", "bindingtype", "plugintypeid");
+				q.ColumnSet.AddColumns("customapiid", "uniquename", "displayname", "description", "isfunction", "bindingtype", "boundentitylogicalname", "plugintypeid");
 
 				if (!string.IsNullOrWhiteSpace(command.Publisher))
 					q.Criteria.AddCondition("uniquename", ConditionOperator.BeginsWith, command.Publisher + "_");
@@ -58,12 +58,13 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 				{
 					output.WriteTable(
 						list,
-						() => ["Unique Name", "Display Name", "Type", "Binding", "Plugin Bound"],
+						() => ["Unique Name", "Display Name", "Type", "Binding", "Bound Entity", "Plugin Bound"],
 						row => [
 							row.GetAttributeValue<string>("uniquename") ?? "",
 							row.GetAttributeValue<string>("displayname") ?? "",
 							row.GetAttributeValue<bool>("isfunction") ? "Function" : "Action",
 							BindingTypeLabel(row.GetAttributeValue<OptionSetValue>("bindingtype")),
+							row.GetAttributeValue<string>("boundentitylogicalname") ?? "",
 							row.GetAttributeValue<EntityReference>("plugintypeid") != null ? "Yes" : "No"
 						],
 						(col, _) => col switch
@@ -95,11 +96,16 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 
 					foreach (var api in list)
 					{
-						var uniqueName  = api.GetAttributeValue<string>("uniquename") ?? "";
-						var description = api.GetAttributeValue<string>("description");
-						var isFunction  = api.GetAttributeValue<bool>("isfunction");
-						var binding     = BindingTypeLabel(api.GetAttributeValue<OptionSetValue>("bindingtype"));
-						var bound       = api.GetAttributeValue<EntityReference>("plugintypeid") != null;
+						var uniqueName   = api.GetAttributeValue<string>("uniquename") ?? "";
+						var description  = api.GetAttributeValue<string>("description");
+						var isFunction   = api.GetAttributeValue<bool>("isfunction");
+						var binding      = BindingTypeLabel(api.GetAttributeValue<OptionSetValue>("bindingtype"));
+						var boundEntity  = api.GetAttributeValue<string>("boundentitylogicalname");
+						var bound        = api.GetAttributeValue<EntityReference>("plugintypeid") != null;
+
+						var bindingLabel = string.IsNullOrWhiteSpace(boundEntity)
+							? $"[{(isFunction ? "Function" : "Action")}/{binding}]"
+							: $"[{(isFunction ? "Function" : "Action")}/{binding}:{boundEntity}]";
 
 						var apiParams = paramsByApi.GetValueOrDefault(api.Id) ?? [];
 						var apiResps  = respsByApi.GetValueOrDefault(api.Id) ?? [];
@@ -115,7 +121,7 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 							type: TypeLabel(r.GetAttributeValue<OptionSetValue>("type"))));
 
 						CustomApiSignatureWriter.WriteSignature(output, uniqueName, inputParams, outputParams);
-						output.Write($"  [{(isFunction ? "Function" : "Action")}/{binding}]", ConsoleColor.DarkGray);
+						output.Write($"  {bindingLabel}", ConsoleColor.DarkGray);
 						if (!bound) output.Write("  (unbound)", ConsoleColor.Yellow);
 						output.WriteLine();
 						if (!string.IsNullOrWhiteSpace(description))
