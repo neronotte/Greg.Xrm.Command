@@ -19,6 +19,10 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 			HelpText = "Filter by type: Action or Function.")]
 		public CustomApiType? Type { get; set; }
 
+		[Option("full", Order = 4,
+			HelpText = "Also show the full signature of each Custom API (parameters and response properties).")]
+		public bool Full { get; set; }
+
 		public void WriteUsageExamples(MarkdownWriter writer)
 		{
 			writer.WriteParagraph("List all Custom APIs in the current environment:");
@@ -32,6 +36,10 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 
 			writer.WriteParagraph("List only Custom Functions (GET) for a specific publisher:");
 			writer.WriteCodeBlock("pacx customapi list --publisher nn --type Function", "Powershell");
+
+			writer.WriteParagraph("Show full signatures (useful for exploring available APIs and their arguments):");
+			writer.WriteCodeBlock("pacx customapi list --full", "Powershell");
+			writer.WriteCodeBlock("pacx customapi list --publisher nn --full", "Powershell");
 		}
 	}
 }

@@ -22,7 +22,7 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 				output.Write("Retrieving Custom APIs...");
 
 				var q = new QueryExpression("customapi") { NoLock = true };
-				q.ColumnSet.AddColumns("uniquename", "displayname", "isfunction", "bindingtype", "plugintypeid");
+				q.ColumnSet.AddColumns("customapiid", "uniquename", "displayname", "isfunction", "bindingtype", "plugintypeid");
 
 				if (!string.IsNullOrWhiteSpace(command.Publisher))
 					q.Criteria.AddCondition("uniquename", ConditionOperator.BeginsWith, command.Publisher + "_");
@@ -37,7 +37,6 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 
 				var rows = results.Entities.AsEnumerable();
 
-				// Client-side filter substring (OData doesn't support case-insensitive contains natively via QueryExpression)
 				if (!string.IsNullOrWhiteSpace(command.Filter))
 				{
 					var filter = command.Filter.ToLowerInvariant();
@@ -54,22 +53,88 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 				}
 
 				output.WriteLine();
-				output.WriteTable(
-					list,
-					() => ["Unique Name", "Display Name", "Type", "Binding Type", "Plugin Bound"],
-					row => [
-						row.GetAttributeValue<string>("uniquename") ?? "",
-						row.GetAttributeValue<string>("displayname") ?? "",
-						row.GetAttributeValue<bool>("isfunction") ? "Function" : "Action",
-						BindingTypeLabel(row.GetAttributeValue<Microsoft.Xrm.Sdk.OptionSetValue>("bindingtype")),
-						row.GetAttributeValue<Microsoft.Xrm.Sdk.EntityReference>("plugintypeid") != null ? "Yes" : "No"
-					],
-					(col, _) => col switch
+
+				if (!command.Full)
+				{
+					output.WriteTable(
+						list,
+						() => ["Unique Name", "Display Name", "Type", "Binding", "Plugin Bound"],
+						row => [
+							row.GetAttributeValue<string>("uniquename") ?? "",
+							row.GetAttributeValue<string>("displayname") ?? "",
+							row.GetAttributeValue<bool>("isfunction") ? "Function" : "Action",
+							BindingTypeLabel(row.GetAttributeValue<OptionSetValue>("bindingtype")),
+							row.GetAttributeValue<EntityReference>("plugintypeid") != null ? "Yes" : "No"
+						],
+						(col, _) => col switch
+						{
+							0 => ConsoleColor.White,
+							2 => ConsoleColor.Cyan,
+							_ => (ConsoleColor?)null
+						});
+				}
+				else
+				{
+					// ── Full mode: batch-load params and responses, then show signature per API ──
+					var apiIds = list.Select(e => e.Id).ToList();
+
+					var paramQ = new QueryExpression("customapirequestparameter") { NoLock = true };
+					paramQ.ColumnSet.AddColumns("customapiid", "uniquename", "type", "isoptional");
+					paramQ.Criteria.AddCondition("customapiid", ConditionOperator.In, apiIds.Cast<object>().ToArray());
+					var allParams = (await crm.RetrieveMultipleAsync(paramQ)).Entities;
+
+					var respQ = new QueryExpression("customapiresponseproperty") { NoLock = true };
+					respQ.ColumnSet.AddColumns("customapiid", "uniquename", "type");
+					respQ.Criteria.AddCondition("customapiid", ConditionOperator.In, apiIds.Cast<object>().ToArray());
+					var allResps = (await crm.RetrieveMultipleAsync(respQ)).Entities;
+
+					var paramsByApi = allParams.GroupBy(p => p.GetAttributeValue<EntityReference>("customapiid")?.Id ?? Guid.Empty)
+						.ToDictionary(g => g.Key, g => g.ToList());
+					var respsByApi  = allResps.GroupBy(r => r.GetAttributeValue<EntityReference>("customapiid")?.Id ?? Guid.Empty)
+						.ToDictionary(g => g.Key, g => g.ToList());
+
+					foreach (var api in list)
 					{
-						0 => ConsoleColor.White,
-						2 => ConsoleColor.Cyan,
-						_ => (ConsoleColor?)null
-					});
+						var uniqueName  = api.GetAttributeValue<string>("uniquename") ?? "";
+						var displayName = api.GetAttributeValue<string>("displayname") ?? "";
+						var isFunction  = api.GetAttributeValue<bool>("isfunction");
+						var binding     = BindingTypeLabel(api.GetAttributeValue<OptionSetValue>("bindingtype"));
+						var bound       = api.GetAttributeValue<EntityReference>("plugintypeid") != null;
+
+						var apiParams = paramsByApi.GetValueOrDefault(api.Id) ?? [];
+						var apiResps  = respsByApi.GetValueOrDefault(api.Id) ?? [];
+
+						var paramSigs = apiParams.Select(p =>
+						{
+							var name = p.GetAttributeValue<string>("uniquename") ?? "";
+							var type = TypeLabel(p.GetAttributeValue<OptionSetValue>("type"));
+							var opt  = p.GetAttributeValue<bool>("isoptional");
+							return opt ? $"[{name}?: {type}]" : $"{name}: {type}";
+						});
+						var respSigs = apiResps.Select(r =>
+						{
+							var name = r.GetAttributeValue<string>("uniquename") ?? "";
+							var type = TypeLabel(r.GetAttributeValue<OptionSetValue>("type"));
+							return $"{name}: {type}";
+						});
+
+						var arrow     = apiResps.Count > 0 ? $" -> {string.Join(", ", respSigs)}" : "";
+						var signature = $"{uniqueName}({string.Join(", ", paramSigs)}){arrow}";
+
+						output.Write(uniqueName, ConsoleColor.White);
+						output.Write($"  [{(isFunction ? "Function" : "Action")}/{binding}]", ConsoleColor.DarkGray);
+						if (!bound) output.Write("  (unbound)", ConsoleColor.Yellow);
+						output.WriteLine();
+						output.Write("  ");
+						output.WriteLine(signature, ConsoleColor.Cyan);
+						if (!string.Equals(uniqueName, displayName, StringComparison.OrdinalIgnoreCase))
+						{
+							output.Write("  Display Name: ");
+							output.WriteLine(displayName, ConsoleColor.DarkGray);
+						}
+						output.WriteLine();
+					}
+				}
 
 				return CommandResult.Success();
 			}
@@ -79,12 +144,30 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 			}
 		}
 
-		private static string BindingTypeLabel(Microsoft.Xrm.Sdk.OptionSetValue? value) => value?.Value switch
+		private static string BindingTypeLabel(OptionSetValue? value) => value?.Value switch
 		{
 			0 => "Global",
 			1 => "Entity",
 			2 => "EntityCollection",
 			_ => "Unknown"
+		};
+
+		private static string TypeLabel(OptionSetValue? value) => value?.Value switch
+		{
+			0  => "Boolean",
+			1  => "DateTime",
+			2  => "Decimal",
+			3  => "Entity",
+			4  => "EntityCollection",
+			5  => "EntityReference",
+			6  => "Float",
+			7  => "Integer",
+			8  => "Money",
+			9  => "Picklist",
+			10 => "String",
+			11 => "StringArray",
+			12 => "Guid",
+			_  => "Unknown"
 		};
 	}
 }
