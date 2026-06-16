@@ -65,7 +65,13 @@ namespace Greg.Xrm.Command.Commands.CustomApi.Model
 			set => SetValue(value);
 		}
 
-		public EntityReference? plugintypeid
+			public string? boundentitylogicalname
+			{
+				get => Get<string>();
+				set => SetValue(value);
+			}
+
+			public EntityReference? plugintypeid
 		{
 			get => Get<EntityReference>();
 			set => SetValue(value);

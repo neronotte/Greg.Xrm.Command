@@ -92,10 +92,11 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 					displayname  = displayName,
 					description  = command.Description ?? string.Empty,
 					bindingtype  = new OptionSetValue((int)command.BindingType),
-					isfunction   = command.Type == CustomApiType.Function,
-					allowedcustomprocessingsteptype = new OptionSetValue((int)command.AllowedStepType),
-					executeprivilegename = string.IsNullOrWhiteSpace(command.ExecutePrivilegeName) ? null : command.ExecutePrivilegeName
-				};
+						boundentitylogicalname = string.IsNullOrWhiteSpace(command.BoundEntityLogicalName) ? null : command.BoundEntityLogicalName,
+						isfunction   = command.Type == CustomApiType.Function,
+						allowedcustomprocessingsteptype = new OptionSetValue((int)command.AllowedStepType),
+						executeprivilegename = string.IsNullOrWhiteSpace(command.ExecutePrivilegeName) ? null : command.ExecutePrivilegeName
+					};
 				await api.SaveOrUpdateAsync(crm);
 				output.WriteLine("Done", ConsoleColor.Green);
 
