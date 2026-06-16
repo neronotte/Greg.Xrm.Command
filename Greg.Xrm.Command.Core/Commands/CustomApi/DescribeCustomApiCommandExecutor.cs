@@ -102,8 +102,8 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 								type: TypeLabel(r.GetAttributeValue<OptionSetValue>("type"))));
 
 					output.Write("  Signature:    ", ConsoleColor.DarkGray);
-					output.WriteLine(uniqueName, ConsoleColor.White);
-					CustomApiSignatureWriter.WriteSignature(output, inputParams, outputParams);
+					CustomApiSignatureWriter.WriteSignature(output, uniqueName, inputParams, outputParams);
+					output.WriteLine();
 
 				// ── Request parameters table ──────────────────────────────────────────
 				if (paramResult.Entities.Count > 0)

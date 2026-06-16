@@ -114,16 +114,12 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 							name: r.GetAttributeValue<string>("uniquename") ?? "",
 							type: TypeLabel(r.GetAttributeValue<OptionSetValue>("type"))));
 
-						output.Write(uniqueName, ConsoleColor.White);
+						CustomApiSignatureWriter.WriteSignature(output, uniqueName, inputParams, outputParams);
 						output.Write($"  [{(isFunction ? "Function" : "Action")}/{binding}]", ConsoleColor.DarkGray);
 						if (!bound) output.Write("  (unbound)", ConsoleColor.Yellow);
-						if (!string.IsNullOrWhiteSpace(description))
-						{
-							output.Write("  ");
-							output.Write(description, ConsoleColor.DarkGray);
-						}
 						output.WriteLine();
-						CustomApiSignatureWriter.WriteSignature(output, inputParams, outputParams);
+						if (!string.IsNullOrWhiteSpace(description))
+							output.WriteLine($"    {description}", ConsoleColor.DarkGray);
 						output.WriteLine();
 					}
 				}
