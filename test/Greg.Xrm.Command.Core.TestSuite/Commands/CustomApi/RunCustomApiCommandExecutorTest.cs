@@ -17,11 +17,13 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 
 		// ── Setup helpers ──────────────────────────────────────────────────────────
 
-		private void SetupApiFound()
+		private void SetupApiFound(bool withPlugin = false)
 		{
 			var api = new Entity("customapi") { Id = ApiId };
 			api["uniquename"] = "nn_GregSum";
 			api["isfunction"] = false;
+			if (withPlugin)
+				api["plugintypeid"] = new EntityReference("plugintype", Guid.NewGuid());
 			this.OrganizationServiceMock
 				.Setup(x => x.RetrieveMultipleAsync(It.Is<QueryExpression>(q => q.EntityName == "customapi")))
 				.ReturnsAsync(new EntityCollection(new List<Entity> { api }));
@@ -235,6 +237,34 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 
 			Assert.IsTrue(result.IsSuccess, result.ErrorMessage);
 			Assert.AreEqual("hello", captured!["nn_GregSum-in-Label"]);
+		}
+
+		[TestMethod]
+		public async Task ExecuteAsync_ShouldWarn_WhenApiIsUnbound()
+		{
+			SetupApiFound(withPlugin: false); // no plugin
+			SetupParams();
+			SetupExecuteResponse([]);
+
+			await executor.ExecuteAsync(
+				new RunCustomApiCommand { UniqueName = "nn_GregSum" },
+				CancellationToken.None);
+
+			StringAssert.Contains(Output.ToString(), "no plugin bound");
+		}
+
+		[TestMethod]
+		public async Task ExecuteAsync_ShouldNotWarn_WhenApiHasPlugin()
+		{
+			SetupApiFound(withPlugin: true);
+			SetupParams();
+			SetupExecuteResponse([]);
+
+			await executor.ExecuteAsync(
+				new RunCustomApiCommand { UniqueName = "nn_GregSum" },
+				CancellationToken.None);
+
+			Assert.IsFalse(Output.ToString().Contains("no plugin bound"));
 		}
 	}
 }

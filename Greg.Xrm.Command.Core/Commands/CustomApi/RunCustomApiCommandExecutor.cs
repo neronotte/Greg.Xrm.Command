@@ -26,7 +26,7 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 				output.Write("'...");
 
 				var apiQ = new QueryExpression("customapi") { NoLock = true, TopCount = 1 };
-				apiQ.ColumnSet.AddColumns("customapiid", "uniquename", "isfunction");
+				apiQ.ColumnSet.AddColumns("customapiid", "uniquename", "isfunction", "plugintypeid");
 				apiQ.Criteria.AddCondition("uniquename", ConditionOperator.Equal, command.UniqueName);
 				var apiResult = await crm.RetrieveMultipleAsync(apiQ);
 				if (apiResult.Entities.Count == 0)
@@ -34,8 +34,12 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 					output.WriteLine("Not found", ConsoleColor.Red);
 					return CommandResult.Fail($"Custom API '{command.UniqueName}' not found.");
 				}
-				var apiId = apiResult.Entities[0].Id;
+				var apiId      = apiResult.Entities[0].Id;
+				var pluginRef  = apiResult.Entities[0].GetAttributeValue<EntityReference>("plugintypeid");
 				output.WriteLine("Done", ConsoleColor.Green);
+
+				if (pluginRef == null)
+					output.WriteLine("  Warning: this Custom API has no plugin bound — execution may fail.", ConsoleColor.Yellow);
 
 				// ── 2. Load parameter metadata ────────────────────────────────────────
 				var paramQ = new QueryExpression("customapirequestparameter") { NoLock = true };
