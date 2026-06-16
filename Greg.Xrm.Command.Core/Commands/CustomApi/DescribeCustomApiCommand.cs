@@ -26,16 +26,16 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 			writer.WriteParagraph("Show the full signature and metadata of a Custom API:");
 			writer.WriteCodeBlock("pacx customapi describe -n nn_GregSum", "Powershell");
 
-			writer.WriteParagraph("Generate a sample input file to use with 'customapi run':");
-			writer.WriteCodeBlock("pacx customapi describe -n nn_GregSum --generate-input-file input.json", "Powershell");
+			writer.WriteParagraph("Generate a sample input file (defaults to 'nn_GregSum-input.json' when no path given):");
+			writer.WriteCodeBlock("pacx customapi describe -n nn_GregSum --generate-input-file", "Powershell");
+			writer.WriteCodeBlock("pacx customapi describe -n nn_GregSum --generate-input-file my-input.json", "Powershell");
 
-			writer.WriteParagraph("Generate a JSON Schema for the input parameters (useful for validation or IDE autocompletion):");
-			writer.WriteCodeBlock("pacx customapi describe -n nn_GregSum --generate-schema-file schema.json", "Powershell");
+			writer.WriteParagraph("Generate a JSON Schema for the input parameters (defaults to 'nn_GregSum-schema.json'):");
+			writer.WriteCodeBlock("pacx customapi describe -n nn_GregSum --generate-schema-file", "Powershell");
+			writer.WriteCodeBlock("pacx customapi describe -n nn_GregSum --generate-schema-file my-schema.json", "Powershell");
 
 			writer.WriteParagraph("Both flags can be combined in a single call:");
-			writer.WriteCodeBlock("pacx customapi describe -n nn_GregSum -gif input.json -gsf schema.json", "Powershell");
-
-			writer.WriteParagraph("The output includes the API type (Action/Function), binding, privacy, allowed step types, bound plugin, description, all request parameters (name, type, required flag, description), and all response properties (name, type, description).");
+			writer.WriteCodeBlock("pacx customapi describe -n nn_GregSum -gif -gsf", "Powershell");
 		}
 	}
 }

@@ -156,24 +156,30 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 				}
 
 				// ── Generate input file ───────────────────────────────────────────────
-				if (!string.IsNullOrWhiteSpace(command.GenerateInputFile))
+					if (command.GenerateInputFile != null)
 				{
-					var inputJson = BuildSampleInput(paramResult.Entities);
-					await File.WriteAllTextAsync(command.GenerateInputFile, JsonSerializer.Serialize(inputJson, IndentedJson), cancellationToken);
-					output.WriteLine();
-					output.Write("  Sample input written to: ");
-					output.WriteLine(command.GenerateInputFile, ConsoleColor.Green);
-				}
+						var inputPath = string.IsNullOrWhiteSpace(command.GenerateInputFile)
+							? $"{uniqueName}-input.json"
+							: command.GenerateInputFile;
+						var inputJson = BuildSampleInput(paramResult.Entities);
+						await File.WriteAllTextAsync(inputPath, JsonSerializer.Serialize(inputJson, IndentedJson), cancellationToken);
+						output.WriteLine();
+						output.Write("  Sample input written to: ");
+						output.WriteLine(inputPath, ConsoleColor.Green);
+					}
 
-				// ── Generate schema file ──────────────────────────────────────────────
-				if (!string.IsNullOrWhiteSpace(command.GenerateSchemaFile))
-				{
-					var schema = BuildJsonSchema(uniqueName, description, paramResult.Entities);
-					await File.WriteAllTextAsync(command.GenerateSchemaFile, JsonSerializer.Serialize(schema, IndentedJson), cancellationToken);
-					output.WriteLine();
-					output.Write("  JSON Schema written to: ");
-					output.WriteLine(command.GenerateSchemaFile, ConsoleColor.Green);
-				}
+					// ── Generate schema file ──────────────────────────────────────────────
+					if (command.GenerateSchemaFile != null)
+					{
+						var schemaPath = string.IsNullOrWhiteSpace(command.GenerateSchemaFile)
+							? $"{uniqueName}-schema.json"
+							: command.GenerateSchemaFile;
+						var schema = BuildJsonSchema(uniqueName, description, paramResult.Entities);
+						await File.WriteAllTextAsync(schemaPath, JsonSerializer.Serialize(schema, IndentedJson), cancellationToken);
+						output.WriteLine();
+						output.Write("  JSON Schema written to: ");
+						output.WriteLine(schemaPath, ConsoleColor.Green);
+					}
 
 				var result = CommandResult.Success();
 				result["UniqueName"]     = uniqueName;
