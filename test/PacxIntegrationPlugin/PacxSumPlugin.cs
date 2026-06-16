@@ -7,13 +7,13 @@ namespace PacxIntegration
 	/// Dataverse Custom API plugin for nn_PacxSum.
 	/// Reads two integer request parameters (Addend1, Addend2) via their uniquename keys
 	/// and returns their sum as the 'Result' response property.
+	/// uniquename of customapirequestparameter is the SDK InputParameters key.
 	/// </summary>
 	public class PacxSumPlugin : IPlugin
 	{
-		// Dataverse uses the customapirequestparameter.uniquename as the InputParameters key
-		private const string InAddend1 = "nn_PacxSum-in-Addend1";
-		private const string InAddend2 = "nn_PacxSum-in-Addend2";
-		private const string OutResult = "nn_PacxSum-out-Result";
+		private const string InAddend1 = "Addend1";
+		private const string InAddend2 = "Addend2";
+		private const string OutResult = "Result";
 
 		public void Execute(IServiceProvider serviceProvider)
 		{

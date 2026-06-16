@@ -52,48 +52,40 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 				var userInput = ParseJson(inputJson);  // null when no input provided
 
 				// ── 4. Validate required params and build the request ─────────────────
-				var apiUniqueName = command.UniqueName!;
-				var inPrefix = apiUniqueName + "-in-";
+					var apiUniqueName = command.UniqueName!;
 
-				var request = new OrganizationRequest(apiUniqueName);
+					var request = new OrganizationRequest(apiUniqueName);
 
-				foreach (var p in paramMeta)
-				{
-					var sdkKey     = p.GetAttributeValue<string>("uniquename") ?? "";
-					var paramName  = p.GetAttributeValue<string>("name")
-						?? (sdkKey.StartsWith(inPrefix, StringComparison.OrdinalIgnoreCase) ? sdkKey[inPrefix.Length..] : sdkKey);
-					var isOptional = p.GetAttributeValue<bool>("isoptional");
-					var typeCode   = p.GetAttributeValue<OptionSetValue>("type")?.Value ?? -1;
-
-					// User input keys match the short name; Dataverse request key is the uniquename
-					JsonElement element = default;
-					var found = userInput.HasValue && TryFindKey(userInput.Value, paramName, out element);
-
-					if (!found && !isOptional)
-						return CommandResult.Fail($"Required parameter '{paramName}' is missing from the input.");
-
-					if (found)
-						request[sdkKey] = ConvertValue(element, typeCode, paramName);
-				}
-
-				// Warn about keys in user input that don't match any parameter
-				if (userInput.HasValue)
-				{
-					var knownNames = paramMeta
-						.Select(p =>
-						{
-							var sdkKey = p.GetAttributeValue<string>("uniquename") ?? "";
-							return p.GetAttributeValue<string>("name")
-								?? (sdkKey.StartsWith(inPrefix, StringComparison.OrdinalIgnoreCase) ? sdkKey[inPrefix.Length..] : sdkKey);
-						})
-						.ToHashSet(StringComparer.OrdinalIgnoreCase);
-
-					foreach (var key in userInput.Value.EnumerateObject().Select(p => p.Name))
+					foreach (var p in paramMeta)
 					{
-						if (!knownNames.Contains(key))
-							output.WriteLine($"  Warning: input key '{key}' does not match any declared parameter — ignored.", ConsoleColor.Yellow);
+						var sdkKey     = p.GetAttributeValue<string>("uniquename") ?? "";
+						var isOptional = p.GetAttributeValue<bool>("isoptional");
+						var typeCode   = p.GetAttributeValue<OptionSetValue>("type")?.Value ?? -1;
+
+						// uniquename is the user-input key and the Dataverse SDK request key
+						JsonElement element = default;
+						var found = userInput.HasValue && TryFindKey(userInput.Value, sdkKey, out element);
+
+						if (!found && !isOptional)
+							return CommandResult.Fail($"Required parameter '{sdkKey}' is missing from the input.");
+
+						if (found)
+							request[sdkKey] = ConvertValue(element, typeCode, sdkKey);
 					}
-				}
+
+					// Warn about keys in user input that don't match any parameter
+					if (userInput.HasValue)
+					{
+						var knownKeys = paramMeta
+							.Select(p => p.GetAttributeValue<string>("uniquename") ?? "")
+							.ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+						foreach (var key in userInput.Value.EnumerateObject().Select(p => p.Name))
+						{
+							if (!knownKeys.Contains(key))
+								output.WriteLine($"  Warning: input key '{key}' does not match any declared parameter — ignored.", ConsoleColor.Yellow);
+						}
+					}
 
 				// ── 5. Execute ────────────────────────────────────────────────────────
 				output.Write("Executing '");
@@ -104,15 +96,11 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 				output.WriteLine("Done", ConsoleColor.Green);
 
 				// ── 6. Display response ───────────────────────────────────────────────
-				var outPrefix = apiUniqueName + "-out-";
-				var responseEntries = response.Results
-					.Select(kv => (
-						ShortName: kv.Key.StartsWith(outPrefix, StringComparison.OrdinalIgnoreCase)
-							? kv.Key[outPrefix.Length..]
-							: kv.Key,
-						FullName: kv.Key,
-						Value: kv.Value))
-					.ToList();
+					var responseEntries = response.Results
+						.Select(kv => (
+							Name:  kv.Key,
+							Value: kv.Value))
+						.ToList();
 
 				if (responseEntries.Count == 0)
 				{
@@ -125,13 +113,13 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 					output.WriteTable(
 						responseEntries,
 						() => ["Name", "Value"],
-						row => [row.ShortName, FormatValue(row.Value)],
+						row => [row.Name, FormatValue(row.Value)],
 						(col, _) => col == 0 ? ConsoleColor.White : (ConsoleColor?)null);
 				}
 
 				var result = CommandResult.Success();
-				foreach (var (shortName, fullName, value) in responseEntries)
-					result[shortName] = value;
+				foreach (var (name, value) in responseEntries)
+					result[name] = value;
 
 				return result;
 			}
@@ -255,10 +243,5 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 			string[] arr             => string.Join(", ", arr),
 			_                        => value.ToString() ?? ""
 		};
-
-		private static string ShortName(string uniqueName, string prefix)
-			=> uniqueName.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)
-				? uniqueName[prefix.Length..]
-				: uniqueName;
 	}
 }

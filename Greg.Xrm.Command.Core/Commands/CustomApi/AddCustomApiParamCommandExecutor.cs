@@ -23,7 +23,7 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 				// Resolve the Custom API
 				output.Write($"Resolving Custom API '{command.ApiUniqueName}'...");
 				var q = new QueryExpression("customapi") { NoLock = true, TopCount = 1 };
-				q.ColumnSet.AddColumn("customapiid");
+					q.ColumnSet.AddColumns("customapiid", "displayname");
 				q.Criteria.AddCondition("uniquename", ConditionOperator.Equal, command.ApiUniqueName);
 				var apiResult = await crm.RetrieveMultipleAsync(q);
 				if (apiResult.Entities.Count == 0)
@@ -31,15 +31,15 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 					output.WriteLine("Not found", ConsoleColor.Red);
 					return CommandResult.Fail($"Custom API '{command.ApiUniqueName}' not found.");
 				}
-				var apiId = apiResult.Entities[0].Id;
-				output.WriteLine("Done", ConsoleColor.Green);
+					var apiId          = apiResult.Entities[0].Id;
+					var apiDisplayName = apiResult.Entities[0].GetAttributeValue<string>("displayname") ?? command.ApiUniqueName;
+					output.WriteLine("Done", ConsoleColor.Green);
 
 
-
-
-				CustomApiParamSpec.TryParse(command.Param!, out var spec, out _);
-				var paramUniqueName = $"{command.ApiUniqueName}-in-{spec!.UniqueName}";
-				var displayName = command.DisplayName ?? CustomApiDisplayNameHelper.InferDisplayName(spec.UniqueName);
+					CustomApiParamSpec.TryParse(command.Param!, out var spec, out _);
+					var paramUniqueName = spec!.UniqueName;  // already cleaned by TryParse
+					var paramName       = CustomApiDisplayNameHelper.BuildParamName(apiDisplayName, paramUniqueName);
+					var displayName     = command.DisplayName ?? paramName;
 
 
 
@@ -56,7 +56,7 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 				output.Write($"Adding parameter '{paramUniqueName}'...");
 				var param = new CustomApiRequestParameter
 				{
-						name        = spec.UniqueName,
+							name        = paramName,
 						uniquename  = paramUniqueName,
 					displayname = displayName,
 					description = command.Description ?? string.Empty,

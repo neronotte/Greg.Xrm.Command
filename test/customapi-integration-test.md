@@ -8,9 +8,9 @@
 
 Dataverse Custom APIs are one of the most powerful extensibility points in the Power Platform. They let you define typed, self-documenting messages that can be called from anywhere — Power Automate, Canvas Apps, PCF controls, external services — with full SDK support and plugin-driven logic.
 
-The problem has always been *tooling friction*: creating a Custom API traditionally requires navigating the Maker Portal's Custom API form, manually creating request parameters and response properties one by one, then separately registering a plugin, binding it, and hoping you got the uniquename casing right when writing the plugin code.
+The problem has always been _tooling friction_: creating a Custom API traditionally requires navigating the Maker Portal's Custom API form, manually creating request parameters and response properties one by one, then separately registering a plugin, binding it, and hoping you got the uniquename casing right when writing the plugin code.
 
-This post documents the full lifecycle of a Custom API — from creation to live execution — using the new `customapi` command suite in [PACX](https://github.com/neronotte/Greg.Xrm.Command), the Greg PowerPlatform CLI Extended. Every command below was run against a real `rg01.crm4.dynamics.com` environment during development of the feature itself, so what you're reading is a live integration test journal.
+This post documents the full lifecycle of a Custom API — from creation to live execution — using the new `customapi` command suite in [PACX](https://github.com/neronotte/Greg.Xrm.Command). Every command below was run against a real environment during development of the feature itself, so what you're reading is a live integration test journal.
 
 ---
 
@@ -19,6 +19,7 @@ This post documents the full lifecycle of a Custom API — from creation to live
 We'll implement `nn_PacxSum`: a simple Custom API that takes two integers (`Addend1`, `Addend2`) and returns their sum (`Result`). Trivial logic, but it exercises every part of the stack.
 
 Environment details:
+
 - **Environment:** `rg01` (`https://rg01.crm4.dynamics.com`)
 - **Solution:** `master`
 - **Publisher prefix:** `nn`
@@ -37,32 +38,33 @@ pacx customapi create `
 ```
 
 Output:
+
 ```
 Connecting to the current dataverse environment...Done
 Validating solution 'master'...Done
 Checking if Custom API 'nn_PacxSum' already exists...Not found
 Creating Custom API 'nn_PacxSum'...Done
   Warning: could not add component to solution 'master': ...
-  Adding param 'nn_PacxSum-in-Addend1'...Done
-  Adding param 'nn_PacxSum-in-Addend2'...Done
-  Adding response 'nn_PacxSum-out-Result'...Done
+  Adding param 'Addend1'...Done
+  Adding param 'Addend2'...Done
+  Adding response 'Result'...Done
 
 Custom API created: nn_PacxSum
 Display name:       Pacx Sum
 Solution:           master
-Parameters:   nn_PacxSum-in-Addend1 (Integer), nn_PacxSum-in-Addend2 (Integer)
-Responses:    nn_PacxSum-out-Result (Integer)
+Parameters:   Addend1 (Integer), Addend2 (Integer)
+Responses:    Result (Integer)
 ```
 
 A single command creates the `customapi`, both `customapirequestparameter` records, and the `customapiresponseproperty` record. PACX infers the unique name automatically from the display name and the solution's publisher prefix: `"Pacx Sum"` → `nn_PacxSum`.
 
 ### Naming conventions enforced by PACX
 
-| Entity | `name` (display) | `uniquename` (SDK key) |
-|---|---|---|
-| Custom API | `Pacx Sum` | `nn_PacxSum` |
-| Request parameter | `Addend1` | `nn_PacxSum-in-Addend1` |
-| Response property | `Result` | `nn_PacxSum-out-Result` |
+| Entity            | `name` (display) | `uniquename` (SDK key)  |
+| ----------------- | ---------------- | ----------------------- |
+| Custom API        | `Pacx Sum`       | `nn_PacxSum`            |
+| Request parameter | `Addend1`        | `nn_PacxSum-in-Addend1` |
+| Response property | `Result`         | `nn_PacxSum-out-Result` |
 
 The `uniquename` of request parameters and response properties is what Dataverse uses as the key in `OrganizationRequest.Parameters` and `OrganizationResponse.Results` respectively. The `{apiname}-in-{param}` / `{apiname}-out-{prop}` pattern prevents name collisions across APIs while remaining readable in plugin code.
 
@@ -85,6 +87,7 @@ pacx customapi describe -n nn_PacxSum
 ```
 
 Output:
+
 ```
 Custom API:
   Unique Name:  nn_PacxSum
@@ -124,10 +127,11 @@ pacx customapi describe -n nn_PacxSum --generate-input-file C:\Temp\pacxsum-inpu
 ```
 
 Produces:
+
 ```json
 {
-  "Addend1": 0,
-  "Addend2": 0
+	"Addend1": 0,
+	"Addend2": 0
 }
 ```
 
@@ -142,9 +146,9 @@ The plugin reads parameters using their `uniquename` as the key in `context.Inpu
 ```csharp
 public class PacxSumPlugin : IPlugin
 {
-    private const string InAddend1 = "nn_PacxSum-in-Addend1";
-    private const string InAddend2 = "nn_PacxSum-in-Addend2";
-    private const string OutResult = "nn_PacxSum-out-Result";
+    private const string InAddend1 = "Addend1";   // not "nn_PacxSum-in-Addend1"
+    private const string InAddend2 = "Addend2";
+    private const string OutResult = "Result";    // not "nn_PacxSum-out-Result"
 
     public void Execute(IServiceProvider serviceProvider)
     {
@@ -188,6 +192,7 @@ pacx plugin push -p .\bin\Release\net462\PacxIntegration.dll
 ```
 
 Output:
+
 ```
 Creating assembly PacxIntegration (1.0.0.0)...Done
 Adding assembly PacxIntegration (1.0.0.0) to solution master...Done
@@ -205,6 +210,7 @@ pacx customapi bind -a nn_PacxSum -p PacxIntegration.PacxSumPlugin
 ```
 
 Output:
+
 ```
 Resolving Custom API 'nn_PacxSum'...Done
 Resolving plugin type 'PacxIntegration.PacxSumPlugin'...Done
@@ -225,6 +231,7 @@ pacx customapi run -n nn_PacxSum --input '{"Addend1":5,"Addend2":3}'
 ```
 
 Output:
+
 ```
 Connecting to the current dataverse environment...Done
 Resolving Custom API 'nn_PacxSum'...Done
@@ -249,6 +256,7 @@ pacx customapi run -n nn_PacxSum --input-file C:\Temp\pacxsum-input.json
 ```
 
 Output:
+
 ```
 Result | 42
 ```
@@ -273,11 +281,11 @@ The `name` attribute on `customapi` is the primary name column — required by D
 
 Adding Custom API components to a solution via `AddSolutionComponentRequest` requires the correct `componenttype` integer. After iterative testing:
 
-| Component | `componenttype` |
-|---|---|
-| `customapi` | 10036 |
-| `customapirequestparameter` | 10037 |
-| `customapiresponseproperty` | 10038 |
+| Component                   | `componenttype` |
+| --------------------------- | --------------- |
+| `customapi`                 | 10036           |
+| `customapirequestparameter` | 10037           |
+| `customapiresponseproperty` | 10038           |
 
 Earlier guesses (431/432/433, then just wrong) produced errors like "Cannot add AttributeImageConfig / CatalogAssignment". The correct values were determined by reading the Dataverse error message — each error names the component type that the integer maps to.
 
@@ -329,6 +337,7 @@ pacx customapi delete -n nn_MyApi [--force]
 The `customapi` command suite in PACX compresses what used to be a 15-minute multi-form exercise into a handful of terminal commands. The full lifecycle — create, describe, push plugin, bind, run — takes under two minutes once you know the pattern.
 
 Key things to remember:
+
 1. Plugin code uses `uniquename` (e.g. `"nn_PacxSum-in-Addend1"`) as the `InputParameters` key
 2. `customapi run` input JSON uses the short `name` (e.g. `"Addend1"`) — PACX handles the mapping
 3. Plugin assemblies must be strong-name signed

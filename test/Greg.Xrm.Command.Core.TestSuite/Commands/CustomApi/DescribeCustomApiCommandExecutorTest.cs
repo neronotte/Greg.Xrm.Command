@@ -33,8 +33,8 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 		private Entity MakeParam(string shortName, int typeCode = 7 /* Integer */, bool isOptional = false, string? description = null)
 		{
 			var e = new Entity("customapirequestparameter") { Id = Guid.NewGuid() };
-				e["name"]        = shortName;
-				e["uniquename"]  = $"nn_GregSum-in-{shortName}";
+					e["name"]        = $"GregSum-In-{shortName}";
+					e["uniquename"]  = shortName;
 				e["displayname"] = shortName;
 				e["type"]        = new OptionSetValue(typeCode);
 				e["isoptional"]  = isOptional;
@@ -45,8 +45,8 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 			private Entity MakeResponse(string shortName, int typeCode = 7 /* Integer */, string? description = null)
 			{
 				var e = new Entity("customapiresponseproperty") { Id = Guid.NewGuid() };
-				e["name"]        = shortName;
-				e["uniquename"]  = $"nn_GregSum-out-{shortName}";
+					e["name"]        = $"GregSum-Out-{shortName}";
+					e["uniquename"]  = shortName;
 				e["displayname"] = shortName;
 				e["type"]        = new OptionSetValue(typeCode);
 				if (description != null) e["description"] = description;

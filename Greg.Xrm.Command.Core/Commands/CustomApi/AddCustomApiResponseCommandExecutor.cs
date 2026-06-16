@@ -23,7 +23,7 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 				// Resolve the Custom API
 				output.Write($"Resolving Custom API '{command.ApiUniqueName}'...");
 				var q = new QueryExpression("customapi") { NoLock = true, TopCount = 1 };
-				q.ColumnSet.AddColumn("customapiid");
+					q.ColumnSet.AddColumns("customapiid", "displayname");
 				q.Criteria.AddCondition("uniquename", ConditionOperator.Equal, command.ApiUniqueName);
 				var apiResult = await crm.RetrieveMultipleAsync(q);
 				if (apiResult.Entities.Count == 0)
@@ -31,12 +31,14 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 					output.WriteLine("Not found", ConsoleColor.Red);
 					return CommandResult.Fail($"Custom API '{command.ApiUniqueName}' not found.");
 				}
-				var apiId = apiResult.Entities[0].Id;
-				output.WriteLine("Done", ConsoleColor.Green);
+					var apiId          = apiResult.Entities[0].Id;
+					var apiDisplayName = apiResult.Entities[0].GetAttributeValue<string>("displayname") ?? command.ApiUniqueName;
+					output.WriteLine("Done", ConsoleColor.Green);
 
-				CustomApiParamSpec.TryParse(command.Response!, out var spec, out _);
-				var respUniqueName = $"{command.ApiUniqueName}-out-{spec!.UniqueName}";
-				var displayName = command.DisplayName ?? CustomApiDisplayNameHelper.InferDisplayName(spec.UniqueName);
+					CustomApiParamSpec.TryParse(command.Response!, out var spec, out _);
+					var respUniqueName = spec!.UniqueName;  // already cleaned by TryParse
+					var respName       = CustomApiDisplayNameHelper.BuildResponseName(apiDisplayName, respUniqueName);
+					var displayName    = command.DisplayName ?? respName;
 
 					// Idempotency check
 					var existingQ = new QueryExpression("customapiresponseproperty") { NoLock = true, TopCount = 1 };
@@ -50,7 +52,7 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 					output.Write($"Adding response property '{respUniqueName}'...");
 					var resp = new CustomApiResponseProperty
 					{
-						name        = spec.UniqueName,
+							name        = respName,
 						uniquename  = respUniqueName,
 					displayname = displayName,
 					description = command.Description ?? string.Empty,

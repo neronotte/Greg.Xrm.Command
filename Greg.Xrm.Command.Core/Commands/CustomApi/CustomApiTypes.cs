@@ -25,7 +25,8 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 			var typePart = raw[(colonIdx + 1)..];
 
 			bool isOptional = namePart.EndsWith('?');
-			var uniqueName = isOptional ? namePart[..^1] : namePart;
+			var rawName  = isOptional ? namePart[..^1] : namePart;
+			var uniqueName = CustomApiDisplayNameHelper.CleanIdentifier(rawName);
 
 			if (!Enum.TryParse<CustomApiParamType>(typePart, true, out var type))
 			{ error = $"unknown type '{typePart}'"; return false; }
@@ -82,5 +83,29 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 			var namePart = string.Concat(displayName.Split(' ', StringSplitOptions.RemoveEmptyEntries));
 			return $"{publisherPrefix}_{namePart}";
 		}
+
+		/// <summary>
+		/// Strips all characters that are not letters or digits.
+		/// Spaces and special characters are removed so the result is a valid identifier.
+		/// Example: "Data Di Nascita" -> "DataDiNascita"
+		/// </summary>
+		public static string CleanIdentifier(string raw)
+			=> string.Concat(raw.Where(char.IsLetterOrDigit));
+
+		/// <summary>
+		/// Builds the value for the <c>name</c> attribute of a request parameter record:
+		/// <c>{cleanApiDisplayName}-In-{cleanParamName}</c>.
+		/// Example: "Pacx Sum", "Addend1" -> "PacxSum-In-Addend1"
+		/// </summary>
+		public static string BuildParamName(string apiDisplayName, string cleanParamName)
+			=> $"{CleanIdentifier(apiDisplayName)}-In-{cleanParamName}";
+
+		/// <summary>
+		/// Builds the value for the <c>name</c> attribute of a response property record:
+		/// <c>{cleanApiDisplayName}-Out-{cleanPropName}</c>.
+		/// Example: "Pacx Sum", "Result" -> "PacxSum-Out-Result"
+		/// </summary>
+		public static string BuildResponseName(string apiDisplayName, string cleanPropName)
+			=> $"{CleanIdentifier(apiDisplayName)}-Out-{cleanPropName}";
 	}
 }

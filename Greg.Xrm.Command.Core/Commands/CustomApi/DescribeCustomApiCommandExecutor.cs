@@ -88,12 +88,10 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 
 				// ── Signature line ────────────────────────────────────────────────────
 				output.WriteLine();
-				var inPrefix  = uniqueName + "-in-";
-				var outPrefix = uniqueName + "-out-";
 
 				var paramSigs = paramResult.Entities.Select(p =>
 				{
-					var pName = ParamName(p, inPrefix);
+					var pName = ParamName(p);
 					var pType = TypeLabel(p.GetAttributeValue<OptionSetValue>("type"));
 					var pOpt  = p.GetAttributeValue<bool>("isoptional");
 					return pOpt ? $"[{pName}?: {pType}]" : $"{pName}: {pType}";
@@ -101,7 +99,7 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 
 				var respSigs = respResult.Entities.Select(r =>
 				{
-					var rName = ParamName(r, outPrefix);
+					var rName = ParamName(r);
 					var rType = TypeLabel(r.GetAttributeValue<OptionSetValue>("type"));
 					return $"{rName}: {rType}";
 				});
@@ -122,7 +120,7 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 						paramResult.Entities,
 						() => ["Name", "Type", "Required", "Description"],
 						row => [
-							ParamName(row, inPrefix),
+							ParamName(row),
 							TypeLabel(row.GetAttributeValue<OptionSetValue>("type")),
 							row.GetAttributeValue<bool>("isoptional") ? "No" : "Yes",
 							row.GetAttributeValue<string>("description") ?? ""
@@ -145,7 +143,7 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 						respResult.Entities,
 						() => ["Name", "Type", "Description"],
 						row => [
-							ParamName(row, outPrefix),
+							ParamName(row),
 							TypeLabel(row.GetAttributeValue<OptionSetValue>("type")),
 							row.GetAttributeValue<string>("description") ?? ""
 						],
@@ -166,7 +164,7 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 				// ── Generate input file ───────────────────────────────────────────────
 				if (!string.IsNullOrWhiteSpace(command.GenerateInputFile))
 				{
-					var inputJson = BuildSampleInput(paramResult.Entities, inPrefix);
+					var inputJson = BuildSampleInput(paramResult.Entities);
 					await File.WriteAllTextAsync(command.GenerateInputFile, JsonSerializer.Serialize(inputJson, IndentedJson), cancellationToken);
 					output.WriteLine();
 					output.Write("  Sample input written to: ");
@@ -176,7 +174,7 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 				// ── Generate schema file ──────────────────────────────────────────────
 				if (!string.IsNullOrWhiteSpace(command.GenerateSchemaFile))
 				{
-					var schema = BuildJsonSchema(uniqueName, description, paramResult.Entities, inPrefix);
+					var schema = BuildJsonSchema(uniqueName, description, paramResult.Entities);
 					await File.WriteAllTextAsync(command.GenerateSchemaFile, JsonSerializer.Serialize(schema, IndentedJson), cancellationToken);
 					output.WriteLine();
 					output.Write("  JSON Schema written to: ");
@@ -203,12 +201,12 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 		/// Produces a sample JSON object with one representative value per parameter.
 		/// All parameters (required and optional) are included so the user can see every option.
 		/// </summary>
-		private static JsonObject BuildSampleInput(IEnumerable<Entity> parameters, string inPrefix)
+		private static JsonObject BuildSampleInput(IEnumerable<Entity> parameters)
 		{
 			var obj = new JsonObject();
 			foreach (var p in parameters)
 			{
-				var pName    = ParamName(p, inPrefix);
+				var pName    = ParamName(p);
 				var typeCode = p.GetAttributeValue<OptionSetValue>("type")?.Value ?? -1;
 				obj[pName] = SampleValue(typeCode);
 			}
@@ -218,7 +216,7 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 		/// <summary>
 		/// Produces a JSON Schema (draft 2020-12) for the input parameters of the Custom API.
 		/// </summary>
-		private static JsonObject BuildJsonSchema(string apiUniqueName, string? apiDescription, IEnumerable<Entity> parameters, string inPrefix)
+		private static JsonObject BuildJsonSchema(string apiUniqueName, string? apiDescription, IEnumerable<Entity> parameters)
 		{
 			var schema = new JsonObject
 			{
@@ -233,7 +231,7 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 
 			foreach (var p in parameters)
 			{
-					var pName      = ParamName(p, inPrefix);
+					var pName      = ParamName(p);
 				var typeCode   = p.GetAttributeValue<OptionSetValue>("type")?.Value ?? -1;
 				var isOptional = p.GetAttributeValue<bool>("isoptional");
 				var desc       = p.GetAttributeValue<string>("description");
@@ -311,15 +309,14 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 		// ── Label helpers ─────────────────────────────────────────────────────────
 
 			/// <summary>
-			/// Returns the user-facing parameter name: the stored 'name' attribute when available,
-			/// otherwise falls back to stripping the API prefix from 'uniquename'.
+			/// Returns the user-facing parameter name: the uniquename attribute,
+			/// which is the clean identifier the user specified (e.g. "Addend1").
+			/// Falls back to the name attribute if uniquename is absent.
 			/// </summary>
-			private static string ParamName(Entity e, string prefix)
-			{
-				var name = e.GetAttributeValue<string>("name");
-				if (!string.IsNullOrWhiteSpace(name)) return name;
-				return ShortName(e.GetAttributeValue<string>("uniquename") ?? "", prefix);
-			}
+			private static string ParamName(Entity e)
+				=> e.GetAttributeValue<string>("uniquename")
+				   ?? e.GetAttributeValue<string>("name")
+				   ?? "";
 
 			private static string ShortName(string uniqueName, string prefix)
 			=> uniqueName.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)

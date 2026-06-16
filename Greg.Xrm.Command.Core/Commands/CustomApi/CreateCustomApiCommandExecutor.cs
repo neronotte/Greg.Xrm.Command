@@ -105,73 +105,71 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 				var createdResponses = new List<string>();
 
 				// ── Create parameters ─────────────────────────────────────────────────
-				foreach (var paramSpec in CreateCustomApiCommand.SplitSpecs(command.Params))
-				{
-					CustomApiParamSpec.TryParse(paramSpec, out var spec, out _);
-					var paramUniqueName  = $"{uniqueName}-in-{spec!.UniqueName}";
-					var paramDisplayName = CustomApiDisplayNameHelper.InferDisplayName(spec.UniqueName);
-
-					output.Write("  Adding param '");
-					output.Write(paramUniqueName, ConsoleColor.Yellow);
-					output.Write("'...");
-
-					var existingParam = await QueryParamByNameAndApiAsync(crm, paramUniqueName, api.Id);
-					if (existingParam != null)
+					foreach (var paramSpec in CreateCustomApiCommand.SplitSpecs(command.Params))
 					{
-						output.WriteLine("Already exists (skipped)", ConsoleColor.Yellow);
-						continue;
+						CustomApiParamSpec.TryParse(paramSpec, out var spec, out _);
+						var paramUniqueName = spec!.UniqueName;  // already cleaned by TryParse
+
+						output.Write("  Adding param '");
+						output.Write(paramUniqueName, ConsoleColor.Yellow);
+						output.Write("'...");
+
+						var existingParam = await QueryParamByNameAndApiAsync(crm, paramUniqueName, api.Id);
+						if (existingParam != null)
+						{
+							output.WriteLine("Already exists (skipped)", ConsoleColor.Yellow);
+							continue;
+						}
+
+						var param = new CustomApiRequestParameter
+						{
+							name         = CustomApiDisplayNameHelper.BuildParamName(displayName, paramUniqueName),
+							uniquename   = paramUniqueName,
+							displayname  = CustomApiDisplayNameHelper.BuildParamName(displayName, paramUniqueName),
+								description  = string.Empty,
+								type         = new OptionSetValue(spec.TypeCode),
+								isoptional   = spec.IsOptional,
+								customapiid  = new EntityReference("customapi", api.Id)
+							};
+						await param.SaveOrUpdateAsync(crm);
+						output.WriteLine("Done", ConsoleColor.Green);
+
+						await AddToSolutionAsync(crm, output, solutionName, ComponentType.CustomAPIRequestParameter, param.Id, cancellationToken);
+						createdParams.Add($"{paramUniqueName} ({spec.Type}{(spec.IsOptional ? ", optional" : "")})");
 					}
-
-					var param = new CustomApiRequestParameter
-					{
-						name         = spec.UniqueName,
-						uniquename   = paramUniqueName,
-						displayname  = paramDisplayName,
-							description  = string.Empty,
-							type         = new OptionSetValue(spec.TypeCode),
-							isoptional   = spec.IsOptional,
-							customapiid  = new EntityReference("customapi", api.Id)
-						};
-					await param.SaveOrUpdateAsync(crm);
-					output.WriteLine("Done", ConsoleColor.Green);
-
-					await AddToSolutionAsync(crm, output, solutionName, ComponentType.CustomAPIRequestParameter, param.Id, cancellationToken);
-					createdParams.Add($"{paramUniqueName} ({spec.Type}{(spec.IsOptional ? ", optional" : "")})");
-				}
 
 				// ── Create response properties ────────────────────────────────────────
-				foreach (var responseSpec in CreateCustomApiCommand.SplitSpecs(command.Responses))
-				{
-					CustomApiParamSpec.TryParse(responseSpec, out var spec, out _);
-					var respUniqueName  = $"{uniqueName}-out-{spec!.UniqueName}";
-					var respDisplayName = CustomApiDisplayNameHelper.InferDisplayName(spec.UniqueName);
-
-					output.Write("  Adding response '");
-					output.Write(respUniqueName, ConsoleColor.Yellow);
-					output.Write("'...");
-
-					var existingResp = await QueryResponseByNameAndApiAsync(crm, respUniqueName, api.Id);
-					if (existingResp != null)
+					foreach (var responseSpec in CreateCustomApiCommand.SplitSpecs(command.Responses))
 					{
-						output.WriteLine("Already exists (skipped)", ConsoleColor.Yellow);
-						continue;
+						CustomApiParamSpec.TryParse(responseSpec, out var spec, out _);
+						var respUniqueName = spec!.UniqueName;  // already cleaned by TryParse
+
+						output.Write("  Adding response '");
+						output.Write(respUniqueName, ConsoleColor.Yellow);
+						output.Write("'...");
+
+						var existingResp = await QueryResponseByNameAndApiAsync(crm, respUniqueName, api.Id);
+						if (existingResp != null)
+						{
+							output.WriteLine("Already exists (skipped)", ConsoleColor.Yellow);
+							continue;
+						}
+
+						var resp = new CustomApiResponseProperty
+						{
+								name        = CustomApiDisplayNameHelper.BuildResponseName(displayName, respUniqueName),
+								uniquename  = respUniqueName,
+							displayname = CustomApiDisplayNameHelper.BuildResponseName(displayName, respUniqueName),
+								description = string.Empty,
+								type        = new OptionSetValue(spec.TypeCode),
+								customapiid = new EntityReference("customapi", api.Id)
+							};
+						await resp.SaveOrUpdateAsync(crm);
+						output.WriteLine("Done", ConsoleColor.Green);
+
+						await AddToSolutionAsync(crm, output, solutionName, ComponentType.CustomAPIResponseProperty, resp.Id, cancellationToken);
+						createdResponses.Add($"{respUniqueName} ({spec.Type})");
 					}
-
-					var resp = new CustomApiResponseProperty
-					{
-							name        = spec.UniqueName,
-							uniquename  = respUniqueName,
-						displayname = respDisplayName,
-							description = string.Empty,
-							type        = new OptionSetValue(spec.TypeCode),
-							customapiid = new EntityReference("customapi", api.Id)
-						};
-					await resp.SaveOrUpdateAsync(crm);
-					output.WriteLine("Done", ConsoleColor.Green);
-
-					await AddToSolutionAsync(crm, output, solutionName, ComponentType.CustomAPIResponseProperty, resp.Id, cancellationToken);
-					createdResponses.Add($"{respUniqueName} ({spec.Type})");
-				}
 
 				output.WriteLine();
 				output.Write("Custom API created: "); output.WriteLine(uniqueName, ConsoleColor.Green);

@@ -18,13 +18,14 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 		private void SetupApiFound()
 		{
 			var api = new Entity("customapi") { Id = ApiId };
-			this.OrganizationServiceMock
-				.Setup(x => x.RetrieveMultipleAsync(It.Is<QueryExpression>(q => q.EntityName == "customapi")))
-				.ReturnsAsync(new EntityCollection(new List<Entity> { api }));
-			this.OrganizationServiceMock
-				.Setup(x => x.RetrieveMultipleAsync(It.Is<QueryExpression>(q => q.EntityName == "customapi"), It.IsAny<CancellationToken>()))
-				.ReturnsAsync(new EntityCollection(new List<Entity> { api }));
-		}
+				api["displayname"] = "Greg Sum";
+				this.OrganizationServiceMock
+					.Setup(x => x.RetrieveMultipleAsync(It.Is<QueryExpression>(q => q.EntityName == "customapi")))
+					.ReturnsAsync(new EntityCollection(new List<Entity> { api }));
+				this.OrganizationServiceMock
+					.Setup(x => x.RetrieveMultipleAsync(It.Is<QueryExpression>(q => q.EntityName == "customapi"), It.IsAny<CancellationToken>()))
+					.ReturnsAsync(new EntityCollection(new List<Entity> { api }));
+			}
 
 		private void SetupNoExistingParam()
 		{
@@ -92,7 +93,7 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 					new AddCustomApiParamCommand { ApiUniqueName = "nn_GregSum", Param = "X:Integer" },
 					CancellationToken.None);
 
-				Assert.AreEqual("X", capturedName);
+				Assert.AreEqual("GregSum-In-X", capturedName);
 			}
 
 		[TestMethod]
