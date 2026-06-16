@@ -117,7 +117,6 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 							output.Write($"  [{(isFunction ? "Function" : "Action")}/{binding}]", ConsoleColor.DarkGray);
 							if (!bound) output.Write("  (unbound)", ConsoleColor.Yellow);
 							output.WriteLine();
-							output.WriteLine();
 							CustomApiSignatureWriter.WriteSignature(output, inputParams, outputParams);
 						if (!string.Equals(uniqueName, displayName, StringComparison.OrdinalIgnoreCase))
 						{

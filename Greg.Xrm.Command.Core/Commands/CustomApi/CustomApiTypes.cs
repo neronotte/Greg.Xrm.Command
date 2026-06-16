@@ -141,6 +141,8 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 				output.WriteLine();
 			}
 
+			if (inputs.Count > 0 && outputs.Count > 0) output.WriteLine();
+
 			foreach (var (name, type) in outputs)
 			{
 				output.Write(indent);
