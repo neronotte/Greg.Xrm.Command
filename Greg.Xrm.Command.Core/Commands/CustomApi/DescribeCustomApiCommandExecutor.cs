@@ -89,13 +89,15 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 				// ── Signature line ────────────────────────────────────────────────────
 				output.WriteLine();
 
-				var paramSigs = paramResult.Entities.Select(p =>
-				{
-					var pName = ParamName(p);
-					var pType = TypeLabel(p.GetAttributeValue<OptionSetValue>("type"));
-					var pOpt  = p.GetAttributeValue<bool>("isoptional");
-					return pOpt ? $"[{pName}?: {pType}]" : $"{pName}: {pType}";
-				});
+				var paramSigs = paramResult.Entities
+						.OrderBy(p => p.GetAttributeValue<bool>("isoptional"))
+						.Select(p =>
+						{
+							var pName = ParamName(p);
+							var pType = TypeLabel(p.GetAttributeValue<OptionSetValue>("type"));
+							var pOpt  = p.GetAttributeValue<bool>("isoptional");
+							return pOpt ? $"[{pName}: {pType}]" : $"{pName}: {pType}";
+						});
 
 				var respSigs = respResult.Entities.Select(r =>
 				{

@@ -210,8 +210,8 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 				CancellationToken.None);
 
 			var text = Output.ToString();
-			// Optional params appear with [] and ? in the signature
-			StringAssert.Contains(text, "[Note?:");
+			// Optional params appear with [] notation (no ?) in the signature
+			StringAssert.Contains(text, "[Note:");
 			// Required params appear without brackets
 			StringAssert.Contains(text, "X: Integer");
 			// Arrow separator for response

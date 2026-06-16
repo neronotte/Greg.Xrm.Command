@@ -104,13 +104,15 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 						var apiParams = paramsByApi.GetValueOrDefault(api.Id) ?? [];
 						var apiResps  = respsByApi.GetValueOrDefault(api.Id) ?? [];
 
-						var paramSigs = apiParams.Select(p =>
-						{
-							var name = p.GetAttributeValue<string>("uniquename") ?? "";
-							var type = TypeLabel(p.GetAttributeValue<OptionSetValue>("type"));
-							var opt  = p.GetAttributeValue<bool>("isoptional");
-							return opt ? $"[{name}?: {type}]" : $"{name}: {type}";
-						});
+						var paramSigs = apiParams
+								.OrderBy(p => p.GetAttributeValue<bool>("isoptional"))
+								.Select(p =>
+								{
+									var name = p.GetAttributeValue<string>("uniquename") ?? "";
+									var type = TypeLabel(p.GetAttributeValue<OptionSetValue>("type"));
+									var opt  = p.GetAttributeValue<bool>("isoptional");
+									return opt ? $"[{name}: {type}]" : $"{name}: {type}";
+								});
 						var respSigs = apiResps.Select(r =>
 						{
 							var name = r.GetAttributeValue<string>("uniquename") ?? "";
