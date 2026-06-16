@@ -209,14 +209,17 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 				new DescribeCustomApiCommand { UniqueName = "nn_GregSum" },
 				CancellationToken.None);
 
-			var text = Output.ToString();
-			// Optional params appear with [] notation (no ?) in the signature
-			StringAssert.Contains(text, "[Note:");
-			// Required params appear without brackets
-			StringAssert.Contains(text, "X: Integer");
+			var plain = StripColors(Output.ToString());
+			// Required first, no brackets
+			StringAssert.Contains(plain, "X: Integer");
+			// Optional with [] notation
+			StringAssert.Contains(plain, "[Note: String]");
 			// Arrow separator for response
-			StringAssert.Contains(text, "->");
+			StringAssert.Contains(plain, "->");
 		}
+
+		private static string StripColors(string text)
+			=> System.Text.RegularExpressions.Regex.Replace(text, @"</?[A-Za-z]+>", "");
 
 		[TestMethod]
 		public async Task ExecuteAsync_ShouldWriteInputFile_WhenOptionProvided()

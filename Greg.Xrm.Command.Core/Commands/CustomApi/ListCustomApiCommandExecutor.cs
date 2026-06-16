@@ -104,31 +104,23 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 						var apiParams = paramsByApi.GetValueOrDefault(api.Id) ?? [];
 						var apiResps  = respsByApi.GetValueOrDefault(api.Id) ?? [];
 
-						var paramSigs = apiParams
+						var inputParams = apiParams
 								.OrderBy(p => p.GetAttributeValue<bool>("isoptional"))
-								.Select(p =>
-								{
-									var name = p.GetAttributeValue<string>("uniquename") ?? "";
-									var type = TypeLabel(p.GetAttributeValue<OptionSetValue>("type"));
-									var opt  = p.GetAttributeValue<bool>("isoptional");
-									return opt ? $"[{name}: {type}]" : $"{name}: {type}";
-								});
-						var respSigs = apiResps.Select(r =>
-						{
-							var name = r.GetAttributeValue<string>("uniquename") ?? "";
-							var type = TypeLabel(r.GetAttributeValue<OptionSetValue>("type"));
-							return $"{name}: {type}";
-						});
+								.Select(p => (
+									name: p.GetAttributeValue<string>("uniquename") ?? "",
+									type: TypeLabel(p.GetAttributeValue<OptionSetValue>("type")),
+									opt:  p.GetAttributeValue<bool>("isoptional")));
+							var outputParams = apiResps.Select(r => (
+								name: r.GetAttributeValue<string>("uniquename") ?? "",
+								type: TypeLabel(r.GetAttributeValue<OptionSetValue>("type"))));
 
-						var arrow     = apiResps.Count > 0 ? $" -> {string.Join(", ", respSigs)}" : "";
-						var signature = $"{uniqueName}({string.Join(", ", paramSigs)}){arrow}";
-
-						output.Write(uniqueName, ConsoleColor.White);
-						output.Write($"  [{(isFunction ? "Function" : "Action")}/{binding}]", ConsoleColor.DarkGray);
-						if (!bound) output.Write("  (unbound)", ConsoleColor.Yellow);
-						output.WriteLine();
-						output.Write("  ");
-						output.WriteLine(signature, ConsoleColor.Cyan);
+							output.Write(uniqueName, ConsoleColor.White);
+							output.Write($"  [{(isFunction ? "Function" : "Action")}/{binding}]", ConsoleColor.DarkGray);
+							if (!bound) output.Write("  (unbound)", ConsoleColor.Yellow);
+							output.WriteLine();
+							output.Write("  ");
+							CustomApiSignatureWriter.WriteSignature(output, uniqueName, inputParams, outputParams);
+							output.WriteLine();
 						if (!string.Equals(uniqueName, displayName, StringComparison.OrdinalIgnoreCase))
 						{
 							output.Write("  Display Name: ");

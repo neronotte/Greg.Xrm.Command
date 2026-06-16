@@ -1,4 +1,5 @@
 using Greg.Xrm.Command;
+using Greg.Xrm.Command.Services.Output;
 
 namespace Greg.Xrm.Command.Commands.CustomApi
 {
@@ -107,5 +108,51 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 		/// </summary>
 		public static string BuildResponseName(string apiDisplayName, string cleanPropName)
 			=> $"{CleanIdentifier(apiDisplayName)}-Out-{cleanPropName}";
+	}
+
+	/// <summary>
+	/// Writes a colorized Custom API signature to <see cref="IOutput"/>.
+	/// API name = White, punctuation = DarkGray, arg names = Cyan, arg types = Green.
+	/// </summary>
+	public static class CustomApiSignatureWriter
+	{
+		public static void WriteSignature(
+			IOutput output,
+			string apiName,
+			IEnumerable<(string name, string type, bool optional)> inputParams,
+			IEnumerable<(string name, string type)> outputParams)
+		{
+			output.Write(apiName, ConsoleColor.White);
+			output.Write("(", ConsoleColor.DarkGray);
+
+			bool first = true;
+			foreach (var (name, type, optional) in inputParams)
+			{
+				if (!first) output.Write(", ", ConsoleColor.DarkGray);
+				first = false;
+				if (optional) output.Write("[", ConsoleColor.DarkGray);
+				output.Write(name, ConsoleColor.Cyan);
+				output.Write(": ", ConsoleColor.DarkGray);
+				output.Write(type, ConsoleColor.Green);
+				if (optional) output.Write("]", ConsoleColor.DarkGray);
+			}
+
+			output.Write(")", ConsoleColor.DarkGray);
+
+			var outputs = outputParams.ToList();
+			if (outputs.Count > 0)
+			{
+				output.Write(" -> ", ConsoleColor.DarkGray);
+				bool firstOut = true;
+				foreach (var (name, type) in outputs)
+				{
+					if (!firstOut) output.Write(", ", ConsoleColor.DarkGray);
+					firstOut = false;
+					output.Write(name, ConsoleColor.Cyan);
+					output.Write(": ", ConsoleColor.DarkGray);
+					output.Write(type, ConsoleColor.Green);
+				}
+			}
+		}
 	}
 }

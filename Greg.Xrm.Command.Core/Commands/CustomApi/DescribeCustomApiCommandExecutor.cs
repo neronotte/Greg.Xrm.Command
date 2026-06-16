@@ -87,31 +87,23 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 				}
 
 				// ── Signature line ────────────────────────────────────────────────────
-				output.WriteLine();
+					output.WriteLine();
 
-				var paramSigs = paramResult.Entities
-						.OrderBy(p => p.GetAttributeValue<bool>("isoptional"))
-						.Select(p =>
-						{
-							var pName = ParamName(p);
-							var pType = TypeLabel(p.GetAttributeValue<OptionSetValue>("type"));
-							var pOpt  = p.GetAttributeValue<bool>("isoptional");
-							return pOpt ? $"[{pName}: {pType}]" : $"{pName}: {pType}";
-						});
+					var inputParams = paramResult.Entities
+							.OrderBy(p => p.GetAttributeValue<bool>("isoptional"))
+							.Select(p => (
+								name: ParamName(p),
+								type: TypeLabel(p.GetAttributeValue<OptionSetValue>("type")),
+								opt:  p.GetAttributeValue<bool>("isoptional")));
 
-				var respSigs = respResult.Entities.Select(r =>
-				{
-					var rName = ParamName(r);
-					var rType = TypeLabel(r.GetAttributeValue<OptionSetValue>("type"));
-					return $"{rName}: {rType}";
-				});
+					var outputParams = respResult.Entities
+							.Select(r => (
+								name: ParamName(r),
+								type: TypeLabel(r.GetAttributeValue<OptionSetValue>("type"))));
 
-				var sigParams = string.Join(", ", paramSigs);
-				var sigResp   = string.Join(", ", respSigs);
-				var arrow     = respResult.Entities.Count > 0 ? $" -> {sigResp}" : "";
-
-				output.Write("  Signature:    ", ConsoleColor.DarkGray);
-				output.WriteLine($"{uniqueName}({sigParams}){arrow}", ConsoleColor.White);
+					output.Write("  Signature:    ", ConsoleColor.DarkGray);
+					CustomApiSignatureWriter.WriteSignature(output, uniqueName, inputParams, outputParams);
+					output.WriteLine();
 
 				// ── Request parameters table ──────────────────────────────────────────
 				if (paramResult.Entities.Count > 0)
