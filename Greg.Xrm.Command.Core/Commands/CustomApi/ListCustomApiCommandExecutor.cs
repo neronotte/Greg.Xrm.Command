@@ -22,7 +22,7 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 				output.Write("Retrieving Custom APIs...");
 
 				var q = new QueryExpression("customapi") { NoLock = true };
-				q.ColumnSet.AddColumns("customapiid", "uniquename", "displayname", "isfunction", "bindingtype", "plugintypeid");
+				q.ColumnSet.AddColumns("customapiid", "uniquename", "displayname", "description", "isfunction", "bindingtype", "plugintypeid");
 
 				if (!string.IsNullOrWhiteSpace(command.Publisher))
 					q.Criteria.AddCondition("uniquename", ConditionOperator.BeginsWith, command.Publisher + "_");
@@ -96,7 +96,7 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 					foreach (var api in list)
 					{
 						var uniqueName  = api.GetAttributeValue<string>("uniquename") ?? "";
-						var displayName = api.GetAttributeValue<string>("displayname") ?? "";
+						var description = api.GetAttributeValue<string>("description");
 						var isFunction  = api.GetAttributeValue<bool>("isfunction");
 						var binding     = BindingTypeLabel(api.GetAttributeValue<OptionSetValue>("bindingtype"));
 						var bound       = api.GetAttributeValue<EntityReference>("plugintypeid") != null;
@@ -110,19 +110,20 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 									name: p.GetAttributeValue<string>("uniquename") ?? "",
 									type: TypeLabel(p.GetAttributeValue<OptionSetValue>("type")),
 									opt:  p.GetAttributeValue<bool>("isoptional")));
-							var outputParams = apiResps.Select(r => (
-								name: r.GetAttributeValue<string>("uniquename") ?? "",
-								type: TypeLabel(r.GetAttributeValue<OptionSetValue>("type"))));
-							output.Write(uniqueName, ConsoleColor.White);
-							output.Write($"  [{(isFunction ? "Function" : "Action")}/{binding}]", ConsoleColor.DarkGray);
-							if (!bound) output.Write("  (unbound)", ConsoleColor.Yellow);
-							output.WriteLine();
-							CustomApiSignatureWriter.WriteSignature(output, inputParams, outputParams);
-						if (!string.Equals(uniqueName, displayName, StringComparison.OrdinalIgnoreCase))
+						var outputParams = apiResps.Select(r => (
+							name: r.GetAttributeValue<string>("uniquename") ?? "",
+							type: TypeLabel(r.GetAttributeValue<OptionSetValue>("type"))));
+
+						output.Write(uniqueName, ConsoleColor.White);
+						output.Write($"  [{(isFunction ? "Function" : "Action")}/{binding}]", ConsoleColor.DarkGray);
+						if (!bound) output.Write("  (unbound)", ConsoleColor.Yellow);
+						if (!string.IsNullOrWhiteSpace(description))
 						{
-							output.Write("  Display Name: ");
-							output.WriteLine(displayName, ConsoleColor.DarkGray);
+							output.Write("  ");
+							output.Write(description, ConsoleColor.DarkGray);
 						}
+						output.WriteLine();
+						CustomApiSignatureWriter.WriteSignature(output, inputParams, outputParams);
 						output.WriteLine();
 					}
 				}
