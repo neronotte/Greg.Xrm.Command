@@ -50,7 +50,8 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 					output.Write($"Adding response property '{respUniqueName}'...");
 					var resp = new CustomApiResponseProperty
 					{
-						uniquename = respUniqueName,
+						name        = respUniqueName,
+						uniquename  = respUniqueName,
 					displayname = displayName,
 					description = string.IsNullOrWhiteSpace(command.Description) ? null : command.Description,
 					type = new OptionSetValue(spec.TypeCode),

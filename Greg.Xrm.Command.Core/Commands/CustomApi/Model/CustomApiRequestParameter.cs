@@ -9,13 +9,19 @@ namespace Greg.Xrm.Command.Commands.CustomApi.Model
 
 		public CustomApiRequestParameter() : base("customapirequestparameter") { }
 
-		public string? uniquename
+		public string? name
 		{
 			get => Get<string>();
 			set => SetValue(value);
 		}
 
-		public string? displayname
+			public string? uniquename
+			{
+				get => Get<string>();
+				set => SetValue(value);
+			}
+
+			public string? displayname
 		{
 			get => Get<string>();
 			set => SetValue(value);

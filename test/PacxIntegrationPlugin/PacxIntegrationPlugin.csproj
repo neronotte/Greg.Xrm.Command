@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+	<TargetFramework>net462</TargetFramework>
+	<AssemblyName>PacxIntegration</AssemblyName>
+	<RootNamespace>PacxIntegration</RootNamespace>
+	<Nullable>enable</Nullable>
+	<LangVersion>9.0</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+	<PackageReference Include="Microsoft.CrmSdk.CoreAssemblies" Version="9.0.2.52" />
+  </ItemGroup>
+
+</Project>

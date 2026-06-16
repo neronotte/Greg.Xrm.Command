@@ -72,8 +72,28 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 				new AddCustomApiParamCommand { ApiUniqueName = "nn_GregSum", Param = "X?:String" },
 				CancellationToken.None);
 
-			Assert.IsTrue(capturedIsOptional);
-		}
+				Assert.IsTrue(capturedIsOptional);
+			}
+
+			[TestMethod]
+			public async Task ExecuteAsync_ShouldSetName_WhenCreatingParam()
+			{
+				// Regression: Dataverse requires 'name' to be non-null on customapirequestparameter creation.
+				SetupApiFound();
+				SetupNoExistingParam();
+
+				string? capturedName = null;
+				this.OrganizationServiceMock
+					.Setup(x => x.CreateAsync(It.Is<Entity>(e => e.LogicalName == "customapirequestparameter")))
+					.Callback<Entity>(e => capturedName = e.GetAttributeValue<string>("name"))
+					.ReturnsAsync(Guid.NewGuid());
+
+				await executor.ExecuteAsync(
+					new AddCustomApiParamCommand { ApiUniqueName = "nn_GregSum", Param = "X:Integer" },
+					CancellationToken.None);
+
+				Assert.AreEqual("nn_GregSum-in-X", capturedName);
+			}
 
 		[TestMethod]
 		public async Task ExecuteAsync_ShouldFail_WhenApiNotFound()

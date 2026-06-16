@@ -38,12 +38,16 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 		public string ExecutePrivilegeName { get; set; } = string.Empty;
 
 		[Option("param", "p", Order = 9,
-			HelpText = "Comma-separated request parameters as Name:Type (required) or Name?:Type (optional). E.g. nn_X:Integer,nn_Y?:String")]
+			HelpText = "Comma-separated request parameters as Name:Type (required) or Name?:Type (optional). E.g. X:Integer,Y?:String")]
 		public string? Params { get; set; }
 
 		[Option("response", "r", Order = 10,
-			HelpText = "Comma-separated response properties as Name:Type. E.g. nn_Result:Integer")]
+			HelpText = "Comma-separated response properties as Name:Type. E.g. Result:Integer")]
 		public string? Responses { get; set; }
+
+		[Option("solution", "s", Order = 50,
+			HelpText = "Unmanaged solution unique name to add the Custom API components to. Uses the current default solution if omitted.")]
+		public string? SolutionName { get; set; }
 
 		public IEnumerable<ValidationResult> Validate(ValidationContext context)
 		{
@@ -67,6 +71,8 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 			writer.WriteCodeBlock("pacx customapi create -n nn_GregSum", "Powershell");
 			writer.WriteParagraph("Create with request parameters and a response property (comma-separated):");
 			writer.WriteCodeBlock("pacx customapi create -n nn_GregSum -p \"Addend1:Integer, Addend2:Integer\" -r Result:Integer", "Powershell");
+			writer.WriteParagraph("Create and add all components to a specific solution:");
+			writer.WriteCodeBlock("pacx customapi create -n nn_GregSum -p \"Addend1:Integer, Addend2:Integer\" -r Result:Integer -s MySolution", "Powershell");
 		}
 	}
 }

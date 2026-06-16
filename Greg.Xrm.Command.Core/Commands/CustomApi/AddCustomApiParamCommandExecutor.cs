@@ -56,7 +56,8 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 				output.Write($"Adding parameter '{paramUniqueName}'...");
 				var param = new CustomApiRequestParameter
 				{
-					uniquename = paramUniqueName,
+						name        = paramUniqueName,
+						uniquename  = paramUniqueName,
 					displayname = displayName,
 					description = string.IsNullOrWhiteSpace(command.Description) ? null : command.Description,
 					type = new OptionSetValue(spec.TypeCode),
