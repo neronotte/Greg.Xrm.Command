@@ -119,7 +119,7 @@ namespace Greg.Xrm.Command.Commands.WebResources
 
 			writer.WriteParagraph("And you are placed under the `Webresources/home_react_source/src` folder, by typing:");
 
-			writer.WriteCodeBlock("pacx webresources push -f $", "Powershell");
+			writer.WriteCodeBlock("pacx webresources push -p $", "Powershell");
 
 			writer.WriteParagraph("It will: ");
 			writer.WriteList(
@@ -130,12 +130,12 @@ namespace Greg.Xrm.Command.Commands.WebResources
 
 			writer.WriteParagraph("You can also use the $ to target a specific subfolder:");
 
-			writer.WriteCodeBlock("pacx webresources push -f $\\scripts", "Powershell");
+			writer.WriteCodeBlock("pacx webresources push -p $\\scripts", "Powershell");
 
 
 			writer.WriteParagraph("You can also use the * wildcard in the file name to match for files with a specific extension. For example, the following command will deploy all the files with the .js extension from the current folder:");
 
-			writer.WriteCodeBlock("pacx webresources push -f *.js", "Powershell");
+			writer.WriteCodeBlock("pacx webresources push -p *.js", "Powershell");
 
 			writer.WriteParagraph("If you want to deploy the webresources without publishing them, you can use the following command:");
 
