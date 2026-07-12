@@ -255,9 +255,13 @@ themeXml = CreateNewThemeXml(command.WebResourceUniqueName, command.BasePaletteC
 			if ("CustomTheme".Equals(document.Root.Name.LocalName, StringComparison.OrdinalIgnoreCase))
 			{
 				document.Root.SetAttributeValue("logoWebResource", logoWebResourceName);
-				if (!string.IsNullOrWhiteSpace(basePaletteColor))
+if (!string.IsNullOrWhiteSpace(basePaletteColor))
 				{
 					document.Root.SetAttributeValue("basePaletteColor", basePaletteColor.ToHexColor());
+				}
+				else if (string.IsNullOrWhiteSpace(document.Root.Attribute("basePaletteColor")?.Value))
+				{
+					throw new ArgumentException("The --color option is required when the theme has no basePaletteColor.", nameof(basePaletteColor));
 				}
 
 
