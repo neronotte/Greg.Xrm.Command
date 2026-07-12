@@ -85,7 +85,7 @@ namespace Greg.Xrm.Command.Commands.WebResources
 			writer.WriteParagraph("No `CustomThemeDefinition` setting is configured yet. The command creates a new theme webresource, adds it to the specified solution (or the default solution), and saves the setting.");
 			writer.WriteParagraph("**`--color` is mandatory** in this case.");
 			writer.WriteCodeBlockStart("Powershell")
-				.WriteLine("pacx webresources setEnvImage -n new_logo.png --color #0078D4 --solution MySolution")
+				.WriteLine("pacx webresources setEnvImage -n new_logo.png --color '#0078D4' --solution MySolution")
 				.WriteCodeBlockEnd();
 			writer.WriteLine();
 
