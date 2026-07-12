@@ -434,8 +434,8 @@ if (response.ComponentsWithErrors.Count > 0)
 			if (root != null)
 			{
 var relative = Path.GetRelativePath(root.FullName, fullPath).Replace('\\', '/');
-				if (!string.IsNullOrWhiteSpace(relative)
-					&& relative.StartsWith(GetPublisherFolderName(publisherPrefix), StringComparison.OrdinalIgnoreCase))
+if (!string.IsNullOrWhiteSpace(relative)
+					&& relative.StartsWith(prefixSegment, StringComparison.OrdinalIgnoreCase))
 				{
 					return relative;
 				}
