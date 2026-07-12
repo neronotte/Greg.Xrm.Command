@@ -156,21 +156,36 @@ namespace Greg.Xrm.Command.Commands.Settings.Model
 
 			public async Task<SettingDefinition?> GetByUniqueNameAsync(IOrganizationServiceAsync2 crm, string uniqueName)
 			{
-				this.output.Write($"Retrieving setting {uniqueName}...");
+				this.output.Write($"Retrieving setting '{uniqueName}'...");
 
-				var query = new QueryExpression("settingdefinition");
-				query.ColumnSet.AddColumns(DataverseColumnAttribute.GetFromClass<SettingDefinition>());
-				query.Criteria.AddCondition(nameof(uniquename), ConditionOperator.Equal, uniqueName);
-				query.AddOrder(nameof(uniquename), OrderType.Ascending);
-				query.NoLock = true;
-				query.TopCount = 1;
+				try
+				{
+					var query = new QueryExpression("settingdefinition");
+					query.ColumnSet.AddColumns(DataverseColumnAttribute.GetFromClass<SettingDefinition>());
+					query.Criteria.AddCondition(nameof(uniquename), ConditionOperator.Equal, uniqueName);
+					query.AddOrder(nameof(uniquename), OrderType.Ascending);
+					query.NoLock = true;
+					query.TopCount = 1;
 
-				var result = await crm.RetrieveMultipleAsync(query);
+					var result = await crm.RetrieveMultipleAsync(query);
 
-				var settings = result.Entities.Select(e => new SettingDefinition(e)).ToList();
+					var settings = result.Entities.Select(e => new SettingDefinition(e)).FirstOrDefault();
 
-				this.output.WriteLine("Done", ConsoleColor.Green);
-				return settings.FirstOrDefault();
+					if (settings != null)
+					{
+						this.output.WriteLine("Done", ConsoleColor.Green);
+					}
+					else
+					{
+						this.output.WriteLine("FAILED", ConsoleColor.Red);
+					}
+					return settings;
+				}
+				catch
+				{
+					this.output.WriteLine("FAILED", ConsoleColor.Red);
+					throw;
+				}
 			}
 		}
 	}
