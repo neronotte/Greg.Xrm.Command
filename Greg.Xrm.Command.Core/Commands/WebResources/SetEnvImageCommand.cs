@@ -139,7 +139,7 @@ namespace Greg.Xrm.Command.Commands.WebResources
 			writer.WriteLine();
 			writer.WriteCodeBlockStart("Powershell")
 				.WriteLine("# First-time setup at environment level with a blue theme")
-				.WriteLine("pacx webresources setEnvImage -n new_logo.png --color #0078D4 --solution MySolution")
+				.WriteLine("pacx webresources setEnvImage -n new_logo.png --color \"#0078D4\" --solution MySolution")
 				.WriteLine()
 				.WriteLine("# Update existing theme with a new logo (no color change)")
 				.WriteLine("pacx webresources setEnvImage -n new_logo_v2.png")
