@@ -282,10 +282,10 @@ namespace Greg.Xrm.Command.Commands.WebResources
 
 			var query = new QueryExpression("appmodule");
 			query.ColumnSet.AddColumns("appmoduleid", "uniquename", "name");
-			query.TopCount = 1;
 			if (!string.IsNullOrWhiteSpace(command.AppId))
 			{
 				query.Criteria.AddCondition("appmoduleid", ConditionOperator.Equal, Guid.Parse(command.AppId));
+				query.TopCount = 1;
 			}
 			else
 			{
@@ -297,6 +297,14 @@ namespace Greg.Xrm.Command.Commands.WebResources
 			}
 
 			var result = await crm.RetrieveMultipleAsync(query);
+			if (result.TotalRecordCount > 1)
+			{
+				output.WriteLine("FAILED", ConsoleColor.Red);
+				output.WriteLine("More than one app found with the specified name. Please specify the app by its unique ID using --appId.", ConsoleColor.Red);
+				return null;
+			}
+
+
 			var app = result.Entities.FirstOrDefault();
 			if (app == null)
 			{
@@ -356,8 +364,17 @@ namespace Greg.Xrm.Command.Commands.WebResources
 		private async Task AddThemeToSolutionAsync(IOrganizationServiceAsync2 crm, Greg.Xrm.Command.Model.Solution solution, WebResource webResource)
 		{
 			output.Write("Adding theme webresource to solution...");
-			await solution.UpsertSolutionComponentsAsync(crm, [webResource], ComponentType.WebResource);
-			output.WriteLine("Done", ConsoleColor.Green);
+			var response = await solution.UpsertSolutionComponentsAsync(crm, [webResource], ComponentType.WebResource);
+
+			if (response.ComponentsWithErrors.Count > 0)
+			{
+				output.WriteLine("Failed to add theme webresource to solution: " + response.ComponentsWithErrors.First().Fault.Message, ConsoleColor.Yellow);
+				output.WriteLine("The operation will continue regardless", ConsoleColor.Yellow);
+			}
+			else
+			{
+				output.WriteLine("Done", ConsoleColor.Green);
+			}
 		}
 
 		private async Task SaveSettingValueAsync(IOrganizationServiceAsync2 crm, string solutionName, string? appUniqueName, string themeWebResourceName)

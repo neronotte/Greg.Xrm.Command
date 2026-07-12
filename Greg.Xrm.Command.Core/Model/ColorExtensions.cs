@@ -2,7 +2,7 @@ namespace Greg.Xrm.Command.Model
 {
 	public static class ColorExtensions
 	{
-		const string ValidEx = "0123456789ABCDEF";
+		const string ValidEx = "0123456789ABCDEFabcdef";
 
 
 		public static bool IsValidExadecimalColor(this string? color)
