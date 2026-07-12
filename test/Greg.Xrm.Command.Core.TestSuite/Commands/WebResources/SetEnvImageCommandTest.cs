@@ -55,7 +55,7 @@ namespace Greg.Xrm.Command.Commands.WebResources
 
 			var results = command.Validate(new ValidationContext(command)).ToList();
 
-			Assert.AreEqual(1, results.Count);
+			Assert.HasCount(1, results);
 			CollectionAssert.Contains(results[0].MemberNames.ToList(), nameof(SetEnvImageCommand.AppId));
 			CollectionAssert.Contains(results[0].MemberNames.ToList(), nameof(SetEnvImageCommand.AppName));
 		}
@@ -70,8 +70,23 @@ namespace Greg.Xrm.Command.Commands.WebResources
 			};
 
 			var results = command.Validate(new ValidationContext(command)).ToList();
-			Assert.AreEqual(1, results.Count);
+
+			Assert.HasCount(1, results);
 			CollectionAssert.Contains(results[0].MemberNames.ToList(), nameof(SetEnvImageCommand.AppId));
+		}
+
+		[TestMethod]
+		public void ValidateShouldFailWhenAnInvalidColorIsProvided()
+		{
+			var command = new SetEnvImageCommand
+			{
+				WebResourceUniqueName = "new_logo.png",
+				BasePaletteColor = "not-a-color"
+			};
+
+			var results = command.Validate(new ValidationContext(command)).ToList();
+			Assert.HasCount(1, results);
+			CollectionAssert.Contains(results[0].MemberNames.ToList(), nameof(SetEnvImageCommand.BasePaletteColor));
 		}
 	}
 }
