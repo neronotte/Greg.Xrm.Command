@@ -406,8 +406,9 @@ namespace Greg.Xrm.Command.Commands.WebResources
 			var root = FolderTree.RecurseBackFolderContainingFile(".wr.pacx", new DirectoryInfo(Path.GetDirectoryName(fullPath)!));
 			if (root != null)
 			{
-				var relative = Path.GetRelativePath(root.FullName, fullPath).Replace('\\', '/');
-				if (!string.IsNullOrWhiteSpace(relative))
+var relative = Path.GetRelativePath(root.FullName, fullPath).Replace('\\', '/');
+				if (!string.IsNullOrWhiteSpace(relative)
+					&& relative.StartsWith(GetPublisherFolderName(publisherPrefix), StringComparison.OrdinalIgnoreCase))
 				{
 					return relative;
 				}
