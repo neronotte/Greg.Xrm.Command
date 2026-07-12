@@ -134,12 +134,23 @@ namespace Greg.Xrm.Command.Commands.Ribbon
 		public async Task ExecuteAsync_ShouldFail_WhenOutputFolderDoesNotExist()
 		{
 			SetupEntityRibbonResponse(CreateRibbonZip(RibbonXml));
-			var fileName = Path.Combine(Path.GetTempPath(), "PACX-does-not-exist-" + Guid.NewGuid(), "ribbon.xml");
+			var folder = Path.Combine(Path.GetTempPath(), "PACX-does-not-exist-" + Guid.NewGuid());
+			var fileName = Path.Combine(folder, "ribbon.xml");
 			var command = new GetRibbonCommand { EntityName = "account", FileName = fileName };
 
-			var result = await executor.ExecuteAsync(command, CancellationToken.None);
+			try
+			{
+				var result = await executor.ExecuteAsync(command, CancellationToken.None);
 
-			Assert.IsFalse(result.IsSuccess);
+				Assert.IsFalse(result.IsSuccess);
+			}
+			finally
+			{
+				if (Directory.Exists(folder))
+				{
+					Directory.Delete(folder, true);
+				}
+			}
 		}
 
 		// ── error handling ────────────────────────────────────────────────────
