@@ -47,7 +47,9 @@ namespace Greg.Xrm.Command.Services.Plugin
 			bool withPreImage,
 			bool withPostImage,
 			string? preImageName,
-			string? postImageName)
+			string? postImageName,
+			string? preImageAttributes = null,
+			string? postImageAttributes = null)
 		{
 			this.Trace("*** REGISTER ***{0}Plugin: {1},{0}Message: {2},{0}EntityName: {3},{0}Stage: {4},{0}Mode: {5},{0}Deployment: {6},{0}Filtering attributes: {7},{0}Rank: {8},{0}PreImage: {9},{0}PostImage: {10}",
 				Environment.NewLine,
@@ -77,7 +79,7 @@ namespace Greg.Xrm.Command.Services.Plugin
 				if (sdkMessageFilter != null && withPreImage)
 				{
 					this.Trace("Create PreImage...");
-					var image = CreateImage(sdkMessageFilter.primaryobjecttypecode, sdkMessageProcessingStep.ToEntityReference(), ImageType.PreImage, preImageName);
+					var image = CreateImage(sdkMessageFilter.primaryobjecttypecode, sdkMessageProcessingStep.ToEntityReference(), ImageType.PreImage, preImageName, preImageAttributes);
 					stuffToDelete.Add(image.ToEntityReference());
 					this.Trace("Create PreImage...COMPLETED");
 				}
@@ -85,7 +87,7 @@ namespace Greg.Xrm.Command.Services.Plugin
 				if (sdkMessageFilter != null && withPostImage)
 				{
 					this.Trace("Create PostImage...");
-					var image = CreateImage(sdkMessageFilter.primaryobjecttypecode, sdkMessageProcessingStep.ToEntityReference(), ImageType.PostImage, postImageName);
+					var image = CreateImage(sdkMessageFilter.primaryobjecttypecode, sdkMessageProcessingStep.ToEntityReference(), ImageType.PostImage, postImageName, postImageAttributes);
 					stuffToDelete.Add(image.ToEntityReference());
 					this.Trace("Create PostImage...COMPLETED");
 				}
@@ -163,9 +165,13 @@ namespace Greg.Xrm.Command.Services.Plugin
 			return entity;
 		}
 
-		private SdkMessageProcessingStepImage CreateImage(string targetEntityName, EntityReference sdkMessageProcessingStep, ImageType imageType, string? name)
+		private SdkMessageProcessingStepImage CreateImage(string targetEntityName, EntityReference sdkMessageProcessingStep, ImageType imageType, string? name, string? imageAttributes = null)
 		{
 			name ??= targetEntityName + "_" + (imageType == ImageType.PreImage ? "pre" : "post");
+
+			var normalizedAttributes = string.IsNullOrWhiteSpace(imageAttributes)
+				? null
+				: string.Join(",", imageAttributes.Split(',').Select(a => a.Trim()).Where(a => a.Length > 0).OrderBy(a => a));
 
 			var image = new SdkMessageProcessingStepImage
 			{
@@ -173,7 +179,8 @@ namespace Greg.Xrm.Command.Services.Plugin
 				messagepropertyname = "Target",
 				name = name,
 				entityalias = name,
-				imagetype = new OptionSetValue((int)imageType)
+				imagetype = new OptionSetValue((int)imageType),
+				attributes = normalizedAttributes
 			};
 
 			image.SaveOrUpdate(crm);

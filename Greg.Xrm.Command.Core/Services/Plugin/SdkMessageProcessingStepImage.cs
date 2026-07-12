@@ -42,6 +42,12 @@ namespace Greg.Xrm.Command.Services.Plugin
 			set => SetValue(value);
 		}
 
+		public string? attributes
+		{
+			get => Get<string>();
+			set => SetValue(value);
+		}
+
 		// Populated only when loaded via SearchByNameAsync (join to pluginassembly)
 		public Guid assemblyidaliased => GetAliased<Guid?>("imgpa.pluginassemblyid") ?? Guid.Empty;
 
@@ -50,7 +56,7 @@ namespace Greg.Xrm.Command.Services.Plugin
 			public async Task<SdkMessageProcessingStepImage[]> GetByStepIdAsync(IOrganizationServiceAsync2 crm, Guid stepId)
 			{
 				var query = new QueryExpression("sdkmessageprocessingstepimage");
-				query.ColumnSet.AddColumns("sdkmessageprocessingstepid", "messagepropertyname", "name", "entityalias", "imagetype");
+				query.ColumnSet.AddColumns("sdkmessageprocessingstepid", "messagepropertyname", "name", "entityalias", "imagetype", "attributes");
 				query.Criteria.AddCondition("sdkmessageprocessingstepid", ConditionOperator.Equal, stepId);
 				query.NoLock = true;
 				var result = await crm.RetrieveMultipleAsync(query);
@@ -63,7 +69,7 @@ namespace Greg.Xrm.Command.Services.Plugin
 					return [];
 
 				var query = new QueryExpression("sdkmessageprocessingstepimage");
-				query.ColumnSet.AddColumns("sdkmessageprocessingstepid", "messagepropertyname", "name", "entityalias", "imagetype");
+				query.ColumnSet.AddColumns("sdkmessageprocessingstepid", "messagepropertyname", "name", "entityalias", "imagetype", "attributes");
 				query.Criteria.AddCondition("sdkmessageprocessingstepid", ConditionOperator.In, stepIds.Cast<object>().ToArray());
 				query.NoLock = true;
 
@@ -74,7 +80,7 @@ namespace Greg.Xrm.Command.Services.Plugin
 			public async Task<SdkMessageProcessingStepImage[]> SearchByNameAsync(IOrganizationServiceAsync2 crm, string name, ConditionOperator op, CancellationToken cancellationToken)
 			{
 				var query = new QueryExpression("sdkmessageprocessingstepimage");
-				query.ColumnSet.AddColumns("sdkmessageprocessingstepid", "messagepropertyname", "name", "entityalias", "imagetype");
+				query.ColumnSet.AddColumns("sdkmessageprocessingstepid", "messagepropertyname", "name", "entityalias", "imagetype", "attributes");
 				query.Criteria.AddCondition("name", op, name);
 
 				// Join up to pluginassembly so we can navigate back to the assembly level
