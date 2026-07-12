@@ -375,10 +375,11 @@ var document2 = new XDocument(
 			output.Write("Adding theme webresource to solution...");
 			var response = await solution.UpsertSolutionComponentsAsync(crm, [webResource], ComponentType.WebResource);
 
-			if (response.ComponentsWithErrors.Count > 0)
+if (response.ComponentsWithErrors.Count > 0)
 			{
-				output.WriteLine("Failed to add theme webresource to solution: " + response.ComponentsWithErrors.First().Fault.Message, ConsoleColor.Yellow);
-				output.WriteLine("The operation will continue regardless", ConsoleColor.Yellow);
+				var message = "Failed to add theme webresource to solution: " + response.ComponentsWithErrors.First().Fault.Message;
+				output.WriteLine(message, ConsoleColor.Red);
+				throw new CommandException(CommandException.XrmError, message);
 			}
 			else
 			{
