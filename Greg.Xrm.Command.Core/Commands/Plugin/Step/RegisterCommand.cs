@@ -109,7 +109,15 @@ namespace Greg.Xrm.Command.Commands.Plugin.Step
 			if (string.IsNullOrWhiteSpace(attributes))
 				yield break;
 
-			var names = attributes.Split(',').Select(a => a.Trim()).Where(a => a.Length > 0);
+			var names = attributes.Split(',').Select(a => a.Trim()).ToArray();
+			if (names.Any(string.IsNullOrEmpty))
+			{
+				yield return new ValidationResult(
+					"Attribute lists cannot contain empty attribute names.",
+					[propertyName]);
+				yield break;
+			}
+
 			foreach (var name in names)
 			{
 				if (!System.Text.RegularExpressions.Regex.IsMatch(name, @"^[a-z][a-z0-9_]*$"))
