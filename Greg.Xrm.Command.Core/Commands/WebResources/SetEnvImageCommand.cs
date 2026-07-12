@@ -115,7 +115,7 @@ namespace Greg.Xrm.Command.Commands.WebResources
 			writer.WriteLine("#### Scenario 5: App-specific theme (instead of environment-level)");
 			writer.WriteParagraph("Use `--appId` or `--appName` to set the logo for a specific Model-Driven App rather than the entire environment.");
 			writer.WriteCodeBlockStart("Powershell")
-				.WriteLine("pacx webresources setEnvImage -n new_logo.png --appName SalesHub --color #107C10")
+				.WriteLine("pacx webresources setEnvImage -n new_logo.png --appName SalesHub --color \"#107C10\"")
 				.WriteLine("pacx webresources setEnvImage -n new_logo.png --appId 00000000-0000-0000-0000-000000000000")
 				.WriteCodeBlockEnd();
 			writer.WriteLine();
