@@ -148,7 +148,11 @@ namespace Greg.Xrm.Command.Commands.WebResources
 				{
 					var publisherFolderName = GetPublisherFolderName(solution.PublisherCustomizationPrefix);
 					themeWebResourceName = $"{publisherFolderName}/themes/{ThemeFileName}";
-					themeXml = CreateNewThemeXml(command.WebResourceUniqueName, command.BasePaletteColor);
+if (string.IsNullOrWhiteSpace(command.BasePaletteColor))
+{
+	return CommandResult.Fail("The --color option is required when creating a new theme.");
+}
+themeXml = CreateNewThemeXml(command.WebResourceUniqueName, command.BasePaletteColor);
 				}
 
 				themeWebResource = await UpsertThemeWebResourceAsync(crm, themeWebResourceName, themeXml);
