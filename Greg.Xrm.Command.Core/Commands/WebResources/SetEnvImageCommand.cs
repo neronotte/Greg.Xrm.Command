@@ -29,6 +29,8 @@ namespace Greg.Xrm.Command.Commands.WebResources
 		[Option("solution", "s", Order = 5, HelpText = "The solution where to save the theme webresource and setting. If not specified, the default solution is considered.")]
 		public string? SolutionName { get; set; }
 
+
+
 		public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
 		{
 			if (!string.IsNullOrWhiteSpace(AppId) && !string.IsNullOrWhiteSpace(AppName))
