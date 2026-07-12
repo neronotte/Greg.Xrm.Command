@@ -148,7 +148,7 @@ namespace Greg.Xrm.Command.Commands.WebResources
 				.WriteLine("pacx webresources setEnvImage -n new_logo.png --color '#E74C3C'")
 				.WriteLine()
 				.WriteLine("# Set logo for a specific app by name")
-				.WriteLine("pacx webresources setEnvImage -n new_logo.png --appName SalesHub --color #107C10")
+				.WriteLine("pacx webresources setEnvImage -n new_logo.png --appName SalesHub --color '#107C10'")
 				.WriteLine()
 				.WriteLine("# Use a local theme file as base")
 				.WriteLine("pacx webresources setEnvImage -n new_logo.png --localThemeFile .\\themes\\theme.xml --solution MySolution")
