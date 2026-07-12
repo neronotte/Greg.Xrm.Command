@@ -148,7 +148,11 @@ namespace Greg.Xrm.Command.Commands.WebResources
 				{
 					var publisherFolderName = GetPublisherFolderName(solution.PublisherCustomizationPrefix);
 					themeWebResourceName = $"{publisherFolderName}/themes/{ThemeFileName}";
-					themeXml = CreateNewThemeXml(command.WebResourceUniqueName, command.BasePaletteColor);
+if (string.IsNullOrWhiteSpace(command.BasePaletteColor))
+{
+	return CommandResult.Fail("The --color option is required when creating a new theme.");
+}
+themeXml = CreateNewThemeXml(command.WebResourceUniqueName, command.BasePaletteColor);
 				}
 
 				themeWebResource = await UpsertThemeWebResourceAsync(crm, themeWebResourceName, themeXml);
@@ -423,8 +427,9 @@ namespace Greg.Xrm.Command.Commands.WebResources
 			var root = FolderTree.RecurseBackFolderContainingFile(".wr.pacx", new DirectoryInfo(Path.GetDirectoryName(fullPath)!));
 			if (root != null)
 			{
-				var relative = Path.GetRelativePath(root.FullName, fullPath).Replace('\\', '/');
-				if (!string.IsNullOrWhiteSpace(relative))
+var relative = Path.GetRelativePath(root.FullName, fullPath).Replace('\\', '/');
+				if (!string.IsNullOrWhiteSpace(relative)
+					&& relative.StartsWith(GetPublisherFolderName(publisherPrefix), StringComparison.OrdinalIgnoreCase))
 				{
 					return relative;
 				}
