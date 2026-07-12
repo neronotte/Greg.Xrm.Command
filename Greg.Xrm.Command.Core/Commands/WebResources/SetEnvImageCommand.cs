@@ -5,7 +5,7 @@ using Greg.Xrm.Command.Services;
 
 namespace Greg.Xrm.Command.Commands.WebResources
 {
-	[Command("webresources", "setEnvImage", HelpText = "Sets the app/environment logo by updating the modern CustomThemeDefinition setting and theme webresource.")]
+	[Command("webresources", "setEnvImage", HelpText = "Sets the image that will be shown in the top left corner of the title bar. This setting applies for all MDAs of a given environment.")]
 	[Alias("webresources", "setLogo")]
 	[Alias("webresources", "setOrgImage")]
 	[Alias("wr", "setEnvImage")]
@@ -13,7 +13,7 @@ namespace Greg.Xrm.Command.Commands.WebResources
 	[Alias("wr", "setOrgImage")]
 	public class SetEnvImageCommand : ICanProvideUsageExample, IValidatableObject
 	{
-		[Option("name", "n", Order = 1, HelpText = "The unique name of the image webresource to use as logo. Must be a .png, .jpg or .gif image up to 200x48px (best 156x48px).")]
+		[Option("name", "n", Order = 1, HelpText = "The unique name of the web resource to set as the organization image. Must be a .png, .jpg or .gif image up to 200x48px.")]
 		[Required]
 		public string WebResourceUniqueName { get; set; } = string.Empty;
 
