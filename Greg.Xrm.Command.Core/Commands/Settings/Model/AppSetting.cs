@@ -67,6 +67,21 @@ namespace Greg.Xrm.Command.Commands.Settings.Model
 
 				return settings;
 			}
+
+			public async Task<AppSetting?> GetByAppAndDefinitionAsync(IOrganizationServiceAsync2 crm, SettingDefinition settingDefinition, Guid appId)
+			{
+				ArgumentNullException.ThrowIfNull(settingDefinition);
+				if (appId == Guid.Empty) throw new ArgumentException("App Id cannot be empty.", nameof(appId));
+
+				var appQuery = new QueryExpression("appsetting");
+				appQuery.ColumnSet.AddColumn("value");
+				appQuery.Criteria.AddCondition("settingdefinitionid", ConditionOperator.Equal, settingDefinition.Id);
+				appQuery.Criteria.AddCondition("parentappmoduleid", ConditionOperator.Equal, appId);
+				appQuery.TopCount = 1;
+
+				var result = await crm.RetrieveMultipleAsync(appQuery);
+				return result.Entities.Select(x => new AppSetting(x)).FirstOrDefault();
+			}
 		}
 	}
 }

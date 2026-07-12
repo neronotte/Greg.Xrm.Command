@@ -5,7 +5,7 @@ using Microsoft.Xrm.Sdk;
 
 namespace Greg.Xrm.Command
 {
-	public static class CommonExtensions
+	public static partial class CommonExtensions
 	{
 
 		/// <summary>
@@ -29,6 +29,22 @@ namespace Greg.Xrm.Command
 		public static string Join(this IEnumerable<string> parts, string separator)
 		{
 			return string.Join(separator, parts);
+		}
+
+		public static string ToHexColor(this string? color)
+		{
+			if (string.IsNullOrWhiteSpace(color))
+				throw new ArgumentException("Color cannot be null or whitespace.", nameof(color));
+
+			if (color.StartsWith("#"))
+			{
+				color = color.Substring(1);
+			}
+
+			if (!color.IsValidExadecimalColor())
+				throw new ArgumentException($"Color '{color}' is not a valid HTML color.", nameof(color));
+
+			return $"#{color.ToUpper()}";
 		}
 
 
