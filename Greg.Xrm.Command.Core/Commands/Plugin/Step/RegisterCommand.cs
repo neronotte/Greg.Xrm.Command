@@ -106,8 +106,16 @@ namespace Greg.Xrm.Command.Commands.Plugin.Step
 
 		private static IEnumerable<ValidationResult> ValidateAttributeList(string? attributes, string propertyName)
 		{
-			if (string.IsNullOrWhiteSpace(attributes))
+if (attributes is null)
 				yield break;
+
+			if (string.IsNullOrWhiteSpace(attributes))
+			{
+				yield return new ValidationResult(
+					"Attribute lists must contain at least one attribute name.",
+					[propertyName]);
+				yield break;
+			}
 
 			var names = attributes.Split(',').Select(a => a.Trim()).ToArray();
 			if (names.Any(string.IsNullOrEmpty))
