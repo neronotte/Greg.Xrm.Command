@@ -312,7 +312,7 @@ var document2 = new XDocument(
 			}
 
 			var result = await crm.RetrieveMultipleAsync(query);
-			if (result.TotalRecordCount > 1)
+if (result.Entities.Count > 1)
 			{
 				output.WriteLine("FAILED", ConsoleColor.Red);
 				output.WriteLine("More than one app found with the specified name. Please specify the app by its unique ID using --appId.", ConsoleColor.Red);
