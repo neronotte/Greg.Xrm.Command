@@ -36,11 +36,24 @@ namespace Greg.Xrm.Command.Commands.Plugin.Step
 		[Option("preImageName", "preimn", Order = 11, HelpText = "Name of the PreImage. If not specified, will be set automatically as <table name>_pre")]
 		public string? PreImageName { get; set; }
 
-		[Option("postImage", "postim", Order = 12, HelpText = "Indicates whether a PostImage must be registered on the step.", DefaultValue = false)]
+		[Option("preImageAttributes", "preimat", Order = 12, HelpText = "Comma-separated list of attribute logical names to include in the PreImage. When specified, --preImage is assumed true.")]
+		public string? PreImageAttributes { get; set; }
+
+		[Option("postImage", "postim", Order = 13, HelpText = "Indicates whether a PostImage must be registered on the step.", DefaultValue = false)]
 		public bool PostImage { get; set; } = false;
 
-		[Option("postImageName", "postimn", Order = 13, HelpText = "Name of the PreImage. If not specified, will be set automatically as <table name>_pre")]
+		[Option("postImageName", "postimn", Order = 14, HelpText = "Name of the PostImage. If not specified, will be set automatically as <table name>_post")]
 		public string? PostImageName { get; set; }
+
+		[Option("postImageAttributes", "postimat", Order = 15, HelpText = "Comma-separated list of attribute logical names to include in the PostImage. When specified, --postImage is assumed true.")]
+		public string? PostImageAttributes { get; set; }
+
+
+		/// <summary>Gets a value indicating whether a PreImage should be registered (either explicit flag or attributes provided).</summary>
+		public bool EffectivePreImage => PreImage || !string.IsNullOrWhiteSpace(PreImageAttributes);
+
+		/// <summary>Gets a value indicating whether a PostImage should be registered (either explicit flag or attributes provided).</summary>
+		public bool EffectivePostImage => PostImage || !string.IsNullOrWhiteSpace(PostImageAttributes);
 
 
 
@@ -74,17 +87,36 @@ namespace Greg.Xrm.Command.Commands.Plugin.Step
 
 		public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
 		{
-			if (PreImage && string.IsNullOrWhiteSpace(PrimaryEntityName))
+			if (EffectivePreImage && string.IsNullOrWhiteSpace(PrimaryEntityName))
 				yield return new ValidationResult("PreImage cannot be registered for global messages. Please specify a PrimaryEntityName.", [nameof(PreImage), nameof(PrimaryEntityName)]);
-			if (PostImage && string.IsNullOrWhiteSpace(PrimaryEntityName))
+			if (EffectivePostImage && string.IsNullOrWhiteSpace(PrimaryEntityName))
 				yield return new ValidationResult("PostImage cannot be registered for global messages. Please specify a PrimaryEntityName.", [nameof(PostImage), nameof(PrimaryEntityName)]);
 
-
-			if (!string.IsNullOrWhiteSpace(PreImageName) && !PreImage)
+			if (!string.IsNullOrWhiteSpace(PreImageName) && !EffectivePreImage)
 				yield return new ValidationResult("PreImageName is specified but PreImage is not set to true.", [nameof(PreImageName), nameof(PreImage)]);
-			if (!string.IsNullOrWhiteSpace(PostImageName) && !PostImage)
+			if (!string.IsNullOrWhiteSpace(PostImageName) && !EffectivePostImage)
 				yield return new ValidationResult("PostImageName is specified but PostImage is not set to true.", [nameof(PostImageName), nameof(PostImage)]);
 
+			foreach (var error in ValidateAttributeList(PreImageAttributes, nameof(PreImageAttributes)))
+				yield return error;
+			foreach (var error in ValidateAttributeList(PostImageAttributes, nameof(PostImageAttributes)))
+				yield return error;
+		}
+
+
+		private static IEnumerable<ValidationResult> ValidateAttributeList(string? attributes, string propertyName)
+		{
+			if (string.IsNullOrWhiteSpace(attributes))
+				yield break;
+
+			var names = attributes.Split(',').Select(a => a.Trim()).Where(a => a.Length > 0);
+			foreach (var name in names)
+			{
+				if (!System.Text.RegularExpressions.Regex.IsMatch(name, @"^[a-z][a-z0-9_]*$"))
+					yield return new ValidationResult(
+						$"'{name}' is not a valid attribute logical name. Attribute names must be lowercase, start with a letter, and contain only letters, digits, and underscores.",
+						[propertyName]);
+			}
 		}
 
 
@@ -174,6 +206,16 @@ pacx plugin step register \
   --postImageName ""account_after""", "powershell");
 			writer.WriteLine();
 
+			writer.WriteParagraph("**Registration with image attribute filtering** (reduce image payload):");
+			writer.WriteCodeBlock(@"# Register with Pre and Post images filtered to specific attributes
+pacx plugin step register \
+  --class Account_OnUpdate_TrackChanges \
+  --message Update \
+  --table account \
+  --preImageAttributes ""name,accountnumber,telephone1"" \
+  --postImageAttributes ""name,accountnumber""", "powershell");
+			writer.WriteLine();
+
 			writer.WriteParagraph("**Global message registration** (no table specified):");
 			writer.WriteCodeBlock(@"# Register for a global message like Recalculate
 pacx plugin step register --class GlobalRecalculate_Handler --message Recalculate", "powershell");
@@ -186,7 +228,9 @@ pacx plugin step register --class GlobalRecalculate_Handler --message Recalculat
 				"PreImage and PostImage can only be registered for entity-specific messages (not global messages)",
 				"Image names are optional - if not provided, they default to `<tablename>_pre` and `<tablename>_post`",
 				"The system will automatically add the registered step to the specified solution",
-				"Filtering attributes help optimize performance by only triggering the plugin when specific fields change");
+				"Filtering attributes help optimize performance by only triggering the plugin when specific fields change",
+				"Use `--preImageAttributes` / `--postImageAttributes` with a comma-separated list of attribute logical names to reduce image payload size; specifying attributes implies the image is enabled",
+				"Attribute logical names must be lowercase, start with a letter, and contain only letters, digits, and underscores");
 		}
 	}
 

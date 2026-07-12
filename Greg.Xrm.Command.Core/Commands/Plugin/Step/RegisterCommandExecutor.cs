@@ -154,10 +154,12 @@ namespace Greg.Xrm.Command.Commands.Plugin.Step
 					command.Description,
 					command.UnsecureConfiguration,
 					command.SecureConfiguration,
-					command.PreImage,
-					command.PostImage,
+					command.EffectivePreImage,
+					command.EffectivePostImage,
 					command.PreImageName,
-					command.PostImageName);
+					command.PostImageName,
+					command.PreImageAttributes,
+					command.PostImageAttributes);
 				output.WriteLine("Done", ConsoleColor.Green);
 			}
 			catch (Exception ex)

@@ -42,6 +42,12 @@ namespace Greg.Xrm.Command.Services.Plugin
 			set => SetValue(value);
 		}
 
+		public string? attributes
+		{
+			get => Get<string>();
+			set => SetValue(value);
+		}
+
 		// Populated only when loaded via SearchByNameAsync (join to pluginassembly)
 		public Guid assemblyidaliased => GetAliased<Guid?>("imgpa.pluginassemblyid") ?? Guid.Empty;
 
