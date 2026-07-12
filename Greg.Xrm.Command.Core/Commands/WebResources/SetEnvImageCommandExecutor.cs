@@ -147,7 +147,9 @@ namespace Greg.Xrm.Command.Commands.WebResources
 				else
 				{
 					var publisherFolderName = GetPublisherFolderName(solution.PublisherCustomizationPrefix);
-					themeWebResourceName = $"{publisherFolderName}/themes/{ThemeFileName}";
+					themeWebResourceName = appContext != null
+						? $"{publisherFolderName}/theme/{appContext.UniqueName.ToLowerInvariant()}.theme.xml"
+						: $"{publisherFolderName}/themes/{ThemeFileName}";
 if (string.IsNullOrWhiteSpace(command.BasePaletteColor))
 {
 	return CommandResult.Fail("The --color option is required when creating a new theme.");
