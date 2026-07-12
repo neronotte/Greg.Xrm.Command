@@ -264,9 +264,14 @@ themeXml = CreateNewThemeXml(command.WebResourceUniqueName, command.BasePaletteC
 
 			//if ("AppHeaderColors".Equals(document.Root.Name.LocalName, StringComparison.OrdinalIgnoreCase))
 			//{
-			var document2 = new XDocument(
-				new XElement("CustomTheme",
-					new XAttribute("basePaletteColor", basePaletteColor.ToHexColor()),
+if (string.IsNullOrWhiteSpace(basePaletteColor))
+{
+	throw new CommandException(CommandException.CommandRequiredArgumentNotProvided, "The --color option is required when the theme root is AppHeaderColors.");
+}
+
+var document2 = new XDocument(
+	new XElement("CustomTheme",
+		new XAttribute("basePaletteColor", basePaletteColor.ToHexColor()),
 					new XAttribute("logoWebResource", logoWebResourceName)
 				)
 			);
