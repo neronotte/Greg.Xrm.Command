@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using DocumentFormat.OpenXml.Packaging;
 using Greg.Xrm.Command.Parsing;
 using Greg.Xrm.Command.Services;
 
@@ -58,12 +59,12 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 			if (!string.IsNullOrWhiteSpace(UniqueName) && !UniqueName.Contains('_'))
 				yield return new ValidationResult(
 					"--unique-name must include a publisher prefix separated by '_' (e.g. nn_GregSum).",
-					new[] { nameof(UniqueName) });
+					[nameof(UniqueName)]);
 
 				if (BindingType != CustomApiBindingType.Global && string.IsNullOrWhiteSpace(BoundEntityLogicalName))
 					yield return new ValidationResult(
 						"--bound-entity is required when --binding-type is Entity or EntityCollection.",
-						new[] { nameof(BoundEntityLogicalName) });
+						[nameof(BoundEntityLogicalName)]);
 
 				foreach (var p in SplitSpecs(Params))
 					if (!CustomApiParamSpec.TryParse(p, out _, out var err))
@@ -98,6 +99,15 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 				"- **Display names** for parameters/responses: inferred from the name by splitting on capital-letter boundaries — e.g. `Addend1` becomes 'Addend 1'.\n" +
 				"- **Publisher prefix validation**: if `--unique-name` is provided, its prefix (before `_`) must match the solution publisher prefix; mismatches are rejected."
 			);
+
+			writer.WriteParagraph("### `execute-privilege` argument logic");
+			writer.WriteList(
+				"If `--execute-privilege` is omitted, the Custom API will be created without an associated privilege.",
+				"If `--execute-privilege` is provided and a privilege with that name already exists, it will be used."
+			);
+			writer.WriteParagraph("The `execute-privilege` argument uses a fuzzy logic to determine the actual privilege to associate with the Custom API. " +
+			"You can specify a substring of the actual privilege name, case insensitive (e.g. `writeaccount`) and, if not ambiguous, the command will fetch and use the actual privilege name (`prvWriteAccount`).");
+
 		}
 	}
 }

@@ -81,6 +81,11 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 				}
 				output.WriteLine("Not found", ConsoleColor.Green);
 
+
+				var (isValid, executePrivilegeName) = await TryValidateExecutePrivilegeNameAsync(crm, command.ExecutePrivilegeName);
+				if (!isValid)
+					return CommandResult.Fail($"Invalid execute privilege name '{command.ExecutePrivilegeName}'.");
+
 				// ── Create the customapi record ───────────────────────────────────────
 				output.Write("Creating Custom API '");
 				output.Write(uniqueName, ConsoleColor.Yellow);
@@ -95,7 +100,7 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 					boundentitylogicalname = string.IsNullOrWhiteSpace(command.BoundEntityLogicalName) ? null : command.BoundEntityLogicalName,
 					isfunction = command.Type == CustomApiType.Function,
 					allowedcustomprocessingsteptype = new OptionSetValue((int)command.AllowedStepType),
-					executeprivilegename = string.IsNullOrWhiteSpace(command.ExecutePrivilegeName) ? null : command.ExecutePrivilegeName
+					executeprivilegename = executePrivilegeName
 				};
 
 				await api.SaveOrUpdateAsync(crm);
@@ -192,6 +197,35 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 			{
 				return CommandResult.Fail(ex.Message, ex);
 			}
+		}
+
+		private async Task<(bool, string?)> TryValidateExecutePrivilegeNameAsync(IOrganizationServiceAsync2 crm, string? input)
+		{
+			if (string.IsNullOrWhiteSpace(input))
+			{
+				return (true, null); // optional
+			}
+
+			var query = new QueryExpression("privilege") { NoLock = true, TopCount = 2 };
+			query.ColumnSet.AddColumns("name");
+			query.Criteria.AddCondition("name", ConditionOperator.Like, '%' + input + '%');
+
+			var result = await crm.RetrieveMultipleAsync(query);
+
+			if (result.Entities.Count == 0)
+			{
+				output.WriteLine("  Warning: No privilege found matching the provided execute privilege name.", ConsoleColor.Yellow);
+				return (false, null);
+			}
+
+			if (result.Entities.Count > 1)
+			{
+				output.WriteLine(" Warning: Multiple privileges found matching the provided execute privilege name. Refine your privilege definition.");
+				return (false, null);
+			}
+
+			var name = result.Entities[0].GetAttributeValue<string>("name");
+			return (true, name);
 		}
 
 		private async Task AddToSolutionAsync(IOrganizationServiceAsync2 crm, IOutput output, string solutionName, ComponentType componentType, Guid componentId, CancellationToken cancellationToken)
