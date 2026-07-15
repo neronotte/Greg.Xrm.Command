@@ -437,31 +437,31 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 					StringAssert.Contains(result.ErrorMessage, "Invalid execute privilege name");
 				}
 
-				[TestMethod]
-						public async Task ExecuteAsync_ShouldEscapeWildcardCharactersInPrivilegeSearch()
-						{
-							SetupNoExistingApi();
+		[TestMethod]
+		public async Task ExecuteAsync_ShouldEscapeWildcardCharactersInPrivilegeSearch()
+		{
+			SetupNoExistingApi();
 
-							// Exact match returns nothing
-							this.OrganizationServiceMock
-								.Setup(x => x.RetrieveMultipleAsync(It.Is<QueryExpression>(q =>
-									q.EntityName == "privilege" &&
-									q.Criteria.Conditions.Any(c => c.Operator == ConditionOperator.Equal))))
-								.ReturnsAsync(new EntityCollection());
+			// Exact match returns nothing
+			this.OrganizationServiceMock
+				.Setup(x => x.RetrieveMultipleAsync(It.Is<QueryExpression>(q =>
+					q.EntityName == "privilege" &&
+					q.Criteria.Conditions.Any(c => c.Operator == ConditionOperator.Equal))))
+				.ReturnsAsync(new EntityCollection());
 
-							// Capture the LIKE query to verify wildcard escaping
-							string? capturedLikeValue = null;
-							this.OrganizationServiceMock
-								.Setup(x => x.RetrieveMultipleAsync(It.Is<QueryExpression>(q =>
-									q.EntityName == "privilege" &&
-									q.Criteria.Conditions.Any(c => c.Operator == ConditionOperator.Like))))
-								.Returns((QueryBase qb) =>
-								{
-									var q = (QueryExpression)qb;
-									var likeCondition = q.Criteria.Conditions.First(c => c.Operator == ConditionOperator.Like);
-									capturedLikeValue = likeCondition.Values[0]?.ToString();
-									return Task.FromResult(new EntityCollection());
-								});
+			// Capture the LIKE query to verify wildcard escaping
+			string? capturedLikeValue = null;
+			this.OrganizationServiceMock
+				.Setup(x => x.RetrieveMultipleAsync(It.Is<QueryExpression>(q =>
+					q.EntityName == "privilege" &&
+					q.Criteria.Conditions.Any(c => c.Operator == ConditionOperator.Like))))
+				.Returns((QueryBase qb) =>
+				{
+					var q = (QueryExpression)qb;
+					var likeCondition = q.Criteria.Conditions.First(c => c.Operator == ConditionOperator.Like);
+					capturedLikeValue = likeCondition.Values[0]?.ToString();
+					return Task.FromResult(new EntityCollection());
+				});
 
 							await executor.ExecuteAsync(
 								new CreateCustomApiCommand
