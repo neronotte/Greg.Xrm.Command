@@ -463,21 +463,21 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 					return Task.FromResult(new EntityCollection());
 				});
 
-							await executor.ExecuteAsync(
-								new CreateCustomApiCommand
-								{
-									DisplayName = "Greg Sum",
-									UniqueName = "nn_GregSum",
-									ExecutePrivilegeName = "prv_Read%Account[1]"
-								},
-								CancellationToken.None);
+			await executor.ExecuteAsync(
+				new CreateCustomApiCommand
+				{
+					DisplayName = "Greg Sum",
+					UniqueName = "nn_GregSum",
+					ExecutePrivilegeName = "prv_Read%Account[1]"
+				},
+				CancellationToken.None);
 
-							// Verify that _, %, and [ are escaped in the LIKE query
-							Assert.IsNotNull(capturedLikeValue);
-							StringAssert.Contains(capturedLikeValue, "[_]");  // _ escaped
-							StringAssert.Contains(capturedLikeValue, "[%]");  // % escaped
-							StringAssert.Contains(capturedLikeValue, "[[]");  // [ escaped
-						}
+			// Verify that _, %, and [ are escaped in the LIKE query
+			Assert.IsNotNull(capturedLikeValue);
+			StringAssert.Contains(capturedLikeValue, "[_]");  // _ escaped
+			StringAssert.Contains(capturedLikeValue, "[%]");  // % escaped
+			StringAssert.Contains(capturedLikeValue, "[[]");  // [ escaped
+		}
 
 				[TestMethod]
 				public async Task ExecuteAsync_ShouldPreferExactMatchOverFuzzyMatch()
