@@ -254,22 +254,22 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 			StringAssert.Contains(result.ErrorMessage, "No solution name");
 		}
 
-			[TestMethod]
-				public async Task ExecuteAsync_ShouldFail_WhenDataverseThrows()
-				{
-					SetupNoExistingApi();
+		[TestMethod]
+		public async Task ExecuteAsync_ShouldFail_WhenDataverseThrows()
+		{
+			SetupNoExistingApi();
 
-					this.OrganizationServiceMock
-						.Setup(x => x.CreateAsync(It.IsAny<Entity>()))
-						.ThrowsAsync(new FaultException<OrganizationServiceFault>(
-							new OrganizationServiceFault(), "Simulated fault"));
+			this.OrganizationServiceMock
+				.Setup(x => x.CreateAsync(It.IsAny<Entity>()))
+				.ThrowsAsync(new FaultException<OrganizationServiceFault>(
+					new OrganizationServiceFault(), "Simulated fault"));
 
-					var result = await executor.ExecuteAsync(
-						new CreateCustomApiCommand { DisplayName = "Greg Sum", UniqueName = "nn_GregSum" },
-						CancellationToken.None);
+			var result = await executor.ExecuteAsync(
+				new CreateCustomApiCommand { DisplayName = "Greg Sum", UniqueName = "nn_GregSum" },
+				CancellationToken.None);
 
-					Assert.IsFalse(result.IsSuccess);
-				}
+			Assert.IsFalse(result.IsSuccess);
+		}
 
 				#region ExecutePrivilegeName validation tests
 
