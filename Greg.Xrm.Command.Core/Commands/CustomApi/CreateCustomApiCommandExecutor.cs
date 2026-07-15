@@ -206,12 +206,24 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 				return (true, null); // optional
 			}
 
-			var query = new QueryExpression("privilege") { NoLock = true, TopCount = 2 };
+			var query = new QueryExpression("privilege") { NoLock = true, TopCount = 1 };
+			query.ColumnSet.AddColumns("name");
+			query.Criteria.AddCondition("name", ConditionOperator.Equal, input);
+
+			var result = await crm.RetrieveMultipleAsync(query);
+			if (result.Entities.Count == 1)
+			{
+				var foundName = result.Entities[0].GetAttributeValue<string>("name");
+				return (true, foundName);
+			}
+
+			input = input.Trim().Replace("[", "[[]").Replace("_", "[_]").Replace("%", "[%]"); // escape special characters for LIKE query
+
+			query = new QueryExpression("privilege") { NoLock = true, TopCount = 2 };
 			query.ColumnSet.AddColumns("name");
 			query.Criteria.AddCondition("name", ConditionOperator.Like, '%' + input + '%');
 
-			var result = await crm.RetrieveMultipleAsync(query);
-
+			result = await crm.RetrieveMultipleAsync(query);
 			if (result.Entities.Count == 0)
 			{
 				output.WriteLine("  Warning: No privilege found matching the provided execute privilege name.", ConsoleColor.Yellow);
