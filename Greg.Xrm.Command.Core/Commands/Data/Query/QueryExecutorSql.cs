@@ -34,8 +34,8 @@ throw new InvalidOperationException(
 			catch (SqlException ex) when (ex.Message.IndexOf("TDS endpoint is disabled", StringComparison.OrdinalIgnoreCase) >= 0
 										|| ex.Message.IndexOf("EnableSQLForCDS", StringComparison.OrdinalIgnoreCase) >= 0)
 			{
-				throw new InvalidOperationException(
-					"Il TDS endpoint è disabilitato per questo ambiente. Abilitalo da Power Platform Admin Center > Environment > Settings > Product > Features.", ex);
+throw new InvalidOperationException(
+					"The TDS endpoint is disabled for this environment. Enable it in Power Platform Admin Center > Environment > Settings > Product > Features.", ex);
 			}
 			catch (SqlException ex) when (ex.Message.IndexOf("prvAllowTDSAccess", StringComparison.OrdinalIgnoreCase) >= 0)
 			{
