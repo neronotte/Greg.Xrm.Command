@@ -1,4 +1,6 @@
+using System.Text;
 using Spectre.Console;
+using Spectre.Console.Rendering;
 
 namespace Greg.Xrm.Command.Services.Output
 {
@@ -56,39 +58,126 @@ namespace Greg.Xrm.Command.Services.Output
 
 		public IOutput WriteTable<TRow>(IReadOnlyList<TRow> collection, Func<string[]> rowHeaders, Func<TRow, string[]> rowData, Func<int, TRow, ConsoleColor?>? colorPicker = null)
 		{
+			Text getRenderer(string? text, ConsoleColor? color)
+			{
+				text = text ?? string.Empty;
+
+				if (color.HasValue)
+				{
+					return new Text(text, new Style(foreground: DrawingColor(color.Value)));
+				}
+				else
+				{
+					return new Text(text);
+				}
+			}
+
+
+
 			var table = new Table()
 				.RoundedBorder()
-				.BorderColor(Color.CornflowerBlue)
+				.BorderColor(Color.SkyBlue2)
 				.ShowRowSeparators();
 
+			var calculator = new RowLengthCalculator();
+
+			calculator.NewRow();
 			foreach (var col in rowHeaders())
 			{
 				//table.AddColumn(col, c => c.NoWrap().LeftAligned());
 				table.AddColumn(col, c => c.NoWrap().LeftAligned());
+				calculator.AddColumn(col);
 			}
+			calculator.EndRow();
+
+			foreach (var row in collection)
+			{
+				calculator.NewRow();
+				var columns = rowData(row);
+
+				var renderers = new Text[columns.Length];
+				for (int i = 0; i < columns.Length; i++)
+				{
+					var columnValue = columns[i];
+					var color = colorPicker?.Invoke(i, row);
+					renderers[i] = getRenderer(columnValue, color);
+calculator.AddColumn(columnValue ?? string.Empty);
+				}
+				calculator.EndRow();
+
+				table.AddRow(renderers);
+			}
+
+			//ansiConsole.WriteLine("AnsiConsole.Profile.Width: " + ansiConsole.Profile.Width);
+			//ansiConsole.WriteLine("MaxRowLength:              " + calculator.MaxRowLength);
+
+			// if the table fits within the console width, render it as a table
+			// otherwise let's render it as a tree view, because tables won't show up properly in the console if they are too wide
+			if (calculator.MaxRowLength < ansiConsole.Profile.Width)
+			{
+				ansiConsole.Write(table);
+				ansiConsole.WriteLine();
+				return this;
+			}
+
+
+
+
+
+			Markup getRendererForTree(string columnName, int maxColumnNameLength, string? text, Color? columnNameColor = null, ConsoleColor? color = null)
+			{
+				text ??= string.Empty;
+				columnNameColor ??= Color.SkyBlue2;
+				var actualColor = DrawingColor(color ?? Console.ForegroundColor);
+
+				var sb = new StringBuilder();
+				sb.Append('[');
+				sb.Append(columnNameColor.ToString());
+				sb.Append(']');
+				sb.Append(Markup.Escape((columnName+":").PadRight(maxColumnNameLength)));
+				sb.Append("[/]");
+				sb.Append('[');
+				sb.Append(actualColor.ToString());
+				sb.Append(']');
+				sb.Append(Markup.Escape(text));
+				sb.Append("[/]");
+
+				return new Markup(sb.ToString());
+			}
+
+
+
+			var tree = new Tree(string.Empty);
+			var treeItems = rowHeaders().ToArray();
+			var maxColumnNameLength = treeItems.Max(c => c.Length)+2;
 
 			foreach (var row in collection)
 			{
 				var columns = rowData(row);
-				var renderers = new Text[columns.Length];
-				for (int i = 0; i < columns.Length; i++)
+				if (columns.Length == 0) continue;
+
+				var columnValue = columns[0];
+				var color = colorPicker?.Invoke(0, row);
+				var renderer = getRendererForTree(treeItems[0], maxColumnNameLength+4, columnValue, Color.SandyBrown, color);
+
+				var node = tree.AddNode(renderer);
+
+				for (int i = 1; i < treeItems.Length && i < columns.Length; i++)
 				{
-					var color = colorPicker?.Invoke(i, row);
-					if (color.HasValue)
+					var columnName = treeItems[i];
+					columnValue = columns[i];
+					color = colorPicker?.Invoke(i, row);
+
+					if (!string.IsNullOrWhiteSpace(columnValue))
 					{
-						renderers[i] = new Text(columns[i], new Style(foreground: DrawingColor(color.Value)));
-					}
-					else
-					{
-						renderers[i] = new Text(columns[i]);
+						renderer = getRendererForTree(columnName, maxColumnNameLength, columnValue, color: color);
+						node.AddNode(renderer);
 					}
 				}
-				table.AddRow(renderers);
 			}
 
-			ansiConsole.Write(table);
+			ansiConsole.Write(tree);
 			ansiConsole.WriteLine();
-
 			return this;
 		}
 
@@ -116,5 +205,34 @@ namespace Greg.Xrm.Command.Services.Output
 				_ => Color.Grey,
 			};
 		}
+	}
+
+
+	class RowLengthCalculator
+	{
+
+		public void NewRow()
+		{
+			RowLength = 2; // `| `
+		}
+
+		public void AddColumn(string column)
+		{
+			RowLength += column.GetCellWidth() + 3; // ` | `
+		}
+
+		public void EndRow()
+		{
+			RowLength -= 1; // remove the last ` `
+
+			if (RowLength > MaxRowLength)
+			{
+				MaxRowLength = RowLength;
+			}
+		}
+
+		public int RowLength { get; private set; } = 0;
+
+		public int MaxRowLength { get; private set; } = 0;
 	}
 }

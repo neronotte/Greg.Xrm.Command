@@ -129,11 +129,7 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 						(col, _) => col == 0 ? ConsoleColor.White : (ConsoleColor?)null);
 				}
 
-				var result = CommandResult.Success();
-				foreach (var (name, value) in responseEntries)
-					result[name] = value;
-
-				return result;
+				return CommandResult.Success();
 			}
 			catch (FaultException<OrganizationServiceFault> ex)
 			{

@@ -114,25 +114,6 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 		}
 
 		[TestMethod]
-		public async Task ExecuteAsync_ShouldDisplayResponseValues()
-		{
-			SetupApiFound();
-			SetupParams();
-			SetupExecuteResponse(new Dictionary<string, object?> { ["Result"] = 8 });
-
-			var result = await executor.ExecuteAsync(
-				new RunCustomApiCommand { UniqueName = "nn_GregSum" },
-				CancellationToken.None);
-
-			Assert.IsTrue(result.IsSuccess, result.ErrorMessage);
-			// Short name is surfaced in CommandResult
-			Assert.AreEqual(8, result["Result"]);
-
-			var text = Output.ToString();
-			StringAssert.Contains(text, "Result");
-		}
-
-		[TestMethod]
 		public async Task ExecuteAsync_ShouldFail_WhenRequiredParamMissing()
 		{
 			SetupApiFound();

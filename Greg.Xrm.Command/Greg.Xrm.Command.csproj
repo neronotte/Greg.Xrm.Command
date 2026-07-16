@@ -33,12 +33,12 @@
   <ItemGroup>
     <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="11.0.0" />
     <PackageReference Include="ClosedXML" Version="0.105.0" />
-    <PackageReference Include="Microsoft.Data.SqlClient" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="7.0.2" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.6" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.6" />
     <PackageReference Include="Microsoft.PowerPlatform.Dataverse.Client" Version="1.2.10" />
     <PackageReference Include="NuGet.Protocol" Version="7.3.1" />
-    <PackageReference Include="Spectre.Console" Version="0.55.2" />
+    <PackageReference Include="Spectre.Console" Version="0.57.2" />
     <PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.6" />
     <PackageReference Include="System.Text.Json" Version="10.0.6" />
     <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
@@ -47,9 +47,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Greg.Xrm.Command.Core\Greg.Xrm.Command.Core.csproj" />
     <!-- Build-order-only reference: ensures PacxIntegrationPlugin.dll is built before the CLI launches (integration test). -->
-    <ProjectReference Include="..\test\PacxIntegrationPlugin\PacxIntegrationPlugin.csproj"
-                      ReferenceOutputAssembly="false"
-                      SkipGetTargetFrameworkProperties="true" />
+    <ProjectReference Include="..\test\PacxIntegrationPlugin\PacxIntegrationPlugin.csproj" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" />
   </ItemGroup>
 
   <ItemGroup>

@@ -13,6 +13,7 @@ using Greg.Xrm.Command.Services.AttributeDeletion;
 using Greg.Xrm.Command.Services.OptionSet;
 using Greg.Xrm.Command.Services.Plugin;
 using Greg.Xrm.Command.Commands.Solution.Service;
+using Greg.Xrm.Command.Commands.Data.Query;
 
 namespace Greg.Xrm.Command
 {
@@ -62,6 +63,10 @@ namespace Greg.Xrm.Command
 			builder.RegisterType<AttributeDeletionStrategyForRelationships>().As<IAttributeDeletionStrategy>();
 			builder.RegisterType<AttributeDeletionStrategyForMappings>().As<IAttributeDeletionStrategy>();
 			builder.RegisterType<AttributeDeletionStrategyForWorkflows>().As<IAttributeDeletionStrategy>();
+
+
+			builder.RegisterType<QueryExecutorFactory>().As<IQueryExecutorFactory>();
+			builder.RegisterType<QueryOutputFormatterFactory>().As<IQueryOutputFormatterFactory>();
 
 			builder.RegisterType<Services.ComponentResolution.ComponentResolverEngine>().As<Services.ComponentResolution.IComponentResolverEngine>();
 
