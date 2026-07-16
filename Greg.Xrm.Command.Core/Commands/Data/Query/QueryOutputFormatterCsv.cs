@@ -26,7 +26,7 @@ namespace Greg.Xrm.Command.Commands.Data.Query
 
 
 			var sb = new StringBuilder();
-			sb.AppendLine(string.Join(";", columns.Select(x => $"{Delimiter}{x}{Delimiter}")));
+sb.AppendLine(string.Join(Separator, columns.Select(x => $"{Delimiter}{x.Replace("\"", "\"\"")}{Delimiter}")));
 
 
 
@@ -37,9 +37,9 @@ namespace Greg.Xrm.Command.Commands.Data.Query
 				{
 					if (entity.Attributes.Contains(column))
 					{
-						var formattedValu = base.GetPrintableString(entity, column);
-
-						row.Add($"{Delimiter}{formattedValu}{Delimiter}");
+var formattedValue = base.GetPrintableString(entity, column);
+						var escapedValue = formattedValue.Replace("\"", "\"\"");
+						row.Add($"{Delimiter}{escapedValue}{Delimiter}");
 					}
 					else
 					{

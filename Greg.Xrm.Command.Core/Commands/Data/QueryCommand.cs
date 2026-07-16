@@ -89,7 +89,7 @@ namespace Greg.Xrm.Command.Commands.Data
 				"SQL: queries starting with 'SELECT ' (case-insensitive) are interpreted as SQL",
 				"OData: queries containing OData query options (e.g., $filter=, $select=, $top=) are interpreted as OData");
 
-			writer.WriteLine("> **Please note Note**: If you're using powershell, remember to escape the $ sign using ` character in OData queries.");
+writer.WriteLine("> **Please note**: If you're using PowerShell, remember to escape the $ sign using the ` character in OData queries.");
 
 			writer.WriteTitle3("Input Options");
 			writer.WriteParagraph("You can provide the query in two mutually exclusive ways:");
