@@ -21,8 +21,8 @@ namespace Greg.Xrm.Command.Commands.Data.Query
 
 		public IQueryExecutor DetectExecutorFromQueryText(string queryText)
 		{
-ArgumentNullException.ThrowIfNull(queryText);
-			queryText = queryText.TrimStart();
+			ArgumentNullException.ThrowIfNull(queryText);
+			queryText = queryText.Trim();
 
 			if (queryText.StartsWith('<'))
 			{

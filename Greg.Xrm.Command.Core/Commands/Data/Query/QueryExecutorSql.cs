@@ -15,9 +15,9 @@ namespace Greg.Xrm.Command.Commands.Data.Query
 			string accessToken = serviceClient.CurrentAccessToken;
 			if (string.IsNullOrEmpty(accessToken))
 			{
-throw new InvalidOperationException(
-					"The ServiceClient does not expose a valid access token. " +
-					"Ensure it was configured with a token-based AuthType (for example, OAuth, ClientSecret, or Certificate).");
+				throw new InvalidOperationException(
+									"The ServiceClient does not expose a valid access token. " +
+									"Ensure it was configured with a token-based AuthType (for example, OAuth, ClientSecret, or Certificate).");
 			}
 
 			string sqlServerName = new Uri(serviceClient.ConnectedOrgUriActual.ToString()).Host;
@@ -30,18 +30,18 @@ throw new InvalidOperationException(
 
 			try
 			{
-				await conn.OpenAsync();
+				await conn.OpenAsync(cancellationToken);
 			}
 			catch (SqlException ex) when (ex.Message.IndexOf("TDS endpoint is disabled", StringComparison.OrdinalIgnoreCase) >= 0
 										|| ex.Message.IndexOf("EnableSQLForCDS", StringComparison.OrdinalIgnoreCase) >= 0)
 			{
-throw new InvalidOperationException(
-					"The TDS endpoint is disabled for this environment. Enable it in Power Platform Admin Center > Environment > Settings > Product > Features.", ex);
+				throw new InvalidOperationException(
+									"The TDS endpoint is disabled for this environment. Enable it in Power Platform Admin Center > Environment > Settings > Product > Features.", ex);
 			}
 			catch (SqlException ex) when (ex.Message.IndexOf("prvAllowTDSAccess", StringComparison.OrdinalIgnoreCase) >= 0)
 			{
-throw new InvalidOperationException(
-					"The TDS endpoint is enabled, but the user or application lacks the 'Allow user to access TDS endpoint' privilege.", ex);
+				throw new InvalidOperationException(
+									"The TDS endpoint is enabled, but the user or application lacks the 'Allow user to access TDS endpoint' privilege.", ex);
 			}
 
 			using var cmd = new SqlCommand(sqlQuery, conn);

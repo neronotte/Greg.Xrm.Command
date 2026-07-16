@@ -11,6 +11,14 @@ namespace Greg.Xrm.Command.Commands.Data.Query
 		public override async Task Print(IReadOnlyCollection<Entity> entities, bool autorun, CancellationToken cancellationToken)
 		{
 
+
+
+			if (entities.Count == 0)
+			{
+				console.MarkupLine("[red]No data to export.[/]");
+				return;
+			}
+
 			var settings = new JsonSerializerSettings
 			{
 				NullValueHandling = NullValueHandling.Ignore,
@@ -32,7 +40,9 @@ namespace Greg.Xrm.Command.Commands.Data.Query
 				var item = new JObject();
 				foreach (var attribute in entity.Attributes)
 				{
-					var value = JToken.FromObject(attribute.Value, serializer);
+					var value = attribute.Value is null
+ 						? JValue.CreateNull()
+ 						: JToken.FromObject(attribute.Value, serializer);
 
 					item[attribute.Key] = value;
 				}

@@ -24,7 +24,7 @@ namespace Greg.Xrm.Command.Commands.Data.Query
 				}
 			}
 
-			if (columns.Count == 0)
+			if (columns.Count == 0 || entities.Count == 0)
 			{
 				console.MarkupLine("[red]No data to export.[/]");
 				return;

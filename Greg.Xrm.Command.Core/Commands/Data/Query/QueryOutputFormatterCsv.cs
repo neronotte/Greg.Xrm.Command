@@ -24,6 +24,12 @@ namespace Greg.Xrm.Command.Commands.Data.Query
 				}
 			}
 
+			if (columns.Count == 0 || entities.Count == 0)
+			{
+				console.MarkupLine("[red]No data to export.[/]");
+				return;
+			}
+
 
 			var sb = new StringBuilder();
 sb.AppendLine(string.Join(Separator, columns.Select(x => $"{Delimiter}{x.Replace("\"", "\"\"")}{Delimiter}")));

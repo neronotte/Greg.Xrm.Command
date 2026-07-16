@@ -16,7 +16,7 @@ namespace Greg.Xrm.Command.Commands.Data
 		[Option("format", "f", HelpText = "The format of the output.", DefaultValue = OutputFormats.JSON)]
 		public OutputFormats OutputFormat { get; set; }
 
-		[Option("output", "o", HelpText = "The path to the output file. If not provided, the output will be printed to the console. If the format is Excel, this argument is mandatory.")]
+		[Option("output", "o", HelpText = "The path to the output file where to store the results of the query. If the format is Excel, this argument is mandatory.")]
 		public string? OutputFileName { get; set; }
 
 		[Option("auto-run", "run", HelpText = "If set, the output file will be automatically opened after the query is executed. Only applicable when an output file is specified.", DefaultValue = false)]

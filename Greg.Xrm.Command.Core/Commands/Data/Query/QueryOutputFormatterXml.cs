@@ -9,6 +9,13 @@ namespace Greg.Xrm.Command.Commands.Data.Query
 	{
 		public override async Task Print(IReadOnlyCollection<Entity> entities, bool autorun, CancellationToken cancellationToken)
 		{
+			if (entities.Count == 0)
+			{
+				console.MarkupLine("[red]No data to export.[/]");
+				return;
+			}
+
+
 			var items = new XDocument(new XElement("Entities"));
 			foreach (var entity in entities)
 			{
@@ -16,7 +23,7 @@ namespace Greg.Xrm.Command.Commands.Data.Query
 				foreach (var attribute in entity.Attributes)
 				{
 					var formattedValue = base.GetPrintableString(entity, attribute.Key);
-					item.Add(new XElement("Attribute", new XAttribute("name", attribute.Key), formattedValue));
+					item.Add(new XElement(System.Xml.XmlConvert.EncodeLocalName(attribute.Key), formattedValue));
 				}
 				items.Root!.Add(item);
 			}
