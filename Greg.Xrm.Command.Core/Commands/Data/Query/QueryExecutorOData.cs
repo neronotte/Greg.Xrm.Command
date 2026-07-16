@@ -14,24 +14,43 @@ namespace Greg.Xrm.Command.Commands.Data.Query
 		{
 			var serviceClient = crm as ServiceClient
 				?? throw new InvalidOperationException("The provided IOrganizationServiceAsync2 instance is not a ServiceClient.");
-			var response = await serviceClient.ExecuteWebRequestAsync(HttpMethod.Get, odataQuery, null, null, cancellationToken: cancellationToken);
 
-			if (!response.IsSuccessStatusCode)
+			var allEntities = new List<Entity>();
+			string? currentQuery = odataQuery;
+
+			while (currentQuery != null)
 			{
-				throw new InvalidOperationException($"OData query failed with status code {response.StatusCode}: {response.ReasonPhrase}");
+				cancellationToken.ThrowIfCancellationRequested();
+
+				var response = await serviceClient.ExecuteWebRequestAsync(HttpMethod.Get, currentQuery, null, null, cancellationToken: cancellationToken);
+
+				if (!response.IsSuccessStatusCode)
+				{
+					throw new InvalidOperationException($"OData query failed with status code {response.StatusCode}: {response.ReasonPhrase}");
+				}
+
+				var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
+				var obj = JObject.Parse(responseContent);
+
+				if (obj["value"] is JArray recordList && recordList.Count > 0)
+				{
+					allEntities.AddRange(ParseEntities(recordList));
+				}
+
+				var nextLink = obj["@odata.nextLink"]?.ToString();
+				if (!string.IsNullOrEmpty(nextLink))
+				{
+					currentQuery = Uri.TryCreate(nextLink, UriKind.Absolute, out var nextUri)
+						? nextUri.PathAndQuery.TrimStart('/')
+						: nextLink.TrimStart('/');
+				}
+				else
+				{
+					currentQuery = null;
+				}
 			}
 
-			var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
-
-			var obj = JObject.Parse(responseContent);
-
-			if (obj["value"] is not JArray recordList || recordList.Count == 0)
-			{
-				return [];
-			}
-
-			var entities = ParseEntities(recordList);
-			return entities;
+			return allEntities;
 		}
 
 
