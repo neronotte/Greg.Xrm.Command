@@ -38,8 +38,11 @@ sb.AppendLine(string.Join(Separator, columns.Select(x => $"{Delimiter}{x.Replace
 					if (entity.Attributes.Contains(column))
 					{
 var formattedValue = base.GetPrintableString(entity, column);
-						var escapedValue = formattedValue.Replace("\"", "\"\"");
-						row.Add($"{Delimiter}{escapedValue}{Delimiter}");
+var safeValue = formattedValue.Length > 0 && "=+-@\t\r".Contains(formattedValue[0])
+	? "'" + formattedValue
+	: formattedValue;
+var escapedValue = safeValue.Replace("\"", "\"\"");
+row.Add($"{Delimiter}{escapedValue}{Delimiter}");
 					}
 					else
 					{
