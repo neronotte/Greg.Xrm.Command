@@ -7,8 +7,6 @@ namespace Greg.Xrm.Command.Commands.Data.Query
 {
 	internal class QueryOutputFormatterExcel(IAnsiConsole console, string? fileName) : QueryOutputFormatterBase
 	{
-		public object XLTableStyle { get; private set; }
-
 		public override async Task Print(IReadOnlyCollection<Entity> entities, bool autorun, CancellationToken cancellationToken)
 		{
 			if (string.IsNullOrWhiteSpace(fileName))
@@ -24,6 +22,12 @@ namespace Greg.Xrm.Command.Commands.Data.Query
 						columns.Add(attribute.Key);
 					}
 				}
+			}
+
+			if (columns.Count == 0)
+			{
+				console.MarkupLine("[red]No data to export.[/]");
+				return;
 			}
 
 

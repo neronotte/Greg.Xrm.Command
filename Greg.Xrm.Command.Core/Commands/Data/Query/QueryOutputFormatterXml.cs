@@ -16,7 +16,7 @@ namespace Greg.Xrm.Command.Commands.Data.Query
 				foreach (var attribute in entity.Attributes)
 				{
 					var formattedValue = base.GetPrintableString(entity, attribute.Key);
-					item.Add(new XElement(attribute.Key, formattedValue));
+					item.Add(new XElement("Attribute", new XAttribute("name", attribute.Key), formattedValue));
 				}
 				items.Root!.Add(item);
 			}
