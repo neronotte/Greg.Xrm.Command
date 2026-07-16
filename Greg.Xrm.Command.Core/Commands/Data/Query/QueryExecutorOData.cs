@@ -89,8 +89,7 @@ namespace Greg.Xrm.Command.Commands.Data.Query
 				var propertyName = property.Name;
 
 				// Skip OData metadata properties and formatted values (already processed)
-				if (propertyName.StartsWith("@", StringComparison.Ordinal) ||
-					propertyName.EndsWith(FormattedValueSuffix, StringComparison.OrdinalIgnoreCase))
+if (propertyName.Contains('@'))
 				{
 					continue;
 				}
