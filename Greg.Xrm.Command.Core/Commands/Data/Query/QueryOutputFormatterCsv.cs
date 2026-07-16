@@ -26,7 +26,7 @@ namespace Greg.Xrm.Command.Commands.Data.Query
 
 
 			var sb = new StringBuilder();
-			sb.AppendLine(string.Join(";", columns.Select(x => $"{Delimiter}{x}{Delimiter}")));
+sb.AppendLine(string.Join(Separator, columns.Select(x => $"{Delimiter}{x.Replace("\"", "\"\"")}{Delimiter}")));
 
 
 
