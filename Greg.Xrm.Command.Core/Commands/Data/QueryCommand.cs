@@ -7,7 +7,7 @@ namespace Greg.Xrm.Command.Commands.Data
 	[Command("data", "query", HelpText = "Commands to streamline data manipulation")]
 	public class QueryCommand : IValidatableObject, ICanProvideUsageExample
 	{
-		[Option("query", "q", HelpText = "The query to execute. Can be a FetchXML or SQL query. Mutually exclusive with --file.")]
+[Option("query", "q", HelpText = "The query to execute. Can be a FetchXML or SQL query. Mutually exclusive with --query-file.")]
 		public string? Query { get; set; }
 
 		[Option("query-file", "qf", HelpText = "Path to a file containing the query to execute. Mutually exclusive with --query.")]
