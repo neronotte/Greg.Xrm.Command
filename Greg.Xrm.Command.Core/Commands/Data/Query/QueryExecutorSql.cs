@@ -1,7 +1,6 @@
 using Microsoft.Data.SqlClient;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
-using Newtonsoft.Json.Linq;
 
 namespace Greg.Xrm.Command.Commands.Data.Query
 {
@@ -22,7 +21,9 @@ namespace Greg.Xrm.Command.Commands.Data.Query
 			}
 
 			string sqlServerName = new Uri(serviceClient.ConnectedOrgUriActual.ToString()).Host;
-			var connString = $"Server={sqlServerName};Connect Timeout=15;";
+
+			// Dataverse's TDS endpoint listens on port 5558. Without specifying it, SqlClient defaults to SQL Server's port 1433, so SQL queries will fail to connect in standard Dataverse environments.
+			var connString = $"Server={sqlServerName},5558;Connect Timeout=15;";
 
 			using var conn = new SqlConnection(connString);
 			conn.AccessToken = accessToken;
