@@ -39,8 +39,8 @@ throw new InvalidOperationException(
 			}
 			catch (SqlException ex) when (ex.Message.IndexOf("prvAllowTDSAccess", StringComparison.OrdinalIgnoreCase) >= 0)
 			{
-				throw new InvalidOperationException(
-					"Il TDS endpoint è abilitato, ma l'utente/applicazione non ha il privilegio 'Allow user to access TDS endpoint'.", ex);
+throw new InvalidOperationException(
+					"The TDS endpoint is enabled, but the user or application lacks the 'Allow user to access TDS endpoint' privilege.", ex);
 			}
 
 			using var cmd = new SqlCommand(sqlQuery, conn);
