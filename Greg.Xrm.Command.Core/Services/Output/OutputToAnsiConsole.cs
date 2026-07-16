@@ -218,7 +218,7 @@ namespace Greg.Xrm.Command.Services.Output
 
 		public void AddColumn(string column)
 		{
-			RowLength += column.Length + 3; // ` | `
+			RowLength += column.GetCellWidth() + 3; // ` | `
 		}
 
 		public void EndRow()
