@@ -10,7 +10,7 @@ namespace Greg.Xrm.Command.Commands.Data.Query
 		public async Task<IReadOnlyCollection<Entity>> ExecuteQueryAsync(IOrganizationServiceAsync2 crm, CancellationToken cancellationToken)
 		{
 			var query = new FetchExpression(fetchXml);
-			var result = await crm.RetrieveMultipleAsync(query, cancellationToken);
+			var result = await crm.RetrieveAllAsync(query, cancellationToken);
 			return result.Entities;
 		}
 	}
