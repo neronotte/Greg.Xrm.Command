@@ -74,7 +74,7 @@ catch (Exception ex) when (ex is not OperationCanceledException)
 				result = await queryExecutor.ExecuteQueryAsync(crm, cancellationToken);
 				output.WriteLine("Done", ConsoleColor.Green);
 			}
-			catch(Exception ex)
+catch (Exception ex) when (ex is not OperationCanceledException)
 			{
 				output.WriteLine("FAILED", ConsoleColor.Red);
 				return CommandResult.Fail($"Error executing query: {ex.Message}", ex);
