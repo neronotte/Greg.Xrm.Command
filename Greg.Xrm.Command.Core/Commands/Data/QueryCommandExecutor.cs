@@ -39,7 +39,7 @@ catch (Exception ex) when (ex is not OperationCanceledException)
 				return CommandResult.Fail("Query text is empty. Please provide a query using the --query option or specify a query file using the --query-file option.");
 			}
 
-			var panel = new Panel(queryText)
+			var panel = new Panel(Markup.Escape(queryText))
 				.Header("Query")
 				.RoundedBorder()
 				.BorderColor(Color.SkyBlue2);

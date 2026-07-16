@@ -495,6 +495,7 @@ namespace Greg.Xrm.Command.Commands.Data
 		#region Cancellation Tests
 
 		[TestMethod]
+		
 		public async Task ExecuteAsync_WhenQueryExecutionThrowsOperationCanceled_ShouldReturnError()
 		{
 			// Arrange
@@ -520,11 +521,8 @@ namespace Greg.Xrm.Command.Commands.Data
 				.ThrowsAsync(new OperationCanceledException("Operation was cancelled"));
 
 			// Act
-			var result = await executor.ExecuteAsync(command, CancellationToken.None);
 
-			// Assert
-			Assert.IsFalse(result.IsSuccess);
-			Assert.IsTrue(result.ErrorMessage!.Contains("Error executing query"));
+			await Assert.ThrowsAsync<OperationCanceledException>(() => executor.ExecuteAsync(command, CancellationToken.None));
 		}
 
 		#endregion
