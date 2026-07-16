@@ -7,7 +7,7 @@ namespace Greg.Xrm.Command.Commands.Data.Query
 {
 	internal class QueryOutputFormatterCsv(IAnsiConsole console, string? fileName) : QueryOutputFormatterBase
 	{
-		const char Separator = ';';
+		const char Separator = ',';
 		const char Delimiter = '"';
 
 		public override async Task Print(IReadOnlyCollection<Entity> entities, bool autorun, CancellationToken cancellationToken)

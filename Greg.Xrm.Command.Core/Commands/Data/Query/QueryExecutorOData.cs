@@ -16,13 +16,17 @@ namespace Greg.Xrm.Command.Commands.Data.Query
 				?? throw new InvalidOperationException("The provided IOrganizationServiceAsync2 instance is not a ServiceClient.");
 
 			var allEntities = new List<Entity>();
+			var headers = new Dictionary<string, List<string>>
+			{
+				["Prefer"] = ["odata.include-annotations=\"OData.Community.Display.V1.FormattedValue\""]
+			};
 			string? currentQuery = odataQuery;
 
 			while (currentQuery != null)
 			{
 				cancellationToken.ThrowIfCancellationRequested();
 
-				var response = await serviceClient.ExecuteWebRequestAsync(HttpMethod.Get, currentQuery, null, null, cancellationToken: cancellationToken);
+				var response = await serviceClient.ExecuteWebRequestAsync(HttpMethod.Get, currentQuery, null, headers, cancellationToken: cancellationToken);
 
 				if (!response.IsSuccessStatusCode)
 				{
@@ -41,7 +45,7 @@ namespace Greg.Xrm.Command.Commands.Data.Query
 				if (!string.IsNullOrEmpty(nextLink))
 				{
 					currentQuery = Uri.TryCreate(nextLink, UriKind.Absolute, out var nextUri)
-						? nextUri.PathAndQuery.TrimStart('/')
+						? Regex.Replace(nextUri.PathAndQuery, @"^/api/data/v[^/]+/", string.Empty, RegexOptions.IgnoreCase)
 						: nextLink.TrimStart('/');
 				}
 				else
