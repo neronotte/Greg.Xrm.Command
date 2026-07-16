@@ -45,7 +45,7 @@ namespace Greg.Xrm.Command.Commands.Data.Query
 				if (!string.IsNullOrEmpty(nextLink))
 				{
 					currentQuery = Uri.TryCreate(nextLink, UriKind.Absolute, out var nextUri)
-						? Regex.Replace(nextUri.PathAndQuery, @"^/api/data/v[^/]+/", string.Empty, RegexOptions.IgnoreCase)
+						? Regex.Replace(nextUri.PathAndQuery, @"^/api/data/v[^/]+/", string.Empty, RegexOptions.IgnoreCase).TrimStart('/')
 						: nextLink.TrimStart('/');
 				}
 				else
