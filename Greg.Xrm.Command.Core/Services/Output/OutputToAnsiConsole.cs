@@ -101,7 +101,7 @@ namespace Greg.Xrm.Command.Services.Output
 					var columnValue = columns[i];
 					var color = colorPicker?.Invoke(i, row);
 					renderers[i] = getRenderer(columnValue, color);
-					calculator.AddColumn(columnValue);
+calculator.AddColumn(columnValue ?? string.Empty);
 				}
 				calculator.EndRow();
 
