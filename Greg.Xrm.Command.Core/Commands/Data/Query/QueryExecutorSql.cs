@@ -16,9 +16,9 @@ namespace Greg.Xrm.Command.Commands.Data.Query
 			string accessToken = serviceClient.CurrentAccessToken;
 			if (string.IsNullOrEmpty(accessToken))
 			{
-				throw new InvalidOperationException(
-					"Il ServiceClient non espone un access token valido. " +
-					"Assicurati che sia stato configurato con un AuthType basato su token (es. OAuth, ClientSecret, Certificate).");
+throw new InvalidOperationException(
+					"The ServiceClient does not expose a valid access token. " +
+					"Ensure it was configured with a token-based AuthType (for example, OAuth, ClientSecret, or Certificate).");
 			}
 
 			string sqlServerName = new Uri(serviceClient.ConnectedOrgUriActual.ToString()).Host;
