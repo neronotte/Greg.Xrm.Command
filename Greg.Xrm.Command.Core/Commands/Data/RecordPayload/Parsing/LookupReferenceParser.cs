@@ -131,7 +131,7 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.Parsing
 				if (queryResult.Entities.Count >= 2)
 				{
 					throw new InvalidOperationException(
-						$"Ambiguous lookup: {queryResult.Entities.Count} {entityName} records match {lookupFieldName} = '{fieldValue}'. Use a GUID instead.");
+						$"Ambiguous lookup: at least 2 {entityName} records match {lookupFieldName} = '{fieldValue}'. Use a GUID instead.");
 				}
 
 				var resolvedId = queryResult.Entities[0].Id;
