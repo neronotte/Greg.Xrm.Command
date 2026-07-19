@@ -50,7 +50,6 @@ Greg.Xrm.Command.Core\
           PlainPayloadParser.cs
           JsonPayloadParser.cs
           LookupReferenceParser.cs
-          RecordPayload.cs
         ValueConverters\
           IFieldValueConverter.cs
           FieldValueConverterFactory.cs
