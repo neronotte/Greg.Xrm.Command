@@ -57,11 +57,11 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.ValueConverters
 			{
 				long l => (double)l,
 				int i => (double)i,
-				double d => d,
+				double d when double.IsFinite(d) => d,
 				decimal dec => (double)dec,
-				string s => double.TryParse(s, NumberStyles.Number, CultureInfo.InvariantCulture, out var result)
-					? result
-					: throw new FormatException($"Cannot convert '{s}' to double for field '{fieldName}'."),
+				string s when double.TryParse(s, NumberStyles.Number, CultureInfo.InvariantCulture, out var result)
+					&& double.IsFinite(result) => result,
+				string s => throw new FormatException($"Cannot convert '{s}' to double for field '{fieldName}'."),
 				_ => throw new FormatException($"Cannot convert value of type '{rawValue.GetType().Name}' to double for field '{fieldName}'.")
 			};
 		}
