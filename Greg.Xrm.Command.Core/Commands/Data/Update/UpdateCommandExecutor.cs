@@ -148,7 +148,9 @@ namespace Greg.Xrm.Command.Commands.Data.Update
 				}
 			}
 
-			return CommandResult.Success();
+var result = CommandResult.Success();
+result["Id"] = command.Id;
+return result;
 		}
 
 		private static Dictionary<string, object?> ParsePayload(UpdateCommand command)
