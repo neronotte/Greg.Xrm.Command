@@ -14,8 +14,8 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.ValueConverters
 		/// <param name="metadata">The attribute metadata for the target field.</param>
 		/// <param name="crm">CRM service, required for lookup fields.</param>
 		/// <returns>
-		/// The converter, or <c>null</c> if the field type is not supported
-		/// (e.g. File or Image — the caller should emit a warning and skip the field).
+		/// The converter, or <c>null</c> for explicitly skipped field types
+		/// (File and Image — the caller should emit a warning and skip the field).
 		/// </returns>
 		public static IFieldValueConverter? GetConverter(AttributeMetadata metadata, IOrganizationServiceAsync2? crm = null)
 		{
@@ -46,7 +46,8 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.ValueConverters
 
 				FileAttributeMetadata or ImageAttributeMetadata => null,
 
-				_ => null
+				_ => throw new InvalidOperationException(
+					$"Unsupported writable attribute metadata type '{metadata.GetType().Name}' for field '{metadata.LogicalName}'.")
 			};
 		}
 	}

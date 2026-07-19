@@ -222,6 +222,25 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload
 			Assert.IsFalse(result.Entity.Attributes.ContainsKey("numberofemployees"));
 		}
 
+		[TestMethod]
+		public async Task ProcessAsync_WithUnsupportedWritableType_ShouldAccumulateError()
+		{
+			var attr = new BigIntAttributeMetadata { LogicalName = "new_bigint" };
+			var metadata = BuildEntityMetadata("contact", attr);
+
+			var payload = new Dictionary<string, object?>
+			{
+				["new_bigint"] = 1L
+			};
+
+			var result = await _processor.ProcessAsync(payload, metadata, true, _crmMock.Object, CancellationToken.None);
+
+			Assert.AreEqual(1, result.Errors.Count);
+			Assert.AreEqual(0, result.Warnings.Count);
+			Assert.IsTrue(result.Errors[0].Contains("Unsupported writable attribute metadata type"));
+			Assert.IsFalse(result.Entity.Attributes.ContainsKey("new_bigint"));
+		}
+
 		#region Helpers
 
 		private static EntityMetadata BuildEntityMetadata(string logicalName, params AttributeMetadata[] attributes)
