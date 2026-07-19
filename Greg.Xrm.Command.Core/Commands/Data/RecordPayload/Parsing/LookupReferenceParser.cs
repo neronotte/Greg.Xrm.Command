@@ -99,8 +99,6 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.Parsing
 
 				var primaryKey = entityMetadata.PrimaryIdAttribute;
 
-				// Escape single quotes in OData query
-				var escapedValue = fieldValue.Replace("'", "''");
 
 				// Query for matching records
 				var query = new QueryExpression(entityName)
