@@ -19,8 +19,12 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.ValueConverters
 				foreach (var item in list)
 				{
 					var converted = _singleConverter.Convert(item, metadata, fieldName);
-					if (converted is OptionSetValue osv)
-						items.Add(osv);
+					if (converted is not OptionSetValue osv)
+					{
+						throw new FormatException(
+							$"Cannot convert null item to multi-select choice for field '{fieldName}'.");
+					}
+					items.Add(osv);
 				}
 			}
 			else if (rawValue is string s)
