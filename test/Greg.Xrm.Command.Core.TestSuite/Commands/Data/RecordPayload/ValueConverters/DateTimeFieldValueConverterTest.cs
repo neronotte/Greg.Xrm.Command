@@ -64,6 +64,40 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.ValueConverters
 		}
 
 		[TestMethod]
+		public void Convert_DateAndTime_WithIso8601WithOffset_ShouldReturnDateTime()
+		{
+			var meta = DateAndTimeMeta();
+			var result = _converter.Convert("2024-01-15T08:30:00+02:00", meta, "createdon");
+
+			Assert.IsInstanceOfType(result, typeof(DateTime));
+			var dt = (DateTime)result!;
+			Assert.AreEqual(2024, dt.Year);
+			Assert.AreEqual(1, dt.Month);
+			Assert.AreEqual(15, dt.Day);
+		}
+
+		[TestMethod]
+		public void Convert_DateAndTime_WithDateOnlyIso_ShouldReturnDateTime()
+		{
+			var meta = DateAndTimeMeta();
+			var result = _converter.Convert("2024-06-01", meta, "createdon");
+
+			Assert.IsInstanceOfType(result, typeof(DateTime));
+			var dt = (DateTime)result!;
+			Assert.AreEqual(2024, dt.Year);
+			Assert.AreEqual(6, dt.Month);
+			Assert.AreEqual(1, dt.Day);
+		}
+
+		[TestMethod]
+		public void Convert_DateAndTime_WithCultureDependentFormat_ShouldThrowFormatException()
+		{
+			var meta = DateAndTimeMeta();
+			Assert.Throws<FormatException>(
+				() => _converter.Convert("01/02/2024", meta, "createdon"));
+		}
+
+		[TestMethod]
 		public void Convert_DateAndTime_WithInvalidFormat_ShouldThrowFormatException()
 		{
 			var meta = DateAndTimeMeta();

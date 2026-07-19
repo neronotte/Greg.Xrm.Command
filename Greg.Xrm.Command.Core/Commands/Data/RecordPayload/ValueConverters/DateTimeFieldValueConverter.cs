@@ -29,8 +29,24 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.ValueConverters
 					$"Cannot convert '{strValue}' to DateOnly for field '{fieldName}'. Expected format: yyyy-MM-dd.");
 			}
 
-			// DateAndTime or UserLocal - accept ISO 8601
-			if (DateTime.TryParse(strValue, null, DateTimeStyles.RoundtripKind, out var dateTime))
+			// DateAndTime or UserLocal - accept ISO 8601 international format only
+			var isoFormats = new[]
+			{
+				"yyyy-MM-ddTHH:mm:ssZ",
+				"yyyy-MM-ddTHH:mm:sszzz",
+				"yyyy-MM-ddTHH:mm:ss",
+				"yyyy-MM-ddTHH:mm:ss.fffZ",
+				"yyyy-MM-ddTHH:mm:ss.fffzzz",
+				"yyyy-MM-ddTHH:mm:ss.fff",
+				"yyyy-MM-dd",
+			};
+
+			if (DateTime.TryParseExact(
+					strValue,
+					isoFormats,
+					CultureInfo.InvariantCulture,
+					DateTimeStyles.RoundtripKind,
+					out var dateTime))
 			{
 				return dateTime;
 			}
