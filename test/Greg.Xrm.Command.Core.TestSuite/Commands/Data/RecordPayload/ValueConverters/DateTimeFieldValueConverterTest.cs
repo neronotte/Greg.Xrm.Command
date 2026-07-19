@@ -74,6 +74,9 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.ValueConverters
 			Assert.AreEqual(2024, dt.Year);
 			Assert.AreEqual(1, dt.Month);
 			Assert.AreEqual(15, dt.Day);
+			Assert.AreEqual(6, dt.Hour);
+			Assert.AreEqual(30, dt.Minute);
+			Assert.AreEqual(DateTimeKind.Utc, dt.Kind);
 		}
 
 		[TestMethod]
