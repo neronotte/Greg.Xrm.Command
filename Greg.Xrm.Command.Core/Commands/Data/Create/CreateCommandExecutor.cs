@@ -140,7 +140,8 @@ namespace Greg.Xrm.Command.Commands.Data.Create
 					var retrieved = await crm.RetrieveAsync(
 						entityMetadata.LogicalName,
 						createdId,
-						new ColumnSet(columns));
+						new ColumnSet(columns),
+						cancellationToken);
 					output.WriteLine("Done", ConsoleColor.Green);
 					output.WriteLine();
 					PrintEntityFields(retrieved);
