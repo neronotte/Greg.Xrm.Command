@@ -13,7 +13,7 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.ValueConverters
 			var strValue = rawValue as string ?? rawValue.ToString()!;
 
 			if (metadata is DateTimeAttributeMetadata dtMeta &&
-				dtMeta.DateTimeBehavior == DateTimeBehavior.DateOnly)
+				string.Equals(dtMeta.DateTimeBehavior?.Value, DateTimeBehavior.DateOnly.Value, StringComparison.OrdinalIgnoreCase))
 			{
 				if (DateTime.TryParseExact(
 						strValue,
