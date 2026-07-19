@@ -203,6 +203,7 @@ return result;
 				null => "(null)",
 				EntityReference er => $"{er.LogicalName}({er.Id})",
 				Microsoft.Xrm.Sdk.OptionSetValue osv => osv.Value.ToString(),
+				Microsoft.Xrm.Sdk.OptionSetValueCollection values => string.Join(", ", values.Select(item => item.Value)),
 				Microsoft.Xrm.Sdk.Money money => money.Value.ToString("F2"),
 				_ => value.ToString() ?? "(null)"
 			};
