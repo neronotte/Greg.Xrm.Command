@@ -32,6 +32,13 @@ namespace Greg.Xrm.Command.Commands.Data.Update
 
 		public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
 		{
+			if (Id == Guid.Empty)
+			{
+				yield return new ValidationResult(
+					"The --id option must be a non-empty GUID.",
+					[nameof(Id)]);
+			}
+
 			var provided = new[]
 			{
 				!string.IsNullOrWhiteSpace(Plain),
