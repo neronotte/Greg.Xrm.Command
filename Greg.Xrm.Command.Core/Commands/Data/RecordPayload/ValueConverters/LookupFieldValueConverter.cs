@@ -45,7 +45,16 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.ValueConverters
 				?? throw new FormatException(
 					$"Expected a string reference for lookup field '{fieldName}', but got '{rawValue.GetType().Name}'.");
 
-			return await LookupReferenceParser.ParseAsync(strValue, fieldName, _crm, cancellationToken);
+			var reference = await LookupReferenceParser.ParseAsync(strValue, fieldName, _crm, cancellationToken);
+			if (metadata is LookupAttributeMetadata lookupMetadata &&
+				lookupMetadata.Targets is { Length: > 0 } targets &&
+				!targets.Contains(reference.LogicalName, StringComparer.OrdinalIgnoreCase))
+			{
+				throw new FormatException(
+					$"Entity '{reference.LogicalName}' is not a valid target for lookup field '{fieldName}'. Valid targets: {string.Join(", ", targets)}.");
+			}
+
+			return reference;
 		}
 	}
 }
