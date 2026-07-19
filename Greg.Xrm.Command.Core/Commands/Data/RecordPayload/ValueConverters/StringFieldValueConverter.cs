@@ -12,7 +12,7 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.ValueConverters
 			if (rawValue is string str)
 				return string.IsNullOrEmpty(str) ? null : str;
 
-			return rawValue.ToString();
+			return System.Convert.ToString(rawValue, System.Globalization.CultureInfo.InvariantCulture);
 		}
 	}
 }
