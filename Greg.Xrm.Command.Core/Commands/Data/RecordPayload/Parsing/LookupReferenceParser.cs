@@ -41,7 +41,7 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.Parsing
 			string rawValue,
 			string fieldName,
 			IOrganizationServiceAsync2 crm,
-			CancellationToken cancellationToken = default)
+			CancellationToken cancellationToken)
 		{
 			// Try GUID pattern first
 			var guidMatch = GuidPattern.Match(rawValue);
@@ -81,7 +81,7 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.Parsing
 						LogicalName = entityName,
 						EntityFilters = EntityFilters.Entity
 					};
-					var metadataResponse = (RetrieveEntityResponse)await crm.ExecuteAsync(metadataRequest);
+					var metadataResponse = (RetrieveEntityResponse)await crm.ExecuteAsync(metadataRequest, cancellationToken);
 					entityMetadata = metadataResponse.EntityMetadata;
 				}
 				catch (FaultException<OrganizationServiceFault> ex)
@@ -107,7 +107,7 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.Parsing
 				EntityCollection queryResult;
 				try
 				{
-					queryResult = await crm.RetrieveMultipleAsync(query);
+					queryResult = await crm.RetrieveMultipleAsync(query, cancellationToken);
 				}
 				catch (FaultException<OrganizationServiceFault> ex)
 				{

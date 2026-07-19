@@ -24,13 +24,13 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.Parsing
 			var guid = Guid.NewGuid();
 			var rawValue = $"account({guid})";
 
-			var result = await LookupReferenceParser.ParseAsync(rawValue, "parentaccountid", _crmMock.Object);
+			var result = await LookupReferenceParser.ParseAsync(rawValue, "parentaccountid", _crmMock.Object, CancellationToken.None);
 
 			Assert.AreEqual("account", result.LogicalName);
 			Assert.AreEqual(guid, result.Id);
 			// CRM should NOT have been called
-			_crmMock.Verify(c => c.ExecuteAsync(It.IsAny<OrganizationRequest>()), Times.Never);
-			_crmMock.Verify(c => c.RetrieveMultipleAsync(It.IsAny<QueryBase>()), Times.Never);
+			_crmMock.Verify(c => c.ExecuteAsync(It.IsAny<OrganizationRequest>(), It.IsAny<CancellationToken>()), Times.Never);
+			_crmMock.Verify(c => c.RetrieveMultipleAsync(It.IsAny<QueryBase>(), It.IsAny<CancellationToken>()), Times.Never);
 		}
 
 		[TestMethod]
@@ -42,7 +42,7 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.Parsing
 			SetupMetadata("systemuser", "systemuserid");
 			SetupRetrieveMultiple("systemuser", expectedGuid);
 
-			var result = await LookupReferenceParser.ParseAsync(rawValue, "ownerid", _crmMock.Object);
+			var result = await LookupReferenceParser.ParseAsync(rawValue, "ownerid", _crmMock.Object, CancellationToken.None);
 
 			Assert.AreEqual("systemuser", result.LogicalName);
 			Assert.AreEqual(expectedGuid, result.Id);
@@ -57,7 +57,7 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.Parsing
 			SetupRetrieveMultiple("systemuser"); // no results
 
 			var ex = await Assert.ThrowsAsync<InvalidOperationException>(
-				() => LookupReferenceParser.ParseAsync(rawValue, "ownerid", _crmMock.Object));
+				() => LookupReferenceParser.ParseAsync(rawValue, "ownerid", _crmMock.Object, CancellationToken.None));
 
 			Assert.IsTrue(ex.Message.Contains("No systemuser record found"));
 		}
@@ -71,7 +71,7 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.Parsing
 			SetupRetrieveMultiple("account", Guid.NewGuid(), Guid.NewGuid());
 
 			var ex = await Assert.ThrowsAsync<InvalidOperationException>(
-				() => LookupReferenceParser.ParseAsync(rawValue, "parentaccountid", _crmMock.Object));
+				() => LookupReferenceParser.ParseAsync(rawValue, "parentaccountid", _crmMock.Object, CancellationToken.None));
 
 			Assert.IsTrue(ex.Message.Contains("Ambiguous lookup"));
 			Assert.IsTrue(ex.Message.Contains("2"));
@@ -83,7 +83,7 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.Parsing
 			var rawValue = "foo bar"; // not a valid lookup reference
 
 			await Assert.ThrowsAsync<FormatException>(
-				() => LookupReferenceParser.ParseAsync(rawValue, "ownerid", _crmMock.Object));
+				() => LookupReferenceParser.ParseAsync(rawValue, "ownerid", _crmMock.Object, CancellationToken.None));
 		}
 
 		[TestMethod]
@@ -103,7 +103,7 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.Parsing
 				.ReturnsAsync(new EntityCollection(
 					new List<Entity> { new Entity("account") { Id = expectedGuid } }));
 
-			var result = await LookupReferenceParser.ParseAsync(rawValue, "parentaccountid", _crmMock.Object);
+			var result = await LookupReferenceParser.ParseAsync(rawValue, "parentaccountid", _crmMock.Object, CancellationToken.None);
 
 			Assert.AreEqual(expectedGuid, result.Id);
 			Assert.IsNotNull(capturedQuery);
