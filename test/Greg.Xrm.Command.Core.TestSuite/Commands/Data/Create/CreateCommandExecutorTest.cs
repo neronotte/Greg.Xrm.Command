@@ -68,13 +68,13 @@ namespace Greg.Xrm.Command.Commands.Data.Create
 			var retrievedEntity = new Entity("contact") { Id = expectedId };
 			retrievedEntity["firstname"] = "Mario";
 			retrievedEntity["lastname"] = "Rossi";
-			_crmMock.Setup(c => c.RetrieveAsync("contact", expectedId, It.IsAny<ColumnSet>()))
+			_crmMock.Setup(c => c.RetrieveAsync("contact", expectedId, It.IsAny<ColumnSet>(), It.IsAny<CancellationToken>()))
 				.ReturnsAsync(retrievedEntity);
 
 			var result = await _executor.ExecuteAsync(command, CancellationToken.None);
 
 			Assert.IsTrue(result.IsSuccess);
-			_crmMock.Verify(c => c.RetrieveAsync("contact", expectedId, It.IsAny<ColumnSet>()), Times.Once);
+			_crmMock.Verify(c => c.RetrieveAsync("contact", expectedId, It.IsAny<ColumnSet>(), It.IsAny<CancellationToken>()), Times.Once);
 		}
 
 		[TestMethod]
@@ -105,7 +105,7 @@ namespace Greg.Xrm.Command.Commands.Data.Create
 				Plain = "field=value"
 			};
 
-			_crmMock.Setup(c => c.ExecuteAsync(It.IsAny<OrganizationRequest>()))
+			_crmMock.Setup(c => c.ExecuteAsync(It.IsAny<OrganizationRequest>(), It.IsAny<CancellationToken>()))
 				.ThrowsAsync(new System.ServiceModel.FaultException<OrganizationServiceFault>(
 					new OrganizationServiceFault(),
 					new System.ServiceModel.FaultReason("Table not found")));
@@ -232,7 +232,7 @@ namespace Greg.Xrm.Command.Commands.Data.Create
 			var response = new RetrieveEntityResponse();
 			response.Results["EntityMetadata"] = entityMetadata;
 
-			_crmMock.Setup(c => c.ExecuteAsync(It.Is<OrganizationRequest>(r => r is RetrieveEntityRequest)))
+			_crmMock.Setup(c => c.ExecuteAsync(It.Is<OrganizationRequest>(r => r is RetrieveEntityRequest), It.IsAny<CancellationToken>()))
 				.ReturnsAsync(response);
 		}
 

@@ -83,7 +83,7 @@ namespace Greg.Xrm.Command.Commands.Data.Update
 				Plain = "field=value"
 			};
 
-			_crmMock.Setup(c => c.ExecuteAsync(It.IsAny<OrganizationRequest>()))
+			_crmMock.Setup(c => c.ExecuteAsync(It.IsAny<OrganizationRequest>(), It.IsAny<CancellationToken>()))
 				.ThrowsAsync(new System.ServiceModel.FaultException<OrganizationServiceFault>(
 					new OrganizationServiceFault(),
 					new System.ServiceModel.FaultReason("Table not found")));
@@ -169,7 +169,7 @@ namespace Greg.Xrm.Command.Commands.Data.Update
 			var response = new RetrieveEntityResponse();
 			response.Results["EntityMetadata"] = entityMetadata;
 
-			_crmMock.Setup(c => c.ExecuteAsync(It.Is<OrganizationRequest>(r => r is RetrieveEntityRequest)))
+			_crmMock.Setup(c => c.ExecuteAsync(It.Is<OrganizationRequest>(r => r is RetrieveEntityRequest), It.IsAny<CancellationToken>()))
 				.ReturnsAsync(response);
 		}
 
