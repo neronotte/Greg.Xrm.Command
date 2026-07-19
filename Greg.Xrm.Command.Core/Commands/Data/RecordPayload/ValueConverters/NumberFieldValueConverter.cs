@@ -25,9 +25,9 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.ValueConverters
 		{
 			return rawValue switch
 			{
-				long l => (int)l,
+				long l => checked((int)l),
 				int i => i,
-				double d => (int)d,
+				double d when double.IsFinite(d) && d == Math.Truncate(d) && d >= int.MinValue && d <= int.MaxValue => (int)d,
 				string s => int.TryParse(s, NumberStyles.Integer, CultureInfo.InvariantCulture, out var result)
 					? result
 					: throw new FormatException($"Cannot convert '{s}' to integer for field '{fieldName}'."),
