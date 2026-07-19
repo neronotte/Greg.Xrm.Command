@@ -145,7 +145,7 @@ namespace Greg.Xrm.Command.Commands.Data.Create
 					output.WriteLine();
 					PrintEntityFields(retrieved);
 				}
-				catch (FaultException<OrganizationServiceFault> ex)
+				catch (Exception ex) when (ex is not OperationCanceledException)
 				{
 					output.WriteLine("FAILED", ConsoleColor.Red);
 					output.WriteLine($"Warning: Could not retrieve record fields: {ex.Message}", ConsoleColor.Yellow);
