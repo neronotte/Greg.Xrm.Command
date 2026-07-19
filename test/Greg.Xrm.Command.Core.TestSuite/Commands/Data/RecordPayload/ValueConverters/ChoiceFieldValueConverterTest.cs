@@ -26,7 +26,7 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.ValueConverters
 		[TestMethod]
 		public void Convert_WithLong_ShouldReturnOptionSetValue()
 		{
-			var meta = new PicklistAttributeMetadata();
+			var meta = BuildPicklistWithOptions((1, "Active"), (2, "Inactive"));
 			var result = _converter.Convert(1L, meta, "status");
 
 			Assert.IsInstanceOfType(result, typeof(OptionSetValue));
@@ -36,11 +36,55 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.ValueConverters
 		[TestMethod]
 		public void Convert_WithNumericString_ShouldReturnOptionSetValue()
 		{
-			var meta = new PicklistAttributeMetadata();
+			var meta = BuildPicklistWithOptions((1, "Active"), (2, "Inactive"));
 			var result = _converter.Convert("2", meta, "status");
 
 			Assert.IsInstanceOfType(result, typeof(OptionSetValue));
 			Assert.AreEqual(2, ((OptionSetValue)result!).Value);
+		}
+
+		[TestMethod]
+		public void Convert_WithUndefinedIntegerCode_ShouldThrowFormatException()
+		{
+			var meta = BuildPicklistWithOptions((1, "Active"), (2, "Inactive"));
+
+			var ex = Assert.Throws<FormatException>(
+				() => _converter.Convert(3, meta, "status"));
+
+			Assert.IsTrue(ex.Message.Contains("Valid codes are: 1, 2."));
+		}
+
+		[TestMethod]
+		public void Convert_WithUndefinedLongCode_ShouldThrowFormatException()
+		{
+			var meta = BuildPicklistWithOptions((1, "Active"), (2, "Inactive"));
+
+			var ex = Assert.Throws<FormatException>(
+				() => _converter.Convert(3L, meta, "status"));
+
+			Assert.IsTrue(ex.Message.Contains("Valid codes are: 1, 2."));
+		}
+
+		[TestMethod]
+		public void Convert_WithUndefinedNumericStringCode_ShouldThrowFormatException()
+		{
+			var meta = BuildPicklistWithOptions((1, "Active"), (2, "Inactive"));
+
+			var ex = Assert.Throws<FormatException>(
+				() => _converter.Convert("3", meta, "status"));
+
+			Assert.IsTrue(ex.Message.Contains("Valid codes are: 1, 2."));
+		}
+
+		[TestMethod]
+		public void Convert_WithOutOfRangeLong_ShouldThrowFormatException()
+		{
+			var meta = BuildPicklistWithOptions((1, "Active"), (2, "Inactive"));
+
+			var ex = Assert.Throws<FormatException>(
+				() => _converter.Convert((long)int.MaxValue + 1, meta, "status"));
+
+			Assert.IsTrue(ex.Message.Contains("out of Int32 range"));
 		}
 
 		[TestMethod]

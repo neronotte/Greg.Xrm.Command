@@ -26,7 +26,7 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.ValueConverters
 		[TestMethod]
 		public void Convert_WithCommaSeparatedIntegers_ShouldReturnOptionSetValueCollection()
 		{
-			var meta = new MultiSelectPicklistAttributeMetadata();
+			var meta = BuildMultiSelectWithOptions((1, "Red"), (2, "Blue"), (3, "Green"));
 			var result = _converter.Convert("1,2,3", meta, "tags");
 
 			Assert.IsInstanceOfType(result, typeof(OptionSetValueCollection));
@@ -50,7 +50,7 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.ValueConverters
 		[TestMethod]
 		public void Convert_WithListOfLong_ShouldReturnOptionSetValueCollection()
 		{
-			var meta = new MultiSelectPicklistAttributeMetadata();
+			var meta = BuildMultiSelectWithOptions((1, "Red"), (2, "Blue"), (3, "Green"));
 			var list = new List<object?> { 1L, 2L, 3L };
 			var result = _converter.Convert(list, meta, "tags");
 

@@ -10,29 +10,26 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.ValueConverters
 			if (rawValue == null)
 				return null;
 
-			// If it's a long (from JSON number), convert directly
 			if (rawValue is long l)
-				return new OptionSetValue((int)l);
+			{
+				if (l < int.MinValue || l > int.MaxValue)
+				{
+					throw new FormatException(
+						$"Cannot convert value '{l}' to choice value for field '{fieldName}': value is out of Int32 range.");
+				}
 
-			// If it's an int
+				return new OptionSetValue(ResolveNumericCode((int)l, metadata, fieldName));
+			}
+
 			if (rawValue is int i)
-				return new OptionSetValue(i);
+				return new OptionSetValue(ResolveNumericCode(i, metadata, fieldName));
 
 			if (rawValue is string s)
 			{
-				// Try numeric parse first
 				if (int.TryParse(s, out var numericCode))
-					return new OptionSetValue(numericCode);
+					return new OptionSetValue(ResolveNumericCode(numericCode, metadata, fieldName));
 
-				// Try label match
-				OptionMetadataCollection? options = metadata switch
-				{
-					PicklistAttributeMetadata pl => pl.OptionSet?.Options,
-					StateAttributeMetadata st => st.OptionSet?.Options,
-					StatusAttributeMetadata su => su.OptionSet?.Options,
-					MultiSelectPicklistAttributeMetadata ms => ms.OptionSet?.Options,
-					_ => null
-				};
+				var options = GetOptions(metadata);
 
 				if (options != null)
 				{
@@ -58,6 +55,39 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.ValueConverters
 			throw new FormatException(
 				$"Cannot convert value '{rawValue}' to choice value for field '{fieldName}'.");
 		}
+
+		private static int ResolveNumericCode(int code, AttributeMetadata metadata, string fieldName)
+		{
+			var options = GetOptions(metadata);
+			if (options == null || !options.Any(option => option.Value == code))
+			{
+				var validCodes = options == null
+					? string.Empty
+					: string.Join(", ", options
+						.Where(option => option.Value.HasValue)
+						.Select(option => option.Value!.Value.ToString()));
+
+				var message = $"Cannot convert '{code}' to choice value for field '{fieldName}'.";
+				if (!string.IsNullOrWhiteSpace(validCodes))
+				{
+					message += $" Valid codes are: {validCodes}.";
+				}
+
+				throw new FormatException(message);
+			}
+
+			return code;
+		}
+
+		private static OptionMetadataCollection? GetOptions(AttributeMetadata metadata) =>
+			metadata switch
+			{
+				PicklistAttributeMetadata pl => pl.OptionSet?.Options,
+				StateAttributeMetadata st => st.OptionSet?.Options,
+				StatusAttributeMetadata su => su.OptionSet?.Options,
+				MultiSelectPicklistAttributeMetadata ms => ms.OptionSet?.Options,
+				_ => null
+			};
 
 		private static string? GetLabel(OptionMetadata option) =>
 			option.Label?.UserLocalizedLabel?.Label
