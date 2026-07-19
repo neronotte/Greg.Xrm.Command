@@ -190,6 +190,11 @@ return result;
 				.Select(a => new { Name = a.Key, Value = FormatValue(a.Value) })
 				.ToList();
 
+			if (entity.Id != Guid.Empty)
+			{
+				fields.Insert(0, new { Name = "id", Value = entity.Id.ToString() });
+			}
+
 			if (fields.Count == 0)
 			{
 				output.WriteLine("(no fields)");

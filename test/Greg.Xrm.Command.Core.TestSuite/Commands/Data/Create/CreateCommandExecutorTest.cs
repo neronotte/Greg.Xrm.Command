@@ -75,6 +75,10 @@ namespace Greg.Xrm.Command.Commands.Data.Create
 
 			Assert.IsTrue(result.IsSuccess);
 			_crmMock.Verify(c => c.RetrieveAsync("contact", expectedId, It.IsAny<ColumnSet>(), It.IsAny<CancellationToken>()), Times.Once);
+			var hasIdRow = _output.ToString()
+				.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries)
+				.Any(line => line.TrimStart().StartsWith("| id") && line.Contains(expectedId.ToString()));
+			Assert.IsTrue(hasIdRow);
 		}
 
 		[TestMethod]
