@@ -105,7 +105,7 @@ namespace Greg.Xrm.Command.Commands.Data.Update
 			output.Write($"Updating record {command.Id}...");
 			try
 			{
-				await crm.UpdateAsync(processResult.Entity);
+				await crm.UpdateAsync(processResult.Entity, cancellationToken);
 				output.WriteLine("Done", ConsoleColor.Green);
 			}
 			catch (FaultException<OrganizationServiceFault> ex)
