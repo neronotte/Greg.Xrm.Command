@@ -127,9 +127,16 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.Parsing
 				}
 			}
 
-			// Emit the last pair if we have a key
+			if (state == State.InsideTopLevelQuotes || parenDepth != 0)
+			{
+				throw new FormatException("Malformed payload: unclosed quote or parenthesis.");
+			}
+
 			if (key.Length > 0)
 			{
+				if (state == State.ReadingKey)
+					throw new FormatException($"Malformed payload token '{key}': expected field=value.");
+
 				EmitPair(result, key, value);
 			}
 
