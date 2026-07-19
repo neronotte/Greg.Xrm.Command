@@ -291,7 +291,11 @@ contenuto interno = "domainname='mario.rossi@contoso.com'"
 → regex: ^([a-z][a-z0-9_]+)='(.+)'$  (con gestione delle '' escape)
 → fieldName = "domainname"
 → fieldValue = "mario.rossi@contoso.com"
-→ query OData: GET systemusers?$select=systemuserid&$filter=domainname eq 'mario.rossi@contoso.com'&$top=2
+→ RetrieveEntityRequest { LogicalName = "systemuser", EntityFilters = EntityFilters.Entity }
+  → PrimaryIdAttribute = "systemuserid"
+→ QueryExpression("systemuser") { ColumnSet = ["systemuserid"], TopCount = 2 }
+  con Criteria: domainname = 'mario.rossi@contoso.com'
+→ RetrieveMultipleAsync(query)
 ```
 
 ### Diagramma di flusso — Risoluzione lookup
@@ -304,19 +308,19 @@ flowchart TD
     C -->|Sì| E[entityName = gruppo 1\ncontentInner = gruppo 2]
     E --> F{Guid.TryParse\ncontentInner}
     F -->|Sì| G[Restituisce EntityReference\nentityName + GUID]
-    F -->|No| H[Applica regex\nnomecampo eq 'valore']
+    F -->|No| H[Applica regex\nnomecampo='valore']
     H --> I{Match trovato?}
     I -->|No| J[Errore: sintassi field-based non valida]
-    I -->|Sì| K[fieldName, fieldValue estratti]
-    K --> L[Recupera plural name della tabella da metadata]
-    L --> M["GET /{pluralName}?$select={pk}&$filter={fieldName} eq '{fieldValue}'&$top=2"]
+    I -->|Sì| K[fieldName, fieldValue estratti\n'' unescaped a ']
+    K --> L[RetrieveEntityRequest\nEntityFilters.Entity\n→ PrimaryIdAttribute]
+    L --> M[QueryExpression con ColumnSet={pk}\nCriteria: fieldName = fieldValue\nTopCount = 2\nRetrieveMultipleAsync]
     M --> N{Risultati}
     N -->|0 record| O[Errore: nessun record trovato]
     N -->|2+ record| P[Errore: valore ambiguo, più record corrispondono]
     N -->|1 record| Q[Restituisce EntityReference\nentityName + GUID risolto]
 ```
 
-> **Gestione `''` nei valori field-based**: prima di costruire la query OData, il valore viene unescaped sostituendo `''` con `'`. La stringa inviata a OData viene correttamente re-escaped nella query filter.
+> **Gestione `''` nei valori field-based**: il valore viene unescaped sostituendo `''` con `'` prima di essere passato come parametro a `QueryExpression`. La query viene eseguita tramite `RetrieveMultipleAsync`, non tramite OData.
 
 ---
 
