@@ -45,10 +45,12 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.Parsing
 				case JsonValueKind.String:
 					return element.GetString();
 
-				case JsonValueKind.Number:
-					if (element.TryGetInt64(out var longValue))
-						return longValue;
-					return element.GetDouble();
+case JsonValueKind.Number:
+	if (element.TryGetInt64(out var longValue))
+		return longValue;
+	if (element.TryGetDecimal(out var decimalValue))
+		return decimalValue;
+	return element.GetDouble();
 
 				case JsonValueKind.True:
 					return true;
