@@ -33,14 +33,16 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.ValueConverters
 
 				if (options != null)
 				{
-					foreach (var option in options)
-					{
-						var label = GetLabel(option);
-						if (label != null && label.Equals(s, StringComparison.OrdinalIgnoreCase))
-						{
-							return new OptionSetValue(option.Value!.Value);
-						}
-					}
+					var matches = options
+						.Where(option => option.Value.HasValue && string.Equals(GetLabel(option), s, StringComparison.OrdinalIgnoreCase))
+						.ToList();
+
+					if (matches.Count == 1)
+						return new OptionSetValue(matches[0].Value!.Value);
+
+					if (matches.Count > 1)
+						throw new FormatException(
+							$"Choice label '{s}' is ambiguous for field '{fieldName}'. Use an integer code instead.");
 
 					var validLabels = string.Join(", ", options
 						.Select(GetLabel)
