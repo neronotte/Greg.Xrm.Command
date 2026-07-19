@@ -10,65 +10,65 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.ValueConverters
 		private readonly BooleanAttributeMetadata _metadata = new();
 
 		[TestMethod]
-		public void Convert_TrueBool_ShouldReturnTrue()
+		public async Task Convert_TrueBool_ShouldReturnTrue()
 		{
-			var result = _converter.Convert(true, _metadata, "flag");
+			var result = await _converter.ConvertAsync(true, _metadata, "flag", CancellationToken.None);
 			Assert.AreEqual(true, result);
 		}
 
 		[TestMethod]
-		public void Convert_FalseBool_ShouldReturnFalse()
+		public async Task Convert_FalseBool_ShouldReturnFalse()
 		{
-			var result = _converter.Convert(false, _metadata, "flag");
+			var result = await _converter.ConvertAsync(false, _metadata, "flag", CancellationToken.None);
 			Assert.AreEqual(false, result);
 		}
 
 		[TestMethod]
-		public void Convert_StringTrue_ShouldReturnTrue()
+		public async Task Convert_StringTrue_ShouldReturnTrue()
 		{
-			var result = _converter.Convert("true", _metadata, "flag");
+			var result = await _converter.ConvertAsync("true", _metadata, "flag", CancellationToken.None);
 			Assert.AreEqual(true, result);
 		}
 
 		[TestMethod]
-		public void Convert_StringFalse_ShouldReturnFalse()
+		public async Task Convert_StringFalse_ShouldReturnFalse()
 		{
-			var result = _converter.Convert("false", _metadata, "flag");
+			var result = await _converter.ConvertAsync("false", _metadata, "flag", CancellationToken.None);
 			Assert.AreEqual(false, result);
 		}
 
 		[TestMethod]
-		public void Convert_StringTrueCaseInsensitive_ShouldReturnTrue()
+		public async Task Convert_StringTrueCaseInsensitive_ShouldReturnTrue()
 		{
-			var result = _converter.Convert("TRUE", _metadata, "flag");
+			var result = await _converter.ConvertAsync("TRUE", _metadata, "flag", CancellationToken.None);
 			Assert.AreEqual(true, result);
 		}
 
 		[TestMethod]
-		public void Convert_StringOne_ShouldReturnTrue()
+		public async Task Convert_StringOne_ShouldReturnTrue()
 		{
-			var result = _converter.Convert("1", _metadata, "flag");
+			var result = await _converter.ConvertAsync("1", _metadata, "flag", CancellationToken.None);
 			Assert.AreEqual(true, result);
 		}
 
 		[TestMethod]
-		public void Convert_StringZero_ShouldReturnFalse()
+		public async Task Convert_StringZero_ShouldReturnFalse()
 		{
-			var result = _converter.Convert("0", _metadata, "flag");
+			var result = await _converter.ConvertAsync("0", _metadata, "flag", CancellationToken.None);
 			Assert.AreEqual(false, result);
 		}
 
 		[TestMethod]
-		public void Convert_InvalidString_ShouldThrowFormatException()
+		public async Task Convert_InvalidString_ShouldThrowFormatException()
 		{
-			Assert.Throws<FormatException>(
-				() => _converter.Convert("yes", _metadata, "flag"));
+			await Assert.ThrowsAsync<FormatException>(
+				() => _converter.ConvertAsync("yes", _metadata, "flag", CancellationToken.None));
 		}
 
 		[TestMethod]
-		public void Convert_NullValue_ShouldReturnNull()
+		public async Task Convert_NullValue_ShouldReturnNull()
 		{
-			var result = _converter.Convert(null, _metadata, "flag");
+			var result = await _converter.ConvertAsync(null, _metadata, "flag", CancellationToken.None);
 			Assert.IsNull(result);
 		}
 	}

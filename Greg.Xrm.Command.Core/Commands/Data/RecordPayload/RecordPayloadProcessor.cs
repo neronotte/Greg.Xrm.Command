@@ -84,30 +84,21 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload
 				// 5. Convert the value
 				try
 				{
-					if (attrMeta is LookupAttributeMetadata)
+					var converter = FieldValueConverterFactory.GetConverter(attrMeta, crm);
+					if (converter == null)
 					{
-						var lookupConverter = new LookupFieldValueConverter(crm);
-						var converted = await lookupConverter.ConvertAsync(rawValue, attrMeta, fieldName, cancellationToken);
-						entity[fieldName] = converted;
+						warnings.Add($"Field '{fieldName}' has an unsupported type '{attrMeta.AttributeType}' and will be skipped.");
+						continue;
 					}
-					else
+
+					var converted = await converter.ConvertAsync(rawValue, attrMeta, fieldName, cancellationToken);
+					if (converted is SkippedFieldValue)
 					{
-						var converter = FieldValueConverterFactory.GetConverter(attrMeta, crm);
-						if (converter == null)
-						{
-							warnings.Add($"Field '{fieldName}' has an unsupported type '{attrMeta.AttributeType}' and will be skipped.");
-							continue;
-						}
-
-						var converted = converter.Convert(rawValue, attrMeta, fieldName);
-						if (converted is SkippedFieldValue)
-						{
-							warnings.Add($"Field '{fieldName}' cannot be set and will be skipped.");
-							continue;
-						}
-
-						entity[fieldName] = converted;
+						warnings.Add($"Field '{fieldName}' cannot be set and will be skipped.");
+						continue;
 					}
+
+					entity[fieldName] = converted;
 				}
 				catch (OperationCanceledException)
 				{

@@ -91,19 +91,19 @@ namespace Greg.Xrm.Command.Commands.Data.Create
 				output.WriteLine($"Warning: {warning}", ConsoleColor.Yellow);
 			}
 
-			// 7. Dry-run
+			// 7. Assign optional ID
+			if (command.Id.HasValue)
+			{
+				processResult.Entity.Id = command.Id.Value;
+			}
+
+			// 8. Dry-run
 			if (command.DryRun)
 			{
 				output.WriteLine();
 				output.WriteLine("Dry-run mode: the following fields would be set:", ConsoleColor.Cyan);
 				PrintEntityFields(processResult.Entity);
 				return CommandResult.Success();
-			}
-
-			// 8. Assign optional ID
-			if (command.Id.HasValue)
-			{
-				processResult.Entity.Id = command.Id.Value;
 			}
 
 			// 9. Create the record
@@ -127,8 +127,7 @@ namespace Greg.Xrm.Command.Commands.Data.Create
 
 			// 10. Output result
 			output.WriteLine();
-			output.Write("Record created successfully.  Table: ").Write(command.Table, ConsoleColor.Cyan);
-			output.Write("  Id: ").WriteLine(createdId.ToString(), ConsoleColor.Cyan);
+			output.Write("Record created successfully.  Table: ").WriteLine(command.Table, ConsoleColor.Cyan);
 
 			// 11. Return fields if requested
 			if (!string.IsNullOrWhiteSpace(command.Return))
@@ -155,9 +154,9 @@ namespace Greg.Xrm.Command.Commands.Data.Create
 				}
 			}
 
-var result = CommandResult.Success();
-result["Id"] = createdId;
-return result;
+			var result = CommandResult.Success();
+			result["Id"] = createdId;
+			return result;
 		}
 
 		private static Dictionary<string, object?> ParsePayload(CreateCommand command)

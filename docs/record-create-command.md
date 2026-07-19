@@ -237,7 +237,7 @@ flowchart TD
 ### Input
 
 - `--json`: stringa JSON inline
-- `--file`: contenuto del file letto con `File.ReadAllTextAsync`
+- `--file`: contenuto del file letto con `File.ReadAllText`
 
 ### Parsing
 
@@ -401,24 +401,24 @@ flowchart TD
 
 ### Output standard (nessun `--return`)
 
-Il GUID del record creato è sempre stampato, indipendentemente da `--return`.
+Il comando segnala sempre la creazione riuscita e restituisce il GUID strutturato nel risultato finale del runner.
 
 ```
 Creating record on table 'contact'... Done
 
-Record created successfully.
-  Table : contact
-  Id    : 3fa85f64-5717-4562-b3fc-2c963f66afa6
+Record created successfully.  Table: contact
+Result:
+  Id: 3fa85f64-5717-4562-b3fc-2c963f66afa6
 ```
 
 ### Output con `--return firstname,lastname,emailaddress1`
 
-Il campo `id` è sempre incluso come prima riga, anche se non specificato in `--return`.
+Se viene richiesto `--return`, l'output tabellare mostra anche l'`id` del record risolto oltre ai campi restituiti.
 
 ```
 Creating record on table 'contact'... Done
 
-Record created successfully.
+Record created successfully.  Table: contact
 
   Field            Value
   ─────────────── ────────────────────────────
@@ -426,6 +426,9 @@ Record created successfully.
   firstname        Mario
   lastname         Rossi
   emailaddress1    mario.rossi@contoso.com
+
+Result:
+  Id: 3fa85f64-5717-4562-b3fc-2c963f66afa6
 ```
 
 ### Output con `--dry-run`
@@ -447,7 +450,7 @@ No record was created.
 
 ## Gestione degli errori
 
-Il comando accumula **tutti** gli errori di parsing e conversione prima di fallire, in modo da mostrare all'utente (o all'agente IA) tutte le correzioni necessarie in un unico ciclo.
+Gli errori di **conversione per campo** vengono accumulati da `RecordPayloadProcessor` prima del fallimento. Gli errori di parsing del payload (`--plain`, `--json`, `--file`) invece interrompono subito l'esecuzione al primo input malformato.
 
 | Scenario | Messaggio di errore |
 |---|---|

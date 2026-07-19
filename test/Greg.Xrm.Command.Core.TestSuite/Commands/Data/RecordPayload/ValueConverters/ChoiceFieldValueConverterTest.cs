@@ -24,106 +24,106 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.ValueConverters
 		}
 
 		[TestMethod]
-		public void Convert_WithLong_ShouldReturnOptionSetValue()
+		public async Task Convert_WithLong_ShouldReturnOptionSetValue()
 		{
 			var meta = BuildPicklistWithOptions((1, "Active"), (2, "Inactive"));
-			var result = _converter.Convert(1L, meta, "status");
+			var result = await _converter.ConvertAsync(1L, meta, "status", CancellationToken.None);
 
 			Assert.IsInstanceOfType(result, typeof(OptionSetValue));
 			Assert.AreEqual(1, ((OptionSetValue)result!).Value);
 		}
 
 		[TestMethod]
-		public void Convert_WithNumericString_ShouldReturnOptionSetValue()
+		public async Task Convert_WithNumericString_ShouldReturnOptionSetValue()
 		{
 			var meta = BuildPicklistWithOptions((1, "Active"), (2, "Inactive"));
-			var result = _converter.Convert("2", meta, "status");
+			var result = await _converter.ConvertAsync("2", meta, "status", CancellationToken.None);
 
 			Assert.IsInstanceOfType(result, typeof(OptionSetValue));
 			Assert.AreEqual(2, ((OptionSetValue)result!).Value);
 		}
 
 		[TestMethod]
-		public void Convert_WithUndefinedIntegerCode_ShouldThrowFormatException()
+		public async Task Convert_WithUndefinedIntegerCode_ShouldThrowFormatException()
 		{
 			var meta = BuildPicklistWithOptions((1, "Active"), (2, "Inactive"));
 
-			var ex = Assert.Throws<FormatException>(
-				() => _converter.Convert(3, meta, "status"));
+			var ex = await Assert.ThrowsAsync<FormatException>(
+				() => _converter.ConvertAsync(3, meta, "status", CancellationToken.None));
 
 			Assert.IsTrue(ex.Message.Contains("Valid codes are: 1, 2."));
 		}
 
 		[TestMethod]
-		public void Convert_WithUndefinedLongCode_ShouldThrowFormatException()
+		public async Task Convert_WithUndefinedLongCode_ShouldThrowFormatException()
 		{
 			var meta = BuildPicklistWithOptions((1, "Active"), (2, "Inactive"));
 
-			var ex = Assert.Throws<FormatException>(
-				() => _converter.Convert(3L, meta, "status"));
+			var ex = await Assert.ThrowsAsync<FormatException>(
+				() => _converter.ConvertAsync(3L, meta, "status", CancellationToken.None));
 
 			Assert.IsTrue(ex.Message.Contains("Valid codes are: 1, 2."));
 		}
 
 		[TestMethod]
-		public void Convert_WithUndefinedNumericStringCode_ShouldThrowFormatException()
+		public async Task Convert_WithUndefinedNumericStringCode_ShouldThrowFormatException()
 		{
 			var meta = BuildPicklistWithOptions((1, "Active"), (2, "Inactive"));
 
-			var ex = Assert.Throws<FormatException>(
-				() => _converter.Convert("3", meta, "status"));
+			var ex = await Assert.ThrowsAsync<FormatException>(
+				() => _converter.ConvertAsync("3", meta, "status", CancellationToken.None));
 
 			Assert.IsTrue(ex.Message.Contains("Valid codes are: 1, 2."));
 		}
 
 		[TestMethod]
-		public void Convert_WithOutOfRangeLong_ShouldThrowFormatException()
+		public async Task Convert_WithOutOfRangeLong_ShouldThrowFormatException()
 		{
 			var meta = BuildPicklistWithOptions((1, "Active"), (2, "Inactive"));
 
-			var ex = Assert.Throws<FormatException>(
-				() => _converter.Convert((long)int.MaxValue + 1, meta, "status"));
+			var ex = await Assert.ThrowsAsync<FormatException>(
+				() => _converter.ConvertAsync((long)int.MaxValue + 1, meta, "status", CancellationToken.None));
 
 			Assert.IsTrue(ex.Message.Contains("out of Int32 range"));
 		}
 
 		[TestMethod]
-		public void Convert_WithValidLabel_ShouldReturnMatchingOptionSetValue()
+		public async Task Convert_WithValidLabel_ShouldReturnMatchingOptionSetValue()
 		{
 			var meta = BuildPicklistWithOptions((1, "Active"), (2, "Inactive"));
-			var result = _converter.Convert("Active", meta, "status");
+			var result = await _converter.ConvertAsync("Active", meta, "status", CancellationToken.None);
 
 			Assert.IsInstanceOfType(result, typeof(OptionSetValue));
 			Assert.AreEqual(1, ((OptionSetValue)result!).Value);
 		}
 
 		[TestMethod]
-		public void Convert_WithLabelCaseInsensitive_ShouldWork()
+		public async Task Convert_WithLabelCaseInsensitive_ShouldWork()
 		{
 			var meta = BuildPicklistWithOptions((1, "Active"), (2, "Inactive"));
-			var result = _converter.Convert("active", meta, "status");
+			var result = await _converter.ConvertAsync("active", meta, "status", CancellationToken.None);
 
 			Assert.IsInstanceOfType(result, typeof(OptionSetValue));
 			Assert.AreEqual(1, ((OptionSetValue)result!).Value);
 		}
 
 		[TestMethod]
-		public void Convert_WithInvalidLabel_ShouldThrowFormatException()
+		public async Task Convert_WithInvalidLabel_ShouldThrowFormatException()
 		{
 			var meta = BuildPicklistWithOptions((1, "Active"), (2, "Inactive"));
 
-			var ex = Assert.Throws<FormatException>(
-				() => _converter.Convert("Unknown", meta, "status"));
+			var ex = await Assert.ThrowsAsync<FormatException>(
+				() => _converter.ConvertAsync("Unknown", meta, "status", CancellationToken.None));
 
 			Assert.IsTrue(ex.Message.Contains("Active"));
 			Assert.IsTrue(ex.Message.Contains("Inactive"));
 		}
 
 		[TestMethod]
-		public void Convert_NullValue_ShouldReturnNull()
+		public async Task Convert_NullValue_ShouldReturnNull()
 		{
 			var meta = new PicklistAttributeMetadata();
-			var result = _converter.Convert(null, meta, "status");
+			var result = await _converter.ConvertAsync(null, meta, "status", CancellationToken.None);
 			Assert.IsNull(result);
 		}
 	}

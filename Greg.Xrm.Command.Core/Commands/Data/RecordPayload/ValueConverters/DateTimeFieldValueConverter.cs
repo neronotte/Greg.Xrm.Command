@@ -5,10 +5,12 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.ValueConverters
 {
 	public class DateTimeFieldValueConverter : IFieldValueConverter
 	{
-		public object? Convert(object? rawValue, AttributeMetadata metadata, string fieldName)
+		public Task<object?> ConvertAsync(object? rawValue, AttributeMetadata metadata, string fieldName, CancellationToken cancellationToken)
 		{
+			cancellationToken.ThrowIfCancellationRequested();
+
 			if (rawValue == null)
-				return null;
+				return Task.FromResult<object?>(null);
 
 			var strValue = rawValue as string ?? rawValue.ToString()!;
 
@@ -22,7 +24,7 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.ValueConverters
 						DateTimeStyles.None,
 						out var dateOnly))
 				{
-					return new DateTime(dateOnly.Year, dateOnly.Month, dateOnly.Day, 0, 0, 0, DateTimeKind.Unspecified);
+					return Task.FromResult<object?>(new DateTime(dateOnly.Year, dateOnly.Month, dateOnly.Day, 0, 0, 0, DateTimeKind.Unspecified));
 				}
 
 				throw new FormatException(
@@ -45,9 +47,9 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.ValueConverters
 					out var offsetDateTime))
 			{
 				if (string.Equals(behavior, DateTimeBehavior.TimeZoneIndependent.Value, StringComparison.OrdinalIgnoreCase))
-					return offsetDateTime.DateTime;
+					return Task.FromResult<object?>(offsetDateTime.DateTime);
 
-				return offsetDateTime.UtcDateTime;
+				return Task.FromResult<object?>(offsetDateTime.UtcDateTime);
 			}
 
 			var isoFormats = new[]
@@ -64,7 +66,7 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.ValueConverters
 					DateTimeStyles.None,
 					out var dateTime))
 			{
-				return dateTime;
+				return Task.FromResult<object?>(dateTime);
 			}
 
 			throw new FormatException(

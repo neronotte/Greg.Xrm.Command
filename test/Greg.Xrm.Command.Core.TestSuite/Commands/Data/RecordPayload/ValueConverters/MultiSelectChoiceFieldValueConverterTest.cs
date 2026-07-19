@@ -24,10 +24,10 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.ValueConverters
 		}
 
 		[TestMethod]
-		public void Convert_WithCommaSeparatedIntegers_ShouldReturnOptionSetValueCollection()
+		public async Task Convert_WithCommaSeparatedIntegers_ShouldReturnOptionSetValueCollection()
 		{
 			var meta = BuildMultiSelectWithOptions((1, "Red"), (2, "Blue"), (3, "Green"));
-			var result = _converter.Convert("1,2,3", meta, "tags");
+			var result = await _converter.ConvertAsync("1,2,3", meta, "tags", CancellationToken.None);
 
 			Assert.IsInstanceOfType(result, typeof(OptionSetValueCollection));
 			var collection = (OptionSetValueCollection)result!;
@@ -35,10 +35,10 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.ValueConverters
 		}
 
 		[TestMethod]
-		public void Convert_WithCommaSeparatedLabels_ShouldReturnMatchingValues()
+		public async Task Convert_WithCommaSeparatedLabels_ShouldReturnMatchingValues()
 		{
 			var meta = BuildMultiSelectWithOptions((1, "Red"), (2, "Blue"), (3, "Green"));
-			var result = _converter.Convert("Red,Blue", meta, "colors");
+			var result = await _converter.ConvertAsync("Red,Blue", meta, "colors", CancellationToken.None);
 
 			Assert.IsInstanceOfType(result, typeof(OptionSetValueCollection));
 			var collection = (OptionSetValueCollection)result!;
@@ -48,11 +48,11 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.ValueConverters
 		}
 
 		[TestMethod]
-		public void Convert_WithListOfLong_ShouldReturnOptionSetValueCollection()
+		public async Task Convert_WithListOfLong_ShouldReturnOptionSetValueCollection()
 		{
 			var meta = BuildMultiSelectWithOptions((1, "Red"), (2, "Blue"), (3, "Green"));
 			var list = new List<object?> { 1L, 2L, 3L };
-			var result = _converter.Convert(list, meta, "tags");
+			var result = await _converter.ConvertAsync(list, meta, "tags", CancellationToken.None);
 
 			Assert.IsInstanceOfType(result, typeof(OptionSetValueCollection));
 			var collection = (OptionSetValueCollection)result!;
@@ -60,11 +60,11 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.ValueConverters
 		}
 
 		[TestMethod]
-		public void Convert_WithListOfStrings_ShouldReturnOptionSetValueCollection()
+		public async Task Convert_WithListOfStrings_ShouldReturnOptionSetValueCollection()
 		{
 			var meta = BuildMultiSelectWithOptions((1, "Red"), (2, "Blue"), (3, "Green"));
 			var list = new List<object?> { "Red", "Green" };
-			var result = _converter.Convert(list, meta, "colors");
+			var result = await _converter.ConvertAsync(list, meta, "colors", CancellationToken.None);
 
 			Assert.IsInstanceOfType(result, typeof(OptionSetValueCollection));
 			var collection = (OptionSetValueCollection)result!;
@@ -72,20 +72,20 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.ValueConverters
 		}
 
 		[TestMethod]
-		public void Convert_NullValue_ShouldReturnNull()
+		public async Task Convert_NullValue_ShouldReturnNull()
 		{
 			var meta = new MultiSelectPicklistAttributeMetadata();
-			var result = _converter.Convert(null, meta, "tags");
+			var result = await _converter.ConvertAsync(null, meta, "tags", CancellationToken.None);
 			Assert.IsNull(result);
 		}
 
 		[TestMethod]
-		public void Convert_WithUnsupportedType_ShouldThrowFormatException()
+		public async Task Convert_WithUnsupportedType_ShouldThrowFormatException()
 		{
 			var meta = new MultiSelectPicklistAttributeMetadata();
 			// single long (not a list, not a string) should throw
-			Assert.Throws<FormatException>(
-				() => _converter.Convert(42L, meta, "tags"));
+			await Assert.ThrowsAsync<FormatException>(
+				() => _converter.ConvertAsync(42L, meta, "tags", CancellationToken.None));
 		}
 	}
 }

@@ -6,19 +6,21 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.ValueConverters
 {
 	public class NumberFieldValueConverter : IFieldValueConverter
 	{
-		public object? Convert(object? rawValue, AttributeMetadata metadata, string fieldName)
+		public Task<object?> ConvertAsync(object? rawValue, AttributeMetadata metadata, string fieldName, CancellationToken cancellationToken)
 		{
-			if (rawValue == null)
-				return null;
+			cancellationToken.ThrowIfCancellationRequested();
 
-			return metadata switch
+			if (rawValue == null)
+				return Task.FromResult<object?>(null);
+
+			return Task.FromResult<object?>(metadata switch
 			{
 				IntegerAttributeMetadata => ConvertToInt(rawValue, fieldName),
 				DecimalAttributeMetadata => ConvertToDecimal(rawValue, fieldName),
 				DoubleAttributeMetadata => ConvertToDouble(rawValue, fieldName),
 				MoneyAttributeMetadata => new Money(ConvertToDecimal(rawValue, fieldName)),
 				_ => throw new InvalidOperationException($"Unsupported numeric metadata type '{metadata.GetType().Name}' for field '{fieldName}'.")
-			};
+			});
 		}
 
 		private static int ConvertToInt(object rawValue, string fieldName)

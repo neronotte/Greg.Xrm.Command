@@ -7,8 +7,10 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.ValueConverters
 	{
 		private readonly ChoiceFieldValueConverter _singleConverter = new();
 
-		public object? Convert(object? rawValue, AttributeMetadata metadata, string fieldName)
+		public async Task<object?> ConvertAsync(object? rawValue, AttributeMetadata metadata, string fieldName, CancellationToken cancellationToken)
 		{
+			cancellationToken.ThrowIfCancellationRequested();
+
 			if (rawValue == null)
 				return null;
 
@@ -18,7 +20,7 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.ValueConverters
 			{
 				foreach (var item in list)
 				{
-					var converted = _singleConverter.Convert(item, metadata, fieldName);
+					var converted = await _singleConverter.ConvertAsync(item, metadata, fieldName, cancellationToken);
 					if (converted is not OptionSetValue osv)
 					{
 						throw new FormatException(
@@ -32,7 +34,7 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.ValueConverters
 				var tokens = s.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 				foreach (var token in tokens)
 				{
-					var converted = _singleConverter.Convert(token, metadata, fieldName);
+					var converted = await _singleConverter.ConvertAsync(token, metadata, fieldName, cancellationToken);
 					if (converted is OptionSetValue osv)
 						items.Add(osv);
 				}

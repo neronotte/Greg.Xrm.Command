@@ -42,6 +42,7 @@ namespace Greg.Xrm.Command.Commands.Data.Update
 			var result = await _executor.ExecuteAsync(command, CancellationToken.None);
 
 			Assert.IsTrue(result.IsSuccess);
+			Assert.AreEqual(recordId, result["Id"]);
 			_crmMock.Verify(c => c.UpdateAsync(It.Is<Entity>(e =>
 				e.LogicalName == "contact" &&
 				e.Id == recordId &&
@@ -49,7 +50,7 @@ namespace Greg.Xrm.Command.Commands.Data.Update
 
 			var outputText = _output.ToString();
 			Assert.IsTrue(outputText.Contains("Record updated successfully"));
-			Assert.IsTrue(outputText.Contains(recordId.ToString()));
+			Assert.IsFalse(outputText.Contains($"Id: {recordId}"));
 		}
 
 		[TestMethod]

@@ -28,10 +28,10 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.ValueConverters
 		}
 
 		[TestMethod]
-		public void Convert_DateOnly_WithValidDate_ShouldReturnUnspecifiedMidnight()
+		public async Task Convert_DateOnly_WithValidDate_ShouldReturnUnspecifiedMidnight()
 		{
 			var meta = DateOnlyMeta();
-			var result = _converter.Convert("1990-05-20", meta, "birthdate");
+			var result = await _converter.ConvertAsync("1990-05-20", meta, "birthdate", CancellationToken.None);
 
 			Assert.IsInstanceOfType(result, typeof(DateTime));
 			var dt = (DateTime)result!;
@@ -43,18 +43,18 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.ValueConverters
 		}
 
 		[TestMethod]
-		public void Convert_DateOnly_WithInvalidFormat_ShouldThrowFormatException()
+		public async Task Convert_DateOnly_WithInvalidFormat_ShouldThrowFormatException()
 		{
 			var meta = DateOnlyMeta();
-			Assert.Throws<FormatException>(
-				() => _converter.Convert("20-05-1990", meta, "birthdate"));
+			await Assert.ThrowsAsync<FormatException>(
+				() => _converter.ConvertAsync("20-05-1990", meta, "birthdate", CancellationToken.None));
 		}
 
 		[TestMethod]
-		public void Convert_DateAndTime_WithIso8601_ShouldReturnDateTime()
+		public async Task Convert_DateAndTime_WithIso8601_ShouldReturnDateTime()
 		{
 			var meta = DateAndTimeMeta();
-			var result = _converter.Convert("2024-01-15T08:30:00Z", meta, "createdon");
+			var result = await _converter.ConvertAsync("2024-01-15T08:30:00Z", meta, "createdon", CancellationToken.None);
 
 			Assert.IsInstanceOfType(result, typeof(DateTime));
 			var dt = (DateTime)result!;
@@ -64,10 +64,10 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.ValueConverters
 		}
 
 		[TestMethod]
-		public void Convert_DateAndTime_WithIso8601WithOffset_ShouldReturnDateTime()
+		public async Task Convert_DateAndTime_WithIso8601WithOffset_ShouldReturnDateTime()
 		{
 			var meta = DateAndTimeMeta();
-			var result = _converter.Convert("2024-01-15T08:30:00+02:00", meta, "createdon");
+			var result = await _converter.ConvertAsync("2024-01-15T08:30:00+02:00", meta, "createdon", CancellationToken.None);
 
 			Assert.IsInstanceOfType(result, typeof(DateTime));
 			var dt = (DateTime)result!;
@@ -80,10 +80,10 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.ValueConverters
 		}
 
 		[TestMethod]
-		public void Convert_DateAndTime_WithDateOnlyIso_ShouldReturnDateTime()
+		public async Task Convert_DateAndTime_WithDateOnlyIso_ShouldReturnDateTime()
 		{
 			var meta = DateAndTimeMeta();
-			var result = _converter.Convert("2024-06-01", meta, "createdon");
+			var result = await _converter.ConvertAsync("2024-06-01", meta, "createdon", CancellationToken.None);
 
 			Assert.IsInstanceOfType(result, typeof(DateTime));
 			var dt = (DateTime)result!;
@@ -93,26 +93,26 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.ValueConverters
 		}
 
 		[TestMethod]
-		public void Convert_DateAndTime_WithCultureDependentFormat_ShouldThrowFormatException()
+		public async Task Convert_DateAndTime_WithCultureDependentFormat_ShouldThrowFormatException()
 		{
 			var meta = DateAndTimeMeta();
-			Assert.Throws<FormatException>(
-				() => _converter.Convert("01/02/2024", meta, "createdon"));
+			await Assert.ThrowsAsync<FormatException>(
+				() => _converter.ConvertAsync("01/02/2024", meta, "createdon", CancellationToken.None));
 		}
 
 		[TestMethod]
-		public void Convert_DateAndTime_WithInvalidFormat_ShouldThrowFormatException()
+		public async Task Convert_DateAndTime_WithInvalidFormat_ShouldThrowFormatException()
 		{
 			var meta = DateAndTimeMeta();
-			Assert.Throws<FormatException>(
-				() => _converter.Convert("not-a-date", meta, "createdon"));
+			await Assert.ThrowsAsync<FormatException>(
+				() => _converter.ConvertAsync("not-a-date", meta, "createdon", CancellationToken.None));
 		}
 
 		[TestMethod]
-		public void Convert_NullValue_ShouldReturnNull()
+		public async Task Convert_NullValue_ShouldReturnNull()
 		{
 			var meta = DateAndTimeMeta();
-			var result = _converter.Convert(null, meta, "createdon");
+			var result = await _converter.ConvertAsync(null, meta, "createdon", CancellationToken.None);
 			Assert.IsNull(result);
 		}
 	}

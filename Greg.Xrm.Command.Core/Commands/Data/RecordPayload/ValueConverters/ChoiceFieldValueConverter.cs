@@ -5,10 +5,12 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.ValueConverters
 {
 	public class ChoiceFieldValueConverter : IFieldValueConverter
 	{
-		public object? Convert(object? rawValue, AttributeMetadata metadata, string fieldName)
+		public Task<object?> ConvertAsync(object? rawValue, AttributeMetadata metadata, string fieldName, CancellationToken cancellationToken)
 		{
+			cancellationToken.ThrowIfCancellationRequested();
+
 			if (rawValue == null)
-				return null;
+				return Task.FromResult<object?>(null);
 
 			if (rawValue is long l)
 			{
@@ -18,16 +20,16 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.ValueConverters
 						$"Cannot convert value '{l}' to choice value for field '{fieldName}': value is out of Int32 range.");
 				}
 
-				return new OptionSetValue(ResolveNumericCode((int)l, metadata, fieldName));
+				return Task.FromResult<object?>(new OptionSetValue(ResolveNumericCode((int)l, metadata, fieldName)));
 			}
 
 			if (rawValue is int i)
-				return new OptionSetValue(ResolveNumericCode(i, metadata, fieldName));
+				return Task.FromResult<object?>(new OptionSetValue(ResolveNumericCode(i, metadata, fieldName)));
 
 			if (rawValue is string s)
 			{
 				if (int.TryParse(s, out var numericCode))
-					return new OptionSetValue(ResolveNumericCode(numericCode, metadata, fieldName));
+					return Task.FromResult<object?>(new OptionSetValue(ResolveNumericCode(numericCode, metadata, fieldName)));
 
 				var options = GetOptions(metadata);
 
@@ -38,7 +40,7 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.ValueConverters
 						.ToList();
 
 					if (matches.Count == 1)
-						return new OptionSetValue(matches[0].Value!.Value);
+						return Task.FromResult<object?>(new OptionSetValue(matches[0].Value!.Value));
 
 					if (matches.Count > 1)
 						throw new FormatException(

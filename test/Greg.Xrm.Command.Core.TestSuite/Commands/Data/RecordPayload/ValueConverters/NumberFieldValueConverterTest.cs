@@ -10,63 +10,63 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.ValueConverters
 		private readonly NumberFieldValueConverter _converter = new();
 
 		[TestMethod]
-		public void Convert_IntegerFromLong_ShouldReturnInt()
+		public async Task Convert_IntegerFromLong_ShouldReturnInt()
 		{
-			var result = _converter.Convert(42L, new IntegerAttributeMetadata(), "count");
+			var result = await _converter.ConvertAsync(42L, new IntegerAttributeMetadata(), "count", CancellationToken.None);
 			Assert.IsInstanceOfType(result, typeof(int));
 			Assert.AreEqual(42, result);
 		}
 
 		[TestMethod]
-		public void Convert_IntegerFromString_ShouldReturnInt()
+		public async Task Convert_IntegerFromString_ShouldReturnInt()
 		{
-			var result = _converter.Convert("100", new IntegerAttributeMetadata(), "count");
+			var result = await _converter.ConvertAsync("100", new IntegerAttributeMetadata(), "count", CancellationToken.None);
 			Assert.IsInstanceOfType(result, typeof(int));
 			Assert.AreEqual(100, result);
 		}
 
 		[TestMethod]
-		public void Convert_IntegerFromInvalidString_ShouldThrowFormatException()
+		public async Task Convert_IntegerFromInvalidString_ShouldThrowFormatException()
 		{
-			Assert.Throws<FormatException>(
-				() => _converter.Convert("not-a-number", new IntegerAttributeMetadata(), "count"));
+			await Assert.ThrowsAsync<FormatException>(
+				() => _converter.ConvertAsync("not-a-number", new IntegerAttributeMetadata(), "count", CancellationToken.None));
 		}
 
 		[TestMethod]
-		public void Convert_DecimalFromString_ShouldReturnDecimal()
+		public async Task Convert_DecimalFromString_ShouldReturnDecimal()
 		{
-			var result = _converter.Convert("1234.56", new DecimalAttributeMetadata(), "amount");
+			var result = await _converter.ConvertAsync("1234.56", new DecimalAttributeMetadata(), "amount", CancellationToken.None);
 			Assert.IsInstanceOfType(result, typeof(decimal));
 			Assert.AreEqual(1234.56m, result);
 		}
 
 		[TestMethod]
-		public void Convert_DoubleFromString_ShouldReturnDouble()
+		public async Task Convert_DoubleFromString_ShouldReturnDouble()
 		{
-			var result = _converter.Convert("3.14", new DoubleAttributeMetadata(), "ratio");
+			var result = await _converter.ConvertAsync("3.14", new DoubleAttributeMetadata(), "ratio", CancellationToken.None);
 			Assert.IsInstanceOfType(result, typeof(double));
 			Assert.AreEqual(3.14, (double)result!, 0.001);
 		}
 
 		[TestMethod]
-		public void Convert_MoneyFromString_ShouldReturnMoneyObject()
+		public async Task Convert_MoneyFromString_ShouldReturnMoneyObject()
 		{
-			var result = _converter.Convert("50000.00", new MoneyAttributeMetadata(), "revenue");
+			var result = await _converter.ConvertAsync("50000.00", new MoneyAttributeMetadata(), "revenue", CancellationToken.None);
 			Assert.IsInstanceOfType(result, typeof(Money));
 			Assert.AreEqual(50000m, ((Money)result!).Value);
 		}
 
 		[TestMethod]
-		public void Convert_NullValue_ShouldReturnNull()
+		public async Task Convert_NullValue_ShouldReturnNull()
 		{
-			var result = _converter.Convert(null, new IntegerAttributeMetadata(), "count");
+			var result = await _converter.ConvertAsync(null, new IntegerAttributeMetadata(), "count", CancellationToken.None);
 			Assert.IsNull(result);
 		}
 
 		[TestMethod]
-		public void Convert_IntegerFromDouble_ShouldConvert()
+		public async Task Convert_IntegerFromDouble_ShouldConvert()
 		{
-			var result = _converter.Convert(3.0, new IntegerAttributeMetadata(), "count");
+			var result = await _converter.ConvertAsync(3.0, new IntegerAttributeMetadata(), "count", CancellationToken.None);
 			Assert.AreEqual(3, result);
 		}
 	}

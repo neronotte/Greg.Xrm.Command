@@ -1,8 +1,6 @@
 using Greg.Xrm.Command.Commands.Data.RecordPayload.Parsing;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
-using Microsoft.Xrm.Sdk.Messages;
-using Microsoft.Xrm.Sdk.Metadata;
 using Microsoft.Xrm.Sdk.Query;
 
 namespace Greg.Xrm.Command.Commands.Data.RecordPayload.Parsing
@@ -51,7 +49,6 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.Parsing
 			var expectedGuid = Guid.NewGuid();
 			var rawValue = "systemuser(domainname='mario@contoso.com')";
 
-			SetupMetadata("systemuser", "systemuserid");
 			SetupRetrieveMultiple("systemuser", expectedGuid);
 
 			var result = await LookupReferenceParser.ParseAsync(rawValue, "ownerid", _crmMock.Object, CancellationToken.None);
@@ -65,7 +62,6 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.Parsing
 		{
 			var rawValue = "systemuser(domainname='nobody@contoso.com')";
 
-			SetupMetadata("systemuser", "systemuserid");
 			SetupRetrieveMultiple("systemuser"); // no results
 
 			var ex = await Assert.ThrowsAsync<InvalidOperationException>(
@@ -79,7 +75,6 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.Parsing
 		{
 			var rawValue = "account(name='Acme')";
 
-			SetupMetadata("account", "accountid");
 			SetupRetrieveMultiple("account", Guid.NewGuid(), Guid.NewGuid());
 
 			var ex = await Assert.ThrowsAsync<InvalidOperationException>(
@@ -105,8 +100,6 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.Parsing
 			var expectedGuid = Guid.NewGuid();
 			var rawValue = "account(name='Riccardo''s Corp')";
 
-			SetupMetadata("account", "accountid");
-
 			// Capture the query to verify the unescaped value was used
 			QueryExpression? capturedQuery = null;
 			_crmMock
@@ -119,28 +112,11 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.Parsing
 
 			Assert.AreEqual(expectedGuid, result.Id);
 			Assert.IsNotNull(capturedQuery);
-			var condition = capturedQuery!.Criteria.Conditions[0];
+			Assert.IsFalse(capturedQuery!.ColumnSet.AllColumns);
+			Assert.AreEqual(0, capturedQuery.ColumnSet.Columns.Count);
+			var condition = capturedQuery.Criteria.Conditions[0];
 			Assert.AreEqual("Riccardo's Corp", condition.Values[0]);
 		}
-
-		#region Helpers
-
-		private void SetupMetadata(string entityName, string primaryKey)
-			{
-				var entityMetadata = new EntityMetadata();
-
-				// Set PrimaryIdAttribute via reflection (it's read-only)
-				typeof(EntityMetadata)
-					.GetProperty(nameof(EntityMetadata.PrimaryIdAttribute))!
-					.SetValue(entityMetadata, primaryKey);
-
-				var response = new RetrieveEntityResponse();
-				response.Results["EntityMetadata"] = entityMetadata;
-
-				_crmMock
-					.Setup(c => c.ExecuteAsync(It.Is<OrganizationRequest>(r => r is RetrieveEntityRequest), It.IsAny<CancellationToken>()))
-					.ReturnsAsync(response);
-			}
 
 		private void SetupRetrieveMultiple(string entityName, params Guid[] guids)
 		{
@@ -152,7 +128,5 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.Parsing
 				.Setup(c => c.RetrieveMultipleAsync(It.IsAny<QueryBase>(), It.IsAny<CancellationToken>()))
 				.ReturnsAsync(new EntityCollection(entities));
 		}
-
-		#endregion
 	}
 }

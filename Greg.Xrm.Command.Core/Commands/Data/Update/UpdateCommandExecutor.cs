@@ -123,8 +123,7 @@ namespace Greg.Xrm.Command.Commands.Data.Update
 
 			// 10. Output result
 			output.WriteLine();
-			output.Write("Record updated successfully.  Table: ").Write(command.Table, ConsoleColor.Cyan);
-			output.Write("  Id: ").WriteLine(command.Id.ToString(), ConsoleColor.Cyan);
+			output.Write("Record updated successfully.  Table: ").WriteLine(command.Table, ConsoleColor.Cyan);
 
 			// 11. Return fields if requested
 			if (!string.IsNullOrWhiteSpace(command.Return))
@@ -151,9 +150,9 @@ namespace Greg.Xrm.Command.Commands.Data.Update
 				}
 			}
 
-var result = CommandResult.Success();
-result["Id"] = command.Id;
-return result;
+			var result = CommandResult.Success();
+			result["Id"] = command.Id;
+			return result;
 		}
 
 		private static Dictionary<string, object?> ParsePayload(UpdateCommand command)

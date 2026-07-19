@@ -11,8 +11,7 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.ValueConverters
 	/// </summary>
 	/// <remarks>
 	/// This converter is special: it requires an <see cref="IOrganizationServiceAsync2"/> to
-	/// resolve field-based lookups asynchronously. Callers must use
-	/// <see cref="ConvertAsync"/> instead of the synchronous interface method.
+	/// resolve field-based lookups asynchronously.
 	/// </remarks>
 	public class LookupFieldValueConverter : IFieldValueConverter
 	{
@@ -21,15 +20,6 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.ValueConverters
 		public LookupFieldValueConverter(IOrganizationServiceAsync2 crm)
 		{
 			_crm = crm;
-		}
-
-		/// <summary>
-		/// Not supported — use <see cref="ConvertAsync"/> for lookup fields.
-		/// </summary>
-		public object? Convert(object? rawValue, AttributeMetadata metadata, string fieldName)
-		{
-			// Synchronous path: throw so callers use ConvertAsync
-			return ConvertAsync(rawValue, metadata, fieldName, CancellationToken.None).GetAwaiter().GetResult();
 		}
 
 		public async Task<object?> ConvertAsync(

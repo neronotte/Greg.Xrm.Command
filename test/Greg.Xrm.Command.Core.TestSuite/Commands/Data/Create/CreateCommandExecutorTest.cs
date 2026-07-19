@@ -42,13 +42,14 @@ namespace Greg.Xrm.Command.Commands.Data.Create
 			var result = await _executor.ExecuteAsync(command, CancellationToken.None);
 
 			Assert.IsTrue(result.IsSuccess);
+			Assert.AreEqual(expectedId, result["Id"]);
 			_crmMock.Verify(c => c.CreateAsync(It.Is<Entity>(e =>
 				e.LogicalName == "contact" &&
 				(string)e["firstname"] == "Mario"), It.IsAny<CancellationToken>()), Times.Once);
 
 			var outputText = _output.ToString();
 			Assert.IsTrue(outputText.Contains("Record created successfully"));
-			Assert.IsTrue(outputText.Contains(expectedId.ToString()));
+			Assert.IsFalse(outputText.Contains($"Id: {expectedId}"));
 		}
 
 		[TestMethod]
@@ -98,6 +99,26 @@ namespace Greg.Xrm.Command.Commands.Data.Create
 			Assert.IsTrue(result.IsSuccess);
 			_crmMock.Verify(c => c.CreateAsync(It.IsAny<Entity>(), It.IsAny<CancellationToken>()), Times.Never);
 			Assert.IsTrue(_output.ToString().Contains("Dry-run"));
+		}
+
+		[TestMethod]
+		public async Task ExecuteAsync_WithDryRunAndCustomId_ShouldIncludeIdInPreview()
+		{
+			var customId = Guid.NewGuid();
+			var command = new CreateCommand
+			{
+				Table = "contact",
+				Plain = "firstname=Mario",
+				Id = customId,
+				DryRun = true
+			};
+
+			SetupEntityMetadata("contact", new StringAttributeMetadata { LogicalName = "firstname" });
+
+			var result = await _executor.ExecuteAsync(command, CancellationToken.None);
+
+			Assert.IsTrue(result.IsSuccess);
+			Assert.IsTrue(_output.ToString().Contains(customId.ToString()));
 		}
 
 		[TestMethod]

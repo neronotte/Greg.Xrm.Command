@@ -2,8 +2,6 @@ using System.ServiceModel;
 using System.Text.RegularExpressions;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
-using Microsoft.Xrm.Sdk.Messages;
-using Microsoft.Xrm.Sdk.Metadata;
 using Microsoft.Xrm.Sdk.Query;
 
 namespace Greg.Xrm.Command.Commands.Data.RecordPayload.Parsing
@@ -79,31 +77,10 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.Parsing
 				// Unescape '' -> '
 				var fieldValue = rawFieldValue.Replace("''", "'");
 
-				// Retrieve entity metadata to get EntitySetName and PrimaryIdAttribute
-				EntityMetadata entityMetadata;
-				try
-				{
-					var metadataRequest = new RetrieveEntityRequest
-					{
-						LogicalName = entityName,
-						EntityFilters = EntityFilters.Entity
-					};
-					var metadataResponse = (RetrieveEntityResponse)await crm.ExecuteAsync(metadataRequest, cancellationToken);
-					entityMetadata = metadataResponse.EntityMetadata;
-				}
-				catch (FaultException<OrganizationServiceFault> ex)
-				{
-					throw new InvalidOperationException(
-						$"Failed to retrieve metadata for entity '{entityName}' while resolving field '{fieldName}': {ex.Message}", ex);
-				}
-
-				var primaryKey = entityMetadata.PrimaryIdAttribute;
-
-
 				// Query for matching records
 				var query = new QueryExpression(entityName)
 				{
-					ColumnSet = new ColumnSet(primaryKey),
+					ColumnSet = new ColumnSet(false),
 					NoLock = true,
 					TopCount = 2
 				};

@@ -14,7 +14,8 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.ValueConverters
 		/// <param name="rawValue">The raw value from the input payload.</param>
 		/// <param name="metadata">The attribute metadata for the target field.</param>
 		/// <param name="fieldName">The logical name of the field (for error messages).</param>
+		/// <param name="cancellationToken">Cancellation token.</param>
 		/// <returns>The converted value ready to assign to an Entity attribute.</returns>
-		object? Convert(object? rawValue, AttributeMetadata metadata, string fieldName);
+		Task<object?> ConvertAsync(object? rawValue, AttributeMetadata metadata, string fieldName, CancellationToken cancellationToken);
 	}
 }
