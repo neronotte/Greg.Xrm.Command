@@ -43,7 +43,7 @@ namespace Greg.Xrm.Command.Commands.Data.Create
 					LogicalName = command.Table!,
 					EntityFilters = EntityFilters.Attributes
 				};
-				var response = (RetrieveEntityResponse)await crm.ExecuteAsync(request);
+				var response = (RetrieveEntityResponse)await crm.ExecuteAsync(request, cancellationToken);
 				entityMetadata = response.EntityMetadata;
 				output.WriteLine("Done", ConsoleColor.Green);
 			}
