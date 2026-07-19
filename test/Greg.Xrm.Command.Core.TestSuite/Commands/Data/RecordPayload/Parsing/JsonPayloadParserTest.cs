@@ -14,9 +14,9 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.Parsing
 
 			Assert.AreEqual("Acme", result["name"]);
 			Assert.AreEqual(1000000L, result["revenue"]);
-			Assert.AreEqual(true, result["active"]);
-			Assert.AreEqual(3.14, (double)result["score"]!, 0.001);
-			Assert.IsNull(result["description"]);
+				Assert.AreEqual(true, result["active"]);
+				Assert.AreEqual(3.14m, (decimal)result["score"]!);
+				Assert.IsNull(result["description"]);
 		}
 
 		[TestMethod]

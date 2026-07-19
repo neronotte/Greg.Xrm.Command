@@ -37,7 +37,7 @@ namespace Greg.Xrm.Command.Commands.Data.Update
 			};
 
 			SetupEntityMetadata("contact", new StringAttributeMetadata { LogicalName = "firstname" });
-			_crmMock.Setup(c => c.UpdateAsync(It.IsAny<Entity>())).Returns(Task.CompletedTask);
+			_crmMock.Setup(c => c.UpdateAsync(It.IsAny<Entity>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
 
 			var result = await _executor.ExecuteAsync(command, CancellationToken.None);
 
@@ -45,7 +45,7 @@ namespace Greg.Xrm.Command.Commands.Data.Update
 			_crmMock.Verify(c => c.UpdateAsync(It.Is<Entity>(e =>
 				e.LogicalName == "contact" &&
 				e.Id == recordId &&
-				(string)e["firstname"] == "Mario")), Times.Once);
+				(string)e["firstname"] == "Mario"), It.IsAny<CancellationToken>()), Times.Once);
 
 			var outputText = _output.ToString();
 			Assert.IsTrue(outputText.Contains("Record updated successfully"));
@@ -69,7 +69,7 @@ namespace Greg.Xrm.Command.Commands.Data.Update
 			var result = await _executor.ExecuteAsync(command, CancellationToken.None);
 
 			Assert.IsTrue(result.IsSuccess);
-			_crmMock.Verify(c => c.UpdateAsync(It.IsAny<Entity>()), Times.Never);
+			_crmMock.Verify(c => c.UpdateAsync(It.IsAny<Entity>(), It.IsAny<CancellationToken>()), Times.Never);
 			Assert.IsTrue(_output.ToString().Contains("Dry-run"));
 		}
 
@@ -109,7 +109,7 @@ namespace Greg.Xrm.Command.Commands.Data.Update
 			var result = await _executor.ExecuteAsync(command, CancellationToken.None);
 
 			Assert.IsFalse(result.IsSuccess);
-			_crmMock.Verify(c => c.UpdateAsync(It.IsAny<Entity>()), Times.Never);
+			_crmMock.Verify(c => c.UpdateAsync(It.IsAny<Entity>(), It.IsAny<CancellationToken>()), Times.Never);
 		}
 
 		[TestMethod]
@@ -126,8 +126,8 @@ namespace Greg.Xrm.Command.Commands.Data.Update
 			SetupEntityMetadata("contact", new StringAttributeMetadata { LogicalName = "firstname" });
 
 			Entity? capturedEntity = null;
-			_crmMock.Setup(c => c.UpdateAsync(It.IsAny<Entity>()))
-				.Callback<Entity>(e => capturedEntity = e)
+			_crmMock.Setup(c => c.UpdateAsync(It.IsAny<Entity>(), It.IsAny<CancellationToken>()))
+				.Callback<Entity, CancellationToken>((e, ct) => capturedEntity = e)
 				.Returns(Task.CompletedTask);
 
 			var result = await _executor.ExecuteAsync(command, CancellationToken.None);
@@ -149,7 +149,7 @@ namespace Greg.Xrm.Command.Commands.Data.Update
 
 			SetupEntityMetadata("contact", new StringAttributeMetadata { LogicalName = "firstname" });
 
-			_crmMock.Setup(c => c.UpdateAsync(It.IsAny<Entity>()))
+			_crmMock.Setup(c => c.UpdateAsync(It.IsAny<Entity>(), It.IsAny<CancellationToken>()))
 				.ThrowsAsync(new System.ServiceModel.FaultException<OrganizationServiceFault>(
 					new OrganizationServiceFault(),
 					new System.ServiceModel.FaultReason("SDK error")));

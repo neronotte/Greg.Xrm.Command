@@ -37,14 +37,14 @@ namespace Greg.Xrm.Command.Commands.Data.Create
 			};
 
 			SetupEntityMetadata("contact", new StringAttributeMetadata { LogicalName = "firstname" });
-			_crmMock.Setup(c => c.CreateAsync(It.IsAny<Entity>())).ReturnsAsync(expectedId);
+			_crmMock.Setup(c => c.CreateAsync(It.IsAny<Entity>(), It.IsAny<CancellationToken>())).ReturnsAsync(expectedId);
 
 			var result = await _executor.ExecuteAsync(command, CancellationToken.None);
 
 			Assert.IsTrue(result.IsSuccess);
 			_crmMock.Verify(c => c.CreateAsync(It.Is<Entity>(e =>
 				e.LogicalName == "contact" &&
-				(string)e["firstname"] == "Mario")), Times.Once);
+				(string)e["firstname"] == "Mario"), It.IsAny<CancellationToken>()), Times.Once);
 
 			var outputText = _output.ToString();
 			Assert.IsTrue(outputText.Contains("Record created successfully"));
@@ -63,7 +63,7 @@ namespace Greg.Xrm.Command.Commands.Data.Create
 			};
 
 			SetupEntityMetadata("contact", new StringAttributeMetadata { LogicalName = "firstname" });
-			_crmMock.Setup(c => c.CreateAsync(It.IsAny<Entity>())).ReturnsAsync(expectedId);
+			_crmMock.Setup(c => c.CreateAsync(It.IsAny<Entity>(), It.IsAny<CancellationToken>())).ReturnsAsync(expectedId);
 
 			var retrievedEntity = new Entity("contact") { Id = expectedId };
 			retrievedEntity["firstname"] = "Mario";
@@ -92,7 +92,7 @@ namespace Greg.Xrm.Command.Commands.Data.Create
 			var result = await _executor.ExecuteAsync(command, CancellationToken.None);
 
 			Assert.IsTrue(result.IsSuccess);
-			_crmMock.Verify(c => c.CreateAsync(It.IsAny<Entity>()), Times.Never);
+			_crmMock.Verify(c => c.CreateAsync(It.IsAny<Entity>(), It.IsAny<CancellationToken>()), Times.Never);
 			Assert.IsTrue(_output.ToString().Contains("Dry-run"));
 		}
 
@@ -130,7 +130,7 @@ namespace Greg.Xrm.Command.Commands.Data.Create
 			var result = await _executor.ExecuteAsync(command, CancellationToken.None);
 
 			Assert.IsFalse(result.IsSuccess);
-			_crmMock.Verify(c => c.CreateAsync(It.IsAny<Entity>()), Times.Never);
+			_crmMock.Verify(c => c.CreateAsync(It.IsAny<Entity>(), It.IsAny<CancellationToken>()), Times.Never);
 		}
 
 		[TestMethod]
@@ -147,12 +147,12 @@ namespace Greg.Xrm.Command.Commands.Data.Create
 				new StringAttributeMetadata { LogicalName = "firstname" },
 				new FileAttributeMetadata { LogicalName = "new_attachment" });
 
-			_crmMock.Setup(c => c.CreateAsync(It.IsAny<Entity>())).ReturnsAsync(expectedId);
+			_crmMock.Setup(c => c.CreateAsync(It.IsAny<Entity>(), It.IsAny<CancellationToken>())).ReturnsAsync(expectedId);
 
 			var result = await _executor.ExecuteAsync(command, CancellationToken.None);
 
 			Assert.IsTrue(result.IsSuccess);
-			_crmMock.Verify(c => c.CreateAsync(It.IsAny<Entity>()), Times.Once);
+			_crmMock.Verify(c => c.CreateAsync(It.IsAny<Entity>(), It.IsAny<CancellationToken>()), Times.Once);
 			Assert.IsTrue(_output.ToString().Contains("Warning"));
 		}
 
@@ -170,8 +170,8 @@ namespace Greg.Xrm.Command.Commands.Data.Create
 			SetupEntityMetadata("contact", new StringAttributeMetadata { LogicalName = "firstname" });
 
 			Entity? capturedEntity = null;
-			_crmMock.Setup(c => c.CreateAsync(It.IsAny<Entity>()))
-				.Callback<Entity>(e => capturedEntity = e)
+			_crmMock.Setup(c => c.CreateAsync(It.IsAny<Entity>(), It.IsAny<CancellationToken>()))
+				.Callback<Entity, CancellationToken>((e, ct) => capturedEntity = e)
 				.ReturnsAsync(customId);
 
 			var result = await _executor.ExecuteAsync(command, CancellationToken.None);
@@ -192,7 +192,7 @@ namespace Greg.Xrm.Command.Commands.Data.Create
 
 			SetupEntityMetadata("contact", new StringAttributeMetadata { LogicalName = "firstname" });
 
-			_crmMock.Setup(c => c.CreateAsync(It.IsAny<Entity>()))
+			_crmMock.Setup(c => c.CreateAsync(It.IsAny<Entity>(), It.IsAny<CancellationToken>()))
 				.ThrowsAsync(new System.ServiceModel.FaultException<OrganizationServiceFault>(
 					new OrganizationServiceFault(),
 					new System.ServiceModel.FaultReason("SDK error")));
@@ -214,13 +214,13 @@ namespace Greg.Xrm.Command.Commands.Data.Create
 			};
 
 			SetupEntityMetadata("contact", new StringAttributeMetadata { LogicalName = "firstname" });
-			_crmMock.Setup(c => c.CreateAsync(It.IsAny<Entity>())).ReturnsAsync(expectedId);
+			_crmMock.Setup(c => c.CreateAsync(It.IsAny<Entity>(), It.IsAny<CancellationToken>())).ReturnsAsync(expectedId);
 
 			var result = await _executor.ExecuteAsync(command, CancellationToken.None);
 
 			Assert.IsTrue(result.IsSuccess);
 			_crmMock.Verify(c => c.CreateAsync(It.Is<Entity>(e =>
-				(string)e["firstname"] == "Mario")), Times.Once);
+				(string)e["firstname"] == "Mario"), It.IsAny<CancellationToken>()), Times.Once);
 		}
 
 		#region Helpers

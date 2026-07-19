@@ -98,8 +98,8 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.Parsing
 			// Capture the query to verify the unescaped value was used
 			QueryExpression? capturedQuery = null;
 			_crmMock
-				.Setup(c => c.RetrieveMultipleAsync(It.IsAny<QueryBase>()))
-				.Callback<QueryBase>(q => capturedQuery = q as QueryExpression)
+				.Setup(c => c.RetrieveMultipleAsync(It.IsAny<QueryBase>(), It.IsAny<CancellationToken>()))
+				.Callback<QueryBase, CancellationToken>((q, ct) => capturedQuery = q as QueryExpression)
 				.ReturnsAsync(new EntityCollection(
 					new List<Entity> { new Entity("account") { Id = expectedGuid } }));
 
@@ -114,21 +114,21 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.Parsing
 		#region Helpers
 
 		private void SetupMetadata(string entityName, string primaryKey)
-		{
-			var entityMetadata = new EntityMetadata();
+			{
+				var entityMetadata = new EntityMetadata();
 
-			// Set PrimaryIdAttribute via reflection (it's read-only)
-			typeof(EntityMetadata)
-				.GetProperty(nameof(EntityMetadata.PrimaryIdAttribute))!
-				.SetValue(entityMetadata, primaryKey);
+				// Set PrimaryIdAttribute via reflection (it's read-only)
+				typeof(EntityMetadata)
+					.GetProperty(nameof(EntityMetadata.PrimaryIdAttribute))!
+					.SetValue(entityMetadata, primaryKey);
 
-			var response = new RetrieveEntityResponse();
-			response.Results["EntityMetadata"] = entityMetadata;
+				var response = new RetrieveEntityResponse();
+				response.Results["EntityMetadata"] = entityMetadata;
 
-			_crmMock
-				.Setup(c => c.ExecuteAsync(It.Is<OrganizationRequest>(r => r is RetrieveEntityRequest)))
-				.ReturnsAsync(response);
-		}
+				_crmMock
+					.Setup(c => c.ExecuteAsync(It.Is<OrganizationRequest>(r => r is RetrieveEntityRequest), It.IsAny<CancellationToken>()))
+					.ReturnsAsync(response);
+			}
 
 		private void SetupRetrieveMultiple(string entityName, params Guid[] guids)
 		{
@@ -137,7 +137,7 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.Parsing
 				.ToList();
 
 			_crmMock
-				.Setup(c => c.RetrieveMultipleAsync(It.IsAny<QueryBase>()))
+				.Setup(c => c.RetrieveMultipleAsync(It.IsAny<QueryBase>(), It.IsAny<CancellationToken>()))
 				.ReturnsAsync(new EntityCollection(entities));
 		}
 
