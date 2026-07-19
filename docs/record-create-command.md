@@ -237,7 +237,7 @@ flowchart TD
 ### Input
 
 - `--json`: stringa JSON inline
-- `--file`: contenuto del file letto con `File.ReadAllText`
+- `--file`: contenuto del file letto in modo sincrono con `File.ReadAllText`
 
 ### Parsing
 
