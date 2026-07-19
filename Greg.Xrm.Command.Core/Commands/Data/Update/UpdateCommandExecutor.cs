@@ -136,7 +136,8 @@ namespace Greg.Xrm.Command.Commands.Data.Update
 					var retrieved = await crm.RetrieveAsync(
 						entityMetadata.LogicalName,
 						command.Id,
-						new ColumnSet(columns));
+						new ColumnSet(columns),
+						cancellationToken);
 					output.WriteLine("Done", ConsoleColor.Green);
 					output.WriteLine();
 					PrintEntityFields(retrieved);
