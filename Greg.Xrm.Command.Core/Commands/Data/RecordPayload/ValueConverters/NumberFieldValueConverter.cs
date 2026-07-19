@@ -27,6 +27,7 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.ValueConverters
 			{
 				long l => checked((int)l),
 				int i => i,
+				decimal dec when dec == decimal.Truncate(dec) && dec >= int.MinValue && dec <= int.MaxValue => (int)dec,
 				double d when double.IsFinite(d) && d == Math.Truncate(d) && d >= int.MinValue && d <= int.MaxValue => (int)d,
 				string s => int.TryParse(s, NumberStyles.Integer, CultureInfo.InvariantCulture, out var result)
 					? result
