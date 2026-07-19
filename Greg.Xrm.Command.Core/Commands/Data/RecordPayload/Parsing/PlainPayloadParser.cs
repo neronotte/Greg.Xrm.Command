@@ -93,6 +93,12 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.Parsing
 								i++;
 							}
 						}
+						else if (ch == '\'' && parenDepth > 0 &&
+							i + 1 < input.Length && input[i + 1] == '\'')
+						{
+							value.Append('\'');
+							i += 2;
+						}
 						else
 						{
 							// Inside parentheses: single quotes and semicolons are literal
