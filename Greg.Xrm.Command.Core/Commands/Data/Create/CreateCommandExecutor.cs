@@ -109,7 +109,7 @@ namespace Greg.Xrm.Command.Commands.Data.Create
 			Guid createdId;
 			try
 			{
-				createdId = await crm.CreateAsync(processResult.Entity);
+				createdId = await crm.CreateAsync(processResult.Entity, cancellationToken);
 				output.WriteLine("Done", ConsoleColor.Green);
 			}
 			catch (FaultException<OrganizationServiceFault> ex)
