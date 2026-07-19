@@ -49,6 +49,13 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.Parsing
 			{
 				var entityName = guidMatch.Groups[1].Value.ToLowerInvariant();
 				var guid = Guid.Parse(guidMatch.Groups[2].Value);
+				if (guid == Guid.Empty)
+				{
+					throw new FormatException(
+						$"Invalid lookup reference format for field '{fieldName}': '{rawValue}'. " +
+						$"Expected formats: entity(GUID) or entity(fieldname='value').");
+				}
+
 				return new EntityReference(entityName, guid);
 			}
 

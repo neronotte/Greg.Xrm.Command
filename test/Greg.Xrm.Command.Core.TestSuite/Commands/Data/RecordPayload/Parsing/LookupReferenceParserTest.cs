@@ -34,6 +34,18 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.Parsing
 		}
 
 		[TestMethod]
+		public async Task ParseAsync_WithEmptyGuid_ShouldThrowFormatExceptionWithoutCallingCrm()
+		{
+			var rawValue = "account(00000000-0000-0000-0000-000000000000)";
+
+			await Assert.ThrowsAsync<FormatException>(
+				() => LookupReferenceParser.ParseAsync(rawValue, "parentaccountid", _crmMock.Object, CancellationToken.None));
+
+			_crmMock.Verify(c => c.ExecuteAsync(It.IsAny<OrganizationRequest>(), It.IsAny<CancellationToken>()), Times.Never);
+			_crmMock.Verify(c => c.RetrieveMultipleAsync(It.IsAny<QueryBase>(), It.IsAny<CancellationToken>()), Times.Never);
+		}
+
+		[TestMethod]
 		public async Task ParseAsync_WithFieldBasedLookup_OneResult_ShouldReturnResolvedGuid()
 		{
 			var expectedGuid = Guid.NewGuid();
