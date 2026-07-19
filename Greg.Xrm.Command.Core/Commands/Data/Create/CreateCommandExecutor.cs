@@ -152,7 +152,9 @@ namespace Greg.Xrm.Command.Commands.Data.Create
 				}
 			}
 
-			return CommandResult.Success();
+var result = CommandResult.Success();
+result["Id"] = createdId;
+return result;
 		}
 
 		private static Dictionary<string, object?> ParsePayload(CreateCommand command)
