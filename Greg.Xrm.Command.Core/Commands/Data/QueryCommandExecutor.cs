@@ -27,7 +27,7 @@ namespace Greg.Xrm.Command.Commands.Data
 					queryText = await File.ReadAllTextAsync(command.QueryFile!, cancellationToken);
 					output.WriteLine("Done", ConsoleColor.Green).WriteLine();
 				}
-catch (Exception ex) when (ex is not OperationCanceledException)
+				catch (Exception ex) when (ex is not OperationCanceledException)
 				{
 					output.WriteLine("FAILED", ConsoleColor.Red);
 					return CommandResult.Fail($"Error reading query file: {ex.Message}", ex);
@@ -74,7 +74,7 @@ catch (Exception ex) when (ex is not OperationCanceledException)
 				result = await queryExecutor.ExecuteQueryAsync(crm, cancellationToken);
 				output.WriteLine("Done", ConsoleColor.Green);
 			}
-catch (Exception ex) when (ex is not OperationCanceledException)
+			catch (Exception ex) when (ex is not OperationCanceledException)
 			{
 				output.WriteLine("FAILED", ConsoleColor.Red);
 				return CommandResult.Fail($"Error executing query: {ex.Message}", ex);
