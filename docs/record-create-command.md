@@ -26,7 +26,7 @@ Il comando `pacx data create` consente di creare un record su una tabella Datave
 - **`--json`** / **`--file`**: payload JSON, ideale per pipeline e agenti IA
 
 Il comando è progettato per:
-- Supportare **tutti i tipi di campo** Dataverse (stringhe, numeri, date, choice, multi-select, lookup, ecc.)
+- Supportare i tipi di campo Dataverse elencati nella tabella seguente; i campi File/Image vengono ignorati con un warning e i tipi non supportati producono un errore
 - Essere **utilizzabile da agenti IA** senza conoscere la sintassi del form maker
 - Risolvere le **lookup per valore di campo** (non solo per GUID), interrogando Dataverse al momento dell'esecuzione
 - Operare in modalità **dry-run** per validare il payload senza creare il record
