@@ -65,7 +65,6 @@ namespace Greg.Xrm.Command.Commands.Data.Update
 					validatingForCreate: false,
 					crm,
 					cancellationToken);
-				output.WriteLine("Done", ConsoleColor.Green);
 			}
 			catch (Exception ex) when (ex is not OperationCanceledException)
 			{
@@ -76,12 +75,15 @@ namespace Greg.Xrm.Command.Commands.Data.Update
 			// 5. Check errors
 			if (processResult.Errors.Count > 0)
 			{
+				output.WriteLine("FAILED", ConsoleColor.Red);
 				foreach (var error in processResult.Errors)
 				{
 					output.WriteLine($"Error: {error}", ConsoleColor.Red);
 				}
 				return CommandResult.Fail($"Payload validation failed with {processResult.Errors.Count} error(s).");
 			}
+
+			output.WriteLine("Done", ConsoleColor.Green);
 
 			// 6. Emit warnings
 			foreach (var warning in processResult.Warnings)
