@@ -117,6 +117,15 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.Parsing
 		}
 
 		[TestMethod]
+		public void Parse_WithUnmatchedParenthesisInPlainText_ShouldTreatItAsLiteral()
+		{
+			var result = PlainPayloadParser.Parse("description=Use (legacy");
+
+			Assert.AreEqual(1, result.Count);
+			Assert.AreEqual("Use (legacy", result["description"]);
+		}
+
+		[TestMethod]
 		public void Parse_WithEscapedQuoteInsideQuotedSection_ShouldProduceLiteralQuote()
 		{
 			// 'Riccardo''s note' inside quotes → Riccardo's note

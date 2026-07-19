@@ -73,7 +73,8 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.Parsing
 						}
 						else if (ch == '(' && !insideParenthesizedQuotes)
 						{
-							parenDepth++;
+							if (parenDepth > 0 || IsLookupReferencePrefix(value))
+								parenDepth++;
 							value.Append(ch);
 							i++;
 						}
@@ -156,6 +157,21 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.Parsing
 			}
 
 			return result;
+		}
+
+		private static bool IsLookupReferencePrefix(System.Text.StringBuilder value)
+		{
+			if (value.Length == 0)
+				return false;
+
+			for (var index = 0; index < value.Length; index++)
+			{
+				var ch = value[index];
+				if (!(char.IsLetterOrDigit(ch) || ch == '_'))
+					return false;
+			}
+
+			return true;
 		}
 
 		private static void EmitPair(Dictionary<string, string> result, System.Text.StringBuilder key, System.Text.StringBuilder value)
