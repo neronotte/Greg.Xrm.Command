@@ -132,7 +132,7 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.Parsing
 				throw new FormatException("Malformed payload: unclosed quote or parenthesis.");
 			}
 
-			if (key.Length > 0)
+			if (key.Length > 0 || state == State.ReadingValue)
 			{
 				if (state == State.ReadingKey)
 					throw new FormatException($"Malformed payload token '{key}': expected field=value.");
@@ -146,10 +146,10 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.Parsing
 		private static void EmitPair(Dictionary<string, string> result, System.Text.StringBuilder key, System.Text.StringBuilder value)
 		{
 			var fieldName = key.ToString().Trim();
-			if (!string.IsNullOrEmpty(fieldName))
-			{
-				result[fieldName] = value.ToString();
-			}
+			if (string.IsNullOrEmpty(fieldName))
+				throw new FormatException("Malformed payload: field name cannot be empty.");
+
+			result[fieldName] = value.ToString();
 		}
 	}
 }
