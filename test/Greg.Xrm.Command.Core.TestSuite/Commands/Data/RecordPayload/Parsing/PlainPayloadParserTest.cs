@@ -107,6 +107,16 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.Parsing
 		}
 
 		[TestMethod]
+		public void Parse_WithQuotedParenthesisInsideLookup_ShouldNotSplitOnSemicolon()
+		{
+			var result = PlainPayloadParser.Parse("parentcustomerid=account(name='A);B');firstname=Mario");
+
+			Assert.AreEqual(2, result.Count);
+			Assert.AreEqual("account(name='A);B')", result["parentcustomerid"]);
+			Assert.AreEqual("Mario", result["firstname"]);
+		}
+
+		[TestMethod]
 		public void Parse_WithEscapedQuoteInsideQuotedSection_ShouldProduceLiteralQuote()
 		{
 			// 'Riccardo''s note' inside quotes → Riccardo's note

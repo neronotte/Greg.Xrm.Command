@@ -34,6 +34,7 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.Parsing
 			var key = new System.Text.StringBuilder();
 			var value = new System.Text.StringBuilder();
 			var parenDepth = 0;
+			var insideParenthesizedQuotes = false;
 			var i = 0;
 
 			while (i < input.Length)
@@ -56,13 +57,27 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.Parsing
 						break;
 
 					case State.ReadingValue:
-						if (ch == '(')
+						if (ch == '\'' && parenDepth > 0)
+						{
+							if (i + 1 < input.Length && input[i + 1] == '\'')
+							{
+								value.Append('\'');
+								i += 2;
+							}
+							else
+							{
+								insideParenthesizedQuotes = !insideParenthesizedQuotes;
+								value.Append(ch);
+								i++;
+							}
+						}
+						else if (ch == '(' && !insideParenthesizedQuotes)
 						{
 							parenDepth++;
 							value.Append(ch);
 							i++;
 						}
-						else if (ch == ')')
+						else if (ch == ')' && !insideParenthesizedQuotes)
 						{
 							if (parenDepth > 0) parenDepth--;
 							value.Append(ch);
@@ -92,12 +107,6 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.Parsing
 								state = State.InsideTopLevelQuotes;
 								i++;
 							}
-						}
-						else if (ch == '\'' && parenDepth > 0 &&
-							i + 1 < input.Length && input[i + 1] == '\'')
-						{
-							value.Append('\'');
-							i += 2;
 						}
 						else
 						{
