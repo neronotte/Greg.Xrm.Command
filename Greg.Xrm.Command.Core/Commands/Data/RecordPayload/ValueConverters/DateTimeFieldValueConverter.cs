@@ -32,12 +32,8 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.ValueConverters
 			// DateAndTime or UserLocal - accept ISO 8601 international format only
 			var isoFormats = new[]
 			{
-				"yyyy-MM-ddTHH:mm:ssZ",
-				"yyyy-MM-ddTHH:mm:sszzz",
-				"yyyy-MM-ddTHH:mm:ss",
-				"yyyy-MM-ddTHH:mm:ss.fffZ",
-				"yyyy-MM-ddTHH:mm:ss.fffzzz",
-				"yyyy-MM-ddTHH:mm:ss.fff",
+				"yyyy-MM-dd'T'HH:mm:ssK",
+				"yyyy-MM-dd'T'HH:mm:ss.FFFFFFFK",
 				"yyyy-MM-dd",
 			};
 
