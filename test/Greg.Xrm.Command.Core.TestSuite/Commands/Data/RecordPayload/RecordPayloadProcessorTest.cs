@@ -1,5 +1,6 @@
 using Greg.Xrm.Command.Commands.Data.RecordPayload;
 using Microsoft.PowerPlatform.Dataverse.Client;
+using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Metadata;
 
 namespace Greg.Xrm.Command.Commands.Data.RecordPayload
@@ -239,6 +240,55 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload
 			Assert.AreEqual(0, result.Warnings.Count);
 			Assert.IsTrue(result.Errors[0].Contains("Unsupported writable attribute metadata type"));
 			Assert.IsFalse(result.Entity.Attributes.ContainsKey("new_bigint"));
+		}
+
+		[TestMethod]
+		public async Task ProcessAsync_WithLookupTargetOutsideAllowedTargets_ShouldAccumulateError()
+		{
+			var attr = new LookupAttributeMetadata
+			{
+				LogicalName = "parentcustomerid",
+				Targets = ["contact"]
+			};
+			var metadata = BuildEntityMetadata("account", attr);
+			var accountId = Guid.NewGuid();
+
+			var payload = new Dictionary<string, object?>
+			{
+				["parentcustomerid"] = $"account({accountId})"
+			};
+
+			var result = await _processor.ProcessAsync(payload, metadata, true, _crmMock.Object, CancellationToken.None);
+
+			Assert.AreEqual(1, result.Errors.Count);
+			Assert.IsTrue(result.Errors[0].Contains("not a valid target"));
+			Assert.IsFalse(result.Entity.Attributes.ContainsKey("parentcustomerid"));
+		}
+
+		[TestMethod]
+		public async Task ProcessAsync_WithLookupTargetWithinAllowedTargets_ShouldSetEntityReference()
+		{
+			var attr = new LookupAttributeMetadata
+			{
+				LogicalName = "parentcustomerid",
+				Targets = ["account", "contact"]
+			};
+			var metadata = BuildEntityMetadata("account", attr);
+			var accountId = Guid.NewGuid();
+
+			var payload = new Dictionary<string, object?>
+			{
+				["parentcustomerid"] = $"account({accountId})"
+			};
+
+			var result = await _processor.ProcessAsync(payload, metadata, true, _crmMock.Object, CancellationToken.None);
+
+			Assert.AreEqual(0, result.Errors.Count);
+			Assert.IsTrue(result.Entity.Attributes.ContainsKey("parentcustomerid"));
+			var value = result.Entity["parentcustomerid"] as EntityReference;
+			Assert.IsNotNull(value);
+			Assert.AreEqual("account", value.LogicalName);
+			Assert.AreEqual(accountId, value.Id);
 		}
 
 		#region Helpers
