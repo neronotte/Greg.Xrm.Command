@@ -28,7 +28,7 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.ValueConverters
 		}
 
 		[TestMethod]
-		public void Convert_DateOnly_WithValidDate_ShouldReturnUtcMidnight()
+		public void Convert_DateOnly_WithValidDate_ShouldReturnUnspecifiedMidnight()
 		{
 			var meta = DateOnlyMeta();
 			var result = _converter.Convert("1990-05-20", meta, "birthdate");
@@ -39,7 +39,7 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.ValueConverters
 			Assert.AreEqual(5, dt.Month);
 			Assert.AreEqual(20, dt.Day);
 			Assert.AreEqual(0, dt.Hour);
-			Assert.AreEqual(DateTimeKind.Utc, dt.Kind);
+			Assert.AreEqual(DateTimeKind.Unspecified, dt.Kind);
 		}
 
 		[TestMethod]

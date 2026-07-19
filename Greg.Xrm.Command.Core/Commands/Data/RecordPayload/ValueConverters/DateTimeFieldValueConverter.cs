@@ -22,7 +22,7 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload.ValueConverters
 						DateTimeStyles.None,
 						out var dateOnly))
 				{
-					return new DateTime(dateOnly.Year, dateOnly.Month, dateOnly.Day, 0, 0, 0, DateTimeKind.Utc);
+					return new DateTime(dateOnly.Year, dateOnly.Month, dateOnly.Day, 0, 0, 0, DateTimeKind.Unspecified);
 				}
 
 				throw new FormatException(
