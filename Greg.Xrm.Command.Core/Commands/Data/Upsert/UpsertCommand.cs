@@ -97,7 +97,7 @@ namespace Greg.Xrm.Command.Commands.Data.Upsert
 				"--id: GUID of the record to upsert, e.g. --id 3fa85f64-5717-4562-b3fc-2c963f66afa6",
 				"--key (-k): semicolon-separated field=value pairs forming the alternate key, e.g. --key accountnumber=ACC001");
 			writer.WriteParagraph("For --key, multi-field alternate keys are also supported: --key \"field1=value1;field2=value2\"");
-			writer.WriteParagraph("The key fields are used exclusively for record lookup. To also set the key field values in the payload, include them in --plain/--json/--file as well.");
+			writer.WriteParagraph("For --key, Dataverse uses the key fields for lookup and automatically applies those values when creating a record. Do not repeat key fields in --plain/--json/--file.");
 
 			writer.WriteTitle3("Supported field types");
 			writer.WriteTable(
