@@ -41,6 +41,15 @@ namespace Greg.Xrm.Command.Commands.Data.Upsert
 		}
 
 		[TestMethod]
+		public void Parse_WithIdOption_ShouldWork()
+		{
+			var id = Guid.NewGuid();
+			var command = Utility.TestParseCommand<UpsertCommand>(
+				"data", "upsert", "-t", "account", "--id", id.ToString(), "--plain", "name=Contoso Ltd");
+			Assert.AreEqual(id, command.Id);
+		}
+
+		[TestMethod]
 		public void Parse_WithPlainLongOption_ShouldWork()
 		{
 			var command = Utility.TestParseCommand<UpsertCommand>(
@@ -134,6 +143,23 @@ namespace Greg.Xrm.Command.Commands.Data.Upsert
 			var command = Utility.TestParseCommand<UpsertCommand>(
 				"data", "upsert", "-t", "account", "--key", "accountnumber=ACC001", "--plain", "name=Contoso Ltd");
 			Assert.IsNull(command.Return);
+		}
+
+		[TestMethod]
+		public void Parse_Default_IdShouldBeEmpty()
+		{
+			var command = Utility.TestParseCommand<UpsertCommand>(
+				"data", "upsert", "-t", "account", "--key", "accountnumber=ACC001", "--plain", "name=Contoso Ltd");
+			Assert.AreEqual(Guid.Empty, command.Id);
+		}
+
+		[TestMethod]
+		public void Parse_Default_KeyShouldBeNull_WhenIdProvided()
+		{
+			var id = Guid.NewGuid();
+			var command = Utility.TestParseCommand<UpsertCommand>(
+				"data", "upsert", "-t", "account", "--id", id.ToString(), "--plain", "name=Contoso Ltd");
+			Assert.IsNull(command.Key);
 		}
 
 		#endregion
@@ -242,7 +268,63 @@ namespace Greg.Xrm.Command.Commands.Data.Upsert
 			};
 			var results = Validate(command);
 
-			Assert.IsTrue(results.Any(r => r.ErrorMessage!.Contains("--key")));
+			Assert.IsTrue(results.Any(r => r.ErrorMessage!.Contains("--key") || r.ErrorMessage!.Contains("--id")));
+		}
+
+		[TestMethod]
+		public void Validate_WhenNeitherIdNorKey_ShouldReturnError()
+		{
+			var command = new UpsertCommand
+			{
+				Table = "account",
+				Plain = "name=Contoso Ltd"
+			};
+			var results = Validate(command);
+
+			Assert.IsTrue(results.Any(r => r.ErrorMessage!.Contains("--id") && r.ErrorMessage!.Contains("--key")));
+		}
+
+		[TestMethod]
+		public void Validate_WhenBothIdAndKey_ShouldReturnError()
+		{
+			var command = new UpsertCommand
+			{
+				Table = "account",
+				Id = Guid.NewGuid(),
+				Key = "accountnumber=ACC001",
+				Plain = "name=Contoso Ltd"
+			};
+			var results = Validate(command);
+
+			Assert.IsTrue(results.Any(r => r.ErrorMessage!.Contains("mutually exclusive")));
+		}
+
+		[TestMethod]
+		public void Validate_WhenIdProvidedWithPlain_ShouldPass()
+		{
+			var command = new UpsertCommand
+			{
+				Table = "account",
+				Id = Guid.NewGuid(),
+				Plain = "name=Contoso Ltd"
+			};
+			var results = Validate(command);
+
+			Assert.AreEqual(0, results.Count);
+		}
+
+		[TestMethod]
+		public void Validate_WhenIdProvidedWithJson_ShouldPass()
+		{
+			var command = new UpsertCommand
+			{
+				Table = "account",
+				Id = Guid.NewGuid(),
+				Json = "{\"name\":\"Contoso Ltd\"}"
+			};
+			var results = Validate(command);
+
+			Assert.AreEqual(0, results.Count);
 		}
 
 		#endregion

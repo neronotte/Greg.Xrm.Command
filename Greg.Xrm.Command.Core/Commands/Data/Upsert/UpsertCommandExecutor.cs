@@ -17,24 +17,29 @@ namespace Greg.Xrm.Command.Commands.Data.Upsert
 	{
 		public async Task<CommandResult> ExecuteAsync(UpsertCommand command, CancellationToken cancellationToken)
 		{
-			// 1. Parse key
-			Dictionary<string, object?> rawKey;
-			try
-			{
-				var parsed = PlainPayloadParser.Parse(command.Key!);
-				rawKey = parsed.ToDictionary(
-					kvp => kvp.Key,
-					kvp => (object?)kvp.Value,
-					StringComparer.OrdinalIgnoreCase);
-			}
-			catch (Exception ex) when (ex is not OperationCanceledException)
-			{
-				return CommandResult.Fail($"Error parsing --key: {ex.Message}", ex);
-			}
+			var useIdMode = command.Id != Guid.Empty;
 
-			if (rawKey.Count == 0)
+			// 1. Parse key (only when --key is used)
+			Dictionary<string, object?> rawKey = new(StringComparer.OrdinalIgnoreCase);
+			if (!useIdMode)
 			{
-				return CommandResult.Fail("The --key option must contain at least one field=value pair.");
+				try
+				{
+					var parsed = PlainPayloadParser.Parse(command.Key!);
+					rawKey = parsed.ToDictionary(
+						kvp => kvp.Key,
+						kvp => (object?)kvp.Value,
+						StringComparer.OrdinalIgnoreCase);
+				}
+				catch (Exception ex) when (ex is not OperationCanceledException)
+				{
+					return CommandResult.Fail($"Error parsing --key: {ex.Message}", ex);
+				}
+
+				if (rawKey.Count == 0)
+				{
+					return CommandResult.Fail("The --key option must contain at least one field=value pair.");
+				}
 			}
 
 			// 2. Parse payload
@@ -92,25 +97,31 @@ namespace Greg.Xrm.Command.Commands.Data.Upsert
 				return CommandResult.Fail($"Error processing payload: {ex.Message}", ex);
 			}
 
-			// 6. Process key fields (to get typed values for KeyAttributes)
-			RecordPayloadProcessor.ProcessResult keyResult;
-			try
+			// 6. Process key fields (only when --key is used)
+			RecordPayloadProcessor.ProcessResult? keyResult = null;
+			if (!useIdMode)
 			{
-				keyResult = await processor.ProcessAsync(
-					rawKey,
-					entityMetadata,
-					validatingForCreate: false,
-					crm,
-					cancellationToken);
-			}
-			catch (Exception ex) when (ex is not OperationCanceledException)
-			{
-				output.WriteLine("FAILED", ConsoleColor.Red);
-				return CommandResult.Fail($"Error processing key fields: {ex.Message}", ex);
+				try
+				{
+					keyResult = await processor.ProcessAsync(
+						rawKey,
+						entityMetadata,
+						validatingForCreate: false,
+						crm,
+						cancellationToken);
+				}
+				catch (Exception ex) when (ex is not OperationCanceledException)
+				{
+					output.WriteLine("FAILED", ConsoleColor.Red);
+					return CommandResult.Fail($"Error processing key fields: {ex.Message}", ex);
+				}
 			}
 
 			// 7. Check errors
-			var allErrors = payloadResult.Errors.Concat(keyResult.Errors).ToList();
+			var allErrors = keyResult != null
+				? payloadResult.Errors.Concat(keyResult.Errors).ToList()
+				: payloadResult.Errors.ToList();
+
 			if (allErrors.Count > 0)
 			{
 				output.WriteLine("FAILED", ConsoleColor.Red);
@@ -124,16 +135,26 @@ namespace Greg.Xrm.Command.Commands.Data.Upsert
 			output.WriteLine("Done", ConsoleColor.Green);
 
 			// 8. Emit warnings
-			foreach (var warning in payloadResult.Warnings.Concat(keyResult.Warnings))
+			var allWarnings = keyResult != null
+				? payloadResult.Warnings.Concat(keyResult.Warnings)
+				: payloadResult.Warnings;
+			foreach (var warning in allWarnings)
 			{
 				output.WriteLine($"Warning: {warning}", ConsoleColor.Yellow);
 			}
 
 			// 9. Build the upsert entity
 			var entity = payloadResult.Entity;
-			foreach (var kvp in keyResult.Entity.Attributes)
+			if (useIdMode)
 			{
-				entity.KeyAttributes[kvp.Key] = kvp.Value;
+				entity.Id = command.Id;
+			}
+			else
+			{
+				foreach (var kvp in keyResult!.Entity.Attributes)
+				{
+					entity.KeyAttributes[kvp.Key] = kvp.Value;
+				}
 			}
 
 			// 10. Dry-run
@@ -141,8 +162,15 @@ namespace Greg.Xrm.Command.Commands.Data.Upsert
 			{
 				output.WriteLine();
 				output.WriteLine("Dry-run mode: the following fields would be set:", ConsoleColor.Cyan);
-				output.WriteLine("Key attributes (used for record lookup):", ConsoleColor.Cyan);
-				PrintKeyAttributes(entity.KeyAttributes);
+				if (useIdMode)
+				{
+					output.WriteLine($"Record ID: {command.Id}", ConsoleColor.Cyan);
+				}
+				else
+				{
+					output.WriteLine("Key attributes (used for record lookup):", ConsoleColor.Cyan);
+					PrintKeyAttributes(entity.KeyAttributes);
+				}
 				output.WriteLine("Payload attributes:", ConsoleColor.Cyan);
 				PrintEntityFields(entity);
 				return CommandResult.Success();

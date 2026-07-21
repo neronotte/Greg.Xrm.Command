@@ -4,15 +4,17 @@ using Greg.Xrm.Command.Services;
 
 namespace Greg.Xrm.Command.Commands.Data.Upsert
 {
-	[Command("data", "upsert", HelpText = "Creates or updates a record in a Dataverse table using an alternate key (upsert).")]
+	[Command("data", "upsert", HelpText = "Creates or updates a record in a Dataverse table using a record ID or an alternate key (upsert).")]
 	public class UpsertCommand : IValidatableObject, ICanProvideUsageExample
 	{
 		[Option("table", "t", HelpText = "Logical name of the target table.")]
 		[Required]
 		public string? Table { get; set; }
 
-		[Option("key", "k", HelpText = "Semicolon-separated list of field=value pairs that form the alternate key used to identify the record.")]
-		[Required]
+		[Option("id", "id", HelpText = "The GUID of the record to upsert. Mutually exclusive with --key.")]
+		public Guid Id { get; set; }
+
+		[Option("key", "k", HelpText = "Semicolon-separated list of field=value pairs that form the alternate key used to identify the record. Mutually exclusive with --id.")]
 		public string? Key { get; set; }
 
 		[Option("plain", "p", HelpText = "Semicolon-separated list of field=value pairs for the record payload. Mutually exclusive with --json and --file.")]
@@ -32,11 +34,20 @@ namespace Greg.Xrm.Command.Commands.Data.Upsert
 
 		public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
 		{
-			if (string.IsNullOrWhiteSpace(Key))
+			var hasId = Id != Guid.Empty;
+			var hasKey = !string.IsNullOrWhiteSpace(Key);
+
+			if (!hasId && !hasKey)
 			{
 				yield return new ValidationResult(
-					"The --key option is required and must contain at least one field=value pair.",
-					[nameof(Key)]);
+					"Either --id or --key must be specified.",
+					[nameof(Id), nameof(Key)]);
+			}
+			else if (hasId && hasKey)
+			{
+				yield return new ValidationResult(
+					"--id and --key are mutually exclusive; specify only one.",
+					[nameof(Id), nameof(Key)]);
 			}
 
 			var provided = new[]
@@ -71,7 +82,7 @@ namespace Greg.Xrm.Command.Commands.Data.Upsert
 		public void WriteUsageExamples(MarkdownWriter writer)
 		{
 			writer.WriteTitle3("Overview");
-			writer.WriteParagraph("This command performs an upsert (insert-or-update) operation on a Dataverse table. It uses an alternate key to determine whether the target record already exists: if it does, the record is updated; otherwise, a new record is created. The operation is idempotent and can be safely repeated.");
+			writer.WriteParagraph("This command performs an upsert (insert-or-update) operation on a Dataverse table. It uses either a record GUID (--id) or an alternate key (--key) to determine whether the target record already exists: if it does, the record is updated; otherwise, a new record is created. The operation is idempotent and can be safely repeated.");
 
 			writer.WriteTitle3("Input modes");
 			writer.WriteParagraph("Exactly one of the following input modes must be used (they are mutually exclusive):");
@@ -80,11 +91,12 @@ namespace Greg.Xrm.Command.Commands.Data.Upsert
 				"--json (-j): a JSON object string representing the record payload",
 				"--file (-f): path to a JSON file containing the record payload");
 
-			writer.WriteTitle3("Alternate key (--key)");
-			writer.WriteParagraph("The --key option specifies the alternate key used to identify the record. It uses the same semicolon-separated field=value format as --plain:");
+			writer.WriteTitle3("Record identifier: --id vs --key");
+			writer.WriteParagraph("Exactly one of the following record identifier options must be provided (they are mutually exclusive):");
 			writer.WriteList(
-				"Single-field key: --key accountnumber=ACC001",
-				"Multi-field key: --key \"field1=value1;field2=value2\"");
+				"--id: GUID of the record to upsert, e.g. --id 3fa85f64-5717-4562-b3fc-2c963f66afa6",
+				"--key (-k): semicolon-separated field=value pairs forming the alternate key, e.g. --key accountnumber=ACC001");
+			writer.WriteParagraph("For --key, multi-field alternate keys are also supported: --key \"field1=value1;field2=value2\"");
 			writer.WriteParagraph("The key fields are used exclusively for record lookup. To also set the key field values in the payload, include them in --plain/--json/--file as well.");
 
 			writer.WriteTitle3("Supported field types");
@@ -107,7 +119,8 @@ namespace Greg.Xrm.Command.Commands.Data.Upsert
 
 			writer.WriteTitle3("Options");
 			writer.WriteList(
-				"--key (-k): required; semicolon-separated field=value pairs for the alternate key",
+				"--id: GUID of the record to upsert (mutually exclusive with --key)",
+				"--key (-k): semicolon-separated field=value pairs for the alternate key (mutually exclusive with --id)",
 				"--return (-r): comma-separated list of columns to retrieve after the operation and display; if omitted only the record ID is shown",
 				"--dry-run (-dr): validates and displays the resolved payload without actually performing the upsert");
 
@@ -116,6 +129,9 @@ namespace Greg.Xrm.Command.Commands.Data.Upsert
 
 			writer.WriteTitle3("Examples");
 			writer.WriteCodeBlockStart("Powershell");
+			writer.WriteLine("# Upsert an account by record GUID");
+			writer.WriteLine("pacx data upsert -t account --id 3fa85f64-5717-4562-b3fc-2c963f66afa6 --plain \"name=Contoso Ltd\"");
+			writer.WriteLine();
 			writer.WriteLine("# Upsert an account by alternate key");
 			writer.WriteLine("pacx data upsert -t account --key accountnumber=ACC001 --plain \"name=Contoso Ltd\"");
 			writer.WriteLine();

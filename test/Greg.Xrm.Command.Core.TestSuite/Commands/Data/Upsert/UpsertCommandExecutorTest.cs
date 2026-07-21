@@ -350,6 +350,126 @@ namespace Greg.Xrm.Command.Commands.Data.Upsert
 			_crmMock.Verify(c => c.ExecuteAsync(It.Is<OrganizationRequest>(r => r is UpsertRequest), It.IsAny<CancellationToken>()), Times.Once);
 		}
 
+		// ── --id mode: record created ──────────────────────────────────────────
+
+		[TestMethod]
+		public async Task ExecuteAsync_WithId_WhenRecordCreated_ShouldReturnSuccessWithCreatedFlag()
+		{
+			var recordId = Guid.NewGuid();
+			var command = new UpsertCommand
+			{
+				Table = "account",
+				Id = recordId,
+				Plain = "name=Contoso Ltd"
+			};
+
+			SetupEntityMetadata("account",
+				new StringAttributeMetadata { LogicalName = "name" });
+
+			SetupUpsertResponse(recordId, recordCreated: true);
+
+			var result = await _executor.ExecuteAsync(command, CancellationToken.None);
+
+			Assert.IsTrue(result.IsSuccess, result.ErrorMessage);
+			Assert.AreEqual(recordId, result["Id"]);
+			Assert.AreEqual(true, result["RecordCreated"]);
+		}
+
+		// ── --id mode: entity Id is set on the request ─────────────────────────
+
+		[TestMethod]
+		public async Task ExecuteAsync_WithId_ShouldSetEntityIdOnRequest()
+		{
+			var recordId = Guid.NewGuid();
+			var command = new UpsertCommand
+			{
+				Table = "account",
+				Id = recordId,
+				Plain = "name=Contoso Ltd"
+			};
+
+			SetupEntityMetadata("account",
+				new StringAttributeMetadata { LogicalName = "name" });
+
+			Entity? capturedEntity = null;
+			_crmMock
+				.Setup(c => c.ExecuteAsync(It.Is<OrganizationRequest>(r => r is UpsertRequest), It.IsAny<CancellationToken>()))
+				.ReturnsAsync((OrganizationRequest r, CancellationToken _) =>
+				{
+					capturedEntity = ((UpsertRequest)r).Target;
+					var response = new UpsertResponse();
+					response.Results["RecordCreated"] = false;
+					response.Results["Target"] = new EntityReference("account", recordId);
+					return response;
+				});
+
+			var result = await _executor.ExecuteAsync(command, CancellationToken.None);
+
+			Assert.IsTrue(result.IsSuccess, result.ErrorMessage);
+			Assert.IsNotNull(capturedEntity);
+			Assert.AreEqual(recordId, capturedEntity!.Id);
+			Assert.AreEqual(0, capturedEntity.KeyAttributes.Count);
+		}
+
+		// ── --id mode: no KeyAttributes set ───────────────────────────────────
+
+		[TestMethod]
+		public async Task ExecuteAsync_WithId_ShouldNotSetKeyAttributes()
+		{
+			var recordId = Guid.NewGuid();
+			var command = new UpsertCommand
+			{
+				Table = "account",
+				Id = recordId,
+				Plain = "name=Contoso Ltd"
+			};
+
+			SetupEntityMetadata("account",
+				new StringAttributeMetadata { LogicalName = "name" });
+
+			Entity? capturedEntity = null;
+			_crmMock
+				.Setup(c => c.ExecuteAsync(It.Is<OrganizationRequest>(r => r is UpsertRequest), It.IsAny<CancellationToken>()))
+				.ReturnsAsync((OrganizationRequest r, CancellationToken _) =>
+				{
+					capturedEntity = ((UpsertRequest)r).Target;
+					var response = new UpsertResponse();
+					response.Results["RecordCreated"] = false;
+					response.Results["Target"] = new EntityReference("account", recordId);
+					return response;
+				});
+
+			await _executor.ExecuteAsync(command, CancellationToken.None);
+
+			Assert.IsNotNull(capturedEntity);
+			Assert.AreEqual(0, capturedEntity!.KeyAttributes.Count);
+		}
+
+		// ── --id mode: dry-run ─────────────────────────────────────────────────
+
+		[TestMethod]
+		public async Task ExecuteAsync_WithIdAndDryRun_ShouldNotCallUpsert()
+		{
+			var recordId = Guid.NewGuid();
+			var command = new UpsertCommand
+			{
+				Table = "account",
+				Id = recordId,
+				Plain = "name=Contoso Ltd",
+				DryRun = true
+			};
+
+			SetupEntityMetadata("account",
+				new StringAttributeMetadata { LogicalName = "name" });
+
+			var result = await _executor.ExecuteAsync(command, CancellationToken.None);
+
+			Assert.IsTrue(result.IsSuccess, result.ErrorMessage);
+			_crmMock.Verify(c => c.ExecuteAsync(It.Is<OrganizationRequest>(r => r is UpsertRequest), It.IsAny<CancellationToken>()), Times.Never);
+			Assert.IsTrue(_output.ToString().Contains("Dry-run"));
+			Assert.IsTrue(_output.ToString().Contains(recordId.ToString()));
+		}
+
 		#region Helpers
 
 		private void SetupEntityMetadata(string logicalName, params AttributeMetadata[] attributes)
