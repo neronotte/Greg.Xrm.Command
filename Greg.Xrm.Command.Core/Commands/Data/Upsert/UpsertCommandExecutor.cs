@@ -119,7 +119,7 @@ namespace Greg.Xrm.Command.Commands.Data.Upsert
 
 			// 7. Check errors
 			var allErrors = keyResult != null
-				? payloadResult.Errors.Concat(keyResult.Errors).ToList()
+				? payloadResult.Errors.Concat(keyResult.Errors).Concat(keyResult.Warnings).ToList()
 				: payloadResult.Errors.ToList();
 
 			if (allErrors.Count > 0)
