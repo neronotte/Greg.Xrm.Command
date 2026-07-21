@@ -84,10 +84,9 @@ namespace Greg.Xrm.Command.Commands.Data.Upsert
 			RecordPayloadProcessor.ProcessResult payloadResult;
 			try
 			{
-				payloadResult = await processor.ProcessAsync(
+				payloadResult = await processor.ProcessForUpsertAsync(
 					rawPayload,
 					entityMetadata,
-					validatingForCreate: true,
 					crm,
 					cancellationToken);
 			}

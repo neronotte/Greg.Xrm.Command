@@ -11,6 +11,13 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload
 	/// </summary>
 	public class RecordPayloadProcessor
 	{
+		private enum ValidationMode
+		{
+			Create,
+			Update,
+			Upsert
+		}
+
 		public record ProcessResult(
 			Entity Entity,
 			IReadOnlyList<string> Warnings,
@@ -33,6 +40,35 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload
 			Dictionary<string, object?> rawPayload,
 			EntityMetadata entityMetadata,
 			bool validatingForCreate,
+			IOrganizationServiceAsync2 crm,
+			CancellationToken cancellationToken)
+		{
+			return await ProcessAsync(
+				rawPayload,
+				entityMetadata,
+				validatingForCreate ? ValidationMode.Create : ValidationMode.Update,
+				crm,
+				cancellationToken);
+		}
+
+		public async Task<ProcessResult> ProcessForUpsertAsync(
+			Dictionary<string, object?> rawPayload,
+			EntityMetadata entityMetadata,
+			IOrganizationServiceAsync2 crm,
+			CancellationToken cancellationToken)
+		{
+			return await ProcessAsync(
+				rawPayload,
+				entityMetadata,
+				ValidationMode.Upsert,
+				crm,
+				cancellationToken);
+		}
+
+		private async Task<ProcessResult> ProcessAsync(
+			Dictionary<string, object?> rawPayload,
+			EntityMetadata entityMetadata,
+			ValidationMode validationMode,
 			IOrganizationServiceAsync2 crm,
 			CancellationToken cancellationToken)
 		{
@@ -63,12 +99,12 @@ namespace Greg.Xrm.Command.Commands.Data.RecordPayload
 				}
 
 				// 3. Check IsValidForCreate / IsValidForUpdate
-				if (validatingForCreate && attrMeta.IsValidForCreate == false)
+				if (validationMode == ValidationMode.Create && attrMeta.IsValidForCreate == false)
 				{
 					warnings.Add($"Field '{fieldName}' is not valid for create and will be skipped.");
 					continue;
 				}
-				if (!validatingForCreate && attrMeta.IsValidForUpdate == false)
+				if (validationMode == ValidationMode.Update && attrMeta.IsValidForUpdate == false)
 				{
 					warnings.Add($"Field '{fieldName}' is not valid for update and will be skipped.");
 					continue;

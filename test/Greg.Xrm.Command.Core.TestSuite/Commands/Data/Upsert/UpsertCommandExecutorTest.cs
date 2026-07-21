@@ -158,6 +158,50 @@ namespace Greg.Xrm.Command.Commands.Data.Upsert
 			Assert.AreEqual("Contoso Ltd", capturedEntity["name"]);
 		}
 
+		[TestMethod]
+		public async Task ExecuteAsync_ShouldKeepCreateOnlyAndUpdateOnlyPayloadFieldsInUpsertMode()
+		{
+			var recordId = Guid.NewGuid();
+			var command = new UpsertCommand
+			{
+				Table = "account",
+				Key = "accountnumber=ACC001",
+				Plain = "createonly=from-create;updateonly=from-update"
+			};
+
+			var createOnly = new StringAttributeMetadata { LogicalName = "createonly" };
+			SetIsValidForCreate(createOnly, true);
+			SetIsValidForUpdate(createOnly, false);
+
+			var updateOnly = new StringAttributeMetadata { LogicalName = "updateonly" };
+			SetIsValidForCreate(updateOnly, false);
+			SetIsValidForUpdate(updateOnly, true);
+
+			SetupEntityMetadata("account",
+				new StringAttributeMetadata { LogicalName = "accountnumber" },
+				createOnly,
+				updateOnly);
+
+			Entity? capturedEntity = null;
+			_crmMock
+				.Setup(c => c.ExecuteAsync(It.Is<OrganizationRequest>(r => r is UpsertRequest), It.IsAny<CancellationToken>()))
+				.ReturnsAsync((OrganizationRequest r, CancellationToken _) =>
+				{
+					capturedEntity = ((UpsertRequest)r).Target;
+					var response = new UpsertResponse();
+					response.Results["RecordCreated"] = true;
+					response.Results["Target"] = new EntityReference("account", recordId);
+					return response;
+				});
+
+			var result = await _executor.ExecuteAsync(command, CancellationToken.None);
+
+			Assert.IsTrue(result.IsSuccess, result.ErrorMessage);
+			Assert.IsNotNull(capturedEntity);
+			Assert.AreEqual("from-create", capturedEntity!["createonly"]);
+			Assert.AreEqual("from-update", capturedEntity["updateonly"]);
+		}
+
 		// ── Dry-run ────────────────────────────────────────────────────────────
 
 		[TestMethod]
@@ -506,6 +550,20 @@ namespace Greg.Xrm.Command.Commands.Data.Upsert
 				.GetProperty(nameof(EntityMetadata.Attributes))!
 				.SetValue(metadata, attributes);
 			return metadata;
+		}
+
+		private static void SetIsValidForCreate(AttributeMetadata attr, bool value)
+		{
+			typeof(AttributeMetadata)
+				.GetProperty(nameof(AttributeMetadata.IsValidForCreate))!
+				.SetValue(attr, value);
+		}
+
+		private static void SetIsValidForUpdate(AttributeMetadata attr, bool value)
+		{
+			typeof(AttributeMetadata)
+				.GetProperty(nameof(AttributeMetadata.IsValidForUpdate))!
+				.SetValue(attr, value);
 		}
 
 		#endregion
