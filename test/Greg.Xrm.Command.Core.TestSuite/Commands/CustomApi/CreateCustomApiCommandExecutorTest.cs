@@ -1,4 +1,5 @@
 using Greg.Xrm.Command.Model;
+using Greg.Xrm.Command.Services;
 using Microsoft.Crm.Sdk.Messages;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
@@ -12,12 +13,26 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 	{
 		private readonly CreateCustomApiCommandExecutor executor;
 		private readonly Mock<ISolutionRepository> solutionRepositoryMock;
+		private readonly Mock<IObjectTypeCodeFinder> objectTypeCodeFinderMock;
 
 		private const string DefaultSolution = "TestSolution";
+		private const int CustomApiObjectTypeCode = 10315;
+		private const int CustomApiRequestParameterObjectTypeCode = 10316;
+		private const int CustomApiResponsePropertyObjectTypeCode = 10317;
 
 		public CreateCustomApiCommandExecutorTest()
 		{
 			this.solutionRepositoryMock = new Mock<ISolutionRepository>();
+			this.objectTypeCodeFinderMock = new Mock<IObjectTypeCodeFinder>();
+			this.objectTypeCodeFinderMock
+				.Setup(x => x.GetObjectTypeCodeForTableAsync(It.IsAny<IOrganizationServiceAsync2>(), "customapi", It.IsAny<CancellationToken>()))
+				.ReturnsAsync(CustomApiObjectTypeCode);
+			this.objectTypeCodeFinderMock
+				.Setup(x => x.GetObjectTypeCodeForTableAsync(It.IsAny<IOrganizationServiceAsync2>(), "customapirequestparameter", It.IsAny<CancellationToken>()))
+				.ReturnsAsync(CustomApiRequestParameterObjectTypeCode);
+			this.objectTypeCodeFinderMock
+				.Setup(x => x.GetObjectTypeCodeForTableAsync(It.IsAny<IOrganizationServiceAsync2>(), "customapiresponseproperty", It.IsAny<CancellationToken>()))
+				.ReturnsAsync(CustomApiResponsePropertyObjectTypeCode);
 
 			// Default solution
 			this.OrganizationServiceRepositoryMock
@@ -48,7 +63,8 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 			this.executor = new CreateCustomApiCommandExecutor(
 				this.Output,
 				this.OrganizationServiceRepositoryMock.Object,
-				this.solutionRepositoryMock.Object);
+				this.solutionRepositoryMock.Object,
+				this.objectTypeCodeFinderMock.Object);
 		}
 
 		private void SetupNoExistingApi()
@@ -103,7 +119,7 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 			this.OrganizationServiceMock.Verify(
 				x => x.ExecuteAsync(It.Is<AddSolutionComponentRequest>(r =>
 					r.SolutionUniqueName == DefaultSolution &&
-						r.ComponentType == (int)ComponentType.CustomAPI), It.IsAny<CancellationToken>()),
+						r.ComponentType == CustomApiObjectTypeCode), It.IsAny<CancellationToken>()),
 				Times.Once);
 		}
 
