@@ -97,7 +97,7 @@ pacx customapi list --full
 pacx customapi describe --unique-name myp_MyAction --generate-input-file --generate-schema-file
 
 # Execute it
-pacx customapi run --api myp_MyAction --input input.json
+pacx customapi run --unique-name myp_MyAction --input-file input.json
 
 # Bind to a plugin
 pacx customapi bind --api myp_MyAction --plugin MyPlugin.MyType
