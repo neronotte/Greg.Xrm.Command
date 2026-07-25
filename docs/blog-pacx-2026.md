@@ -19,8 +19,8 @@ Before covering the new commands, it is worth mentioning the foundation they wer
 ```powershell
 pacx org info
 pacx org language list
-pacx org language add --language 1040
-pacx org language remove --language 1040
+pacx org language add --lcid 1040
+pacx org language remove --lcid 1040
 ```
 
 Four new commands under [`pacx org`](https://github.com/neronotte/Greg.Xrm.Command/wiki/pacx-org) to manage your Dataverse organization without touching the admin portal. [`org info`](https://github.com/neronotte/Greg.Xrm.Command/wiki/pacx-org-info) gives you a quick summary of the current environment. The [`org language`](https://github.com/neronotte/Greg.Xrm.Command/wiki/pacx-org-language) group lets you [`list`](https://github.com/neronotte/Greg.Xrm.Command/wiki/pacx-org-language-list), [`add`](https://github.com/neronotte/Greg.Xrm.Command/wiki/pacx-org-language-add), and [`remove`](https://github.com/neronotte/Greg.Xrm.Command/wiki/pacx-org-language-remove) languages programmatically — useful in automated environment setup scripts, or when you are managing multilingual deployments and want that step reproducible and auditable.
