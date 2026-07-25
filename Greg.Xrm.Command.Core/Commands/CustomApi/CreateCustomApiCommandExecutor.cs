@@ -1,6 +1,8 @@
 using System.ServiceModel;
+using System.Linq;
 using Greg.Xrm.Command.Commands.CustomApi.Model;
 using Greg.Xrm.Command.Model;
+using Greg.Xrm.Command.Services;
 using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
 using Microsoft.Crm.Sdk.Messages;
@@ -13,7 +15,8 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 	public class CreateCustomApiCommandExecutor(
 		IOutput output,
 		IOrganizationServiceRepository organizationServiceRepository,
-		ISolutionRepository solutionRepository)
+		ISolutionRepository solutionRepository,
+		IObjectTypeCodeFinder objectTypeCodeFinder)
 		: ICommandExecutor<CreateCustomApiCommand>
 	{
 		public async Task<CommandResult> ExecuteAsync(CreateCustomApiCommand command, CancellationToken cancellationToken)
@@ -86,16 +89,37 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 				if (!isValid)
 					return CommandResult.Fail($"Invalid execute privilege name '{command.ExecutePrivilegeName}'.");
 
+				var paramSpecs = CreateCustomApiCommand.SplitSpecs(command.Params).ToList();
+				var responseSpecs = CreateCustomApiCommand.SplitSpecs(command.Responses).ToList();
+				var hasParams = paramSpecs.Count > 0;
+				var hasResponses = responseSpecs.Count > 0;
+
+				var customApiObjectTypeCode = await objectTypeCodeFinder.GetObjectTypeCodeForTableAsync(crm, "customapi", cancellationToken);
+				var customApiRequestObjectTypeCode = hasParams
+					? await objectTypeCodeFinder.GetObjectTypeCodeForTableAsync(crm, "customapirequestparameter", cancellationToken)
+					: (int?)null;
+				var customApiResponseObjectTypeCode = hasResponses
+					? await objectTypeCodeFinder.GetObjectTypeCodeForTableAsync(crm, "customapiresponseproperty", cancellationToken)
+					: (int?)null;
+
 				// ── Create the customapi record ───────────────────────────────────────
 				output.Write("Creating Custom API '");
 				output.Write(uniqueName, ConsoleColor.Yellow);
 				output.Write("'...");
+
+				var description = command.Description;
+				if (string.IsNullOrWhiteSpace(description))
+				{
+					description = uniqueName;
+				}
+
+
 				var api = new Model.CustomApi
 				{
 					name = displayName,
 					uniquename = uniqueName,
 					displayname = displayName,
-					description = command.Description ?? uniqueName,
+					description = description,
 					bindingtype = new OptionSetValue((int)command.BindingType),
 					boundentitylogicalname = string.IsNullOrWhiteSpace(command.BoundEntityLogicalName) ? null : command.BoundEntityLogicalName,
 					isfunction = command.Type == CustomApiType.Function,
@@ -106,13 +130,13 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 				await api.SaveOrUpdateAsync(crm);
 				output.WriteLine("Done", ConsoleColor.Green);
 
-				await AddToSolutionAsync(crm, output, solutionName, ComponentType.CustomAPI, api.Id, cancellationToken);
+				await AddToSolutionAsync(crm, output, solutionName, customApiObjectTypeCode, api.Id, cancellationToken);
 
 				var createdParams = new List<string>();
 				var createdResponses = new List<string>();
 
 				// ── Create parameters ─────────────────────────────────────────────────
-				foreach (var paramSpec in CreateCustomApiCommand.SplitSpecs(command.Params))
+				foreach (var paramSpec in paramSpecs)
 				{
 					CustomApiParamSpec.TryParse(paramSpec, out var spec, out _);
 					var paramUniqueName = spec!.UniqueName;  // already cleaned by TryParse
@@ -141,12 +165,12 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 					await param.SaveOrUpdateAsync(crm);
 					output.WriteLine("Done", ConsoleColor.Green);
 
-					await AddToSolutionAsync(crm, output, solutionName, ComponentType.CustomAPIRequestParameter, param.Id, cancellationToken);
+					await AddToSolutionAsync(crm, output, solutionName, customApiRequestObjectTypeCode!.Value, param.Id, cancellationToken);
 					createdParams.Add($"{paramUniqueName} ({spec.Type}{(spec.IsOptional ? ", optional" : "")})");
 				}
 
 				// ── Create response properties ────────────────────────────────────────
-				foreach (var responseSpec in CreateCustomApiCommand.SplitSpecs(command.Responses))
+				foreach (var responseSpec in responseSpecs)
 				{
 					CustomApiParamSpec.TryParse(responseSpec, out var spec, out _);
 					var respUniqueName = spec!.UniqueName;  // already cleaned by TryParse
@@ -174,7 +198,7 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 					await resp.SaveOrUpdateAsync(crm);
 					output.WriteLine("Done", ConsoleColor.Green);
 
-					await AddToSolutionAsync(crm, output, solutionName, ComponentType.CustomAPIResponseProperty, resp.Id, cancellationToken);
+					await AddToSolutionAsync(crm, output, solutionName, customApiResponseObjectTypeCode!.Value, resp.Id, cancellationToken);
 					createdResponses.Add($"{respUniqueName} ({spec.Type})");
 				}
 
@@ -240,17 +264,15 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 			return (true, name);
 		}
 
-		private async Task AddToSolutionAsync(IOrganizationServiceAsync2 crm, IOutput output, string solutionName, ComponentType componentType, Guid componentId, CancellationToken cancellationToken)
+		private async Task AddToSolutionAsync(IOrganizationServiceAsync2 crm, IOutput output, string solutionName, int componentType, Guid componentId, CancellationToken cancellationToken)
 		{
 			try
 			{
 				var req = new AddSolutionComponentRequest
 				{
 					SolutionUniqueName = solutionName,
-					ComponentType = (int)componentType,
-					ComponentId = componentId,
-					AddRequiredComponents = false,
-					DoNotIncludeSubcomponents = true,
+					ComponentType = componentType,
+					ComponentId = componentId
 				};
 				await crm.ExecuteAsync(req, cancellationToken);
 			}
