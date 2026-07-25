@@ -94,7 +94,7 @@ pacx customapi add-response --api myp_MyAction --response OutputResult:String
 
 # Inspect it
 pacx customapi list --full
-pacx customapi describe --api myp_MyAction --generate-input-file --generate-schema-file
+pacx customapi describe --unique-name myp_MyAction --generate-input-file --generate-schema-file
 
 # Execute it
 pacx customapi run --api myp_MyAction --input input.json
