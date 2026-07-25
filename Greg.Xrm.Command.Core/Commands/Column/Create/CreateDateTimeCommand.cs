@@ -27,7 +27,7 @@ namespace Greg.Xrm.Command.Commands.Column.Create
 pacx column add datetime -t tableName -n columnName
 
 # Create date-only column
-pacx column add datetime -t tableName -n columnName --dateTimeBehavior DateOnly --dateTimeFormat DateOnly
+pacx column add datetime -t tableName -n columnName --behavior DateOnly --format DateOnly
 pacx column add datetime -t tableName -n columnName -dtb DateOnly -dtf DateOnly
 
 # Create time-zone independent datetime
