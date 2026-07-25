@@ -58,8 +58,8 @@ A full suite under [`pacx solution component`](https://github.com/neronotte/Greg
 ## Generating Constants from Metadata
 
 ```powershell
-pacx solution constants generate --solution MySolution --language csharp
-pacx solution constants generate --solution MySolution --language javascript
+pacx solution constants --solutionName MySolution --outputCs ./constants --namespaceCs MySolution.Constants
+pacx solution constants --solutionName MySolution --outputJs ./constants --namespaceJs MySolution
 ```
 
 If you are writing plugin code or PCF controls and you are still hardcoding entity logical names and attribute names as string literals, [`solution generateLateBoundConstants`](https://github.com/neronotte/Greg.Xrm.Command/wiki/pacx-solution-generateLateBoundConstants) is the answer. It reads your solution's metadata and emits a constants file — either C# or JavaScript — with all table names, attribute names, entity set names, and global option set values. Regenerate it after every schema change and your code stays in sync without manual effort.
