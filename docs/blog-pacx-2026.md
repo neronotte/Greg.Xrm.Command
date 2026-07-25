@@ -30,7 +30,7 @@ Four new commands under [`pacx org`](https://github.com/neronotte/Greg.Xrm.Comma
 ## Column Naming Conventions
 
 ```powershell
-pacx column conventions set --prefix myp --casing camelCase
+pacx column conventions set --casing camelCase
 pacx column conventions show
 pacx column conventions reset
 ```
