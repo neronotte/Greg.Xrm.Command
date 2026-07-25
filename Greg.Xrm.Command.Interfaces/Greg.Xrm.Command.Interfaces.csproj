@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>net8.0</TargetFramework>
+		<TargetFramework>net10.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<RootNamespace>Greg.Xrm.Command</RootNamespace>
@@ -39,11 +39,12 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Autofac.Extensions.DependencyInjection" Version="11.0.0" />
+		<PackageReference Include="Autofac.Extensions.DependencyInjection" Version="11.0.2" />
 		<PackageReference Include="ClosedXML" Version="0.105.0" />
-		<PackageReference Include="Microsoft.PowerPlatform.Dataverse.Client" Version="1.2.10" />
-		<PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.6" />
-		<PackageReference Include="System.Text.Json" Version="10.0.6" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.10" />
+		<PackageReference Include="Microsoft.PowerPlatform.Dataverse.Client" Version="1.2.26" />
+		<PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.10" />
+		<PackageReference Include="System.Text.Json" Version="10.0.10" />
 		<PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
 	</ItemGroup>
 
