@@ -71,6 +71,7 @@ If you are writing plugin code or PCF controls and you are still hardcoding enti
 ```powershell
 pacx usersettings list
 pacx usersettings set --uilanguageid 1040
+```
 
 175 user setting definitions, manageable from the terminal via [`pacx userSettings`](https://github.com/neronotte/Greg.Xrm.Command/wiki/pacx-usersettings). If you have ever needed to toggle a specific Dataverse user setting across environments as part of a deployment or test setup, this is the command group for that. [`list`](https://github.com/neronotte/Greg.Xrm.Command/wiki/pacx-usersettings-list) shows everything available; [`set`](https://github.com/neronotte/Greg.Xrm.Command/wiki/pacx-usersettings-set) changes a value for the current user on the current environment.
 
