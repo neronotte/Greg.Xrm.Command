@@ -4,7 +4,7 @@ Microsoft's investments in making Power Platform development increasingly **Agen
 
 PACX has always had one goal: **simplify the developer's daily life by reducing the need to open the Maker Portal**. Every time you fire up a browser to create a column, register a plugin step, or check which solution components are misplaced, you are losing flow. PACX is the CLI that gives that flow back.
 
-In the first half of 2026, PACX grew significantly. This post walks through the most relevant additions, grouped by theme.
+In 2026, PACX has grown significantly. This post walks through the most relevant additions, grouped by theme.
 
 ---
 
