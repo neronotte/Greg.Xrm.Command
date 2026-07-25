@@ -42,11 +42,11 @@ PACX already supported creating columns of any type from the CLI. What was missi
 ## Solution Component Management
 
 ```powershell
-pacx solution component add --solution MySolution --type 1 --id <guid>
-pacx solution component move --from SolutionA --to SolutionB --type 1 --id <guid>
-pacx solution component moveAll --from SolutionA --to SolutionB
-pacx solution component remove --solution MySolution --type 1 --id <guid>
-pacx solution component removeAll --solution MySolution
+pacx solution component add --solution MySolution --componentType 1 --componentId <guid>
+pacx solution component move --fromSolution SolutionA --toSolution SolutionB --componentId <guid>
+pacx solution component moveAll --fromSolution SolutionA --toSolution SolutionB --componentType 1
+pacx solution component remove --solution MySolution --componentId <guid>
+pacx solution component removeAll --solution MySolution --componentType 1
 pacx solution component types
 pacx solution component addTable --solution MySolution --table contact
 ```
