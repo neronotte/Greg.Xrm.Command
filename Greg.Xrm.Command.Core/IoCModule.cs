@@ -47,7 +47,7 @@ namespace Greg.Xrm.Command
 			builder.RegisterType<Commands.Table.Migration.TableGraphBuilder>().AsSelf();
 			builder.RegisterType<Commands.Views.Model.ViewRetrieverService>().As<Commands.Views.Model.IViewRetrieverService>();
 			builder.RegisterType<OptionSetParser>().As<IOptionSetParser>();
-			builder.RegisterType<ObjectTypeCodeFinder>().As<IObjectTypeCodeFinder>().InstancePerLifetimeScope();
+			builder.RegisterType<ObjectTypeCodeFinder>().As<IObjectTypeCodeFinder>();
 
 
 			builder.RegisterType<FolderResolver>().As<IFolderResolver>();
