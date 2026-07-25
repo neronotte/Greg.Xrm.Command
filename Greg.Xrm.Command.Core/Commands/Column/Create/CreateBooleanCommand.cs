@@ -18,10 +18,10 @@ namespace Greg.Xrm.Command.Commands.Column.Create
 		public void WriteUsageExamples(MarkdownWriter writer)
 		{
 			writer.WriteCodeBlock(@"# Creates a simple true/false column
-pacx column create --type Boolean -t tableName -n columnName
+pacx column add boolean -t tableName -n columnName
 
 # Change the labels for True and False values
-pacx column create --type Boolean -t tableName -n columnName --trueLabel Yes --falseLabel No", "Powershell");
+pacx column add boolean -t tableName -n columnName --trueLabel Yes --falseLabel No", "Powershell");
 		}
 	}
 }

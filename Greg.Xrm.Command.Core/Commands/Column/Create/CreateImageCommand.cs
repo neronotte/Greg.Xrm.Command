@@ -15,19 +15,19 @@ namespace Greg.Xrm.Command.Commands.Column.Create
 		public void WriteUsageExamples(MarkdownWriter writer)
 		{
 
-			writer.WriteCodeBlock(@"# Creates a simple file column
-pacx column create --type File -t tableName -n columnName
+			writer.WriteCodeBlock(@"# Creates a simple image column
+pacx column add image -t tableName -n columnName
 
 # specifies the max allowed size in KB (10 MB)
-pacx column create --type File -t tableName -n columnName --maxSizeInKB 10240
-pacx column create --type File -t tableName -n columnName -maxKb 10240
+pacx column add image -t tableName -n columnName --maxSizeInKB 10240
+pacx column add image -t tableName -n columnName -maxKb 10240
 ", "Powershell");
 
 
 			writer.WriteParagraph("You can also specify if the image column should store only thumbnail-sized images using the `--canStoreOnlyThumbnailImage` option.");
 			writer.WriteCodeBlock(@"# Create image column that stores only thumbnail-sized images
-pacx column create --type Image -t tableName -n columnName --storeOnlyThumbnailImage
-pacx column create --type Image -t tableName -n columnName -thumb
+pacx column add image -t tableName -n columnName --storeOnlyThumbnailImage
+pacx column add image -t tableName -n columnName -thumb
 ", "Powershell");
 
 			writer.WriteParagraph("To generate a thumbnail-sized image, Dataverse will crop and resize the image to a square shape according to the following rules:");

@@ -27,12 +27,10 @@ namespace Greg.Xrm.Command.Commands.Column.Create
 			writer.WriteLine();
 
 			writer.WriteCodeBlock(@"# Creates a simple decimal column with precision 2
-pacx column create --type Decimal -t tableName -n columnName
-pacx column create --type Double -t tableName -n columnName
+pacx column add decimal -t tableName -n columnName
 
 # Set precision and min/max values
-pacx column create --type Decimal -t tableName -n columnName --precision 4 --min 0 --max 999.99
-pacx column create --type Double -t tableName -n columnName --precision 4 --min 0 --max 999.99", "Powershell");
+pacx column add decimal -t tableName -n columnName --precision 4 --min 0 --max 999.99", "Powershell");
 		}
 	}
 }

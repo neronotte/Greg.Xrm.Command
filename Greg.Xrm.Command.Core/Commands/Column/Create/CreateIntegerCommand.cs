@@ -21,13 +21,13 @@ namespace Greg.Xrm.Command.Commands.Column.Create
 		public void WriteUsageExamples(MarkdownWriter writer)
 		{
 			writer.WriteCodeBlock(@"# Creates a simple integer column
-pacx column create --type Integer -t tableName -n columnName
+pacx column add integer -t tableName -n columnName
 
 # Set minimum and maximum values
-pacx column create --type Integer -t tableName -n columnName --min 0 --max 100
+pacx column add integer -t tableName -n columnName --min 0 --max 100
 
 # Specify integer format (None, Duration, TimeZone, Language, Locale)
-pacx column create --type Integer -t tableName -n columnName --intFormat Duration", "Powershell");
+pacx column add integer -t tableName -n columnName --intFormat Duration", "Powershell");
 		}
 	}
 }

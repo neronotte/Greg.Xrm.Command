@@ -35,13 +35,13 @@ namespace Greg.Xrm.Command.Commands.Column.Create
 			writer.WriteParagraph("You can manually set all other arguments in the following way:");
 
 			writer.WriteCodeBlock(@"# Specify a different format (Email, Json, RichText, Text, TextArea)
-pacx column create --type Memo -t tableName -n columnName --memoFormat RichText
+pacx column add memo -t tableName -n columnName --memoFormat RichText
 
 # Specify a different max length (default is 2000)
-pacx column create --type Memo -t tableName -n columnName --len 200
+pacx column add memo -t tableName -n columnName --len 200
 
 # Create a required field (supported values are: None, ApplicationRequired, Recommended)
-pacx column create --type Memo -t tableName -n columnName -r ApplicationRequired", "Powershell");
+pacx column add memo -t tableName -n columnName -r ApplicationRequired", "Powershell");
 		}
 	}
 }

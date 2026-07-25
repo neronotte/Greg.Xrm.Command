@@ -12,11 +12,11 @@ namespace Greg.Xrm.Command.Commands.Column.Create
 		public void WriteUsageExamples(MarkdownWriter writer)
 		{
 			writer.WriteCodeBlock(@"# Creates a simple file column
-pacx column create --type File -t tableName -n columnName
+pacx column add file -t tableName -n columnName
 
 # specifies the max allowed size in KB (10 MB)
-pacx column create --type File -t tableName -n columnName --maxSizeInKB 10240
-pacx column create --type File -t tableName -n columnName -maxKb 10240
+pacx column add file -t tableName -n columnName --maxSizeInKB 10240
+pacx column add file -t tableName -n columnName -maxKb 10240
 ", "Powershell");
 		}
 	}
