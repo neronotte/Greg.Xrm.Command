@@ -36,7 +36,7 @@ namespace Greg.Xrm.Command.Commands.Column.Create
 			writer.WriteParagraph("You can manually set all other arguments in the following way:");
 
 			writer.WriteCodeBlock(@"# Specify a different format (supported values are: Email, Text, TextArea, Url, TickerSymbol, Phone, Json, RichText)
-pacx column add string -t tableName -n columnName --stringFormat Email
+pacx column add string -t tableName -n columnName --format Email
 
 # Specify a different max length (default is 100)
 pacx column add string -t tableName -n columnName --len 200
