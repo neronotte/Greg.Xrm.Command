@@ -103,8 +103,8 @@ pacx customapi run --unique-name myp_MyAction --input-file input.json
 pacx customapi bind --api myp_MyAction --plugin MyPlugin.MyType
 
 # Clean up
-pacx customapi removeParam --api myp_MyAction --name InputName
-pacx customapi delete --api myp_MyAction
+pacx customapi remove-param --api myp_MyAction --name InputName
+pacx customapi delete --unique-name myp_MyAction
 ```
 
 The [`pacx customapi`](https://github.com/neronotte/Greg.Xrm.Command/wiki/pacx-customapi) group covers the full lifecycle. A few details worth highlighting:
