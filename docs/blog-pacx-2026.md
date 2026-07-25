@@ -86,7 +86,7 @@ pacx customapi create --unique-name myp_MyAction --display-name "My Action" --so
 
 # Create a bound Custom API (entity binding)
 pacx customapi create --unique-name myp_MyAction --display-name "My Action" \
-  --bound-entity contact --solution MySolution
+  --binding-type Entity --bound-entity contact --solution MySolution
 
 # Add parameters and response properties
 pacx customapi addParam --api myp_MyAction --name InputName --type String --required
