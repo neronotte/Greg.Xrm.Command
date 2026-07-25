@@ -51,11 +51,11 @@ pacx column add string -t tableName -n columnName --audit false
 pacx column add string -t tableName -n columnName -d ""This is a description of the column""
 
 # Create a column of type TextArea or RichText, required
-pacx column add string -t tableName -n columnName --stringFormat TextArea --len 2000 -r ApplicationRequired 
-pacx column add string -t tableName -n columnName --stringFormat RichText --len 2000 -r ApplicationRequired 
+pacx column add string -t tableName -n columnName --format TextArea --len 2000 -r ApplicationRequired 
+pacx column add string -t tableName -n columnName --format RichText --len 2000 -r ApplicationRequired 
 
 # Create a column of type Json
-pacx column add string -t tableName -n columnName --stringFormat Json --len 4000", "Powershell");
+pacx column add string -t tableName -n columnName --format Json --len 4000", "Powershell");
 
 
 			writer.WriteParagraph("If you want to create an autonumber field, you can use the `--autoNumber` option. The format must be specified in the form of a string, using [the same syntax as the one used in the maker portal](https://learn.microsoft.com/en-us/dynamics365/customerengagement/on-premises/developer/create-auto-number-attributes?view=op-9-1#autonumberformat-options). For example, you can use `{SEQNUM(5)}` to create a 5-digit autonumber field.");
