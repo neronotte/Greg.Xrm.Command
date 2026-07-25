@@ -52,7 +52,7 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 					output.WriteLine($"Parameters:  {paramCount}", ConsoleColor.Yellow);
 					output.WriteLine($"Responses:   {respCount}", ConsoleColor.Yellow);
 					output.WriteLine();
-					output.Write("Are you sure you want to delete this Custom API and all its children? (y/n) ");
+					output.Write("Are you sure you want to delete this Custom API and all its children? (y/N) ");
 
 					var confirmation = Console.ReadLine()?.Trim();
 					if (!string.Equals(confirmation, "y", StringComparison.OrdinalIgnoreCase))
