@@ -135,7 +135,7 @@ A focused addition to the existing [`plugin step register`](https://github.com/n
 pacx wr setEnvImage --name mylogo.png --color "#0078D4"
 
 # Update the logo for a specific app
-pacx wr setEnvImage --file mylogo.png --appName "My Model App"
+pacx wr setEnvImage --name mylogo.png --appName "My Model App"
 
 # Sync the theme to a local file for version control
 pacx wr setEnvImage --file mylogo.png --localThemeFile ./theme.xml
