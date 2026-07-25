@@ -23,8 +23,7 @@ namespace Greg.Xrm.Command.Commands.Column.Create
 		public void WriteUsageExamples(MarkdownWriter writer)
 		{
 			writer.WriteLine("This type of column is used for storing decimal numbers with a specified precision and range.");
-			writer.WriteLine("If you specify \"Decimal\" as the type, the system will automatically generate a column that in the maker UI is shown as DataType=Decimal.");
-			writer.WriteLine("If you specify \"Double\" as the type, the system will automatically generate a column that in the maker UI is shown as DataType=Float.");
+			writer.WriteLine("In the maker UI, this column is shown as DataType=Float.");
 			writer.WriteLine();
 
 			writer.WriteCodeBlock(@"# Creates a simple double column with precision 2
