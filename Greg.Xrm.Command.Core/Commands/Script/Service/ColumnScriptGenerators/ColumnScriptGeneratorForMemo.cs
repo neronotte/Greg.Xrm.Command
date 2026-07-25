@@ -7,7 +7,7 @@ namespace Greg.Xrm.Command.Commands.Script.Service.ColumnScriptGenerators
 	{
 		public override void GenerateScript(StringBuilder script)
 		{
-			GenerateBase(script, "string");
+			GenerateBase(script, "memo");
 
 			if (field.Format != null)
 			{

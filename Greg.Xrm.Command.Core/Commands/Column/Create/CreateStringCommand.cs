@@ -36,41 +36,41 @@ namespace Greg.Xrm.Command.Commands.Column.Create
 			writer.WriteParagraph("You can manually set all other arguments in the following way:");
 
 			writer.WriteCodeBlock(@"# Specify a different format (supported values are: Email, Text, TextArea, Url, TickerSymbol, Phone, Json, RichText)
-pacx column create -t tableName -n columnName --stringFormat Email
+pacx column add string -t tableName -n columnName --stringFormat Email
 
 # Specify a different max length (default is 100)
-pacx column create -t tableName -n columnName --len 200
+pacx column add string -t tableName -n columnName --len 200
 
 # Create a required field (supported values are: None, ApplicationRequired, Recommended)
-pacx column create -t tableName -n columnName -r ApplicationRequired
+pacx column add string -t tableName -n columnName -r ApplicationRequired
 
 # Disable auditing for this column
-pacx column create -t tableName -n columnName --audit false
+pacx column add string -t tableName -n columnName --audit false
 
 # Create a column with a description
-pacx column create -t tableName -n columnName -d ""This is a description of the column""
+pacx column add string -t tableName -n columnName -d ""This is a description of the column""
 
 # Create a column of type TextArea or RichText, required
-pacx column create -t tableName -n columnName --stringFormat TextArea --len 2000 -r ApplicationRequired 
-pacx column create -t tableName -n columnName --stringFormat RichText --len 2000 -r ApplicationRequired 
+pacx column add string -t tableName -n columnName --stringFormat TextArea --len 2000 -r ApplicationRequired 
+pacx column add string -t tableName -n columnName --stringFormat RichText --len 2000 -r ApplicationRequired 
 
 # Create a column of type Json
-pacx column create -t tableName -n columnName --stringFormat Json --len 4000", "Powershell");
+pacx column add string -t tableName -n columnName --stringFormat Json --len 4000", "Powershell");
 
 
 			writer.WriteParagraph("If you want to create an autonumber field, you can use the `--autoNumber` option. The format must be specified in the form of a string, using [the same syntax as the one used in the maker portal](https://learn.microsoft.com/en-us/dynamics365/customerengagement/on-premises/developer/create-auto-number-attributes?view=op-9-1#autonumberformat-options). For example, you can use `{SEQNUM(5)}` to create a 5-digit autonumber field.");
 
 			writer.WriteCodeBlock(@"# Example value: XX-00001
-pacx column create -t tableName -n columnName --autonumber ""XX-{SEQNUM(5)}""
+pacx column add string -t tableName -n columnName --autonumber ""XX-{SEQNUM(5)}""
 
 # Example value: 123456-#-R3V
-pacx column create -t tableName -n columnName --autonumber ""{SEQNUM:6}-#-{RANDSTRING:3}""
+pacx column add string -t tableName -n columnName --autonumber ""{SEQNUM:6}-#-{RANDSTRING:3}""
 
 # Example value: CAS-002000-S1P0H0-20170913091544
-pacx column create -t tableName -n columnName --autonumber ""CAS-{SEQNUM:6}-{RANDSTRING:6}-{DATETIMEUTC:yyyyMMddhhmmss}""
+pacx column add string -t tableName -n columnName --autonumber ""CAS-{SEQNUM:6}-{RANDSTRING:6}-{DATETIMEUTC:yyyyMMddhhmmss}""
 
 # Example value: CAS-002000-201709-Z8M2Z6-110901
-pacx column create -t tableName -n columnName --autonumber ""CAS-{SEQNUM:6}-{DATETIMEUTC:yyyyMM}-{RANDSTRING:6}-{DATETIMEUTC:hhmmss}""
+pacx column add string -t tableName -n columnName --autonumber ""CAS-{SEQNUM:6}-{DATETIMEUTC:yyyyMM}-{RANDSTRING:6}-{DATETIMEUTC:hhmmss}""
 ", "Powershell");
 		}
 	}

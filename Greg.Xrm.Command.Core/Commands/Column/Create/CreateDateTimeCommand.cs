@@ -24,17 +24,17 @@ namespace Greg.Xrm.Command.Commands.Column.Create
 		public void WriteUsageExamples(MarkdownWriter writer)
 		{
 			writer.WriteCodeBlock(@"# Creates a simple date and time column
-pacx column create --type DateTime -t tableName -n columnName
+pacx column add datetime -t tableName -n columnName
 
 # Create date-only column
-pacx column create --type DateTime -t tableName -n columnName --dateTimeBehavior DateOnly --dateTimeFormat DateOnly
-pacx column create --type DateTime -t tableName -n columnName -dtb DateOnly -dtf DateOnly
+pacx column add datetime -t tableName -n columnName --dateTimeBehavior DateOnly --dateTimeFormat DateOnly
+pacx column add datetime -t tableName -n columnName -dtb DateOnly -dtf DateOnly
 
 # Create time-zone independent datetime
-pacx column create --type DateTime -t tableName -n columnName --dateTimeBehavior TimeZoneIndependent
+pacx column add datetime -t tableName -n columnName --dateTimeBehavior TimeZoneIndependent
 
 # Create user local datetime with date and time format
-pacx column create --type DateTime -t tableName -n columnName --dateTimeBehavior UserLocal --dateTimeFormat DateAndTime", "Powershell");
+pacx column add datetime -t tableName -n columnName --dateTimeBehavior UserLocal --dateTimeFormat DateAndTime", "Powershell");
 		}
 	}
 }

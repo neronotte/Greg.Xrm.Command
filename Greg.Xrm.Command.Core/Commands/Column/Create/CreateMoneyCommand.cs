@@ -26,13 +26,13 @@ namespace Greg.Xrm.Command.Commands.Column.Create
 		public void WriteUsageExamples(MarkdownWriter writer)
 		{
 			writer.WriteCodeBlock(@"# Creates a simple money column with precision 2
-pacx column create --type Money -t tableName -n columnName
+pacx column add money -t tableName -n columnName
 
 # Set precision and precision source
-pacx column create --type Money -t tableName -n columnName --precision 4 --precisionSource 0
+pacx column add money -t tableName -n columnName --precision 4 --precisionSource 0
 
 # Set minimum and maximum values
-pacx column create --type Money -t tableName -n columnName --min 0 --max 1000000", "Powershell");
+pacx column add money -t tableName -n columnName --min 0 --max 1000000", "Powershell");
 		}
 	}
 }

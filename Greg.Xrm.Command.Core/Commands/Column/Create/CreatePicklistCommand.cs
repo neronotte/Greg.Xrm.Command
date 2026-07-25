@@ -53,24 +53,24 @@ namespace Greg.Xrm.Command.Commands.Column.Create
 			writer.WriteParagraph("If you want to create a multi-select picklist, you can use the `--multiselect` option. If you want to use an existing global option set, you can use the `--globalOptionSetName` option.");
 
 			writer.WriteCodeBlock(@"# Creates a simple picklist with options
-pacx column create --type Picklist -t tableName -n columnName --options ""Option 1,Option 2,Option 3""
+pacx column add optionset -t tableName -n columnName --options ""Option 1,Option 2,Option 3""
 
 # Create picklist with custom values
-pacx column create --type Picklist -t tableName -n columnName --options ""Red:100000000,Green:100000001,Blue:100000002""
+pacx column add optionset -t tableName -n columnName --options ""Red:100000000,Green:100000001,Blue:100000002""
 
 # Create multi-select picklist
-pacx column create --type Picklist -t tableName -n columnName --options ""Tag1,Tag2,Tag3"" --multiselect
+pacx column add optionset -t tableName -n columnName --options ""Tag1,Tag2,Tag3"" --multiselect
 
 # Use existing global option set
-pacx column create --type Picklist -t tableName -n columnName --globalOptionSetName existing_global_optionset", "Powershell");
+pacx column add optionset -t tableName -n columnName --globalOptionSetName existing_global_optionset", "Powershell");
 
 			writer.WriteParagraph("You can also specify a default value for the picklist using the `--defaultValue` option. You can provide either the label or the value of the option (labels are matched first).");
 
 			writer.WriteCodeBlock(@"# Create picklist with default value by label
-pacx column create --type Picklist -t tableName -n columnName --options ""Red:100000000,Green:100000001,Blue:100000002"" --defaultValue Green
+pacx column add optionset -t tableName -n columnName --options ""Red:100000000,Green:100000001,Blue:100000002"" --defaultValue Green
 # Create picklist with default value by value
-pacx column create --type Picklist -t tableName -n columnName --options ""Red,Green,Blue"" --defaultValue 100000001 # Green
-pacx column create --type Picklist -t tableName -n columnName --options ""Red:100000000,Green:100000001,Blue:100000002"" --defaultValue 100000001
+pacx column add optionset -t tableName -n columnName --options ""Red,Green,Blue"" --defaultValue 100000001 # Green
+pacx column add optionset -t tableName -n columnName --options ""Red:100000000,Green:100000001,Blue:100000002"" --defaultValue 100000001
 ", "Powershell");
 		}
 	}
