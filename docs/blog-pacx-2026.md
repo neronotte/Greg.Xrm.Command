@@ -132,7 +132,7 @@ A focused addition to the existing [`plugin step register`](https://github.com/n
 
 ```powershell
 # Set the org-level logo for the first time
-pacx wr setEnvImage --file mylogo.png --color "#0078D4"
+pacx wr setEnvImage --name mylogo.png --color "#0078D4"
 
 # Update the logo for a specific app
 pacx wr setEnvImage --file mylogo.png --appName "My Model App"
