@@ -10,6 +10,13 @@ namespace Greg.Xrm.Command.Services.Connection
 		string GetTokenCachePath();
 
 		/// <summary>
+		/// Returns the access token for the currently active authentication profile, or <c>null</c> if
+		/// no valid access token is available. This method does not attempt to refresh the token if it has expired.
+		/// </summary>
+		/// <returns>The current valid access token, or <c>null</c> if no valid token is available.</returns>
+		Task<string?> GetCurrentAccessTokenAsync();
+
+		/// <summary>
 		/// Sets a temporary environment override for the current command invocation.
 		/// Subsequent calls to <see cref="GetCurrentConnectionAsync"/> and
 		/// <see cref="GetCurrentConnectionNameAsync"/> will resolve against

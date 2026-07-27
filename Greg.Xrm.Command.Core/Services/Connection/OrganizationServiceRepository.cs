@@ -48,6 +48,15 @@ namespace Greg.Xrm.Command.Services.Connection
 		}
 
 
+		public async Task<string?> GetCurrentAccessTokenAsync()
+		{
+			var conn = (ServiceClient)await GetCurrentConnectionAsync();
+			if (!string.IsNullOrWhiteSpace(conn.CurrentAccessToken)) return conn.CurrentAccessToken;
+
+			var connectionName = await GetCurrentConnectionNameAsync();
+			var accessToken = await TokenCache.TryGetAccessTokenAsync(connectionName);
+			return accessToken?.AccessToken;
+		}
 
 
 
