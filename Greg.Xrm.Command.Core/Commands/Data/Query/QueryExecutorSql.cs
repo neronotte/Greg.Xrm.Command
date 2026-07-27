@@ -1,18 +1,18 @@
+using Greg.Xrm.Command.Services.Connection;
 using Microsoft.Data.SqlClient;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
 
 namespace Greg.Xrm.Command.Commands.Data.Query
 {
-	public class QueryExecutorSql(string sqlQuery) : IQueryExecutor
+	public class QueryExecutorSql(string sqlQuery, IOrganizationServiceRepository organizationServiceRepository) : IQueryExecutor
 	{
 		public async Task<IReadOnlyCollection<Entity>> ExecuteQueryAsync(IOrganizationServiceAsync2 crm, CancellationToken cancellationToken)
 		{
 			var serviceClient = crm as ServiceClient
 				?? throw new InvalidOperationException("The provided IOrganizationServiceAsync2 instance is not a ServiceClient.");
 
-
-			string accessToken = serviceClient.CurrentAccessToken;
+			var accessToken = await organizationServiceRepository.GetCurrentAccessTokenAsync();
 			if (string.IsNullOrEmpty(accessToken))
 			{
 				throw new InvalidOperationException(

@@ -1,9 +1,10 @@
 using System.Text.RegularExpressions;
+using Greg.Xrm.Command.Services.Connection;
 
 namespace Greg.Xrm.Command.Commands.Data.Query
 {
 
-	public class QueryExecutorFactory : IQueryExecutorFactory
+	public class QueryExecutorFactory(IOrganizationServiceRepository organizationServiceRepository) : IQueryExecutorFactory
 	{
 		/// <summary>
 		/// Stricter check using regex: matches $option= as it would appear
@@ -31,7 +32,7 @@ namespace Greg.Xrm.Command.Commands.Data.Query
 
 			if (queryText.StartsWith("SELECT ", StringComparison.OrdinalIgnoreCase))
 			{
-				return new QueryExecutorSql(queryText);
+				return new QueryExecutorSql(queryText, organizationServiceRepository);
 			}
 
 			if (ContainsODataQueryStrict(queryText))
