@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.IO.Packaging;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Xml;
 using Greg.Xrm.Command.Services.Settings;
 using Microsoft.Xrm.Sdk;
@@ -116,6 +117,12 @@ namespace Greg.Xrm.Command.Services.Plugin
 					return PluginAssemblyReadResult.Error($"Cannot find .NET Framework 4.6.2. reference assemblies at <{frameworkPath}>.");
 				}
 
+				var net462Assemblies = Directory
+					.GetFiles(frameworkPath, "*.dll")
+					.Where(x => !x.EndsWith("mscorlib.dll"))
+					.ToArray();
+
+
 				var currentAssemblyFile = new FileInfo(Assembly.GetExecutingAssembly().Location);
 
 				var sdkLibrary = Path.Combine(currentAssemblyFile.DirectoryName!, "Microsoft.Xrm.Sdk.dll");
@@ -124,8 +131,13 @@ namespace Greg.Xrm.Command.Services.Plugin
 					return PluginAssemblyReadResult.Error($"Cannot find Microsoft.Xrm.Sdk.dll at <{sdkLibrary}>.");
 				}
 
+				var runtimeDir = RuntimeEnvironment.GetRuntimeDirectory();
+				var currentRuntimeAssemblies = Directory.GetFiles(runtimeDir, "*.dll");
+
+
 				var referenceAssemblies = new List<string> { filePath };
-				referenceAssemblies.AddRange(Directory.GetFiles(frameworkPath, "*.dll"));
+				referenceAssemblies.AddRange(currentRuntimeAssemblies);
+				referenceAssemblies.AddRange(net462Assemblies);
 				referenceAssemblies.Add(sdkLibrary);
 
 				var resolver = new PathAssemblyResolver(referenceAssemblies);
