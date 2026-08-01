@@ -31,7 +31,13 @@ namespace Greg.Xrm.Command.Commands.Plugin.Trace
 					"performanceexecutionduration", "messageblock", "exceptiondetails");
 
 				if (!string.IsNullOrWhiteSpace(command.TypeName))
-					q.Criteria.AddCondition("typename", ConditionOperator.Like, $"%{command.TypeName}%");
+				{
+					var escapedTypeName = command.TypeName.Trim()
+						.Replace("[", "[[]")
+						.Replace("_", "[_]")
+						.Replace("%", "[%]");
+					q.Criteria.AddCondition("typename", ConditionOperator.Like, $"%{escapedTypeName}%");
+				}
 
 				if (command.ErrorsOnly)
 				{
