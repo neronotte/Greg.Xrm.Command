@@ -121,13 +121,53 @@ namespace Greg.Xrm.Command.Commands.Plugin.Trace
 		// ── validation ────────────────────────────────────────────────────────
 
 		[TestMethod]
-		public void ValidateShouldFailWhenTopIsZeroOrNegative()
+		public void ValidateShouldFailWhenTopIsNegative()
+		{
+			var command = new ListCommand { Top = -1 };
+
+			var results = command.Validate(new ValidationContext(command)).ToList();
+
+			Assert.AreEqual(1, results.Count);
+		}
+
+		[TestMethod]
+		public void ValidateShouldFailWhenTopIsZero()
 		{
 			var command = new ListCommand { Top = 0 };
 
 			var results = command.Validate(new ValidationContext(command)).ToList();
 
 			Assert.AreEqual(1, results.Count);
+		}
+
+		[TestMethod]
+		public void ValidateShouldFailWhenTopExceedsMaximum()
+		{
+			var command = new ListCommand { Top = 1001 };
+
+			var results = command.Validate(new ValidationContext(command)).ToList();
+
+			Assert.AreEqual(1, results.Count);
+		}
+
+		[TestMethod]
+		public void ValidateShouldPassWhenTopIsMinimumValid()
+		{
+			var command = new ListCommand { Top = 1 };
+
+			var results = command.Validate(new ValidationContext(command)).ToList();
+
+			Assert.AreEqual(0, results.Count);
+		}
+
+		[TestMethod]
+		public void ValidateShouldPassWhenTopIsMaximumValid()
+		{
+			var command = new ListCommand { Top = 1000 };
+
+			var results = command.Validate(new ValidationContext(command)).ToList();
+
+			Assert.AreEqual(0, results.Count);
 		}
 
 		[TestMethod]
