@@ -91,9 +91,10 @@ namespace Greg.Xrm.Command.Commands.Plugin.Trace
 			await executor.ExecuteAsync(command, CancellationToken.None);
 
 			Assert.IsNotNull(this.capturedQuery);
-			var condition = this.capturedQuery.Criteria.Conditions.Single();
-			Assert.AreEqual("exceptiondetails", condition.AttributeName);
-			Assert.AreEqual(ConditionOperator.NotNull, condition.Operator);
+			var conditions = this.capturedQuery.Criteria.Conditions;
+			Assert.AreEqual(2, conditions.Count);
+			Assert.IsTrue(conditions.Any(c => c.AttributeName == "exceptiondetails" && c.Operator == ConditionOperator.NotNull));
+			Assert.IsTrue(conditions.Any(c => c.AttributeName == "exceptiondetails" && c.Operator == ConditionOperator.NotEqual && Equals(c.Values.Single(), string.Empty)));
 		}
 
 		[TestMethod]
