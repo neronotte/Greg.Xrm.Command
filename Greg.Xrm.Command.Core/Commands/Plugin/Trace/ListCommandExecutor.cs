@@ -34,7 +34,11 @@ namespace Greg.Xrm.Command.Commands.Plugin.Trace
 					q.Criteria.AddCondition("typename", ConditionOperator.Like, $"%{command.TypeName}%");
 
 				if (command.ErrorsOnly)
+				{
 					q.Criteria.AddCondition("exceptiondetails", ConditionOperator.NotNull);
+					q.Criteria.AddCondition("exceptiondetails", ConditionOperator.NotEqual, string.Empty);
+				}
+					
 
 				q.AddOrder("createdon", OrderType.Descending);
 
