@@ -102,7 +102,7 @@ namespace Greg.Xrm.Command.Interactive
 			var dict = new Dictionary<string, string>();
 			foreach (var option in options)
 			{
-				var promptText = $"[{DefaultColors.Primary}]?[/] Provide value for [{DefaultColors.Accent}]--{option.Option.LongName}[/]\"";
+				var promptText = $"[{DefaultColors.Primary}]?[/] Provide value for [{DefaultColors.Accent}]--{option.Option.LongName}[/]";
 				if (option.IsRequired)
 				{
 					promptText += " [red](required)[/]";
