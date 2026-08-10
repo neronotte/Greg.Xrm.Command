@@ -98,6 +98,19 @@ namespace Greg.Xrm.Command.Commands.Forms
 		}
 
 		[TestMethod]
+		public void EnsureHandler_ShouldUpdatePassContext_WhenItDiffers()
+		{
+			var form = CreateEmptyForm();
+			FormEventXmlEditor.EnsureHandler(form, "onload", null, "myprefix_scripts.js", "My.Account.onLoad", true);
+
+			var changed = FormEventXmlEditor.EnsureHandler(form, "onload", null, "myprefix_scripts.js", "My.Account.onLoad", false);
+
+			Assert.IsTrue(changed, "Changing passExecutionContext must count as a change.");
+			var handler = form.Descendants("Handler").Single();
+			Assert.AreEqual("false", handler.Attribute("passExecutionContext")?.Value);
+		}
+
+		[TestMethod]
 		public void EnsureHandler_ShouldAppendSecondHandler_OnSameEvent()
 		{
 			var form = CreateEmptyForm();

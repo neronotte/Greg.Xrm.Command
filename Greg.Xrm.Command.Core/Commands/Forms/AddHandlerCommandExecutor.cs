@@ -20,13 +20,18 @@ namespace Greg.Xrm.Command.Commands.Forms
 	{
 		public async Task<CommandResult> ExecuteAsync(AddHandlerCommand command, CancellationToken cancellationToken)
 		{
+			if (!string.IsNullOrWhiteSpace(command.TempDir) && !Directory.Exists(command.TempDir))
+			{
+				return CommandResult.Fail($"The --output directory <{command.TempDir}> does not exist. No changes have been applied.");
+			}
+
 			output.Write($"Connecting to the current dataverse environment...");
 			var crm = await organizationServiceRepository.GetCurrentConnectionAsync();
 			output.WriteLine("Done", ConsoleColor.Green);
 
 			if (!await CheckWebResourceExistsAsync(crm, command.Library))
 			{
-				return CommandResult.Fail($"Webresource <{command.Library}> not found in the current environment. The name must match exactly, check it via 'pacx webresources list' or in the maker portal.");
+				return CommandResult.Fail($"Webresource <{command.Library}> not found in the current environment, or it is not a javascript webresource. The name must match exactly, check it via the maker portal.");
 			}
 
 			output.Write($"Retrieving main form of table {command.TableName}...");
@@ -63,7 +68,7 @@ namespace Greg.Xrm.Command.Commands.Forms
 
 					using var solutionContent = await solution.DownloadAsync();
 
-					if (!string.IsNullOrWhiteSpace(command.TempDir) && Directory.Exists(command.TempDir))
+					if (!string.IsNullOrWhiteSpace(command.TempDir))
 					{
 						var fileName = Path.Combine(command.TempDir, $"{solution}_original.zip");
 						await solutionContent.SaveToAsync(fileName);
@@ -111,7 +116,7 @@ namespace Greg.Xrm.Command.Commands.Forms
 		{
 			try
 			{
-				if (!string.IsNullOrWhiteSpace(command.TempDir) && Directory.Exists(command.TempDir))
+				if (!string.IsNullOrWhiteSpace(command.TempDir))
 				{
 					var fileName = Path.Combine(command.TempDir, $"{command.TableName}_{form.name.OnlyLowercaseLettersNumbersOrUnderscore()}_original_formxml.xml");
 					await File.WriteAllTextAsync(fileName, form.formxml, cancellationToken);
@@ -172,6 +177,7 @@ namespace Greg.Xrm.Command.Commands.Forms
 			};
 			query.ColumnSet.AddColumns("name");
 			query.Criteria.AddCondition("name", ConditionOperator.Equal, libraryName);
+			query.Criteria.AddCondition("webresourcetype", ConditionOperator.Equal, (int)WebResourceType.Script);
 
 			var response = await crm.RetrieveMultipleAsync(query);
 			if (response.Entities.Count == 0)
@@ -221,6 +227,12 @@ namespace Greg.Xrm.Command.Commands.Forms
 
 			if (formList.Count == 1)
 			{
+				if (!string.IsNullOrWhiteSpace(formName) && !formList[0].name.Equals(formName, StringComparison.OrdinalIgnoreCase))
+				{
+					result = CommandResult.Fail($"Main form <{formName}> not found for table <{tableName}>");
+					return false;
+				}
+
 				form = formList[0];
 				output.WriteLine($"Main form found: {form.name}");
 				return true;

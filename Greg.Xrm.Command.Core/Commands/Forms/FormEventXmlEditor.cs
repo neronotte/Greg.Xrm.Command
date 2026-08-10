@@ -49,7 +49,8 @@ namespace Greg.Xrm.Command.Commands.Forms
 		/// Ensures the given handler is registered on the given event.
 		/// For the onchange event, <paramref name="field"/> identifies the column to watch.
 		/// Returns true when the document has been changed, false when the same
-		/// function of the same library is already registered on the event.
+		/// function of the same library is already registered on the event with
+		/// the same passExecutionContext setting.
 		/// </summary>
 		public static bool EnsureHandler(XElement form, string eventName, string? field, string libraryName, string functionName, bool passExecutionContext)
 		{
@@ -97,12 +98,21 @@ namespace Greg.Xrm.Command.Commands.Forms
 				eventElement.Add(handlers);
 			}
 
-			var alreadyThere = handlers.Elements("Handler")
-				.Any(h => string.Equals(h.Attribute("functionName")?.Value, functionName, StringComparison.OrdinalIgnoreCase)
+			var existing = handlers.Elements("Handler")
+				.FirstOrDefault(h => string.Equals(h.Attribute("functionName")?.Value, functionName, StringComparison.OrdinalIgnoreCase)
 					&& string.Equals(h.Attribute("libraryName")?.Value, libraryName, StringComparison.OrdinalIgnoreCase));
-			if (alreadyThere)
+			if (existing != null)
 			{
-				return false;
+				// the handler is already registered, but the requested
+				// passExecutionContext setting may differ from the stored one
+				var requested = passExecutionContext ? "true" : "false";
+				if (string.Equals(existing.Attribute("passExecutionContext")?.Value, requested, StringComparison.OrdinalIgnoreCase))
+				{
+					return false;
+				}
+
+				existing.SetAttributeValue("passExecutionContext", requested);
+				return true;
 			}
 
 			handlers.Add(new XElement("Handler",

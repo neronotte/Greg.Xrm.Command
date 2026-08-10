@@ -64,7 +64,7 @@ namespace Greg.Xrm.Command.Commands.Forms
 			writer.WriteParagraph("Attach an OnChange handler to a specific column:");
 			writer.WriteCodeBlock("pacx forms addhandler -t account -l myprefix_scripts.js -fn My.Account.onNameChange -e OnChange --field name", "Powershell");
 
-			writer.WriteParagraph("If the webresource library is not yet referenced by the form, it is added automatically. If the same function of the same library is already registered on the event, the command makes no change, so it is safe to run repeatedly (e.g. from a setup script).");
+			writer.WriteParagraph("If the webresource library is not yet referenced by the form, it is added automatically. If the same function of the same library is already registered on the event, the command makes no change (only the passExecutionContext setting is updated when it differs), so it is safe to run repeatedly (e.g. from a setup script).");
 
 			writer.WriteParagraph("Use --output to save a backup of the original form before any change is applied, e.g. when running against forms you care about:");
 			writer.WriteCodeBlock("pacx forms addhandler -t account -l myprefix_scripts.js -fn My.Account.onLoad --output C:\\temp", "Powershell");
