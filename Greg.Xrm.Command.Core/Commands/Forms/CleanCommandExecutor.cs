@@ -19,6 +19,11 @@ namespace Greg.Xrm.Command.Commands.Forms
 	{
 		public async Task<CommandResult> ExecuteAsync(CleanCommand command, CancellationToken cancellationToken)
 		{
+			if (!string.IsNullOrWhiteSpace(command.TempDir) && !Directory.Exists(command.TempDir))
+			{
+				return CommandResult.Fail($"The --output directory <{command.TempDir}> does not exist. No changes have been applied.");
+			}
+
 			output.Write($"Connecting to the current dataverse environment...");
 			var crm = await organizationServiceRepository.GetCurrentConnectionAsync();
 			output.WriteLine("Done", ConsoleColor.Green);
@@ -68,7 +73,7 @@ namespace Greg.Xrm.Command.Commands.Forms
 					// now I need to download the solution, extract the customizations.xml file, modify it, and re-upload it
 					using (var solutionContent = await solution.DownloadAsync())
 					{
-						if (!string.IsNullOrWhiteSpace(command.TempDir) && Directory.Exists(command.TempDir))
+						if (!string.IsNullOrWhiteSpace(command.TempDir))
 						{
 							var fileName = Path.Combine(command.TempDir, $"{solution}_original.zip");
 							await solutionContent.SaveToAsync(fileName);
@@ -151,6 +156,12 @@ namespace Greg.Xrm.Command.Commands.Forms
 
 			if (formList.Count == 1)
 			{
+				if (!string.IsNullOrWhiteSpace(formName) && !formList[0].name.Equals(formName, StringComparison.OrdinalIgnoreCase))
+				{
+					result = CommandResult.Fail($"Main form <{formName}> not found for table <{tableName}>");
+					return false;
+				}
+
 				form = formList[0];
 				output.WriteLine($"Main form found: {form.name}");
 				return true;
