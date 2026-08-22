@@ -1,20 +1,21 @@
 using Autofac;
 using Greg.Xrm.Command.Commands.Column.Builders;
+using Greg.Xrm.Command.Commands.Data.Query;
 using Greg.Xrm.Command.Commands.Forms.Model;
 using Greg.Xrm.Command.Commands.Script.MetadataExtractor;
 using Greg.Xrm.Command.Commands.Script.Service;
+using Greg.Xrm.Command.Commands.Solution.Service;
 using Greg.Xrm.Command.Commands.Table.ExportMetadata;
 using Greg.Xrm.Command.Commands.WebResources.ApplyIconsRules;
 using Greg.Xrm.Command.Commands.WebResources.ProjectFile;
 using Greg.Xrm.Command.Commands.WebResources.PushLogic;
 using Greg.Xrm.Command.Commands.WebResources.Templates;
 using Greg.Xrm.Command.Model;
+using Greg.Xrm.Command.Services;
 using Greg.Xrm.Command.Services.AttributeDeletion;
+using Greg.Xrm.Command.Services.Forms;
 using Greg.Xrm.Command.Services.OptionSet;
 using Greg.Xrm.Command.Services.Plugin;
-using Greg.Xrm.Command.Commands.Solution.Service;
-using Greg.Xrm.Command.Commands.Data.Query;
-using Greg.Xrm.Command.Services;
 
 namespace Greg.Xrm.Command
 {
@@ -48,6 +49,7 @@ namespace Greg.Xrm.Command
 			builder.RegisterType<Commands.Views.Model.ViewRetrieverService>().As<Commands.Views.Model.IViewRetrieverService>();
 			builder.RegisterType<OptionSetParser>().As<IOptionSetParser>();
 			builder.RegisterType<ObjectTypeCodeFinder>().As<IObjectTypeCodeFinder>();
+			builder.RegisterType<FormWrapperFactory>().As<IFormWrapperFactory>();
 
 
 			builder.RegisterType<FolderResolver>().As<IFolderResolver>();

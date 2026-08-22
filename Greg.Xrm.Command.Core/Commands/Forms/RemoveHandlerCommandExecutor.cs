@@ -8,19 +8,18 @@ using Greg.Xrm.Command.Services.Output;
 using Microsoft.Crm.Sdk.Messages;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
-using Microsoft.Xrm.Sdk.Query;
 
 namespace Greg.Xrm.Command.Commands.Forms
 {
-	public class AddHandlerCommandExecutor
+	public class RemoveHandlerCommandExecutor
 	(
 			IOrganizationServiceRepository organizationServiceRepository,
 			IOutput output,
 			IFormRepository formRepository,
 			ISolutionRepository solutionRepository,
-			IFormWrapperFactory formWrapperFactory) : ICommandExecutor<AddHandlerCommand>
+			IFormWrapperFactory formWrapperFactory) : ICommandExecutor<RemoveHandlerCommand>
 	{
-		public async Task<CommandResult> ExecuteAsync(AddHandlerCommand command, CancellationToken cancellationToken)
+		public async Task<CommandResult> ExecuteAsync(RemoveHandlerCommand command, CancellationToken cancellationToken)
 		{
 			if (!string.IsNullOrWhiteSpace(command.TempDir) && !Directory.Exists(command.TempDir))
 			{
@@ -31,10 +30,8 @@ namespace Greg.Xrm.Command.Commands.Forms
 			var crm = await organizationServiceRepository.GetCurrentConnectionAsync();
 			output.WriteLine("Done", ConsoleColor.Green);
 
-			if (!await CheckWebResourceExistsAsync(crm, command.Library))
-			{
-				return CommandResult.Fail($"Webresource <{command.Library}> not found in the current environment, or it is not a javascript webresource. The name must match exactly, check it via the maker portal.");
-			}
+			// no webresource existence check here on purpose, the command must also
+			// be able to clean up registrations of already deleted webresources
 
 			output.Write($"Retrieving main form of table {command.TableName}...");
 			var formList = await formRepository.GetMainFormByTableNameAsync(crm, command.TableName);
@@ -85,12 +82,8 @@ namespace Greg.Xrm.Command.Commands.Forms
 							throw new InvalidOperationException("The form element was not found in the customizations.xml of the temporary solution.");
 						}
 
-						output.Write($"Registering {command.Function} on the {eventName} event...");
-
-						var wrapper = formWrapperFactory.CreateWrapper(element);
-						var changed = wrapper.EnsureLibrary(command.Library);
-						changed = wrapper.EnsureHandler(eventName, field, command.Library, command.Function, command.PassExecutionContext) || changed;
-
+						output.Write($"Removing {command.Function} from the {eventName} event...");
+						var changed = RemoveHandlerAndUnusedLibrary(element, eventName, field, command.Library, command.Function);
 						output.WriteLine("Done", ConsoleColor.Green);
 						return changed;
 					});
@@ -102,7 +95,7 @@ namespace Greg.Xrm.Command.Commands.Forms
 					}
 					else
 					{
-						output.WriteLine("The handler is already registered on the form. No changes applied.", ConsoleColor.DarkGray);
+						output.WriteLine("The handler is not registered on the form. No changes applied.", ConsoleColor.DarkGray);
 					}
 				}
 				catch (Exception ex)
@@ -115,7 +108,7 @@ namespace Greg.Xrm.Command.Commands.Forms
 			return CommandResult.Success();
 		}
 
-		private async Task<CommandResult> ExecuteFastAsync(IOrganizationServiceAsync2 crm, AddHandlerCommand command, Form form, string eventName, string? field, CancellationToken cancellationToken)
+		private async Task<CommandResult> ExecuteFastAsync(IOrganizationServiceAsync2 crm, RemoveHandlerCommand command, Form form, string eventName, string? field, CancellationToken cancellationToken)
 		{
 			try
 			{
@@ -128,16 +121,13 @@ namespace Greg.Xrm.Command.Commands.Forms
 
 				var formElement = XElement.Parse(form.formxml);
 
-				output.Write($"Registering {command.Function} on the {eventName} event...");
-				var wrapper = formWrapperFactory.CreateWrapper(formElement);
-				var changed = wrapper.EnsureLibrary(command.Library);
-				changed = wrapper.EnsureHandler(eventName, field, command.Library, command.Function, command.PassExecutionContext) || changed;
-				formElement = wrapper.ToXElement();
+				output.Write($"Removing {command.Function} from the {eventName} event...");
+				var changed = RemoveHandlerAndUnusedLibrary(formElement, eventName, field, command.Library, command.Function);
 				output.WriteLine("Done", ConsoleColor.Green);
 
 				if (!changed)
 				{
-					output.WriteLine("The handler is already registered on the form. No changes applied.", ConsoleColor.DarkGray);
+					output.WriteLine("The handler is not registered on the form. No changes applied.", ConsoleColor.DarkGray);
 					return CommandResult.Success();
 				}
 
@@ -164,36 +154,24 @@ namespace Greg.Xrm.Command.Commands.Forms
 			}
 		}
 
+		private bool RemoveHandlerAndUnusedLibrary(XElement form, string eventName, string? field, string libraryName, string functionName)
+		{
+			var wrapper = formWrapperFactory.CreateWrapper(form);
+			var changed = wrapper.RemoveHandler(eventName, field, libraryName, functionName);
+
+			if (changed && !wrapper.IsLibraryReferenced(libraryName))
+			{
+				wrapper.RemoveLibrary(libraryName);
+			}
+
+			return changed;
+		}
+
 		private static string GetEventName(FormEvent formEvent) => formEvent switch
 		{
 			FormEvent.OnSave => "onsave",
 			FormEvent.OnChange => "onchange",
 			_ => "onload"
 		};
-
-		private async Task<bool> CheckWebResourceExistsAsync(IOrganizationServiceAsync2 crm, string libraryName)
-		{
-			output.Write($"Checking webresource <{libraryName}>...");
-
-			var query = new QueryExpression("webresource")
-			{
-				NoLock = true,
-				TopCount = 1
-			};
-			query.ColumnSet.AddColumns("name");
-			query.Criteria.AddCondition("name", ConditionOperator.Equal, libraryName);
-			query.Criteria.AddCondition("webresourcetype", ConditionOperator.Equal, (int)WebResourceType.Script);
-
-			var response = await crm.RetrieveMultipleAsync(query);
-			if (response.Entities.Count == 0)
-			{
-				output.WriteLine("Failed", ConsoleColor.Red);
-				return false;
-			}
-
-			output.WriteLine("Done", ConsoleColor.Green);
-			return true;
-		}
-
 	}
 }

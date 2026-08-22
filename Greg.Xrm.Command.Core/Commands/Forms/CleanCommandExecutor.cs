@@ -36,7 +36,7 @@ namespace Greg.Xrm.Command.Commands.Forms
 			var formList = await formRepository.GetMainFormByTableNameAsync(crm, command.TableName);
 			output.WriteLine("Done", ConsoleColor.Green);
 
-			if (!TryGetForm(command.TableName, command.FormName, formList, out var form, out var result))
+			if (!FormCommandHelpers.TryGetForm(output, command.TableName, command.FormName, formList, out var form, out var result))
 			{
 				return result ?? CommandResult.Fail("Error retrieving the form to update");
 			}
@@ -59,7 +59,7 @@ namespace Greg.Xrm.Command.Commands.Forms
 
 
 
-			var (success, result1, solution) = await CreateHoldingSolutionAsync(crm, command.SolutionName);
+			var (success, result1, solution) = await FormCommandHelpers.CreateHoldingSolutionAsync(organizationServiceRepository, solutionRepository, output, crm, command.SolutionName);
 			if (!success) return result1 ?? CommandResult.Fail("Error creating the holding solution");
 			if (solution == null) return CommandResult.Fail("Error creating the holding solution");
 
@@ -114,85 +114,11 @@ namespace Greg.Xrm.Command.Commands.Forms
 
 
 
-		private async Task<(bool, CommandResult?, ITemporarySolution?)> CreateHoldingSolutionAsync(IOrganizationServiceAsync2 crm, string? currentSolutionName)
-		{
-			if (string.IsNullOrWhiteSpace(currentSolutionName))
-			{
-				currentSolutionName = await organizationServiceRepository.GetCurrentDefaultSolutionAsync();
-				if (currentSolutionName == null)
-				{
-					return (false, CommandResult.Fail("No solution name provided and no current solution name found in the settings."), null);
-				}
-			}
-
-			output.Write($"Creating temporary holding solution...");
-			var currentSolution = await solutionRepository.GetByUniqueNameAsync(crm, currentSolutionName);
-			if (currentSolution == null)
-			{
-				return (false, CommandResult.Fail($"Solution {currentSolutionName} not found"), null);
-			}
-
-			var solution = await solutionRepository.CreateTemporarySolutionAsync(crm, currentSolution.publisherid);
-			output.WriteLine("Done", ConsoleColor.Green);
-
-
-			return (true, null, solution);
-		}
 
 
 
 
 
-		private bool TryGetForm(string tableName, string formName, List<Form> formList, out Form? form, out CommandResult? result)
-		{
-			form = null;
-			result = null;
-
-			if (formList.Count == 0)
-			{
-				result = CommandResult.Fail($"No main form found for table {tableName}");
-				return false;
-			}
-
-			if (formList.Count == 1)
-			{
-				if (!string.IsNullOrWhiteSpace(formName) && !formList[0].name.Equals(formName, StringComparison.OrdinalIgnoreCase))
-				{
-					result = CommandResult.Fail($"Main form <{formName}> not found for table <{tableName}>");
-					return false;
-				}
-
-				form = formList[0];
-				output.WriteLine($"Main form found: {form.name}");
-				return true;
-			}
-
-
-			// if we are here, we have more tan 1 form
-
-			if (string.IsNullOrWhiteSpace(formName))
-			{
-				result = CommandResult.Fail($"Table <{tableName}> has more than one main form. Please specify the form name using the --form parameter.");
-				return false;
-			}
-
-			formList = formList.Where(f => f.name.Equals(formName, StringComparison.OrdinalIgnoreCase)).ToList();
-			if (formList.Count == 0)
-			{
-				result = CommandResult.Fail($"Main form <{formName}> not found for table <{tableName}>");
-				return false;
-			}
-
-			if (formList.Count == 1)
-			{
-				form = formList[0];
-				output.WriteLine($"Main form found: {form.name}");
-				return true;
-			}
-
-			result = CommandResult.Fail($"Table <{tableName}> has more than one main form called <{formName}>. Please change the name of the form to uniquely identify it.");
-			return false;
-		}
 
 
 		private async Task<EntityMetadata> RetrieveEntityMetadataAsync(IOrganizationServiceAsync2 crm, string tableName)
