@@ -1,19 +1,20 @@
 using System.Xml.Linq;
-using System.Xml.XPath;
 
-namespace Greg.Xrm.Command.Commands.Forms
+namespace Greg.Xrm.Command.Services.Forms
 {
 	/// <summary>
-	/// Manipulates the formLibraries and events sections of a formxml document,
-	/// producing the same structure the form designer writes.
+	/// Encapsulates an <see cref="XElement"/> representing a dataverse form, manipulating
+	/// the formLibraries and events sections so that the resulting document has the same
+	/// structure the form designer writes.
 	/// </summary>
-	public static class FormEventXmlEditor
+	public class FormEventWrapper(XElement form) : IFormEventWrapper
 	{
+
 		/// <summary>
 		/// Ensures the given webresource is referenced in the formLibraries section.
 		/// Returns true when the document has been changed.
 		/// </summary>
-		public static bool EnsureLibrary(XElement form, string libraryName)
+		public bool EnsureLibrary(string libraryName)
 		{
 			var libraries = form.Element("formLibraries");
 			if (libraries == null)
@@ -52,7 +53,7 @@ namespace Greg.Xrm.Command.Commands.Forms
 		/// function of the same library is already registered on the event with
 		/// the same passExecutionContext setting.
 		/// </summary>
-		public static bool EnsureHandler(XElement form, string eventName, string? field, string libraryName, string functionName, bool passExecutionContext)
+		public bool EnsureHandler(string eventName, string? field, string libraryName, string functionName, bool passExecutionContext)
 		{
 			var events = form.Element("events");
 			if (events == null)
@@ -133,7 +134,7 @@ namespace Greg.Xrm.Command.Commands.Forms
 		/// Returns true when the document has been changed, false when the handler
 		/// was not registered.
 		/// </summary>
-		public static bool RemoveHandler(XElement form, string eventName, string? field, string libraryName, string functionName)
+		public bool RemoveHandler(string eventName, string? field, string libraryName, string functionName)
 		{
 			var events = form.Element("events");
 			var eventElement = events?.Elements("event")
@@ -168,7 +169,7 @@ namespace Greg.Xrm.Command.Commands.Forms
 		/// <summary>
 		/// Returns true when any handler of any event still references the given library.
 		/// </summary>
-		public static bool IsLibraryReferenced(XElement form, string libraryName)
+		public bool IsLibraryReferenced(string libraryName)
 		{
 			return form.Element("events")?
 				.Descendants("Handler")
@@ -180,7 +181,7 @@ namespace Greg.Xrm.Command.Commands.Forms
 		/// the section when it remains empty.
 		/// Returns true when the document has been changed.
 		/// </summary>
-		public static bool RemoveLibrary(XElement form, string libraryName)
+		public bool RemoveLibrary(string libraryName)
 		{
 			var libraries = form.Element("formLibraries");
 			var library = libraries?.Elements("Library")
@@ -199,6 +200,11 @@ namespace Greg.Xrm.Command.Commands.Forms
 			}
 
 			return true;
+		}
+
+		public XElement ToXElement()
+		{
+			return form;
 		}
 	}
 }

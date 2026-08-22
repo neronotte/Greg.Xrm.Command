@@ -1,20 +1,22 @@
 using System.Xml.Linq;
+using Greg.Xrm.Command.Services.Forms;
 
 namespace Greg.Xrm.Command.Commands.Forms
 {
 	[TestClass]
-	public class FormEventXmlEditorTest
+	public class FormEventWrapperTest
 	{
 		private static XElement CreateEmptyForm() => new("form", new XElement("tabs"));
 
-		// ── EnsureLibrary ─────────────────────────────────────────────────────
+		// ── EnsureLibrary ──────────────────────────────────────────────────
 
 		[TestMethod]
 		public void EnsureLibrary_ShouldCreateSectionAndEntry_WhenMissing()
 		{
 			var form = CreateEmptyForm();
+			var wrapper = new FormEventWrapper(form);
 
-			var changed = FormEventXmlEditor.EnsureLibrary(form, "myprefix_scripts.js");
+			var changed = wrapper.EnsureLibrary("myprefix_scripts.js");
 
 			Assert.IsTrue(changed);
 			var library = form.Element("formLibraries")?.Element("Library");
@@ -27,9 +29,10 @@ namespace Greg.Xrm.Command.Commands.Forms
 		public void EnsureLibrary_ShouldDoNothing_WhenLibraryAlreadyReferenced()
 		{
 			var form = CreateEmptyForm();
-			FormEventXmlEditor.EnsureLibrary(form, "myprefix_scripts.js");
+			var wrapper = new FormEventWrapper(form);
+			wrapper.EnsureLibrary("myprefix_scripts.js");
 
-			var changed = FormEventXmlEditor.EnsureLibrary(form, "MYPREFIX_scripts.js");
+			var changed = wrapper.EnsureLibrary("MYPREFIX_scripts.js");
 
 			Assert.IsFalse(changed);
 			Assert.AreEqual(1, form.Element("formLibraries")!.Elements("Library").Count());
@@ -39,22 +42,24 @@ namespace Greg.Xrm.Command.Commands.Forms
 		public void EnsureLibrary_ShouldAppendToExistingSection()
 		{
 			var form = CreateEmptyForm();
-			FormEventXmlEditor.EnsureLibrary(form, "myprefix_a.js");
+			var wrapper = new FormEventWrapper(form);
+			wrapper.EnsureLibrary("myprefix_a.js");
 
-			var changed = FormEventXmlEditor.EnsureLibrary(form, "myprefix_b.js");
+			var changed = wrapper.EnsureLibrary("myprefix_b.js");
 
 			Assert.IsTrue(changed);
 			Assert.AreEqual(2, form.Element("formLibraries")!.Elements("Library").Count());
 		}
 
-		// ── EnsureHandler ─────────────────────────────────────────────────────
+		// ── EnsureHandler ──────────────────────────────────────────────────
 
 		[TestMethod]
 		public void EnsureHandler_ShouldCreateEventAndHandler_ForOnLoad()
 		{
 			var form = CreateEmptyForm();
+			var wrapper = new FormEventWrapper(form);
 
-			var changed = FormEventXmlEditor.EnsureHandler(form, "onload", null, "myprefix_scripts.js", "My.Account.onLoad", true);
+			var changed = wrapper.EnsureHandler("onload", null, "myprefix_scripts.js", "My.Account.onLoad", true);
 
 			Assert.IsTrue(changed);
 			var eventElement = form.Element("events")?.Element("event");
@@ -75,8 +80,9 @@ namespace Greg.Xrm.Command.Commands.Forms
 		public void EnsureHandler_ShouldSetAttribute_ForOnChange()
 		{
 			var form = CreateEmptyForm();
+			var wrapper = new FormEventWrapper(form);
 
-			var changed = FormEventXmlEditor.EnsureHandler(form, "onchange", "name", "myprefix_scripts.js", "My.Account.onNameChange", true);
+			var changed = wrapper.EnsureHandler("onchange", "name", "myprefix_scripts.js", "My.Account.onNameChange", true);
 
 			Assert.IsTrue(changed);
 			var eventElement = form.Element("events")?.Element("event");
@@ -89,9 +95,10 @@ namespace Greg.Xrm.Command.Commands.Forms
 		public void EnsureHandler_ShouldBeIdempotent_ForSameFunctionAndLibrary()
 		{
 			var form = CreateEmptyForm();
-			FormEventXmlEditor.EnsureHandler(form, "onload", null, "myprefix_scripts.js", "My.Account.onLoad", true);
+			var wrapper = new FormEventWrapper(form);
+			wrapper.EnsureHandler("onload", null, "myprefix_scripts.js", "My.Account.onLoad", true);
 
-			var changed = FormEventXmlEditor.EnsureHandler(form, "onload", null, "myprefix_scripts.js", "My.Account.onLoad", true);
+			var changed = wrapper.EnsureHandler("onload", null, "myprefix_scripts.js", "My.Account.onLoad", true);
 
 			Assert.IsFalse(changed);
 			Assert.AreEqual(1, form.Descendants("Handler").Count());
@@ -101,9 +108,10 @@ namespace Greg.Xrm.Command.Commands.Forms
 		public void EnsureHandler_ShouldUpdatePassContext_WhenItDiffers()
 		{
 			var form = CreateEmptyForm();
-			FormEventXmlEditor.EnsureHandler(form, "onload", null, "myprefix_scripts.js", "My.Account.onLoad", true);
+			var wrapper = new FormEventWrapper(form);
+			wrapper.EnsureHandler("onload", null, "myprefix_scripts.js", "My.Account.onLoad", true);
 
-			var changed = FormEventXmlEditor.EnsureHandler(form, "onload", null, "myprefix_scripts.js", "My.Account.onLoad", false);
+			var changed = wrapper.EnsureHandler("onload", null, "myprefix_scripts.js", "My.Account.onLoad", false);
 
 			Assert.IsTrue(changed, "Changing passExecutionContext must count as a change.");
 			var handler = form.Descendants("Handler").Single();
@@ -114,9 +122,10 @@ namespace Greg.Xrm.Command.Commands.Forms
 		public void EnsureHandler_ShouldAppendSecondHandler_OnSameEvent()
 		{
 			var form = CreateEmptyForm();
-			FormEventXmlEditor.EnsureHandler(form, "onload", null, "myprefix_scripts.js", "My.Account.onLoad", true);
+			var wrapper = new FormEventWrapper(form);
+			wrapper.EnsureHandler("onload", null, "myprefix_scripts.js", "My.Account.onLoad", true);
 
-			var changed = FormEventXmlEditor.EnsureHandler(form, "onload", null, "myprefix_scripts.js", "My.Account.initRibbon", true);
+			var changed = wrapper.EnsureHandler("onload", null, "myprefix_scripts.js", "My.Account.initRibbon", true);
 
 			Assert.IsTrue(changed);
 			Assert.AreEqual(1, form.Element("events")!.Elements("event").Count(), "Both handlers should live under the same event element.");
@@ -127,9 +136,10 @@ namespace Greg.Xrm.Command.Commands.Forms
 		public void EnsureHandler_ShouldCreateSeparateEvents_ForDifferentFields()
 		{
 			var form = CreateEmptyForm();
-			FormEventXmlEditor.EnsureHandler(form, "onchange", "name", "myprefix_scripts.js", "My.Account.onNameChange", true);
+			var wrapper = new FormEventWrapper(form);
+			wrapper.EnsureHandler("onchange", "name", "myprefix_scripts.js", "My.Account.onNameChange", true);
 
-			var changed = FormEventXmlEditor.EnsureHandler(form, "onchange", "telephone1", "myprefix_scripts.js", "My.Account.onPhoneChange", true);
+			var changed = wrapper.EnsureHandler("onchange", "telephone1", "myprefix_scripts.js", "My.Account.onPhoneChange", true);
 
 			Assert.IsTrue(changed);
 			Assert.AreEqual(2, form.Element("events")!.Elements("event").Count());
@@ -139,8 +149,9 @@ namespace Greg.Xrm.Command.Commands.Forms
 		public void EnsureHandler_ShouldRespectPassContextFalse()
 		{
 			var form = CreateEmptyForm();
+			var wrapper = new FormEventWrapper(form);
 
-			FormEventXmlEditor.EnsureHandler(form, "onsave", null, "myprefix_scripts.js", "My.Account.onSave", false);
+			wrapper.EnsureHandler("onsave", null, "myprefix_scripts.js", "My.Account.onSave", false);
 
 			var handler = form.Descendants("Handler").Single();
 			Assert.AreEqual("false", handler.Attribute("passExecutionContext")?.Value);
@@ -165,30 +176,32 @@ namespace Greg.Xrm.Command.Commands.Forms
 								new XAttribute("enabled", "true"),
 								new XAttribute("parameters", ""),
 								new XAttribute("passExecutionContext", "true"))))));
+			var wrapper = new FormEventWrapper(form);
 
-			var changed = FormEventXmlEditor.EnsureHandler(form, "onload", null, "myprefix_scripts.js", "My.Account.onLoad", true);
+			var changed = wrapper.EnsureHandler("onload", null, "myprefix_scripts.js", "My.Account.onLoad", true);
 
 			Assert.IsTrue(changed);
 			Assert.AreEqual(1, form.Element("events")!.Elements("event").Count());
 			Assert.AreEqual(2, form.Descendants("Handler").Count());
 		}
 
-		// ── RemoveHandler / RemoveLibrary ─────────────────────────────────────
+		// ── RemoveHandler / RemoveLibrary ────────────────────────────────────
 
-		private static XElement CreateFormWithOnLoadHandler()
+		private static (XElement form, FormEventWrapper wrapper) CreateFormWithOnLoadHandler()
 		{
 			var form = CreateEmptyForm();
-			FormEventXmlEditor.EnsureLibrary(form, "myprefix_scripts.js");
-			FormEventXmlEditor.EnsureHandler(form, "onload", null, "myprefix_scripts.js", "My.Account.onLoad", true);
-			return form;
+			var wrapper = new FormEventWrapper(form);
+			wrapper.EnsureLibrary("myprefix_scripts.js");
+			wrapper.EnsureHandler("onload", null, "myprefix_scripts.js", "My.Account.onLoad", true);
+			return (form, wrapper);
 		}
 
 		[TestMethod]
 		public void RemoveHandler_ShouldRemoveHandlerAndPruneEmptyContainers()
 		{
-			var form = CreateFormWithOnLoadHandler();
+			var (form, wrapper) = CreateFormWithOnLoadHandler();
 
-			var changed = FormEventXmlEditor.RemoveHandler(form, "onload", null, "myprefix_scripts.js", "My.Account.onLoad");
+			var changed = wrapper.RemoveHandler("onload", null, "myprefix_scripts.js", "My.Account.onLoad");
 
 			Assert.IsTrue(changed);
 			Assert.AreEqual(0, form.Descendants("Handler").Count());
@@ -198,9 +211,9 @@ namespace Greg.Xrm.Command.Commands.Forms
 		[TestMethod]
 		public void RemoveHandler_ShouldDoNothing_WhenHandlerIsNotRegistered()
 		{
-			var form = CreateFormWithOnLoadHandler();
+			var (form, wrapper) = CreateFormWithOnLoadHandler();
 
-			var changed = FormEventXmlEditor.RemoveHandler(form, "onload", null, "myprefix_scripts.js", "My.Account.doesNotExist");
+			var changed = wrapper.RemoveHandler("onload", null, "myprefix_scripts.js", "My.Account.doesNotExist");
 
 			Assert.IsFalse(changed);
 			Assert.AreEqual(1, form.Descendants("Handler").Count());
@@ -209,10 +222,10 @@ namespace Greg.Xrm.Command.Commands.Forms
 		[TestMethod]
 		public void RemoveHandler_ShouldKeepOtherHandlersAndTheEvent()
 		{
-			var form = CreateFormWithOnLoadHandler();
-			FormEventXmlEditor.EnsureHandler(form, "onload", null, "myprefix_scripts.js", "My.Account.initRibbon", true);
+			var (form, wrapper) = CreateFormWithOnLoadHandler();
+			wrapper.EnsureHandler("onload", null, "myprefix_scripts.js", "My.Account.initRibbon", true);
 
-			var changed = FormEventXmlEditor.RemoveHandler(form, "onload", null, "myprefix_scripts.js", "My.Account.onLoad");
+			var changed = wrapper.RemoveHandler("onload", null, "myprefix_scripts.js", "My.Account.onLoad");
 
 			Assert.IsTrue(changed);
 			Assert.AreEqual(1, form.Descendants("Handler").Count());
@@ -223,10 +236,11 @@ namespace Greg.Xrm.Command.Commands.Forms
 		public void RemoveHandler_ShouldOnlyTouchTheMatchingFieldEvent()
 		{
 			var form = CreateEmptyForm();
-			FormEventXmlEditor.EnsureHandler(form, "onchange", "name", "myprefix_scripts.js", "My.Account.onNameChange", true);
-			FormEventXmlEditor.EnsureHandler(form, "onchange", "telephone1", "myprefix_scripts.js", "My.Account.onPhoneChange", true);
+			var wrapper = new FormEventWrapper(form);
+			wrapper.EnsureHandler("onchange", "name", "myprefix_scripts.js", "My.Account.onNameChange", true);
+			wrapper.EnsureHandler("onchange", "telephone1", "myprefix_scripts.js", "My.Account.onPhoneChange", true);
 
-			var changed = FormEventXmlEditor.RemoveHandler(form, "onchange", "name", "myprefix_scripts.js", "My.Account.onNameChange");
+			var changed = wrapper.RemoveHandler("onchange", "name", "myprefix_scripts.js", "My.Account.onNameChange");
 
 			Assert.IsTrue(changed);
 			var remainingEvent = form.Element("events")!.Elements("event").Single();
@@ -236,23 +250,23 @@ namespace Greg.Xrm.Command.Commands.Forms
 		[TestMethod]
 		public void RemoveHandler_ShouldOnlyTouchTheMatchingEvent()
 		{
-			var form = CreateFormWithOnLoadHandler();
-			FormEventXmlEditor.EnsureHandler(form, "onsave", null, "myprefix_scripts.js", "My.Account.onLoad", true);
+			var (form, wrapper) = CreateFormWithOnLoadHandler();
+			wrapper.EnsureHandler("onsave", null, "myprefix_scripts.js", "My.Account.onLoad", true);
 
-			var changed = FormEventXmlEditor.RemoveHandler(form, "onsave", null, "myprefix_scripts.js", "My.Account.onLoad");
+			var changed = wrapper.RemoveHandler("onsave", null, "myprefix_scripts.js", "My.Account.onLoad");
 
 			Assert.IsTrue(changed);
 			var remainingEvent = form.Element("events")!.Elements("event").Single();
 			Assert.AreEqual("onload", remainingEvent.Attribute("name")?.Value, "The same function on another event must survive.");
-			Assert.IsTrue(FormEventXmlEditor.IsLibraryReferenced(form, "myprefix_scripts.js"));
+			Assert.IsTrue(wrapper.IsLibraryReferenced("myprefix_scripts.js"));
 		}
 
 		[TestMethod]
 		public void RemoveHandler_ShouldMatchCaseInsensitive()
 		{
-			var form = CreateFormWithOnLoadHandler();
+			var (form, wrapper) = CreateFormWithOnLoadHandler();
 
-			var changed = FormEventXmlEditor.RemoveHandler(form, "OnLoad", null, "MYPREFIX_scripts.js", "my.account.ONLOAD");
+			var changed = wrapper.RemoveHandler("OnLoad", null, "MYPREFIX_scripts.js", "my.account.ONLOAD");
 
 			Assert.IsTrue(changed, "Matching must be case insensitive, like the rest of the editor.");
 			Assert.AreEqual(0, form.Descendants("Handler").Count());
@@ -261,19 +275,19 @@ namespace Greg.Xrm.Command.Commands.Forms
 		[TestMethod]
 		public void IsLibraryReferenced_ShouldReflectRemainingHandlers()
 		{
-			var form = CreateFormWithOnLoadHandler();
-			Assert.IsTrue(FormEventXmlEditor.IsLibraryReferenced(form, "myprefix_scripts.js"));
+			var (form, wrapper) = CreateFormWithOnLoadHandler();
+			Assert.IsTrue(wrapper.IsLibraryReferenced("myprefix_scripts.js"));
 
-			FormEventXmlEditor.RemoveHandler(form, "onload", null, "myprefix_scripts.js", "My.Account.onLoad");
-			Assert.IsFalse(FormEventXmlEditor.IsLibraryReferenced(form, "myprefix_scripts.js"));
+			wrapper.RemoveHandler("onload", null, "myprefix_scripts.js", "My.Account.onLoad");
+			Assert.IsFalse(wrapper.IsLibraryReferenced("myprefix_scripts.js"));
 		}
 
 		[TestMethod]
 		public void RemoveLibrary_ShouldRemoveEntryAndPruneEmptySection()
 		{
-			var form = CreateFormWithOnLoadHandler();
+			var (form, wrapper) = CreateFormWithOnLoadHandler();
 
-			var changed = FormEventXmlEditor.RemoveLibrary(form, "myprefix_scripts.js");
+			var changed = wrapper.RemoveLibrary("myprefix_scripts.js");
 
 			Assert.IsTrue(changed);
 			Assert.IsNull(form.Element("formLibraries"), "An empty formLibraries section must be pruned.");
@@ -283,21 +297,23 @@ namespace Greg.Xrm.Command.Commands.Forms
 		public void RemoveLibrary_ShouldDoNothing_WhenLibraryIsNotReferenced()
 		{
 			var form = CreateEmptyForm();
+			var wrapper = new FormEventWrapper(form);
 
-			var changed = FormEventXmlEditor.RemoveLibrary(form, "myprefix_scripts.js");
+			var changed = wrapper.RemoveLibrary("myprefix_scripts.js");
 
 			Assert.IsFalse(changed);
 		}
 
-		// ── element ordering ──────────────────────────────────────────────────
+		// ── element ordering ─────────────────────────────────────────────────
 
 		[TestMethod]
 		public void EventsShouldComeBeforeFormLibraries_WhenBothAreCreated()
 		{
 			var form = CreateEmptyForm();
+			var wrapper = new FormEventWrapper(form);
 
-			FormEventXmlEditor.EnsureLibrary(form, "myprefix_scripts.js");
-			FormEventXmlEditor.EnsureHandler(form, "onload", null, "myprefix_scripts.js", "My.Account.onLoad", true);
+			wrapper.EnsureLibrary("myprefix_scripts.js");
+			wrapper.EnsureHandler("onload", null, "myprefix_scripts.js", "My.Account.onLoad", true);
 
 			var children = form.Elements().Select(e => e.Name.LocalName).ToList();
 			var eventsIndex = children.IndexOf("events");
@@ -310,9 +326,10 @@ namespace Greg.Xrm.Command.Commands.Forms
 		public void EventsShouldComeBeforeFormLibraries_RegardlessOfCallOrder()
 		{
 			var form = CreateEmptyForm();
+			var wrapper = new FormEventWrapper(form);
 
-			FormEventXmlEditor.EnsureHandler(form, "onload", null, "myprefix_scripts.js", "My.Account.onLoad", true);
-			FormEventXmlEditor.EnsureLibrary(form, "myprefix_scripts.js");
+			wrapper.EnsureHandler("onload", null, "myprefix_scripts.js", "My.Account.onLoad", true);
+			wrapper.EnsureLibrary("myprefix_scripts.js");
 
 			var children = form.Elements().Select(e => e.Name.LocalName).ToList();
 			Assert.IsTrue(children.IndexOf("events") < children.IndexOf("formLibraries"));

@@ -1,5 +1,6 @@
 using Greg.Xrm.Command.Commands.Forms.Model;
 using Greg.Xrm.Command.Model;
+using Greg.Xrm.Command.Services.Forms;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;
 
@@ -11,6 +12,7 @@ namespace Greg.Xrm.Command.Commands.Forms
 		private readonly AddHandlerCommandExecutor executor;
 		private readonly Mock<IFormRepository> formRepositoryMock = new();
 		private readonly Mock<ISolutionRepository> solutionRepositoryMock = new();
+		private readonly IFormWrapperFactory formWrapperFactory = new FormWrapperFactory();
 		private QueryExpression? capturedQuery;
 
 		public AddHandlerCommandExecutorTest()
@@ -19,7 +21,8 @@ namespace Greg.Xrm.Command.Commands.Forms
 				this.OrganizationServiceRepositoryMock.Object,
 				this.Output,
 				this.formRepositoryMock.Object,
-				this.solutionRepositoryMock.Object);
+				this.solutionRepositoryMock.Object,
+				formWrapperFactory);
 		}
 
 		// ── helpers ───────────────────────────────────────────────────────────

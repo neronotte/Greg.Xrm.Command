@@ -1,5 +1,6 @@
 using Greg.Xrm.Command.Commands.Forms.Model;
 using Greg.Xrm.Command.Model;
+using Greg.Xrm.Command.Services.Forms;
 using Microsoft.Xrm.Sdk;
 
 namespace Greg.Xrm.Command.Commands.Forms
@@ -10,6 +11,7 @@ namespace Greg.Xrm.Command.Commands.Forms
 		private readonly RemoveHandlerCommandExecutor executor;
 		private readonly Mock<IFormRepository> formRepositoryMock = new();
 		private readonly Mock<ISolutionRepository> solutionRepositoryMock = new();
+		private readonly IFormWrapperFactory formWrapperFactory = new FormWrapperFactory();
 		private Entity? updatedEntity;
 
 		public RemoveHandlerCommandExecutorTest()
@@ -18,7 +20,8 @@ namespace Greg.Xrm.Command.Commands.Forms
 				this.OrganizationServiceRepositoryMock.Object,
 				this.Output,
 				this.formRepositoryMock.Object,
-				this.solutionRepositoryMock.Object);
+				this.solutionRepositoryMock.Object,
+				this.formWrapperFactory);
 
 			this.OrganizationServiceMock
 				.Setup(s => s.UpdateAsync(It.IsAny<Entity>(), It.IsAny<CancellationToken>()))

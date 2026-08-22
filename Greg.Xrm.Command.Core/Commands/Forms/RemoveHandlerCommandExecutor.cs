@@ -3,6 +3,7 @@ using System.Xml.XPath;
 using Greg.Xrm.Command.Commands.Forms.Model;
 using Greg.Xrm.Command.Model;
 using Greg.Xrm.Command.Services.Connection;
+using Greg.Xrm.Command.Services.Forms;
 using Greg.Xrm.Command.Services.Output;
 using Microsoft.Crm.Sdk.Messages;
 using Microsoft.PowerPlatform.Dataverse.Client;
@@ -15,7 +16,8 @@ namespace Greg.Xrm.Command.Commands.Forms
 			IOrganizationServiceRepository organizationServiceRepository,
 			IOutput output,
 			IFormRepository formRepository,
-			ISolutionRepository solutionRepository) : ICommandExecutor<RemoveHandlerCommand>
+			ISolutionRepository solutionRepository,
+			IFormWrapperFactory formWrapperFactory) : ICommandExecutor<RemoveHandlerCommand>
 	{
 		public async Task<CommandResult> ExecuteAsync(RemoveHandlerCommand command, CancellationToken cancellationToken)
 		{
@@ -152,13 +154,14 @@ namespace Greg.Xrm.Command.Commands.Forms
 			}
 		}
 
-		private static bool RemoveHandlerAndUnusedLibrary(XElement form, string eventName, string? field, string libraryName, string functionName)
+		private bool RemoveHandlerAndUnusedLibrary(XElement form, string eventName, string? field, string libraryName, string functionName)
 		{
-			var changed = FormEventXmlEditor.RemoveHandler(form, eventName, field, libraryName, functionName);
+			var wrapper = formWrapperFactory.CreateWrapper(form);
+			var changed = wrapper.RemoveHandler(eventName, field, libraryName, functionName);
 
-			if (changed && !FormEventXmlEditor.IsLibraryReferenced(form, libraryName))
+			if (changed && !wrapper.IsLibraryReferenced(libraryName))
 			{
-				FormEventXmlEditor.RemoveLibrary(form, libraryName);
+				wrapper.RemoveLibrary(libraryName);
 			}
 
 			return changed;

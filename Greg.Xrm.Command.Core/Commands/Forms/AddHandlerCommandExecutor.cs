@@ -3,6 +3,7 @@ using System.Xml.XPath;
 using Greg.Xrm.Command.Commands.Forms.Model;
 using Greg.Xrm.Command.Model;
 using Greg.Xrm.Command.Services.Connection;
+using Greg.Xrm.Command.Services.Forms;
 using Greg.Xrm.Command.Services.Output;
 using Microsoft.Crm.Sdk.Messages;
 using Microsoft.PowerPlatform.Dataverse.Client;
@@ -16,7 +17,8 @@ namespace Greg.Xrm.Command.Commands.Forms
 			IOrganizationServiceRepository organizationServiceRepository,
 			IOutput output,
 			IFormRepository formRepository,
-			ISolutionRepository solutionRepository) : ICommandExecutor<AddHandlerCommand>
+			ISolutionRepository solutionRepository,
+			IFormWrapperFactory formWrapperFactory) : ICommandExecutor<AddHandlerCommand>
 	{
 		public async Task<CommandResult> ExecuteAsync(AddHandlerCommand command, CancellationToken cancellationToken)
 		{
@@ -85,8 +87,9 @@ namespace Greg.Xrm.Command.Commands.Forms
 
 						output.Write($"Registering {command.Function} on the {eventName} event...");
 
-						var changed = FormEventXmlEditor.EnsureLibrary(element, command.Library);
-						changed = FormEventXmlEditor.EnsureHandler(element, eventName, field, command.Library, command.Function, command.PassExecutionContext) || changed;
+						var wrapper = formWrapperFactory.CreateWrapper(element);
+						var changed = wrapper.EnsureLibrary(command.Library);
+						changed = wrapper.EnsureHandler(eventName, field, command.Library, command.Function, command.PassExecutionContext) || changed;
 
 						output.WriteLine("Done", ConsoleColor.Green);
 						return changed;
@@ -126,8 +129,10 @@ namespace Greg.Xrm.Command.Commands.Forms
 				var formElement = XElement.Parse(form.formxml);
 
 				output.Write($"Registering {command.Function} on the {eventName} event...");
-				var changed = FormEventXmlEditor.EnsureLibrary(formElement, command.Library);
-				changed = FormEventXmlEditor.EnsureHandler(formElement, eventName, field, command.Library, command.Function, command.PassExecutionContext) || changed;
+				var wrapper = formWrapperFactory.CreateWrapper(formElement);
+				var changed = wrapper.EnsureLibrary(command.Library);
+				changed = wrapper.EnsureHandler(eventName, field, command.Library, command.Function, command.PassExecutionContext) || changed;
+				formElement = wrapper.ToXElement();
 				output.WriteLine("Done", ConsoleColor.Green);
 
 				if (!changed)
