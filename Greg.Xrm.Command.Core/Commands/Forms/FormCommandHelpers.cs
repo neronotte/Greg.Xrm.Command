@@ -14,7 +14,7 @@ namespace Greg.Xrm.Command.Commands.Forms
 		/// <summary>
 		/// Picks the main form to work on from the list of main forms of a table.
 		/// When the table has more than one main form (or a form name has been
-		/// provided explicitly), the form name must match exactly.
+	/// provided explicitly), it must identify exactly one form; name matching is case-insensitive.
 		/// </summary>
 		public static bool TryGetForm(IOutput output, string tableName, string formName, List<Form> formList, out Form? form, out CommandResult? result)
 		{
