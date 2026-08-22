@@ -17,6 +17,12 @@ namespace Greg.Xrm.Command.Commands.Views
 		[Option("onto", "o", Order = 3, HelpText = "The name of the views that should be updated with the new layout, separated by comma (,). If not specified, all saved queries except for lookup views will be updated. If * is provided as value, all views will be updated (lookup views included).")]
 		public string? Onto { get; set; }
 
+		[Option("keepcomponents", "kc", Order = 4, HelpText = "Keeps the custom controls of the target views instead of replacing them with the ones of the source view.", DefaultValue = false)]
+		public bool KeepComponents { get; set; } = false;
+
+		[Option("keepsorting", "ks", Order = 5, HelpText = "Keeps the sort order of the target views instead of replacing it with the one of the source view.", DefaultValue = false)]
+		public bool KeepSorting { get; set; } = false;
+
 
 
 		public void WriteUsageExamples(MarkdownWriter writer)
@@ -43,6 +49,11 @@ namespace Greg.Xrm.Command.Commands.Views
 			writer.WriteCodeBlock("pacx view replicate -n \"My View\" -t greg_table -o \"View 1,View 2,View 3\"", "Powershell");
 
 			writer.WriteLine("Separating the view names via comma (,).");
+			writer.WriteLine();
+
+			writer.WriteParagraph("By default, the replication also copies the sort order and the custom controls of the source view onto the target views. When the target views have their own sorting or their own custom controls (e.g. the Power Apps grid control) that should survive the replication, you can keep them by typing: ");
+
+			writer.WriteCodeBlock("pacx view replicate -n \"My View\" -t greg_table --keepsorting --keepcomponents", "Powershell");
 		}
 	}
 }
