@@ -10,8 +10,8 @@ namespace Greg.Xrm.Command.Commands.Views
 				"view", "replicate",
 				"--name", "My View",
 				"--table", "account",
-				"--keepcomponents", "true",
-				"--keepsorting", "true");
+				"--keepComponents", "true",
+				"--keepSorting", "true");
 
 			Assert.AreEqual("My View", command.ViewName);
 			Assert.AreEqual("account", command.TableName);
