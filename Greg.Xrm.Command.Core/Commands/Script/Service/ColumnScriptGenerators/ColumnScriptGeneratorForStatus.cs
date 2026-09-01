@@ -15,7 +15,7 @@ namespace Greg.Xrm.Command.Commands.Script.Service.ColumnScriptGenerators
 			foreach (var stateOption in stateOptions)
 			{
 				script.Append("## STATE: ");
-				script.Append(stateOption.Label.UserLocalizedLabel.Label);
+				script.Append(stateOption.Label.GetTextOrDefault(stateOption.Value?.ToString() ?? string.Empty));
 				script.Append(" (");
 				script.Append(stateOption.Value);
 				script.Append(")");
@@ -34,7 +34,7 @@ namespace Greg.Xrm.Command.Commands.Script.Service.ColumnScriptGenerators
 					script.Append(" --value ");
 					script.Append(child.Value);
 					script.Append(" --label ");
-					script.Append(child.Label.UserLocalizedLabel.Label);
+					script.Append(child.Label.GetTextOrDefault(child.Value?.ToString() ?? string.Empty));
 
 					if (!string.IsNullOrWhiteSpace(child.Color))
 					{

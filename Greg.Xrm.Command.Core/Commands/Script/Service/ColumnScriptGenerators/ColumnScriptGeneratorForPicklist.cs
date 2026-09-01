@@ -15,7 +15,7 @@ namespace Greg.Xrm.Command.Commands.Script.Service.ColumnScriptGenerators
 			}
 			else
 			{
-				var options = field.OptionSet.Options.Select(o => $"{o.Label.UserLocalizedLabel.Label}:{o.Value}");
+				var options = field.OptionSet.Options.Select(o => $"{o.Label.GetTextOrDefault(o.Value?.ToString() ?? string.Empty)}:{o.Value}");
 				script.Append($" --options \"{string.Join(",", options)}\"");
 			}
 
