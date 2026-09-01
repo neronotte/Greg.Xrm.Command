@@ -11,6 +11,10 @@ namespace Greg.Xrm.Command.Model
 		Task<IReadOnlyList<Workflow>> GetByNameAsync(IOrganizationServiceAsync2 crm, string uniqueName);
 		Task<IReadOnlyList<Workflow>> GetBySolutionAsync(IOrganizationServiceAsync2 crm, string solutionUniqueName);
 
+		Task<Workflow?> GetDefinitionByIdAsync(IOrganizationServiceAsync2 crm, Guid id);
+
+		Task<IReadOnlyList<Workflow>> GetDefinitionByNameAsync(IOrganizationServiceAsync2 crm, string name, string? solutionUniqueName);
+
 		Task<IReadOnlyList<Workflow>> SearchByNameAndSolutionAndCategoryAsync(IOrganizationServiceAsync2 crm, string namePart, string? solutionUniqueName, Workflow.Category? category);
 	}
 }
