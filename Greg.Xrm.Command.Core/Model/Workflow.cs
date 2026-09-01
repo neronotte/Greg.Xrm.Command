@@ -7,7 +7,7 @@ namespace Greg.Xrm.Command.Model
 #pragma warning disable IDE1006 // Naming Styles
 	public class Workflow : EntityWrapper
 	{
-		private Workflow(Entity entity) : base(entity)
+		public Workflow(Entity entity) : base(entity)
 		{
 		}
 
@@ -32,6 +32,16 @@ namespace Greg.Xrm.Command.Model
 		public string? CategoryFormatted => GetFormatted(nameof(category));
 
 		public string? xaml
+		{
+			get => Get<string>();
+			set => SetValue(value);
+		}
+
+		/// <summary>
+		/// The definition of a modern flow. Classic workflows store their
+		/// definition in <see cref="xaml"/> instead.
+		/// </summary>
+		public string? clientdata
 		{
 			get => Get<string>();
 			set => SetValue(value);
@@ -122,6 +132,40 @@ namespace Greg.Xrm.Command.Model
 				solutionLink.LinkCriteria.AddCondition("uniquename", ConditionOperator.Equal, solutionUniqueName);
 				query.NoLock = true;
 
+
+				var result = await crm.RetrieveMultipleAsync(query);
+
+				return [.. result.Entities.Select(x => new Workflow(x))];
+			}
+
+			public async Task<Workflow?> GetDefinitionByIdAsync(IOrganizationServiceAsync2 crm, Guid id)
+			{
+				var query = new QueryExpression("workflow");
+				query.ColumnSet.AddColumns(nameof(Workflow.name), nameof(category), nameof(xaml), nameof(clientdata), nameof(statecode), nameof(statuscode));
+				query.Criteria.AddCondition("workflowid", ConditionOperator.Equal, id);
+				query.NoLock = true;
+
+				var result = await crm.RetrieveMultipleAsync(query);
+
+				return result.Entities.Select(x => new Workflow(x)).FirstOrDefault();
+			}
+
+			public async Task<IReadOnlyList<Workflow>> GetDefinitionByNameAsync(IOrganizationServiceAsync2 crm, string name, string? solutionUniqueName)
+			{
+				var query = new QueryExpression("workflow");
+				query.ColumnSet.AddColumns(nameof(Workflow.name), nameof(category), nameof(xaml), nameof(clientdata), nameof(statecode), nameof(statuscode));
+
+				// names entered in the maker portal can carry leading or trailing spaces,
+				// so the exact match is done on the caller side
+				query.Criteria.AddCondition("name", ConditionOperator.Like, $"%{name}%");
+
+				if (!string.IsNullOrWhiteSpace(solutionUniqueName))
+				{
+					var solutionComponentLink = query.AddLink("solutioncomponent", "workflowid", "objectid");
+					var solutionLink = solutionComponentLink.AddLink("solution", "solutionid", "solutionid");
+					solutionLink.LinkCriteria.AddCondition("uniquename", ConditionOperator.Equal, solutionUniqueName);
+				}
+				query.NoLock = true;
 
 				var result = await crm.RetrieveMultipleAsync(query);
 
