@@ -5,6 +5,8 @@ using Greg.Xrm.Command.Services.Output;
 using Greg.Xrm.Command.Services.Plugin;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Newtonsoft.Json;
+using Spectre.Console;
+using Spectre.Console.Json;
 
 namespace Greg.Xrm.Command.Commands.Plugin.Step
 {
@@ -14,6 +16,7 @@ namespace Greg.Xrm.Command.Commands.Plugin.Step
 	/// </summary>
 	public class ListCommandExecutor(
 		IOutput output,
+		IAnsiConsole ansiConsole,
 		IOrganizationServiceRepository organizationServiceRepository,
 		IPluginTypeRepository pluginTypeRepository,
 		ISdkMessageProcessingStepRepository sdkMessageProcessingStepRepository,
@@ -54,7 +57,7 @@ namespace Greg.Xrm.Command.Commands.Plugin.Step
 									   string.IsNullOrWhiteSpace(command.TableName);
 
 			// Process steps and retrieve associated image information
-			var stepInfos = await ProcessStepInformationAsync(crm, steps, showSolutionMembership, cancellationToken);
+			var stepInfos = await ProcessStepInformationAsync(crm, steps, showSolutionMembership);
 
 			// Output results in requested format (table or JSON)
 			WriteOutput(stepInfos, command.Format, showSolutionMembership);
@@ -296,7 +299,7 @@ namespace Greg.Xrm.Command.Commands.Plugin.Step
 		/// <param name="showSolutionMembership">Whether to include solution membership information</param>
 		/// <param name="cancellationToken">Token to handle cancellation requests</param>
 		/// <returns>List of processed plugin step information objects</returns>
-		private async Task<List<PluginStepInfo>> ProcessStepInformationAsync(IOrganizationServiceAsync2 crm, SdkMessageProcessingStep[] steps, bool showSolutionMembership, CancellationToken cancellationToken)
+		private async Task<List<PluginStepInfo>> ProcessStepInformationAsync(IOrganizationServiceAsync2 crm, SdkMessageProcessingStep[] steps, bool showSolutionMembership)
 		{
 			output.Write("Processing step information...");
 
@@ -332,12 +335,12 @@ namespace Greg.Xrm.Command.Commands.Plugin.Step
 		/// <param name="imagesByStepId">Dictionary containing images indexed by step ID</param>
 		/// <param name="showSolutionMembership">Whether to populate solution membership information</param>
 		/// <returns>Formatted plugin step information object</returns>
-		private PluginStepInfo CreatePluginStepInfo(SdkMessageProcessingStep step, Dictionary<Guid, SdkMessageProcessingStepImage[]> imagesByStepId, bool showSolutionMembership = false)
+		private static PluginStepInfo CreatePluginStepInfo(SdkMessageProcessingStep step, Dictionary<Guid, SdkMessageProcessingStepImage[]> imagesByStepId, bool showSolutionMembership = false)
 		{
 			// Retrieve images for this step from the cached dictionary (empty array if none found)
-			var stepImages = imagesByStepId.ContainsKey(step.Id) ? imagesByStepId[step.Id] : [];
+			var stepImages = imagesByStepId.TryGetValue(step.Id, out SdkMessageProcessingStepImage[]? value) ? value : [];
 
-			return new PluginStepInfo
+			var info = new PluginStepInfo
 			{
 				StepId = step.Id,
 				Name = step.name ?? "Unknown",
@@ -345,16 +348,17 @@ namespace Greg.Xrm.Command.Commands.Plugin.Step
 				PluginTypeId = step.plugintypeidaliased,
 				AssemblyName = step.assemblyname,
 				AssemblyId = step.assemblyidaliased,
+				FilteringAttributes = step.filteringattributes,
 				Message = step.messagename,
 				Table = step.primaryobjecttypecode,
 				Stage = PluginStepInfo.GetStageDisplayName(step.stage?.Value),
 				Mode = PluginStepInfo.GetModeDisplayName(step.mode?.Value),
 				Rank = step.rank ?? 0,
 				Status = PluginStepInfo.GetStatusDisplayName(step.statuscode?.Value),
-				HasPreImage = stepImages.Any(img => img.imagetype?.Value == 0), // 0 = PreImage
-				HasPostImage = stepImages.Any(img => img.imagetype?.Value == 1), // 1 = PostImage
 				IsInSolution = showSolutionMembership && step.isstepinsolution
 			};
+			info.AddImages(stepImages);
+			return info;
 		}
 
 
@@ -374,6 +378,10 @@ namespace Greg.Xrm.Command.Commands.Plugin.Step
 			{
 				WriteJsonOutput(stepInfos);
 			}
+			else if (format == ListCommand.OutputFormat.JsonFull)
+			{
+				WriteJsonOutput(stepInfos, true);
+			}
 			else
 			{
 				WriteTableOutput(stepInfos, showSolutionMembership);
@@ -390,12 +398,49 @@ namespace Greg.Xrm.Command.Commands.Plugin.Step
 		/// Uses camelCase naming policy for consistency with web standards.
 		/// </summary>
 		/// <param name="stepInfos">Plugin step information to serialize</param>
-		private void WriteJsonOutput(List<PluginStepInfo> stepInfos)
+		private void WriteJsonOutput(List<PluginStepInfo> stepInfos, bool full = false)
 		{
 			// Serialize and output the JSON
-			var json = JsonConvert.SerializeObject(stepInfos, Formatting.Indented);
+			var settings = new JsonSerializerSettings();
+			if (!full)
+			{
+				settings.ContractResolver = new PropertyExclusionContractResolver(nameof(PluginStepInfo.FilteringAttributes), nameof(PluginStepInfo.Images));
+			}
+
+			var json = JsonConvert.SerializeObject(stepInfos, Formatting.Indented, settings);
 			output.WriteLine();
-			output.WriteLine(json);
+
+			var jsonText = new JsonText(json)
+				.MemberColor(Color.SkyBlue2)
+				.StringColor(Color.SandyBrown)
+				.NumberColor(Color.DarkSeaGreen4_1)
+				.BooleanColor(Color.DarkSeaGreen4_1);
+
+			var panel = new Panel(jsonText)
+				.Header("[Gold1] Plugin Step Definitions [/]")
+				.BorderColor(Color.SkyBlue2)
+				.Padding(1, 1);
+
+			ansiConsole.Write(panel);
+			ansiConsole.WriteLine();
+		}
+
+		/// <summary>
+		/// Contract resolver that excludes the specified property names from JSON serialization.
+		/// </summary>
+		private class PropertyExclusionContractResolver(params string[] propertiesToExclude) : Newtonsoft.Json.Serialization.DefaultContractResolver
+		{
+			private readonly HashSet<string> propertiesToExclude = [.. propertiesToExclude];
+
+			protected override Newtonsoft.Json.Serialization.JsonProperty CreateProperty(System.Reflection.MemberInfo member, MemberSerialization memberSerialization)
+			{
+				var property = base.CreateProperty(member, memberSerialization);
+				if (propertiesToExclude.Contains(property.PropertyName ?? string.Empty))
+				{
+					property.ShouldSerialize = _ => false;
+				}
+				return property;
+			}
 		}
 
 
@@ -428,7 +473,7 @@ namespace Greg.Xrm.Command.Commands.Plugin.Step
 						step.Mode,
 						step.Rank.ToString(),
 						step.Status,
-						step.Images,
+						step.ImagesLabel,
 						step.IsInSolution ? "✓ Yes" : "✕ No"
 					]);
 			}
@@ -448,7 +493,7 @@ namespace Greg.Xrm.Command.Commands.Plugin.Step
 						step.Mode,
 						step.Rank.ToString(),
 						step.Status,
-						step.Images
+						step.ImagesLabel
 					]);
 			}
 

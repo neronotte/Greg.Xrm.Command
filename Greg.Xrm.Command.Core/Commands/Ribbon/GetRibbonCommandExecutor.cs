@@ -122,7 +122,7 @@ namespace Greg.Xrm.Command.Commands.Ribbon
 			{
 				long len = strm.Length;
 				byte[] buff = new byte[len];
-				strm.Read(buff, 0, (int)len);
+				strm.ReadExactly(buff, 0, (int)len);
 				return buff;
 			}
 		}

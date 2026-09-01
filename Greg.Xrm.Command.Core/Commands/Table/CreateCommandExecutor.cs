@@ -285,10 +285,12 @@ namespace Greg.Xrm.Command.Commands.Table
 
 
 
-		private static string SetPrimaryAttributeSchemaName(CreateCommand command, Label displayNameLabel, string publisherPrefix, bool isActivity = false, ColumnConventions conventions = null)
+		private static string SetPrimaryAttributeSchemaName(CreateCommand command, Label displayNameLabel, string publisherPrefix, bool isActivity = false, ColumnConventions? conventions = null)
 		{
 			if (isActivity)
 				return "Subject";
+
+			conventions ??= new ColumnConventions();
 
 			if (!string.IsNullOrWhiteSpace(command.PrimaryAttributeSchemaName))
 			{

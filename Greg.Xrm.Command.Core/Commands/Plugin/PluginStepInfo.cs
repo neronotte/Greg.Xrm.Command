@@ -1,4 +1,4 @@
-using static Greg.Xrm.Command.Services.Plugin.PluginRegistrationToolkit;
+using Greg.Xrm.Command.Services.Plugin;
 
 namespace Greg.Xrm.Command.Commands.Plugin
 {
@@ -14,13 +14,29 @@ namespace Greg.Xrm.Command.Commands.Plugin
 		public string Stage { get; set; } = string.Empty;
 		public string Mode { get; set; } = string.Empty;
 		public int Rank { get; set; }
-		public bool HasPreImage { get; set; }
-		public bool HasPostImage { get; set; }
+
+		public bool HasPreImage => Images.Any(img => img.IsPreImage);
+		public bool HasPostImage => Images.Any(img => img.IsPostImage);
+
 		public string Status { get; set; } = string.Empty;
 		public Guid StepId { get; set; }
 		public bool IsInSolution { get; set; }
 
-		public string Images
+		public string? FilteringAttributes {  get; set; }
+
+
+		private List<PluginImageInfo> images = [];
+		public IReadOnlyList<PluginImageInfo> Images => this.images;
+
+		public void AddImages(IReadOnlyCollection<SdkMessageProcessingStepImage> imageRecords)
+		{
+			this.images.AddRange(imageRecords.Select(x => new PluginImageInfo(x)));
+		}
+
+
+
+		[Newtonsoft.Json.JsonIgnore]
+		public string ImagesLabel
 		{
 			get
 			{
@@ -65,5 +81,26 @@ namespace Greg.Xrm.Command.Commands.Plugin
 				_ => statusCode?.ToString() ?? "Unknown"
 			};
 		}
+	}
+
+	public class PluginImageInfo(SdkMessageProcessingStepImage image)
+	{
+		public Guid Id => image.Id;
+
+		public string? Name => image.name;
+
+		public string? EntityAlias => image.entityalias;
+
+		public string? ImageType => IsPreImage ? "pre" : IsPostImage ? "post" : null;
+
+
+		public string? Attributes => image.attributes;
+
+
+		[Newtonsoft.Json.JsonIgnore]
+		public bool IsPreImage => image.imagetype?.Value == 0; // 0 = Pre Image
+
+		[Newtonsoft.Json.JsonIgnore]
+		public bool IsPostImage => image.imagetype?.Value == 1; // 1 = Post Image
 	}
 }
