@@ -47,7 +47,7 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 			var sol = (Greg.Xrm.Command.Model.Solution)Activator.CreateInstance(
 				typeof(Greg.Xrm.Command.Model.Solution),
 				System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance,
-				null, new object[] { solEntity }, null)!;
+				null, [solEntity], null)!;
 			this.solutionRepositoryMock
 				.Setup(x => x.GetByUniqueNameAsync(It.IsAny<IOrganizationServiceAsync2>(), It.IsAny<string>()))
 				.ReturnsAsync(sol);
@@ -339,7 +339,7 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 						{
 							DisplayName = "Greg Sum",
 							UniqueName = "nn_GregSum",
-							ExecutePrivilegeName = null
+							ExecutePrivilegeName = string.Empty
 						},
 						CancellationToken.None);
 

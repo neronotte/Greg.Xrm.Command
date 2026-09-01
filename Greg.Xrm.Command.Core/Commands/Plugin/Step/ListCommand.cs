@@ -130,6 +130,11 @@ pacx plugin list --table account --all", "powershell");
 				"**In Solution**: Only shown when using solution-based filtering - indicates if the step itself is a component of the specified solution");
 			writer.WriteLine();
 
+			writer.WriteParagraph("If you specify `--format JsonFull`, also the following items are displayed:");
+			writer.WriteList("**Filtering Attributes**: The filter attributes for the step (if any)",
+				"**Images**: Detailed pre/post image configuration including attributes and entity aliases");
+			writer.WriteLine();
+
 			writer.WriteTitle3("Sorting Logic");
 			writer.WriteParagraph("When filtering by table (`--table`), results are sorted by:");
 			writer.WriteList(
@@ -156,7 +161,8 @@ pacx plugin list --table account --all", "powershell");
 		public enum OutputFormat
 		{
 			Table,
-			Json
+			Json,
+			JsonFull
 		}
 	}
 }

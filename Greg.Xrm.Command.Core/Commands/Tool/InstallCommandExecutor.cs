@@ -241,7 +241,7 @@ namespace Greg.Xrm.Command.Commands.Tool
 			return (isValid, package.Identity, dependencies.Count > 1);
 		}
 
-		private async Task<bool> ExtractPackageStream(Stream? packageStream, string packageId, string path, CancellationToken cancellationToken)
+		private async Task<bool> ExtractPackageStream(Stream packageStream, string packageId, string path, CancellationToken cancellationToken)
 		{
 			using (packageStream)
 			using (var packageReader = new PackageArchiveReader(packageStream))

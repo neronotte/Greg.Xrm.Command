@@ -5,14 +5,14 @@ using Microsoft.Xrm.Sdk;
 
 namespace Greg.Xrm.Command.Commands.Plugin.Step
 {
-	public class DisableCommandExecutor(
+	public class EnableCommandExecutor(
 		IOutput output,
 		IOrganizationServiceRepository organizationServiceRepository,
 		IPluginTypeRepository pluginTypeRepository,
 		ISdkMessageProcessingStepRepository sdkMessageProcessingStepRepository
-	) : ICommandExecutor<DisableCommand>
+	) : ICommandExecutor<EnableCommand>
 	{
-		public async Task<CommandResult> ExecuteAsync(DisableCommand command, CancellationToken cancellationToken)
+		public async Task<CommandResult> ExecuteAsync(EnableCommand command, CancellationToken cancellationToken)
 		{
 			output.Write($"Connecting to the current dataverse environment...");
 			var crm = await organizationServiceRepository.GetCurrentConnectionAsync();
@@ -75,16 +75,16 @@ namespace Greg.Xrm.Command.Commands.Plugin.Step
 
 			try
 			{
-				if (step.statecode?.Value == 1)
+				if (step.statecode?.Value == 0)
 				{
-					output.WriteLine("The step is already disabled.", ConsoleColor.Yellow);
+					output.WriteLine("The step is already enabled.", ConsoleColor.Yellow);
 					return CommandResult.Success();
 				}
 
-				output.Write("Disabling step...");
+				output.Write("Enabling step...");
 
-				step.statecode = new OptionSetValue(1); // Disabled
-				step.statuscode = new OptionSetValue(2); // Disabled
+				step.statecode = new OptionSetValue(0); // Enabled
+				step.statuscode = new OptionSetValue(1); // Enabled
 
 				await step.SaveOrUpdateAsync(crm);
 				output.WriteLine("Done", ConsoleColor.Green);
@@ -93,7 +93,7 @@ namespace Greg.Xrm.Command.Commands.Plugin.Step
 			catch (Exception ex)
 			{
 				output.WriteLine("Failed", ConsoleColor.Red);
-				return CommandResult.Fail("An error occurred while disabling the plugin step: " + ex.Message);
+				return CommandResult.Fail("An error occurred while enabling the plugin step: " + ex.Message);
 			}
 
 			return CommandResult.Success();
