@@ -22,11 +22,25 @@ namespace Greg.Xrm.Command.Model
 		public string? name
 		{
 			get => Get<string>();
+			set => SetValue(value);
 		}
 
 		public OptionSetValue category
 		{
 			get => Get<OptionSetValue>();
+			set => SetValue(value);
+		}
+
+		public OptionSetValue? type
+		{
+			get => Get<OptionSetValue>();
+			set => SetValue(value);
+		}
+
+		public string? primaryentity
+		{
+			get => Get<string>();
+			set => SetValue(value);
 		}
 
 		public string? CategoryFormatted => GetFormatted(nameof(category));
@@ -80,6 +94,13 @@ namespace Greg.Xrm.Command.Model
 			Draft = 1,
 			Activated = 2,
 			CompanyDLPViolation = 3,
+		}
+
+		public enum Type
+		{
+			Definition = 1,
+			Activation = 2,
+			Template = 3,
 		}
 
 		public enum Category
