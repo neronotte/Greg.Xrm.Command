@@ -8,10 +8,12 @@ namespace Greg.Xrm.Command.Commands.Workflows
 	[Alias("flow", "create")]
 	public class CreateCommand : IValidatableObject, ICanProvideUsageExample
 	{
-		[Option("name", "n", Order = 1, HelpText = "The name of the flow to create.")]
+[Option("name", "n", Order = 1, HelpText = "The name of the flow to create.")]
+		[Required]
 		public string Name { get; set; } = string.Empty;
 
 		[Option("file", "f", Order = 2, HelpText = "The json file containing the definition of the flow (the same format returned by 'pacx workflow get').")]
+		[Required]
 		public string DefinitionFile { get; set; } = string.Empty;
 
 		[Option("solution", "s", Order = 3, HelpText = "The solution that will contain the flow. If not specified, the current default solution is used.")]
