@@ -11,12 +11,11 @@ namespace Greg.Xrm.Command.Commands.Workflows
 		IOutput output,
 		IOrganizationServiceRepository organizationServiceRepository,
 		ISolutionRepository solutionRepository,
-		IWorkflowRepository workflowRepository)
+		IWorkflowRepository workflowRepository,
+		IWorkflowDefinitionValidator workflowDefinitionValidator)
 
 	: ICommandExecutor<CreateCommand>
 	{
-		private const int SolutionComponentTypeWorkflow = 29;
-
 		public async Task<CommandResult> ExecuteAsync(CreateCommand command, CancellationToken cancellationToken)
 		{
 			// the definition file is validated before connecting, to fail fast on the most likely mistakes
@@ -29,7 +28,7 @@ namespace Greg.Xrm.Command.Commands.Workflows
 
 			if (!definition.LooksLikeAFlowDefinition)
 			{
-				output.WriteLine("Warning: the file does not look like the definition of a flow (no properties.definition found). The flow is created anyway, but it may not open in the designer.", ConsoleColor.Yellow);
+				output.WriteLine("Warning: the file does not look like the definition of a flow (no properties.definition found). It is unlikely to pass the validation.", ConsoleColor.Yellow);
 			}
 
 			output.Write($"Connecting to the current dataverse environment...");
@@ -62,10 +61,21 @@ namespace Greg.Xrm.Command.Commands.Workflows
 
 			var name = command.Name.Trim();
 
-			var existing = await workflowRepository.GetByNameAsync(crm, name);
-			if (existing.Count > 0)
+			// names typed into the maker portal can carry leading or trailing spaces,
+			// so the duplicate check tolerates them the same way get and update do
+			var similar = await workflowRepository.SearchByNameAndSolutionAndCategoryAsync(crm, name, solutionUniqueName: null, category: null);
+			var duplicate = similar.FirstOrDefault(w => string.Equals(w.name?.Trim(), name, StringComparison.OrdinalIgnoreCase));
+			if (duplicate != null)
 			{
-				return CommandResult.Fail($"A workflow named <{name}> already exists in this environment. Please choose a different name, or delete the existing one first.");
+				return CommandResult.Fail($"A workflow named <{duplicate.name}> already exists in this environment. Please choose a different name, or delete the existing one first.");
+			}
+
+			// the definition is validated before the flow exists, so no malformed
+			// definition can ever reach a flow that people actually see
+			var validationError = await workflowDefinitionValidator.ValidateAsync(crm, clientData, cancellationToken);
+			if (validationError != null)
+			{
+				return validationError;
 			}
 
 			var workflow = new Workflow
@@ -95,7 +105,7 @@ namespace Greg.Xrm.Command.Commands.Workflows
 				var request = new AddSolutionComponentRequest
 				{
 					SolutionUniqueName = solutionName,
-					ComponentType = SolutionComponentTypeWorkflow,
+					ComponentType = (int)ComponentType.Workflow,
 					ComponentId = workflow.Id
 				};
 				await crm.ExecuteAsync(request, cancellationToken);

@@ -11,16 +11,22 @@ namespace Greg.Xrm.Command.Commands.Workflows
 		private readonly CreateCommandExecutor executor;
 		private readonly Mock<ISolutionRepository> solutionRepositoryMock = new();
 		private readonly Mock<IWorkflowRepository> workflowRepositoryMock = new();
+		private readonly Mock<IWorkflowDefinitionValidator> validatorMock = new();
 
 		private readonly List<string> tempFiles = [];
 
 		public CreateCommandExecutorTest()
 		{
+			this.validatorMock
+				.Setup(v => v.ValidateAsync(It.IsAny<IOrganizationServiceAsync2>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+				.ReturnsAsync((CommandResult?)null);
+
 			this.executor = new CreateCommandExecutor(
 				this.Output,
 				this.OrganizationServiceRepositoryMock.Object,
 				this.solutionRepositoryMock.Object,
-				this.workflowRepositoryMock.Object);
+				this.workflowRepositoryMock.Object,
+				this.validatorMock.Object);
 		}
 
 		[TestCleanup]
@@ -48,26 +54,26 @@ namespace Greg.Xrm.Command.Commands.Workflows
 			}
 		}
 
-		/// <summary>
-		/// EntityWrapper clears the attributes of the saved entity right after the
-		/// create call, so a capture must clone the entity instead of keeping a reference.
-		/// </summary>
-		private static Entity Clone(Entity entity)
-		{
-			var clone = new Entity(entity.LogicalName, entity.Id);
-			foreach (var attribute in entity.Attributes)
-			{
-				clone[attribute.Key] = attribute.Value;
-			}
-			return clone;
-		}
-
 		private string WriteTempFile(string content)
 		{
 			var path = Path.Combine(Path.GetTempPath(), $"pacx-test-{Guid.NewGuid():N}.json");
 			File.WriteAllText(path, content);
 			tempFiles.Add(path);
 			return path;
+		}
+
+		private static Workflow NamedWorkflow(string name)
+		{
+			var entity = new Entity("workflow", Guid.NewGuid());
+			entity["name"] = name;
+			return new Workflow(entity);
+		}
+
+		private void SetupSimilarWorkflows(params Workflow[] workflows)
+		{
+			this.workflowRepositoryMock
+				.Setup(r => r.SearchByNameAndSolutionAndCategoryAsync(It.IsAny<IOrganizationServiceAsync2>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<Workflow.Category?>()))
+				.ReturnsAsync(workflows);
 		}
 
 		private void SetupHappyEnvironment()
@@ -77,7 +83,7 @@ namespace Greg.Xrm.Command.Commands.Workflows
 				.ReturnsAsync(new TestSolution(isManaged: false));
 
 			this.workflowRepositoryMock
-				.Setup(r => r.GetByNameAsync(It.IsAny<IOrganizationServiceAsync2>(), It.IsAny<string>()))
+				.Setup(r => r.SearchByNameAndSolutionAndCategoryAsync(It.IsAny<IOrganizationServiceAsync2>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<Workflow.Category?>()))
 				.ReturnsAsync([]);
 
 			this.OrganizationServiceMock
@@ -118,10 +124,11 @@ namespace Greg.Xrm.Command.Commands.Workflows
 		{
 			SetupHappyEnvironment();
 			Entity? created = null;
+			var newId = Guid.NewGuid();
 			this.OrganizationServiceMock
 				.Setup(s => s.CreateAsync(It.IsAny<Entity>()))
 				.Callback<Entity>(e => created = Clone(e))
-				.ReturnsAsync(Guid.NewGuid());
+				.ReturnsAsync(newId);
 
 			var file = WriteTempFile(FlowDefinition);
 			var command = new CreateCommand { Name = "My Flow", DefinitionFile = file, SolutionName = "mysolution" };
@@ -135,7 +142,28 @@ namespace Greg.Xrm.Command.Commands.Workflows
 			Assert.AreEqual((int)Workflow.Category.ModernFlow, created.GetAttributeValue<OptionSetValue>("category").Value);
 			Assert.AreEqual((int)Workflow.Type.Definition, created.GetAttributeValue<OptionSetValue>("type").Value);
 			Assert.AreEqual("none", created.GetAttributeValue<string>("primaryentity"));
-			StringAssert.Contains(created.GetAttributeValue<string>("clientdata"), "\"triggers\"");
+			StringAssert.Contains(created.GetAttributeValue<string>("clientdata"), "\"triggers\"", "The flow must carry the definition from the file.");
+			Assert.IsFalse(created.GetAttributeValue<string>("clientdata").Contains("@false"), "The muzzle belongs to the validation probe only, never to the real flow.");
+			Assert.AreEqual(newId, result["workflowid"]);
+			this.validatorMock.Verify(v => v.ValidateAsync(It.IsAny<IOrganizationServiceAsync2>(), It.Is<string>(c => c.Contains("\"triggers\"")), It.IsAny<CancellationToken>()), Times.Once, "The definition must be validated before the flow is created.");
+		}
+
+		[TestMethod]
+		public async Task ExecuteAsync_ShouldNotCreateAnything_WhenTheValidationFails()
+		{
+			SetupHappyEnvironment();
+			this.validatorMock
+				.Setup(v => v.ValidateAsync(It.IsAny<IOrganizationServiceAsync2>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+				.ReturnsAsync(CommandResult.Fail("The flow engine rejected the definition: invalid."));
+
+			var file = WriteTempFile(FlowDefinition);
+			var command = new CreateCommand { Name = "My Flow", DefinitionFile = file, SolutionName = "mysolution" };
+
+			var result = await executor.ExecuteAsync(command, CancellationToken.None);
+
+			Assert.IsFalse(result.IsSuccess);
+			StringAssert.Contains(result.ErrorMessage, "rejected");
+			this.OrganizationServiceMock.Verify(s => s.CreateAsync(It.IsAny<Entity>()), Times.Never, "A rejected definition must never reach a real flow.");
 		}
 
 		[TestMethod]
@@ -238,9 +266,40 @@ namespace Greg.Xrm.Command.Commands.Workflows
 		public async Task ExecuteAsync_ShouldFail_WhenAWorkflowWithTheSameNameExists()
 		{
 			SetupHappyEnvironment();
-			this.workflowRepositoryMock
-				.Setup(r => r.GetByNameAsync(It.IsAny<IOrganizationServiceAsync2>(), "My Flow"))
-				.ReturnsAsync([new Workflow(Guid.NewGuid())]);
+			SetupSimilarWorkflows(NamedWorkflow("My Flow"));
+
+			var file = WriteTempFile(FlowDefinition);
+			var command = new CreateCommand { Name = " My Flow ", DefinitionFile = file, SolutionName = "mysolution" };
+
+			var result = await executor.ExecuteAsync(command, CancellationToken.None);
+
+			Assert.IsFalse(result.IsSuccess);
+			StringAssert.Contains(result.ErrorMessage, "already exists");
+			this.workflowRepositoryMock.Verify(r => r.SearchByNameAndSolutionAndCategoryAsync(It.IsAny<IOrganizationServiceAsync2>(), "My Flow", null, null), Times.Once, "The duplicate check must search the trimmed name across all solutions and categories.");
+			this.validatorMock.Verify(v => v.ValidateAsync(It.IsAny<IOrganizationServiceAsync2>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never, "The cheap duplicate check must run before the expensive validation probe.");
+			this.OrganizationServiceMock.Verify(s => s.CreateAsync(It.IsAny<Entity>()), Times.Never);
+		}
+
+		[TestMethod]
+		public async Task ExecuteAsync_ShouldDetectTheDuplicate_WhenTheCasingDiffers()
+		{
+			SetupHappyEnvironment();
+			SetupSimilarWorkflows(NamedWorkflow("MY FLOW"));
+
+			var file = WriteTempFile(FlowDefinition);
+			var command = new CreateCommand { Name = "my flow", DefinitionFile = file, SolutionName = "mysolution" };
+
+			var result = await executor.ExecuteAsync(command, CancellationToken.None);
+
+			Assert.IsFalse(result.IsSuccess);
+			StringAssert.Contains(result.ErrorMessage, "already exists");
+		}
+
+		[TestMethod]
+		public async Task ExecuteAsync_ShouldDetectTheDuplicate_WhenTheExistingNameCarriesSpaces()
+		{
+			SetupHappyEnvironment();
+			SetupSimilarWorkflows(NamedWorkflow(" My Flow"));
 
 			var file = WriteTempFile(FlowDefinition);
 			var command = new CreateCommand { Name = "My Flow", DefinitionFile = file, SolutionName = "mysolution" };
@@ -250,6 +309,20 @@ namespace Greg.Xrm.Command.Commands.Workflows
 			Assert.IsFalse(result.IsSuccess);
 			StringAssert.Contains(result.ErrorMessage, "already exists");
 			this.OrganizationServiceMock.Verify(s => s.CreateAsync(It.IsAny<Entity>()), Times.Never);
+		}
+
+		[TestMethod]
+		public async Task ExecuteAsync_ShouldNotDetectADuplicate_WhenOnlyALongerNameMatches()
+		{
+			SetupHappyEnvironment();
+			SetupSimilarWorkflows(NamedWorkflow("My Flow With Longer Name"));
+
+			var file = WriteTempFile(FlowDefinition);
+			var command = new CreateCommand { Name = "My Flow", DefinitionFile = file, SolutionName = "mysolution" };
+
+			var result = await executor.ExecuteAsync(command, CancellationToken.None);
+
+			Assert.IsTrue(result.IsSuccess, result.ErrorMessage);
 		}
 
 		[TestMethod]

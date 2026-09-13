@@ -118,6 +118,19 @@ namespace Greg.Xrm.Command.Model
 
 		public class Repository : IWorkflowRepository
 		{
+			/// <summary>
+			/// Like patterns treat [, _ and % as wildcards, so a flow named
+			/// "[DEV] Sync" would not match itself without escaping.
+			/// </summary>
+			public static string EscapeLikePattern(string value)
+			{
+				return value
+					.Replace("[", "[[]")
+					.Replace("_", "[_]")
+					.Replace("%", "[%]");
+			}
+
+
 			public async Task<IReadOnlyList<Workflow>> GetByIdsAsync(IOrganizationServiceAsync2 crm, IEnumerable<Guid> ids)
 			{
 				var query = new QueryExpression("workflow");
@@ -178,7 +191,7 @@ namespace Greg.Xrm.Command.Model
 
 				// names entered in the maker portal can carry leading or trailing spaces,
 				// so the exact match is done on the caller side
-				query.Criteria.AddCondition("name", ConditionOperator.Like, $"%{name}%");
+				query.Criteria.AddCondition("name", ConditionOperator.Like, $"%{EscapeLikePattern(name)}%");
 
 				if (!string.IsNullOrWhiteSpace(solutionUniqueName))
 				{
@@ -200,7 +213,7 @@ namespace Greg.Xrm.Command.Model
 
 				if (!string.IsNullOrWhiteSpace(namePart))
 				{
-					query.Criteria.AddCondition("name", ConditionOperator.Like, $"%{namePart}%");
+					query.Criteria.AddCondition("name", ConditionOperator.Like, $"%{EscapeLikePattern(namePart)}%");
 				}
 				if (!string.IsNullOrWhiteSpace(solutionUniqueName))
 				{

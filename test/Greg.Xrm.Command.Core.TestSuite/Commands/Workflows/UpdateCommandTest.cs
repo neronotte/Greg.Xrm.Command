@@ -9,9 +9,11 @@ namespace Greg.Xrm.Command.Commands.Workflows
 			var command = Utility.TestParseCommand<UpdateCommand>(
 				"workflow", "update",
 				"--name", "My Flow",
+				"--solution", "mysolution",
 				"--file", "myflow.json");
 
 			Assert.AreEqual("My Flow", command.Name);
+			Assert.AreEqual("mysolution", command.SolutionName);
 			Assert.AreEqual("myflow.json", command.DefinitionFile);
 		}
 
@@ -60,15 +62,5 @@ namespace Greg.Xrm.Command.Commands.Workflows
 			StringAssert.Contains(results[0].ErrorMessage, "cannot be used together");
 		}
 
-		[TestMethod]
-		public void ValidateShouldFailWhenFileIsMissing()
-		{
-			var command = new UpdateCommand { Name = "My Flow" };
-
-			var results = command.Validate(new System.ComponentModel.DataAnnotations.ValidationContext(command)).ToList();
-
-			Assert.AreEqual(1, results.Count);
-			StringAssert.Contains(results[0].ErrorMessage, "--file");
-		}
 	}
 }

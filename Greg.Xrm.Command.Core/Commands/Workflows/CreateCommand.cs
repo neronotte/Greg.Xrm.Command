@@ -8,7 +8,7 @@ namespace Greg.Xrm.Command.Commands.Workflows
 	[Alias("flow", "create")]
 	public class CreateCommand : IValidatableObject, ICanProvideUsageExample
 	{
-[Option("name", "n", Order = 1, HelpText = "The name of the flow to create.")]
+		[Option("name", "n", Order = 1, HelpText = "The name of the flow to create.")]
 		[Required]
 		public string Name { get; set; } = string.Empty;
 
@@ -46,6 +46,10 @@ namespace Greg.Xrm.Command.Commands.Workflows
 			writer.WriteLine("pacx workflow create --name \"My New Flow\" --file myflow.json");
 			writer.WriteCodeBlockEnd();
 
+			writer.WriteParagraph("Before the flow is created, the definition is validated. The connection references it uses must exist in the environment, and the definition itself is checked by the flow engine through a short-lived flow named ")
+				.WriteCode("pacx validation probe ...")
+				.Write(" that is created, activated once (automatic triggers get an always-false condition, so the probe cannot fire), and removed again. If the command is killed in that moment, such a probe flow can be left behind and can simply be deleted.");
+
 			writer.WriteParagraph("The flow is created in draft state, so nothing runs until you review it. Open it in the flow designer to check that the connection references resolve, then activate it with ")
 				.WriteCode("pacx workflow activate")
 				.Write(".");
@@ -53,7 +57,7 @@ namespace Greg.Xrm.Command.Commands.Workflows
 			writer.WriteParagraph("By default the flow is added to the current default solution. Use the --solution option to pick a different one.");
 
 			writer.WriteCodeBlockStart("Powershell");
-			writer.WriteLine("pacx workflow create --name \"My New Flow\" --file myflow.json --solution \"My Solution\"");
+			writer.WriteLine("pacx workflow create --name \"My New Flow\" --file myflow.json --solution mysolution");
 			writer.WriteCodeBlockEnd();
 		}
 	}

@@ -9,7 +9,8 @@ namespace Greg.Xrm.Command.Commands.Workflows
 	public class UpdateCommandExecutor(
 		IOutput output,
 		IOrganizationServiceRepository organizationServiceRepository,
-		IWorkflowRepository workflowRepository)
+		IWorkflowRepository workflowRepository,
+		IWorkflowDefinitionValidator workflowDefinitionValidator)
 
 	: ICommandExecutor<UpdateCommand>
 	{
@@ -25,7 +26,7 @@ namespace Greg.Xrm.Command.Commands.Workflows
 
 			if (!definition.LooksLikeAFlowDefinition)
 			{
-				output.WriteLine("Warning: the file does not look like the definition of a flow (no properties.definition found). The flow is updated anyway, but it may not open in the designer.", ConsoleColor.Yellow);
+				output.WriteLine("Warning: the file does not look like the definition of a flow (no properties.definition found). It is unlikely to pass the validation.", ConsoleColor.Yellow);
 			}
 
 			output.Write($"Connecting to the current dataverse environment...");
@@ -46,7 +47,7 @@ namespace Greg.Xrm.Command.Commands.Workflows
 				}
 				else
 				{
-					found = await workflowRepository.GetDefinitionByNameAsync(crm, searchedName, null);
+					found = await workflowRepository.GetDefinitionByNameAsync(crm, searchedName, command.SolutionName?.Trim());
 				}
 
 				output.WriteLine("Done", ConsoleColor.Green);
@@ -86,7 +87,7 @@ namespace Greg.Xrm.Command.Commands.Workflows
 				{
 					output.WriteLine($"  {candidate.name}", ConsoleColor.Yellow);
 				}
-				return CommandResult.Fail("Please provide the full name, or use the --id option to identify the one you need.");
+				return CommandResult.Fail("Please provide the full name, or use the --solution or --id option to identify the one you need.");
 			}
 
 			var workflow = matches[0];
@@ -99,10 +100,20 @@ namespace Greg.Xrm.Command.Commands.Workflows
 			if (string.Equals(workflow.clientdata, clientData, StringComparison.Ordinal))
 			{
 				output.WriteLine("The definition of the flow is already identical to the file, nothing to update.", ConsoleColor.Cyan);
-				return CommandResult.Success();
+				var noChange = CommandResult.Success();
+				noChange["workflowid"] = workflow.Id;
+				return noChange;
 			}
 
 			var isActivated = workflow.statecode?.Value == (int)Workflow.State.Activated;
+
+			// the definition is validated before the target flow is touched, so a
+			// rejected definition leaves the existing flow exactly as it was
+			var validationError = await workflowDefinitionValidator.ValidateAsync(crm, clientData, cancellationToken);
+			if (validationError != null)
+			{
+				return validationError;
+			}
 
 			output.Write($"Updating flow <{workflow.name}>...");
 			try
@@ -119,7 +130,21 @@ namespace Greg.Xrm.Command.Commands.Workflows
 
 			if (isActivated)
 			{
-				output.WriteLine("The flow is currently activated, the new definition is effective immediately.", ConsoleColor.Cyan);
+				// updating the clientdata of an activated flow becomes effective right away,
+				// the state is verified instead of assumed to avoid a silently stopped flow
+				var refreshed = await workflowRepository.GetDefinitionByIdAsync(crm, workflow.Id);
+				if (refreshed == null)
+				{
+					output.WriteLine("Warning: unable to verify the state of the flow after the update. Please check that it is still activated.", ConsoleColor.Yellow);
+				}
+				else if (refreshed.statecode?.Value != (int)Workflow.State.Activated)
+				{
+					output.WriteLine("Warning: the flow was activated before the update, but it is not anymore. Please reactivate it with 'pacx workflow activate'.", ConsoleColor.Yellow);
+				}
+				else
+				{
+					output.WriteLine("The flow is currently activated, the new definition is effective immediately.", ConsoleColor.Cyan);
+				}
 			}
 
 			var result = CommandResult.Success();
