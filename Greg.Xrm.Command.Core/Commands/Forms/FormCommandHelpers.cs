@@ -16,7 +16,7 @@ namespace Greg.Xrm.Command.Commands.Forms
 		/// When the table has more than one main form (or a form name has been
 	/// provided explicitly), it must identify exactly one form; name matching is case-insensitive.
 		/// </summary>
-		public static bool TryGetForm(IOutput output, string tableName, string formName, List<Form> formList, out Form? form, out CommandResult? result)
+		public static bool TryGetForm(IOutput output, string tableName, string formName, List<Form> formList, out Form? form, out CommandResult? result, bool announce = true)
 		{
 			form = null;
 			result = null;
@@ -36,7 +36,7 @@ namespace Greg.Xrm.Command.Commands.Forms
 				}
 
 				form = formList[0];
-				output.WriteLine($"Main form found: {form.name}");
+				if (announce) output.WriteLine($"Main form found: {form.name}");
 				return true;
 			}
 
@@ -56,7 +56,7 @@ namespace Greg.Xrm.Command.Commands.Forms
 			if (formList.Count == 1)
 			{
 				form = formList[0];
-				output.WriteLine($"Main form found: {form.name}");
+				if (announce) output.WriteLine($"Main form found: {form.name}");
 				return true;
 			}
 
