@@ -1,6 +1,6 @@
 namespace Greg.Xrm.Command.Commands.Ribbon
 {
-	[Command("ribbon", "get", HelpText = "Returns the full definition of a specific (application or table) ribbon (command bar).")]
+	[Command("ribbon", "get", HelpText = "Returns the expanded application or table ribbon definition for inspection. Use getdiff for editable RibbonDiffXml.")]
 	public class GetRibbonCommand
 	{
 		[Option("table", "t", Order = 1, HelpText = "The logical name of the table to get the ribbon for. If not specified, application ribbons are returned")]
