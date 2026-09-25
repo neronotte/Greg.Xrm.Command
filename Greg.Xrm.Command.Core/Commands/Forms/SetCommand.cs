@@ -4,7 +4,7 @@ using Greg.Xrm.Command.Services;
 
 namespace Greg.Xrm.Command.Commands.Forms
 {
-	[Command("forms", "set", HelpText = "Replace the XML of a main form and publish it")]
+	[Command("forms", "set", HelpText = "Replace the XML of a main form")]
 	[Alias("form", "set")]
 	public class SetCommand : ICanProvideUsageExample
 	{
@@ -28,11 +28,15 @@ namespace Greg.Xrm.Command.Commands.Forms
 		[Option("fast", "ft", Order = 6, HelpText = "Update the systemform directly instead of using a temporary solution", DefaultValue = false)]
 		public bool Fast { get; set; }
 
+		[Option("publish", "p", Order = 7, HelpText = "Publish the table and its forms after updating. Defaults to false.", DefaultValue = false)]
+		public bool Publish { get; set; }
+
 		public void WriteUsageExamples(MarkdownWriter writer)
 		{
 			writer.WriteCodeBlock("pacx forms get -t account -o account-form.xml", "Powershell");
-			writer.WriteCodeBlock("pacx forms set -t account --file account-form.xml --backup account-form-before.xml", "Powershell");
-			writer.WriteParagraph("The input must contain one complete <form> element. By default, set imports the replacement through a temporary solution and publishes the table. Use --fast for a direct form update and publish.");
+			writer.WriteCodeBlock("pacx forms set -t account --file account-form.xml --backup account-form-before.xml --publish true", "Powershell");
+			writer.WriteParagraph("The input must contain one complete <form> element. By default, set imports the replacement through a temporary solution and leaves it unpublished. --publish publishes the table and its associated forms.");
+			writer.WriteParagraph("--fast updates formxml directly. Dataverse also stores a formjson representation, which may not be synchronized by a direct formxml update. Before publishing in production, apply the final XML without --fast and with --publish true.");
 		}
 	}
 }

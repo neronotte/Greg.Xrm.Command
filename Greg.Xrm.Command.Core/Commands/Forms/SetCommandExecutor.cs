@@ -77,16 +77,20 @@ namespace Greg.Xrm.Command.Commands.Forms
 			{
 				if (command.Fast)
 				{
+					output.WriteLine("WARNING: --fast updates formxml directly. formjson may remain out of sync. Before publishing in production, apply the final XML without --fast.", ConsoleColor.Yellow);
 					var update = new Entity("systemform", form.Id);
 					update["formxml"] = replacementXml;
 					await crm.UpdateAsync(update, cancellationToken);
 
-					var request = new PublishXmlRequest
+					if (command.Publish)
 					{
-						ParameterXml = new XElement("importexportxml",
-							new XElement("entities", new XElement("entity", command.TableName))).ToString(SaveOptions.DisableFormatting)
-					};
-					await crm.ExecuteAsync(request, cancellationToken);
+						var request = new PublishXmlRequest
+						{
+							ParameterXml = new XElement("importexportxml",
+								new XElement("entities", new XElement("entity", command.TableName))).ToString(SaveOptions.DisableFormatting)
+						};
+						await crm.ExecuteAsync(request, cancellationToken);
+					}
 				}
 				else
 				{
@@ -107,11 +111,14 @@ namespace Greg.Xrm.Command.Commands.Forms
 							targets[0].ReplaceWith(new XElement(replacement));
 							return true;
 						});
-						await solution.UploadAndPublishAsync(content.ToArray(), command.TableName);
+						if (command.Publish)
+							await solution.UploadAndPublishAsync(content.ToArray(), command.TableName);
+						else
+							await solution.UploadAsync(content.ToArray());
 					}
 				}
 
-				output.WriteLine("Form XML updated and published.", ConsoleColor.Green);
+				output.WriteLine(command.Publish ? "Form XML updated and table published." : "Form XML updated; table not published.", ConsoleColor.Green);
 				return CommandResult.Success();
 			}
 			catch (Exception ex)
