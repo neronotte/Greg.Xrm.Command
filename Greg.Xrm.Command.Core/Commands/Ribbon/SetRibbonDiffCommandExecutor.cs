@@ -2,6 +2,9 @@ using System.Xml.Linq;
 using Greg.Xrm.Command.Model;
 using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
+using Greg.Xrm.Command.Commands.WebResources.PushLogic;
+using Microsoft.Crm.Sdk.Messages;
+using Microsoft.Xrm.Sdk;
 
 namespace Greg.Xrm.Command.Commands.Ribbon
 {
@@ -62,15 +65,22 @@ namespace Greg.Xrm.Command.Commands.Ribbon
 				var sourceSolution = await solutionRepository.GetByUniqueNameAsync(crm, solutionName);
 				if (sourceSolution == null)
 					return CommandResult.Fail($"Solution <{solutionName}> was not found.");
+				if (sourceSolution.ismanaged)
+					return CommandResult.Fail($"Solution <{solutionName}> is managed. Specify an unmanaged solution for ribbon editing.");
 				var validationError = await RibbonDiffExport.ValidateSolutionAsync(
 					crm, sourceSolution.Id, solutionName, componentId, componentType, cancellationToken);
 				if (validationError != null)
 					return CommandResult.Fail(validationError);
 
 				output.WriteLine("Warning: this will replace the current unmanaged RibbonDiffXml in the target environment.", ConsoleColor.Yellow);
-				using var solution = await solutionRepository.CreateTemporarySolutionAsync(crm, sourceSolution.publisherid);
-				await solution.AddComponentAsync(componentId, componentType, includeSubcomponents: false);
-				using var archive = await solution.DownloadAsync();
+				output.Write($"Exporting solution <{solutionName}>...");
+				var exportResponse = (ExportSolutionResponse)await crm.ExecuteAsync(new ExportSolutionRequest
+				{
+				SolutionName = sourceSolution.uniquename,
+				Managed = false
+				}, cancellationToken);
+				output.WriteLine("Done", ConsoleColor.Green);
+				using var archive = new SolutionZipArchive(exportResponse.ExportSolutionFile);
 
 				XElement? original = null;
 				archive.UpdateEntryXml("customizations.xml", document =>
@@ -108,7 +118,26 @@ namespace Greg.Xrm.Command.Commands.Ribbon
 				}
 
 				ReplaceRibbonDiff(archive, command.TableName, replacement);
-				await solution.UploadAndPublishAsync(archive.ToArray(), string.IsNullOrWhiteSpace(command.TableName) ? [] : [command.TableName]);
+				output.Write($"Importing solution <{solutionName}>...");
+				await crm.ExecuteAsync(new ImportSolutionRequest
+				{
+					CustomizationFile = archive.ToArray(),
+					OverwriteUnmanagedCustomizations = true
+				}, cancellationToken);
+				output.WriteLine("Done", ConsoleColor.Green);
+
+				output.Write("Publishing ribbon customizations...");
+				OrganizationRequest publishRequest;
+				if (string.IsNullOrWhiteSpace(command.TableName))
+					publishRequest = new PublishAllXmlRequest();
+				else
+				{
+					var builder = new PublishXmlBuilder();
+					builder.AddTable(command.TableName);
+					publishRequest = builder.Build()!;
+				}
+				await crm.ExecuteAsync(publishRequest, cancellationToken);
+				output.WriteLine("Done", ConsoleColor.Green);
 				return CommandResult.Success();
 			}
 			catch (Exception ex)
