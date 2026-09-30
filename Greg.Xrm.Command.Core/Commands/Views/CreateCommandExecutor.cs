@@ -1,5 +1,6 @@
 using System.Xml;
 using Greg.Xrm.Command.Commands.Views.Model;
+using Greg.Xrm.Command.Commands.WebResources.PushLogic;
 using Greg.Xrm.Command.Model;
 using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
@@ -11,7 +12,8 @@ namespace Greg.Xrm.Command.Commands.Views
 {
 	public class CreateCommandExecutor(
 		IOrganizationServiceRepository connection,
-		IOutput output) : ICommandExecutor<CreateCommand>
+		IOutput output,
+		IPublishXmlBuilder publisher) : ICommandExecutor<CreateCommand>
 	{
 		public async Task<CommandResult> ExecuteAsync(CreateCommand command, CancellationToken cancellationToken)
 		{
@@ -71,6 +73,21 @@ namespace Greg.Xrm.Command.Commands.Views
 			{
 				output.WriteLine("Error", ConsoleColor.Red);
 				return CommandResult.Fail($"Unable to create view '{command.ViewName}': {ex.Message}", ex);
+			}
+
+			if (!command.Publish) return CommandResult.Success();
+
+			try
+			{
+				output.Write($"Publishing entity '{tableName}' ...");
+				publisher.AddTable(tableName);
+				await crm.ExecuteAsync(publisher.Build(), cancellationToken);
+				output.WriteLine("Done", ConsoleColor.Green);
+			}
+			catch (Exception ex)
+			{
+				output.WriteLine("Error", ConsoleColor.Red);
+				return CommandResult.Fail($"An error occurred while publishing the entity: {ex.Message}", ex);
 			}
 
 			return CommandResult.Success();

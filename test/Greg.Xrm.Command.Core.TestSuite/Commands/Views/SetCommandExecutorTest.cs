@@ -59,7 +59,30 @@ namespace Greg.Xrm.Command.Commands.Views
 				request.ParameterXml.Contains("<entity>account</entity>"))), Times.Once());
 		}
 
+		[TestMethod]
+		[DataRow(false)]
+		[DataRow(true)]
+		public async Task SetFilterPublishesOnlyWhenRequested(bool publish)
+		{
+			var (connection, retriever, crm, output) = BuildDependencies();
+			var executor = new SetFilterCommandExecutor(connection.Object, output, retriever.Object, new PublishXmlBuilder());
+			var result = await executor.ExecuteAsync(new SetFilterCommand
+			{
+				ViewName = "My View", Publish = publish,
+				Filter = "<filter><condition attribute='statecode' operator='eq' value='0'/></filter>"
+			}, CancellationToken.None);
+			Assert.IsTrue(result.IsSuccess, result.ErrorMessage);
+			crm.Verify(c => c.UpdateAsync(It.IsAny<Entity>()), Times.Once());
+			crm.Verify(c => c.ExecuteAsync(It.IsAny<PublishXmlRequest>()), publish ? Times.Once() : Times.Never());
+		}
+
 		private static (SetCommandExecutor Executor, Mock<IOrganizationServiceAsync2> Crm, OutputToMemory Output) BuildExecutor()
+		{
+			var (connection, retriever, crm, output) = BuildDependencies();
+			return (new SetCommandExecutor(connection.Object, output, retriever.Object, new PublishXmlBuilder()), crm, output);
+		}
+
+		private static (Mock<IOrganizationServiceRepository> Connection, Mock<IViewRetrieverService> Retriever, Mock<IOrganizationServiceAsync2> Crm, OutputToMemory Output) BuildDependencies()
 		{
 			var crm = new Mock<IOrganizationServiceAsync2>();
 			crm.Setup(c => c.UpdateAsync(It.IsAny<Entity>())).Returns(Task.CompletedTask);
@@ -75,8 +98,7 @@ namespace Greg.Xrm.Command.Commands.Views
 			var retriever = new Mock<IViewRetrieverService>();
 			retriever.Setup(r => r.GetByNameAsync(crm.Object, QueryType1.SavedQuery, "My View", null))
 				.ReturnsAsync((CommandResult.Success(), (TableView)view));
-			var output = new OutputToMemory();
-			return (new SetCommandExecutor(connection.Object, output, retriever.Object, new PublishXmlBuilder()), crm, output);
+			return (connection, retriever, crm, new OutputToMemory());
 		}
 	}
 }

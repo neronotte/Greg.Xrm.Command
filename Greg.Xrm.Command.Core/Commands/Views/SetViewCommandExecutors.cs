@@ -36,7 +36,7 @@ namespace Greg.Xrm.Command.Commands.Views
 	{
 		public Task<CommandResult> ExecuteAsync(SetCommand command, CancellationToken cancellationToken) =>
 			ViewSetExecutor.RunAsync(connection, output, retriever, publisher, command,
-				view => ViewXmlEditor.SetView(command.FetchXml, command.LayoutXml, view.returnedtypecode), command.Publish);
+				view => ViewXmlEditor.SetView(command.FetchXml, command.LayoutXml, view.returnedtypecode));
 	}
 
 	internal static class ViewSetExecutor
@@ -44,17 +44,17 @@ namespace Greg.Xrm.Command.Commands.Views
 		public static Task<CommandResult> RunAsync(
 			IOrganizationServiceRepository connection, IOutput output, IViewRetrieverService retriever,
 			IPublishXmlBuilder publisher, SetViewCommand command,
-			Func<TableView, (string FetchXml, string? LayoutXml)> edit, bool publish = true) =>
+			Func<TableView, (string FetchXml, string? LayoutXml)> edit) =>
 			RunAsync(connection, output, retriever, publisher, command, view =>
 			{
 				var updated = edit(view);
 				return (updated.FetchXml, updated.LayoutXml, (IReadOnlyList<string>)Array.Empty<string>());
-			}, publish);
+			});
 
 		public static async Task<CommandResult> RunAsync(
 			IOrganizationServiceRepository connection, IOutput output, IViewRetrieverService retriever,
 			IPublishXmlBuilder publisher, SetViewCommand command,
-			Func<TableView, (string FetchXml, string? LayoutXml, IReadOnlyList<string> UnusedAttributes)> edit, bool publish = true)
+			Func<TableView, (string FetchXml, string? LayoutXml, IReadOnlyList<string> UnusedAttributes)> edit)
 		{
 			output.Write("Connecting to the current dataverse environment...");
 			var crm = await connection.GetCurrentConnectionAsync();
@@ -89,7 +89,7 @@ namespace Greg.Xrm.Command.Commands.Views
 			if (updated.UnusedAttributes.Count > 0)
 				output.WriteLine("Warning: FetchXML selects attributes not shown in the layout: " +
 					string.Join(", ", updated.UnusedAttributes) + ". Removing them may make the query more efficient.", ConsoleColor.Yellow);
-			if (!publish) return CommandResult.Success();
+			if (!command.Publish) return CommandResult.Success();
 
 			try
 			{
