@@ -20,7 +20,7 @@ namespace Greg.Xrm.Command.Model
 			this.solution = solution;
 		}
 
-		public async Task AddComponentAsync(Guid componentId, ComponentType componentType, bool includeSubcomponents = true)
+		public async Task AddComponentAsync(Guid componentId, ComponentType componentType)
 		{
 			if (solution.IsDeleted)
 				throw new InvalidOperationException("Operation cannot be performed, the solution is deleted!");
@@ -33,7 +33,7 @@ namespace Greg.Xrm.Command.Model
 					SolutionUniqueName = solution.uniquename,
 					ComponentId = componentId,
 					ComponentType = (int)componentType,
-					DoNotIncludeSubcomponents = !includeSubcomponents
+					DoNotIncludeSubcomponents = true
 				};
 
 				await crm.ExecuteAsync(request);
@@ -106,7 +106,7 @@ namespace Greg.Xrm.Command.Model
 				{
 					builder.AddTable(tableName);
 				}
-				var request2 = (Microsoft.Xrm.Sdk.OrganizationRequest?)builder.Build() ?? new PublishAllXmlRequest();
+				var request2 = builder.Build();
 
 				await crm.ExecuteAsync(request2);
 				sw.Stop();

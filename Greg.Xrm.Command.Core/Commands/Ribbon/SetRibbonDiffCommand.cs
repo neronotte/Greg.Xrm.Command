@@ -26,7 +26,8 @@ namespace Greg.Xrm.Command.Commands.Ribbon
 			writer.WriteCodeBlock("pacx ribbon setdiff --table account --solution RibbonDiff --file account.RibbonDiffXml.xml", "Powershell");
 			writer.WriteParagraph("Save a backup and apply without a confirmation prompt:");
 			writer.WriteCodeBlock("pacx ribbon setdiff --table account --solution RibbonDiff --file account.RibbonDiffXml.xml --backup account.RibbonDiffXml.backup.xml", "Powershell");
-			writer.WriteParagraph("The command shows the diff, replaces the current unmanaged RibbonDiffXml, and publishes the ribbon. Use a file from ribbon getdiff, not the expanded XML produced by ribbon get.");
+			writer.WriteParagraph("The command shows the diff, replaces the current unmanaged RibbonDiffXml, and publishes only that table or the application ribbon. Use a file from ribbon getdiff, not the expanded XML produced by ribbon get.");
+			writer.WriteParagraph("Without --backup, the command asks for confirmation. Any answer other than y, including missing input in non-interactive runs, fails without changing the ribbon.");
 			writer.WriteParagraph("Before export, the command checks the selected unmanaged solution in Dataverse. It allows at most five tables added without subcomponents or as shells, plus Application Ribbons, and rejects every other component. The solution is then exported, edited, reimported, and published; no temporary solution is created. If --solution is omitted, the current default solution is used and reported.");
 		}
 	}

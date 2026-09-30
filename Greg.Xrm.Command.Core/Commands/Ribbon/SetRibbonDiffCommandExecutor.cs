@@ -4,7 +4,6 @@ using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
 using Greg.Xrm.Command.Commands.WebResources.PushLogic;
 using Microsoft.Crm.Sdk.Messages;
-using Microsoft.Xrm.Sdk;
 
 namespace Greg.Xrm.Command.Commands.Ribbon
 {
@@ -13,6 +12,9 @@ namespace Greg.Xrm.Command.Commands.Ribbon
 		IOrganizationServiceRepository organizationServiceRepository,
 		ISolutionRepository solutionRepository) : ICommandExecutor<SetRibbonDiffCommand>
 	{
+		// An empty ribbon node publishes only the application ribbon.
+		private const string ApplicationRibbonPublishXml = "<importexportxml><ribbons><ribbon></ribbon></ribbons></importexportxml>";
+
 		public async Task<CommandResult> ExecuteAsync(SetRibbonDiffCommand command, CancellationToken cancellationToken)
 		{
 			if (!File.Exists(command.FileName))
@@ -57,8 +59,8 @@ namespace Greg.Xrm.Command.Commands.Ribbon
 				if (string.IsNullOrWhiteSpace(solutionName))
 				{
 					solutionName = await organizationServiceRepository.GetCurrentDefaultSolutionAsync();
-				if (!string.IsNullOrWhiteSpace(solutionName))
-					output.WriteLine($"Using default solution <{solutionName}>. For ribbon diffs, consider a dedicated solution with only the target table (no metadata or assets), e.g. --solution RibbonDiff.", ConsoleColor.Yellow);
+					if (!string.IsNullOrWhiteSpace(solutionName))
+						output.WriteLine($"Using default solution <{solutionName}>. For ribbon diffs, consider a dedicated solution with only the target table (no metadata or assets), e.g. --solution RibbonDiff.", ConsoleColor.Yellow);
 				}
 				if (string.IsNullOrWhiteSpace(solutionName))
 					return CommandResult.Fail("No solution specified and no default solution found. Provide a small ribbon solution with --solution RibbonDiff.");
@@ -76,8 +78,8 @@ namespace Greg.Xrm.Command.Commands.Ribbon
 				output.Write($"Exporting solution <{solutionName}>...");
 				var exportResponse = (ExportSolutionResponse)await crm.ExecuteAsync(new ExportSolutionRequest
 				{
-				SolutionName = sourceSolution.uniquename,
-				Managed = false
+					SolutionName = sourceSolution.uniquename,
+					Managed = false
 				}, cancellationToken);
 				output.WriteLine("Done", ConsoleColor.Green);
 				using var archive = new SolutionZipArchive(exportResponse.ExportSolutionFile);
@@ -89,7 +91,7 @@ namespace Greg.Xrm.Command.Commands.Ribbon
 					return false;
 				});
 				if (original == null)
-					return CommandResult.Fail("RibbonDiffXml was not found in the exported temporary solution.");
+					return CommandResult.Fail($"RibbonDiffXml was not found in the exported solution <{solutionName}>.");
 
 				if (XNode.DeepEquals(original, replacement))
 				{
@@ -110,11 +112,9 @@ namespace Greg.Xrm.Command.Commands.Ribbon
 				if (string.IsNullOrWhiteSpace(command.BackupFile))
 				{
 					output.Write("Replace this ribbon in the target environment? (y/N) ");
+					// Anything but "y", including end of input in non-interactive runs, must not report success.
 					if (!string.Equals(Console.ReadLine()?.Trim(), "y", StringComparison.OrdinalIgnoreCase))
-					{
-						output.WriteLine("Aborted.", ConsoleColor.Yellow);
-						return CommandResult.Success();
-					}
+						return CommandResult.Fail("Aborted. The ribbon was not replaced.");
 				}
 
 				ReplaceRibbonDiff(archive, command.TableName, replacement);
@@ -127,9 +127,9 @@ namespace Greg.Xrm.Command.Commands.Ribbon
 				output.WriteLine("Done", ConsoleColor.Green);
 
 				output.Write("Publishing ribbon customizations...");
-				OrganizationRequest publishRequest;
+				PublishXmlRequest publishRequest;
 				if (string.IsNullOrWhiteSpace(command.TableName))
-					publishRequest = new PublishAllXmlRequest();
+					publishRequest = new PublishXmlRequest { ParameterXml = ApplicationRibbonPublishXml };
 				else
 				{
 					var builder = new PublishXmlBuilder();
@@ -152,7 +152,7 @@ namespace Greg.Xrm.Command.Commands.Ribbon
 			archive.UpdateEntryXml("customizations.xml", document =>
 			{
 				var element = RibbonDiffExport.FindRibbonDiff(document, tableName)
-					?? throw new InvalidOperationException("RibbonDiffXml was not found in the exported temporary solution.");
+					?? throw new InvalidOperationException("RibbonDiffXml was not found in the exported solution.");
 				element.ReplaceWith(new XElement(replacement));
 				return true;
 			});

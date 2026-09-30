@@ -77,6 +77,65 @@ namespace Greg.Xrm.Command.Commands.Ribbon
 			}
 		}
 
+		[TestMethod]
+		public async Task ApplicationRibbonPublishesOnlyTheApplicationRibbon()
+		{
+			var file = Path.GetTempFileName();
+			var backup = Path.Combine(Path.GetTempPath(), $"ribbon-{Guid.NewGuid():N}.xml");
+			try
+			{
+				await File.WriteAllTextAsync(file, "<RibbonDiffXml><NewAction /></RibbonDiffXml>");
+				var requests = RibbonDiffSolutionSetup.Setup(OrganizationServiceMock, solutionRepository, "");
+				var executor = new SetRibbonDiffCommandExecutor(Output, OrganizationServiceRepositoryMock.Object, solutionRepository.Object);
+
+				var result = await executor.ExecuteAsync(new SetRibbonDiffCommand
+				{
+					FileName = file, SolutionName = RibbonDiffSolutionSetup.SolutionName, BackupFile = backup
+				}, CancellationToken.None);
+
+				Assert.IsTrue(result.IsSuccess, result.ErrorMessage);
+				Assert.AreEqual(1, requests.OfType<ImportSolutionRequest>().Count());
+				Assert.AreEqual("<importexportxml><ribbons><ribbon></ribbon></ribbons></importexportxml>", requests.OfType<PublishXmlRequest>().Single().ParameterXml);
+				Assert.IsFalse(requests.OfType<PublishAllXmlRequest>().Any());
+			}
+			finally
+			{
+				File.Delete(file);
+				File.Delete(backup);
+			}
+		}
+
+		[TestMethod]
+		[DataRow("n\n")]
+		[DataRow("")]
+		public async Task DeclinedOrMissingConfirmationFailsWithoutImporting(string input)
+		{
+			var file = Path.GetTempFileName();
+			var originalInput = Console.In;
+			try
+			{
+				await File.WriteAllTextAsync(file, "<RibbonDiffXml><NewAction /></RibbonDiffXml>");
+				var requests = RibbonDiffSolutionSetup.Setup(OrganizationServiceMock, solutionRepository, "account");
+				var executor = new SetRibbonDiffCommandExecutor(Output, OrganizationServiceRepositoryMock.Object, solutionRepository.Object);
+				Console.SetIn(new StringReader(input));
+
+				var result = await executor.ExecuteAsync(new SetRibbonDiffCommand
+				{
+					FileName = file, TableName = "account", SolutionName = RibbonDiffSolutionSetup.SolutionName
+				}, CancellationToken.None);
+
+				Assert.IsFalse(result.IsSuccess);
+				StringAssert.Contains(result.ErrorMessage, "Aborted");
+				Assert.IsFalse(requests.OfType<ImportSolutionRequest>().Any());
+				Assert.IsFalse(requests.OfType<PublishXmlRequest>().Any());
+			}
+			finally
+			{
+				Console.SetIn(originalInput);
+				File.Delete(file);
+			}
+		}
+
 		private static byte[] CreateSolutionZip()
 		{
 			using var stream = new MemoryStream();

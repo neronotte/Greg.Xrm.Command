@@ -13,7 +13,7 @@ namespace Greg.Xrm.Command.Model
 		/// <param name="componentId">The unique identifier of the component to add to the solution.</param>
 		/// <param name="componentType">The type of component</param>
 		/// <returns>A task</returns>
-		Task AddComponentAsync(Guid componentId, ComponentType componentType, bool includeSubcomponents = true);
+		Task AddComponentAsync(Guid componentId, ComponentType componentType);
 
 
 		/// <summary>
