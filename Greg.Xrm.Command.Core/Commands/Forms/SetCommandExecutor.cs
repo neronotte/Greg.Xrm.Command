@@ -39,6 +39,9 @@ namespace Greg.Xrm.Command.Commands.Forms
 				replacement = document.Root ?? throw new XmlException("The XML document is empty.");
 				if (replacement.Name != "form")
 					return CommandResult.Fail("The input XML must contain one <form> root element.");
+				// Solution exports of forms layered over a managed base carry solutionaction diff markers instead of the complete form.
+				if (replacement.DescendantsAndSelf().Any(e => e.Attribute("solutionaction") != null))
+					return CommandResult.Fail("The input XML is a solution diff (it contains solutionaction attributes), not a complete form. Use the output of 'pacx forms get' instead.");
 				replacementXml = replacement.ToString(SaveOptions.DisableFormatting);
 			}
 			catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or XmlException)

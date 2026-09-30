@@ -35,7 +35,7 @@ namespace Greg.Xrm.Command.Commands.Forms
 		{
 			writer.WriteCodeBlock("pacx forms get -t account -o account-form.xml", "Powershell");
 			writer.WriteCodeBlock("pacx forms set -t account --file account-form.xml --backup account-form-before.xml --publish true", "Powershell");
-			writer.WriteParagraph("The input must contain one complete <form> element. By default, set imports the replacement through a temporary solution and leaves it unpublished. --publish publishes the table and its associated forms.");
+			writer.WriteParagraph("The input must contain one complete <form> element. Form XML taken from a solution export that contains solutionaction diff markers is rejected. By default, set imports the replacement through a temporary solution and leaves it unpublished. --publish publishes the table and its associated forms.");
 			writer.WriteParagraph("--fast updates formxml directly. Dataverse also stores a formjson representation, which may not be synchronized by a direct formxml update. Before publishing in production, apply the final XML without --fast and with --publish true.");
 		}
 	}

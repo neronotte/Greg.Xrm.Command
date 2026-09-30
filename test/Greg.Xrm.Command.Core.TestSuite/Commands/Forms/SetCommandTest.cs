@@ -41,6 +41,23 @@ namespace Greg.Xrm.Command.Commands.Forms
 		}
 
 		[TestMethod]
+		[DataRow(false)]
+		[DataRow(true)]
+		public async Task RejectsSolutionDiffBeforeConnecting(bool fast)
+		{
+			var path = Path.GetTempFileName();
+			try
+			{
+				await File.WriteAllTextAsync(path, "<form><tabs><tab name=\"new\"><cell id=\"{1}\" solutionaction=\"Removed\" /></tab></tabs></form>");
+				var result = await NewExecutor().ExecuteAsync(new SetCommand { TableName = "account", FileName = path, Fast = fast }, CancellationToken.None);
+				Assert.IsFalse(result.IsSuccess);
+				StringAssert.Contains(result.ErrorMessage, "solutionaction");
+				OrganizationServiceRepositoryMock.Verify(repo => repo.GetCurrentConnectionAsync(), Times.Never);
+			}
+			finally { File.Delete(path); }
+		}
+
+		[TestMethod]
 		public async Task DirectUpdateWarnsAndDoesNotPublishByDefault()
 		{
 			var form = SetupForm();
