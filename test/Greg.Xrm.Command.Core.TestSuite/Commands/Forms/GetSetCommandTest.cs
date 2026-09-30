@@ -76,7 +76,7 @@ namespace Greg.Xrm.Command.Commands.Forms
 			{
 				await File.WriteAllTextAsync(path, "<form><tabs><tab name=\"new\" /></tabs></form>");
 				var executor = NewSetExecutor();
-				var result = await executor.ExecuteAsync(new SetCommand { TableName = "account", FileName = path, BackupFile = backup, Fast = true }, CancellationToken.None);
+				var result = await executor.ExecuteAsync(new SetCommand { TableName = "account", FileName = path, BackupFile = backup, Fast = true, Publish = true }, CancellationToken.None);
 				Assert.IsTrue(result.IsSuccess);
 				Assert.AreEqual("<form><tabs /></form>", await File.ReadAllTextAsync(backup));
 				OrganizationServiceMock.Verify(crm => crm.UpdateAsync(It.Is<Entity>(entity => entity.Id == form.Id &&
@@ -107,7 +107,7 @@ namespace Greg.Xrm.Command.Commands.Forms
 				temporary.Setup(temp => temp.UploadAndPublishAsync(It.IsAny<byte[]>(), It.IsAny<string[]>()))
 					.Callback<byte[], string[]>((bytes, _) => uploaded = bytes).Returns(Task.CompletedTask);
 
-				var result = await NewSetExecutor().ExecuteAsync(new SetCommand { TableName = "account", FileName = path }, CancellationToken.None);
+				var result = await NewSetExecutor().ExecuteAsync(new SetCommand { TableName = "account", FileName = path, Publish = true }, CancellationToken.None);
 				Assert.IsTrue(result.IsSuccess, result.ErrorMessage);
 				temporary.Verify(temp => temp.AddComponentAsync(form.Id, ComponentType.SystemForm), Times.Once);
 				Assert.IsNotNull(uploaded);
