@@ -1,13 +1,13 @@
 # Security Role Get Privileges
 
-Status: proposed design. No command implementation or Dataverse changes yet.
+Status: implemented and locally verified. No live Dataverse operations performed.
 
 ## Goal
 
 Display a security role's privilege configuration in two sections:
 
 - Table privileges: one row per table, eight privilege columns.
-- Miscellaneous privileges: a list of technical names and assigned levels.
+- Miscellaneous privileges: a three-column table with label, level, and technical name.
 
 The command is read-only and accepts both managed and unmanaged roles. It shows
 the selected role's assigned privileges, not effective user access, sharing,
@@ -37,14 +37,19 @@ the same options and invokes the same executor.
 | `--role` | `-r` | Yes | None | Exact root role name or GUID; same resolution as set-privilege. |
 | `--table` | `-t` | No | None | Case-insensitive LIKE contains filter on a table's logical name, schema name, or display name; suppresses miscellaneous output. |
 | `--privilege` | `-p` | No | None | Case-insensitive literal substring of a technical privilege name or standard action label. |
-| `--mode` | `-m` | No | `Assigned` | `All`, `Assigned`, or `Unassigned`. |
-| `--format` | `-f` | No | `functional` | `c`/`compact`, `n`/`number`, `t`/`tech`/`technical`, or `f`/`func`/`functional`. |
+| `--show` | `-s` | No | `Assigned` | `All`, `Assigned`, or `Unassigned`. |
+| `--format` | `-f` | No | `functional` | Four table formats and three JSON formats; see the format table below. |
 
 `--format` replaces the previous compact boolean option. Do not expose
 `--compact`, `--COMPACT`, or `-c`. Format names are case-insensitive;
 `c` normalizes to `compact`, `n` to `number`, `t`/`tech` to `technical`,
 and `f`/`func` to `functional`. These are option values, not boolean flags:
 for example, `--format c` and `-f c` select compact output.
+JSON aliases are `jsontech`/`jsontechnical`/`jt`,
+`json`/`jsonfunc`/`jsonfunctional`/`jf`, and `jsonnumeric`/`jn`.
+The role selector is again `--role`/`-r`; `--name`/`-n` is no longer accepted.
+The assignment selector is `--show`/`-s`; `--mode`, `--filter`, and `-m` are no
+longer accepted. `--show` chooses what to display; `--format`/`-f` chooses how.
 Omitting the option selects `functional`. Empty or unknown format values are
 validation errors, not a fallback to the default.
 
@@ -52,18 +57,21 @@ Examples:
 
 ```powershell
 pacx security roles get-privileges -r "Salesperson"
-pacx security roles get-privileges -r "Salesperson" --mode All
-pacx security roles get-privileges -r "Salesperson" --mode Unassigned
+pacx security roles get-privileges -r "Salesperson" --show All
+pacx security roles get-privileges -r "Salesperson" -s Unassigned
 pacx security roles get-privileges -r "Salesperson" --table account
-pacx security roles get-privileges -r "Salesperson" --table "claim" --mode All
+pacx security roles get-privileges -r "Salesperson" --table "claim" --show All
 pacx security roles get-privileges -r "Salesperson" --privilege Read
 pacx security roles get-privileges -r "Salesperson" --privilege prvWriteAccount
-pacx security roles get-privileges -r "Salesperson" --mode All --format compact
+pacx security roles get-privileges -r "Salesperson" --show All --format compact
 pacx security roles get-privileges -r "Salesperson" --format number
 pacx security roles get-privileges -r "Salesperson" --format tech
 pacx security roles get-privileges -r "Salesperson" --format functional
 pacx security roles get-privileges -r "Salesperson" --format c
 pacx security roles get-privileges -r "Salesperson" -f n
+pacx security roles get-privileges -r "Salesperson" --show All -f jt
+pacx security roles get-privileges -r "Salesperson" --show All -f json
+pacx security roles get-privileges -r "Salesperson" --show All -f jn
 ```
 
 Names of modes are case-insensitive; undefined enum values are rejected by
@@ -156,7 +164,7 @@ but no Write still belongs to Assigned, not Unassigned. This definition is
 confirmed: the role must have NONE of the table's eight actions assigned.
 
 Evaluate this table predicate using the complete eight-action configuration,
-before applying the privilege-name filter. This keeps `--mode` consistent:
+before applying the privilege-name filter. This keeps `--show` consistent:
 filtering for Write does not turn a table with assigned Read into an unassigned
 table. The displayed Write cell may therefore be unassigned in Assigned mode
 (`0` in numeric formats or `None` in textual formats).
@@ -186,9 +194,11 @@ name, case-insensitively. Display names are supplementary, not identifiers.
 
 ## Output
 
-Print the role identity, selected mode/format, and active filters first. Render the two
-sections separately through `IOutput`; omit miscellaneous when `--table` is
-supplied. Never write directly to Console.
+For table formats, print active table/name filters and warnings before the role
+identity. Print a blank line immediately after the `Role: ...` heading, followed
+by the grid. Do not print `Mode: ... | Format: ...` or `Table privileges`.
+Render through `IOutput`; omit miscellaneous when `--table` is supplied. Never
+write directly to Console. JSON formats use the separate export path below.
 
 ### Formats
 
@@ -198,6 +208,9 @@ supplied. Never write directly to Console.
 | `n` or `number` | Standard grid with eight action columns | 0 | 1 | 2 | 3 | 4 |
 | `t`, `tech`, or `technical` | Standard grid with eight action columns | None | Basic | Local | Deep | Global |
 | `f`, `func`, or `functional` (default) | Standard grid with eight action columns | None | User | Business Unit | Parent Child | Organization |
+| `jsontech`, `jsontechnical`, `jt` | JSON object with string values | None | Basic | Local | Deep | Global |
+| `json`, `jsonfunc`, `jsonfunctional`, `jf` | JSON object with string values | None | User | Business Unit | Parent Child | Organization |
+| `jsonnumeric`, `jn` | JSON object with numeric values | 0 | 1 | 2 | 3 | 4 |
 
 All standard grids retain the same table rows and action ordering. The existing
 privilege filter may reduce visible columns. In every format, an unsupported
@@ -257,15 +270,22 @@ Here `--privilege Read` selected Read only. `-` means excluded by the filter,
 not unavailable or unassigned. An unsupported action remains a space even if
 it would otherwise be excluded by the filter. Print a concise legend once.
 
-Without `--table`, miscellaneous output remains a list in every format.
+Without `--table`, miscellaneous output is a three-column table in every table format.
 Use the same level-label mapping as the grid; compact uses numeric labels.
+The label removes the leading `prv` prefix, then inserts a space before every
+uppercase character after the first. For example, `prvReadRecordAuditHistory`
+becomes `Read Record Audit History`. The third column preserves the original
+technical name unchanged. If there are no miscellaneous matches, show the
+existing empty-results message instead of an empty table.
 For example, the default functional format produces:
 
 ```text
 Miscellaneous privileges
-[Organization] prvExportToExcel
-[User] prvExampleUserPrivilege
-[None] prvExampleUnassignedPrivilege
+Label                      | Level        | Technical name
+Export To Excel            | Organization | prvExportToExcel
+Read Record Audit History  | Organization | prvReadRecordAuditHistory
+Example User Privilege     | User         | prvExampleUserPrivilege
+Example Unassigned Privilege | None       | prvExampleUnassignedPrivilege
 ```
 
 Color may reinforce assigned levels when supported by the existing output
@@ -273,16 +293,57 @@ abstraction, but names/digits must remain sufficient in plain-text output.
 Avoid adding a new rendering framework. Format selection does not change
 classification, filtering, assignment state, or the selected miscellaneous items.
 
-Structured command results should contain role identity, mode, canonical format,
-counts, and the
-filtered table/miscellaneous collections with applicability and numeric levels.
-Return the same privilege data for all formats; only rendering and the format
-field change. When `--table` is supplied, the miscellaneous collection is empty and
-its displayed count is zero, consistently with the suppressed section.
+Tabular command result parameters contain only scalar role identity, `Show`, canonical
+format, `TableCount`, `MiscellaneousCount`, and `WarningCount`. Never return arrays
+or collections in output parameters: the CLI displays their .NET type names.
+The full snapshot stays internal and feeds the tables. Warning messages are
+printed through IOutput; only their count is included in the result.
+When `--table` is supplied, `MiscellaneousCount` is zero and the section remains
+suppressed. `security roles list` similarly returns a formatted role-name string,
+not a collection, in its `Roles` output parameter.
+
+### JSON Export
+
+JSON formats emit one indented JSON object, not an array. Properties are the
+technical privilege names and values use the selected level mapping. Shared
+privilege IDs appear only once. Properties are sorted by technical name.
+
+```json
+{
+  "prvExportToExcel": "Organization",
+  "prvReadAccount": "User",
+  "prvWriteAccount": "None"
+}
+```
+
+The numeric counterpart uses actual JSON numbers, including unassigned zero:
+
+```json
+{
+  "prvExportToExcel": 4,
+  "prvReadAccount": 1,
+  "prvWriteAccount": 0
+}
+```
+
+The assignment filter keeps its table-level semantics. Assigned tables may
+therefore contribute unassigned actions with value None/0. `--show All` also
+includes wholly unassigned tables and miscellaneous privileges. `Unassigned`
+exports only wholly unassigned tables and unassigned miscellaneous privileges.
+Table and privilege-name filters apply before export; unsupported actions and
+cells excluded by the privilege filter are omitted rather than emitted as empty
+properties. `--table` suppresses miscellaneous entries in JSON too.
+
+Empty results produce `{}`. Unknown depths produce JSON `null`, never zero or
+an invented depth. JSON serialization preserves and escapes technical names.
+The executor emits no progress logging, role heading, grid, legend, warning
+text or result summary in JSON mode. It returns an empty successful
+CommandResult so the generic runner does not append a `Result:` block. Global
+CLI bootstrap banners are outside this executor and are not changed here.
 
 ## Implementation Plan
 
-### 1. Approve The Contract
+### ✅ 1. Approve The Contract
 
 - Confirmed: Unassigned means tables with no assigned privilege at all.
 - Confirmed: `--table` hides miscellaneous and uses LIKE contains matching;
@@ -292,10 +353,13 @@ its displayed count is zero, consistently with the suppressed section.
 - Confirmed: `--format` replaces the compact boolean, with `c`/`compact`,
   `n`/`number`, `t`/`tech`/`technical`, and `f`/`func`/`functional`;
   default is `functional`.
-- The Assigned default and compact privilege-filter marker `-` remain proposals.
-  Do not implement until the overall design is accepted.
+- Confirmed: JSON technical (`jsontech`, `jsontechnical`, `jt`), functional
+  (`json`, `jsonfunc`, `jsonfunctional`, `jf`), and numeric (`jsonnumeric`, `jn`).
+- Confirmed: role selector `--role`/`-r`; assignment selector `--show`/`-s`.
+- Approved for implementation, including Assigned as the mode default and `-`
+  for compact cells excluded by the privilege filter.
 
-### 2. Retrieve And Classify
+### ✅ 2. Retrieve And Classify
 
 - Add command/options and usage examples using the existing command pattern.
 - Extend the existing privilege repository with a paged catalog read.
@@ -305,12 +369,12 @@ its displayed count is zero, consistently with the suppressed section.
   duplicate assignments, non-applicable cells, and miscellaneous classification
   with local mocks. No external services.
 
-### 3. Filter And Render
+### ✅ 3. Filter And Render
 
-- Keep classification/filtering separate from formatting; all four output formats
+- Keep classification/filtering separate from formatting; all seven output formats
   consume the same snapshot.
 - Add number, technical, and functional grids, compact strings, miscellaneous
-  list, identity, and legend. Use one level-label mapping for grids and lists.
+  table, identity, and legend. Use one level-label mapping for both tables.
 - Test all three modes, every filter and their combinations, case-insensitivity,
   LIKE contains matching for table names, numeric conversion, deterministic
   ordering, empty results, and lossless eight-character strings.
@@ -318,17 +382,23 @@ its displayed count is zero, consistently with the suppressed section.
   excludes `new_case`, and behaves identically for `CLAIM`. Verify miscellaneous
   suppression in every mode, in compact output, combined with `--privilege`,
   and when the table filter has no matches.
-- Test all four formats, every accepted name/alias and casing, the functional
+- Test all seven formats, every accepted name/alias and casing, the functional
   default, unassigned labels, blank unsupported cells, and invalid/empty formats.
 - Explicitly test short format values `c`, `n`, `t`, and `f` with both
   `--format` and `-f`, including uppercase values and canonical normalization.
 - Test usage documentation and parser long/short names, `--format`/`-f`,
   rejection of the obsolete compact flag, defaults, aliases, and invalid modes.
   Reuse existing test helpers and OutputToMemory.
+- Test scalar-only result parameters and the three miscellaneous columns in
+  every format, including prefix removal, uppercase word boundaries, unknown
+  depths, and unassigned levels. Capture table rows to verify internal data.
 - Add parameterized parser tests for all six confirmed command forms, verifying
   that they resolve to the same command type and bind options identically.
+- Parse JSON exports to verify object shape, string versus integer values,
+  filtering, shared-ID deduplication, all levels, null unknown depths, empty
+  results, and absence of command-specific logging or summary.
 
-### 4. Verify
+### ✅ 4. Verify
 
 - Run focused tests, full local suite, editor diagnostics, and Release build.
 - No live environment writes; no commits or remote pushes without authorization.
@@ -340,3 +410,19 @@ API, and RoleEditor's metadata-based classification. Implementation acceptance
 must include a metadata fixture where a privilege's technical name suggests
 one table but its PrivilegeId is mapped to another/shared table. A name-prefix
 implementation must fail this test; a metadata-based implementation must pass.
+
+## Verification Results
+
+- 107 focused command and executor tests passed, including --role/-r and
+  --show/-s binding, rejection of superseded --name/-n, --mode, --filter, and -m options,
+  parsed JSON exports, and tabular heading spacing without redundant logging.
+- Full local suite: 1063 tests passed, no failures.
+- Release solution build passed; no editor diagnostics in the new files.
+- Tests cover all six command forms, format aliases/defaults, modes, metadata-ID
+  classification, shared IDs, paged privilege reads, managed-role inspection,
+  LIKE contains table filtering, miscellaneous suppression, numeric/text depth
+  mapping, fixed-width compact strings, unknown depths, and service faults.
+- Existing work was committed as `ecc4077` and pushed to
+  `origin/feature/security-namespace` before implementation, as requested.
+- The get-privileges implementation follows that baseline in a separate
+  delivery commit. No real-environment security operations were run.

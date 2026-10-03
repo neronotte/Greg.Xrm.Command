@@ -33,6 +33,17 @@ namespace Greg.Xrm.Command.Model
 
 		public class Repository
 		{
+			public async Task<IReadOnlyList<Privilege>> GetAllAsync(IOrganizationServiceAsync2 crm, CancellationToken cancellationToken)
+			{
+				var query = new QueryExpression("privilege")
+				{
+					ColumnSet = new ColumnSet("name", "canbebasic", "canbelocal", "canbedeep", "canbeglobal"),
+					NoLock = true,
+					Orders = { new OrderExpression("privilegeid", OrderType.Ascending) }
+				};
+				return await crm.RetrieveAllAsync(query, entity => new Privilege(entity), cancellationToken);
+			}
+
 			public async Task<Privilege?> GetByNameAsync(IOrganizationServiceAsync2 crm, string name, CancellationToken cancellationToken)
 			{
 				var query = new QueryExpression("privilege")

@@ -25,7 +25,7 @@ namespace Greg.Xrm.Command.Commands.Security.Roles
 
 				var result = CommandResult.Success();
 				result["Count"] = roles.Count;
-				result["Roles"] = roles;
+				result["Roles"] = string.Join(", ", roles.Select(role => role.Name));
 				if (roles.Count == 0)
 				{
 					return result;

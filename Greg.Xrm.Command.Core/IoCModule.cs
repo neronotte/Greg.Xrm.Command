@@ -54,6 +54,7 @@ namespace Greg.Xrm.Command
 			builder.RegisterType<ObjectTypeCodeFinder>().As<IObjectTypeCodeFinder>();
 			builder.RegisterType<SecurityRoleService>().AsSelf();
 			builder.RegisterType<SecurityPrivilegeService>().AsSelf();
+			builder.RegisterType<RolePrivilegeInspectionService>().AsSelf();
 			builder.RegisterType<SecurityUserResolver>().AsSelf();
 			builder.RegisterType<FormWrapperFactory>().As<IFormWrapperFactory>();
 

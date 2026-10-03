@@ -159,6 +159,7 @@ namespace Greg.Xrm.Command.Commands.<Domain>
 - Catch `FaultException<OrganizationServiceFault>` at minimum. Catch `Exception` when non-Dataverse failures are possible.
 - Put non-trivial computation in `private static` helper methods.
 - Populate `CommandResult` with key/value output pairs for structured consumers.
+- `CommandResult` output values must be scalars (strings, numbers, booleans, GUIDs), never arrays or collection objects: the CLI renders them via `ToString()` and displays .NET type names instead of their contents. Render detailed collections through `IOutput.WriteTable` and return counts or explicitly formatted summary strings. Keep collection-based view models internal; tests can inspect service results or capture table rows, rather than requiring collections in command output parameters.
 
 ---
 
@@ -182,6 +183,7 @@ Once the command and executor files are in place, use the **`pacx-unit-test-writ
 - [ ] Progress pattern (`Write(…)` / `WriteLine(" Done", Green)`) used for each step
 - [ ] `FaultException<OrganizationServiceFault>` caught and mapped to `CommandResult.Fail`
 - [ ] `CommandResult` populated with key output values
+- [ ] `CommandResult` contains only scalar output values, no arrays or collections
 - [ ] Tests written using the **`pacx-unit-test-writer`** skill
 - [ ] `dotnet build` passes
 - [ ] `dotnet test Greg.Xrm.Command.Core.TestSuite\Greg.Xrm.Command.Core.TestSuite.csproj` passes

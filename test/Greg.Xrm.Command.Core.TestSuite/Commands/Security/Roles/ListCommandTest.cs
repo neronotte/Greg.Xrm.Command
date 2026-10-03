@@ -127,7 +127,8 @@ namespace Greg.Xrm.Command.Commands.Security.Roles
 
 			Assert.IsTrue(result.IsSuccess, result.ErrorMessage);
 			Assert.AreEqual(1, result["Count"]);
-			Assert.AreEqual("Sales Manager", ((IEnumerable<SecurityRoleInfo>)result["Roles"]).Single().Name);
+			Assert.AreEqual("Sales Manager", result["Roles"]);
+			Assert.IsFalse(result.Values.Any(value => value is System.Collections.IEnumerable && value is not string));
 			StringAssert.Contains(output.ToString(), "Found 1 role.");
 		}
 
