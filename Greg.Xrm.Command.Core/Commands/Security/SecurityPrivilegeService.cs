@@ -1,4 +1,5 @@
 using System.ServiceModel;
+using Greg.Xrm.Command.Model;
 using Microsoft.Crm.Sdk.Messages;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
@@ -10,9 +11,9 @@ namespace Greg.Xrm.Command.Commands.Security
 	/// <summary>
 	/// A privilege granted to a user. <see cref="Depth"/> is populated only for table-level checks.
 	/// </summary>
-	public sealed record SecurityPrivilegeInfo(string Privilege, PrivilegeDepth? Depth = null);
+	public sealed record SecurityPrivilegeInfo(string Privilege, PrivilegeDepth? Depth = null, Guid? BusinessUnitId = null, string? BusinessUnitName = null);
 
-	public sealed class SecurityPrivilegeService
+	public sealed class SecurityPrivilegeService(Organization.Repository organizations, BusinessUnit.Repository businessUnits)
 	{
 		private static readonly (AccessRights Flag, string Label)[] RecordAccessRights =
 		[
@@ -97,7 +98,7 @@ namespace Greg.Xrm.Command.Commands.Security
 				.ToList();
 		}
 
-		private static async Task<IReadOnlyList<SecurityPrivilegeInfo>> GetTablePrivilegesAsync(IOrganizationServiceAsync2 crm, Guid userId, EntityMetadata table, CancellationToken cancellationToken)
+		private async Task<IReadOnlyList<SecurityPrivilegeInfo>> GetTablePrivilegesAsync(IOrganizationServiceAsync2 crm, Guid userId, EntityMetadata table, CancellationToken cancellationToken)
 		{
 			var tablePrivileges = (table.Privileges ?? []).ToDictionary(x => x.PrivilegeId);
 			if (tablePrivileges.Count == 0)
@@ -105,20 +106,26 @@ namespace Greg.Xrm.Command.Commands.Security
 				return [];
 			}
 
+			var crossBusinessUnit = (await organizations.GetAsync(crm, cancellationToken)).OwnershipAcrossBusinessUnitsEnabled;
 			var response = (RetrieveUserPrivilegesResponse)await crm.ExecuteAsync(new RetrieveUserPrivilegesRequest { UserId = userId }, cancellationToken);
+			var grants = (response.RolePrivileges ?? []).Where(privilege => tablePrivileges.ContainsKey(privilege.PrivilegeId)).ToArray();
+			var names = crossBusinessUnit
+				? (await businessUnits.GetByIdsAsync(crm, grants.Select(privilege => privilege.BusinessUnitId), cancellationToken)).ToDictionary(unit => unit.Id, unit => unit.name)
+				: new Dictionary<Guid, string>();
 
-			// the same privilege can be granted by multiple roles: keep the widest depth
-			return (response.RolePrivileges ?? [])
-				.Where(x => tablePrivileges.ContainsKey(x.PrivilegeId))
-				.GroupBy(x => x.PrivilegeId)
+			return grants
+				.GroupBy(privilege => (privilege.PrivilegeId, BusinessUnitId: crossBusinessUnit ? (Guid?)privilege.BusinessUnitId : null))
 				.Select(g =>
 				{
-					var type = tablePrivileges[g.Key].PrivilegeType;
+					var type = tablePrivileges[g.Key.PrivilegeId].PrivilegeType;
 					var label = PrivilegeLabels.TryGetValue(type, out var l) ? l : type.ToString();
-					return (Type: type, Info: new SecurityPrivilegeInfo(label, g.Max(x => x.Depth)));
+					var businessUnitName = g.Key.BusinessUnitId.HasValue && names.TryGetValue(g.Key.BusinessUnitId.Value, out var name) ? name : null;
+					return (Type: type, Info: new SecurityPrivilegeInfo(label, g.Max(x => x.Depth), g.Key.BusinessUnitId, businessUnitName));
 				})
 				.OrderBy(x => GetPrivilegeSortIndex(x.Type))
 				.ThenBy(x => x.Info.Privilege, StringComparer.OrdinalIgnoreCase)
+				.ThenBy(x => x.Info.BusinessUnitName, StringComparer.OrdinalIgnoreCase)
+				.ThenBy(x => x.Info.BusinessUnitId)
 				.Select(x => x.Info)
 				.ToList();
 		}

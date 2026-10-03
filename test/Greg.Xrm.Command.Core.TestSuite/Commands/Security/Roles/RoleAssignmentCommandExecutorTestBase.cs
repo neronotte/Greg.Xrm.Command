@@ -413,6 +413,27 @@ namespace Greg.Xrm.Command.Commands.Security.Roles
 		}
 
 		[TestMethod]
+		public async Task FirstWriteFailureShouldNotPreventSecondWrite()
+		{
+			this.crm.SetupSequence(client => client.ExecuteAsync(It.IsAny<OrganizationRequest>(), It.IsAny<CancellationToken>()))
+				.ThrowsAsync(new FaultException<OrganizationServiceFault>(new OrganizationServiceFault(), "User write failed"))
+				.ReturnsAsync(new OrganizationResponse());
+
+			var result = await this.ExecuteAsync(true, true);
+
+			Assert.IsFalse(result.IsSuccess);
+			this.crm.Verify(client => client.ExecuteAsync(It.IsAny<OrganizationRequest>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
+			this.crm.Verify(client => client.ExecuteAsync(It.Is<OrganizationRequest>(request =>
+				((EntityReference)request["Target"]).LogicalName == "team"), It.IsAny<CancellationToken>()), Times.Once);
+			Assert.AreEqual(1, result["ChangedCount"]);
+			Assert.AreEqual(1, result["FailedCount"]);
+			Assert.AreEqual(0, result["SkippedCount"]);
+			Assert.AreEqual(false, result["UserChanged"]);
+			Assert.AreEqual(true, result["TeamChanged"]);
+			StringAssert.Contains(result.ErrorMessage, "User write failed");
+		}
+
+		[TestMethod]
 		public async Task SecondWriteFailureShouldReportCompletedChanges()
 		{
 			this.crm.SetupSequence(client => client.ExecuteAsync(It.IsAny<OrganizationRequest>(), It.IsAny<CancellationToken>()))
@@ -422,6 +443,60 @@ namespace Greg.Xrm.Command.Commands.Security.Roles
 			Assert.IsFalse(result.IsSuccess);
 			StringAssert.Contains(result.ErrorMessage, "Team write failed");
 			StringAssert.Contains(result.ErrorMessage, "Completed changes: 1");
+			Assert.AreEqual(1, result["ChangedCount"]);
+			Assert.AreEqual(1, result["FailedCount"]);
+			Assert.AreEqual(0, result["SkippedCount"]);
+			Assert.AreEqual(true, result["UserChanged"]);
+			Assert.AreEqual(false, result["TeamChanged"]);
+		}
+
+		[TestMethod]
+		public async Task BothWriteFailuresShouldBeReportedWithoutSkippingSecondAttempt()
+		{
+			this.crm.SetupSequence(client => client.ExecuteAsync(It.IsAny<OrganizationRequest>(), It.IsAny<CancellationToken>()))
+				.ThrowsAsync(new FaultException<OrganizationServiceFault>(new OrganizationServiceFault(), "User write failed"))
+				.ThrowsAsync(new FaultException<OrganizationServiceFault>(new OrganizationServiceFault(), "Team write failed"));
+			var result = await this.ExecuteAsync(true, true);
+			Assert.IsFalse(result.IsSuccess);
+			Assert.AreEqual(0, result["ChangedCount"]);
+			Assert.AreEqual(2, result["FailedCount"]);
+			Assert.AreEqual(0, result["SkippedCount"]);
+			StringAssert.Contains(result.ErrorMessage, "User write failed");
+			StringAssert.Contains(result.ErrorMessage, "Team write failed");
+			Assert.AreEqual("User write failed", result["UserError"]);
+			Assert.AreEqual("Team write failed", result["TeamError"]);
+			this.crm.Verify(client => client.ExecuteAsync(It.IsAny<OrganizationRequest>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
+		}
+
+		[TestMethod]
+		public async Task FailedWriteAndNoOpShouldHaveSeparateCounts()
+		{
+			if (this.Revoke) this.assignments.Remove(("team", this.teamId, this.teamRoleId));
+			else this.assignments.Add(("team", this.teamId, this.teamRoleId));
+			this.crm.Setup(client => client.ExecuteAsync(It.IsAny<OrganizationRequest>(), It.IsAny<CancellationToken>()))
+				.ThrowsAsync(new FaultException<OrganizationServiceFault>(new OrganizationServiceFault(), "User write failed"));
+			var result = await this.ExecuteAsync(true, true);
+			Assert.IsFalse(result.IsSuccess);
+			Assert.AreEqual(0, result["ChangedCount"]);
+			Assert.AreEqual(1, result["FailedCount"]);
+			Assert.AreEqual(1, result["SkippedCount"]);
+			Assert.AreEqual(false, result["TeamChanged"]);
+			StringAssert.Contains(this.output.ToString(), "Nothing to do");
+			this.crm.Verify(client => client.ExecuteAsync(It.IsAny<OrganizationRequest>(), It.IsAny<CancellationToken>()), Times.Once);
+		}
+
+		[TestMethod]
+		public async Task CancellationDuringFirstWriteShouldPreventSecondWrite()
+		{
+			using var cancellation = new CancellationTokenSource();
+			this.crm.Setup(client => client.ExecuteAsync(It.IsAny<OrganizationRequest>(), cancellation.Token))
+				.Returns(() =>
+				{
+					cancellation.Cancel();
+					return Task.FromCanceled<OrganizationResponse>(cancellation.Token);
+				});
+			await Assert.ThrowsAsync<OperationCanceledException>(() => this.ExecuteAsync(true, true, cancellationToken: cancellation.Token));
+			this.crm.Verify(client => client.ExecuteAsync(It.IsAny<OrganizationRequest>(), cancellation.Token), Times.Once);
 		}
 
 		[TestMethod]

@@ -23,8 +23,7 @@
 - Run focused tests, build and the complete local test suite.
 - Document examples and direct-assignment semantics.
 
-Verification: all 122 new parser/executor tests pass and the solution builds in Release.
-The full suite has 1184 passing tests and one failure in the existing `CheckPrivilegeCommandExecutorTest.ExecuteAsyncOnRecordShouldReturnAccessRightsInResult`, caused by a pre-existing worktree change returning a string instead of a privilege collection. That change was left untouched.
+Verification: the complete local suite passes (1287 tests), and the solution builds in Release. Regression tests cover independent user/team writes, first-write and second-write failures, separate failure/no-op counts, and cancellation.
 No live Dataverse environment was modified or used for verification.
 
 ## Usage
@@ -61,7 +60,7 @@ Owner teams and Microsoft Entra group teams are supported. Access teams cannot h
 Managed roles can be assigned or revoked: their definitions are not modified.
 
 All recipients, role copies, and direct associations are resolved before writing.
-Changes are applied sequentially, not transactionally. If a later write fails, the failure reports how many changes completed; rerunning safely skips successful changes.
+Changes are applied sequentially, not transactionally. After the common preflight succeeds, each recipient's write is attempted independently: a failure on the user write does not prevent the team write. A cancellation request still stops execution. If any write fails, the command returns failure while reporting all completed changes and recipient-specific errors; rerunning safely skips successful changes.
 Dataverse still enforces the executing identity's privileges and role-assignment restrictions.
 
-The structured result contains `ChangedCount`, `SkippedCount`, and, for each specified recipient, `UserId`/`TeamId`, `UserRoleId`/`TeamRoleId`, `UserBusinessUnitId`/`TeamBusinessUnitId`, and `UserChanged`/`TeamChanged`.
+The structured result contains `ChangedCount`, `SkippedCount`, `FailedCount`, and, for each specified recipient, `UserId`/`TeamId`, `UserRoleId`/`TeamRoleId`, `UserBusinessUnitId`/`TeamBusinessUnitId`, and `UserChanged`/`TeamChanged`. Failed writes add `UserError`/`TeamError`. Counts and recipient outcomes are also available in a partially successful failure result; `SkippedCount` counts only no-ops, not failed writes.

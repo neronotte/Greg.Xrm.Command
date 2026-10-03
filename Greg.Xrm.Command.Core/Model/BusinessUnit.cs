@@ -11,6 +11,18 @@ namespace Greg.Xrm.Command.Model
 
 		public class Repository
 		{
+			public async Task<IReadOnlyList<BusinessUnit>> GetByIdsAsync(IOrganizationServiceAsync2 crm, IEnumerable<Guid> identifiers, CancellationToken cancellationToken)
+			{
+				var ids = identifiers.Where(identifier => identifier != Guid.Empty).Distinct().ToArray();
+				if (ids.Length == 0) return [];
+				var query = new QueryExpression("businessunit")
+				{
+					ColumnSet = new ColumnSet("name"), Orders = { new OrderExpression("businessunitid", OrderType.Ascending) }
+				};
+				query.Criteria.AddCondition("businessunitid", ConditionOperator.In, ids.Cast<object>().ToArray());
+				return await crm.RetrieveAllAsync(query, entity => new BusinessUnit(entity), cancellationToken);
+			}
+
 			public async Task<BusinessUnit> ResolveAsync(IOrganizationServiceAsync2 crm, string identifier, CancellationToken cancellationToken)
 			{
 				var query = new QueryExpression("businessunit") { ColumnSet = new ColumnSet("name"), TopCount = 2 };

@@ -19,6 +19,7 @@ namespace Greg.Xrm.Command.Commands.Security
 
 			writer.WriteParagraph("Check the privileges a user has on a table (table-level check, no record specified). For each privilege the widest depth granted by the user's roles (directly or through teams) is shown:");
 			writer.WriteCodeBlock("pacx security check-privilege --user 00000000-0000-0000-0000-000000000000 --table account", "Powershell");
+			writer.WriteParagraph("When record ownership across business units is enabled, table-level checks report the widest depth separately for each business unit, showing its name and GUID. Otherwise a single widest depth is reported for each privilege. Record-level checks are unchanged.");
 
 			writer.WriteParagraph("Check the access rights a user has on a specific record (Create, Read, Write, Delete, Append, Append To, Assign, Share). The user can be identified by id, domain name or primary email:");
 			writer.WriteCodeBlock("pacx security check-privilege -u john.doe@contoso.com -t account -id 11111111-1111-1111-1111-111111111111", "Powershell");

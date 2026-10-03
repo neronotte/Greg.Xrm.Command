@@ -70,34 +70,58 @@ namespace Greg.Xrm.Command.Commands.Security.Roles
 				output.WriteLine("Done", ConsoleColor.Green);
 
 				var result = CommandResult.Success();
+				var failures = new List<(string Message, Exception Exception)>();
+				var skipped = 0;
 				foreach (var assignment in assignments)
 				{
 					var recipient = assignment.Recipient;
 					var prefix = recipient.Reference.LogicalName == "systemuser" ? "User" : "Team";
 					var shouldChange = assignment.Exists == revoke;
+					var didChange = false;
 					if (!shouldChange)
 					{
 						output.WriteLine($"{prefix} '{recipient.Name}': role '{assignment.Role.name}' is {(revoke ? "not assigned" : "already assigned")}. Nothing to do.");
+						skipped++;
 					}
 					else
 					{
-						output.Write($"{(revoke ? "Revoking" : "Assigning")} role '{assignment.Role.name}' {(revoke ? "from" : "to")} {prefix.ToLowerInvariant()} '{recipient.Name}'...");
-						var relationship = new Microsoft.Xrm.Sdk.Relationship(prefix == "User" ? "systemuserroles_association" : "teamroles_association");
-						var related = new EntityReferenceCollection { new EntityReference("role", assignment.Role.Id) };
-						OrganizationRequest request = revoke
-							? new DisassociateRequest { Target = recipient.Reference, Relationship = relationship, RelatedEntities = related }
-							: new AssociateRequest { Target = recipient.Reference, Relationship = relationship, RelatedEntities = related };
-						await crm.ExecuteAsync(request, cancellationToken);
-						changed++;
-						output.WriteLine("Done", ConsoleColor.Green);
+						try
+						{
+							cancellationToken.ThrowIfCancellationRequested();
+							output.Write($"{(revoke ? "Revoking" : "Assigning")} role '{assignment.Role.name}' {(revoke ? "from" : "to")} {prefix.ToLowerInvariant()} '{recipient.Name}'...");
+							var relationship = new Microsoft.Xrm.Sdk.Relationship(prefix == "User" ? "systemuserroles_association" : "teamroles_association");
+							var related = new EntityReferenceCollection { new EntityReference("role", assignment.Role.Id) };
+							OrganizationRequest request = revoke
+								? new DisassociateRequest { Target = recipient.Reference, Relationship = relationship, RelatedEntities = related }
+								: new AssociateRequest { Target = recipient.Reference, Relationship = relationship, RelatedEntities = related };
+							await crm.ExecuteAsync(request, cancellationToken);
+							changed++;
+							didChange = true;
+							output.WriteLine("Done", ConsoleColor.Green);
+						}
+						catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
+						catch (Exception exception)
+						{
+							var message = $"{prefix} '{recipient.Name}': {exception.Message}";
+							failures.Add((message, exception));
+							result[prefix + "Error"] = exception.Message;
+							output.WriteLine($"Failed. {message}", ConsoleColor.Red);
+						}
 					}
 					result[prefix + "Id"] = recipient.Reference.Id;
 					result[prefix + "RoleId"] = assignment.Role.Id;
 					result[prefix + "BusinessUnitId"] = assignment.Role.businessunitid?.Id ?? selectedBusinessUnit ?? recipient.BusinessUnitId!.Value;
-					result[prefix + "Changed"] = shouldChange;
+					result[prefix + "Changed"] = didChange;
 				}
 				result["ChangedCount"] = changed;
-				result["SkippedCount"] = assignments.Count - changed;
+				result["SkippedCount"] = skipped;
+				result["FailedCount"] = failures.Count;
+				if (failures.Count > 0)
+				{
+					var failure = CommandResult.Fail(string.Join(" ", failures.Select(item => item.Message)) + $" Completed changes: {changed}. Failed changes: {failures.Count}.", failures[0].Exception);
+					foreach (var entry in result) failure[entry.Key] = entry.Value;
+					return failure;
+				}
 				return result;
 			}
 			catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)

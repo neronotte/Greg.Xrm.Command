@@ -54,7 +54,9 @@ namespace Greg.Xrm.Command.Commands.Security
 			var result = CommandResult.Success();
 			result["UserId"] = user.UserId;
 			result["Count"] = privileges.Count;
-			result["Privileges"] = privileges.Select(p => $"{p.Privilege} ({p.Depth})").Join(", ");
+			result["Privileges"] = privileges.Select(p => p.BusinessUnitId.HasValue
+				? $"{p.Privilege} ({p.Depth}) [BU: {BusinessUnitLabel(p)}]"
+				: $"{p.Privilege} ({p.Depth})").Join(", ");
 			if (privileges.Count == 0)
 			{
 				return result;
@@ -64,11 +66,20 @@ namespace Greg.Xrm.Command.Commands.Security
 			{
 				output.WriteTable(privileges, () => ["Access Right"], privilege => [privilege.Privilege]);
 			}
+			else if (privileges.Any(privilege => privilege.BusinessUnitId.HasValue))
+			{
+				output.WriteTable(privileges, () => ["Privilege", "Depth", "Business Unit"], privilege =>
+					[privilege.Privilege, privilege.Depth?.ToString() ?? string.Empty, BusinessUnitLabel(privilege)]);
+			}
 			else
 			{
 				output.WriteTable(privileges, () => ["Privilege", "Depth"], privilege => [privilege.Privilege, privilege.Depth?.ToString() ?? string.Empty]);
 			}
 			return result;
 		}
+
+		private static string BusinessUnitLabel(SecurityPrivilegeInfo privilege) => string.IsNullOrWhiteSpace(privilege.BusinessUnitName)
+			? privilege.BusinessUnitId?.ToString() ?? string.Empty
+			: $"{privilege.BusinessUnitName} ({privilege.BusinessUnitId})";
 	}
 }
