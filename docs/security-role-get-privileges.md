@@ -32,13 +32,13 @@ Register the first form as the primary command and the remaining five as
 aliases. Do not register the primary form again as an alias. Every form accepts
 the same options and invokes the same executor.
 
-| Option | Short | Required | Default | Meaning |
-| --- | --- | --- | --- | --- |
-| `--role` | `-r` | Yes | None | Exact root role name or GUID; same resolution as set-privilege. |
-| `--table` | `-t` | No | None | Case-insensitive LIKE contains filter on a table's logical name, schema name, or display name; suppresses miscellaneous output. |
-| `--privilege` | `-p` | No | None | Case-insensitive literal substring of a technical privilege name or standard action label. |
-| `--show` | `-s` | No | `Assigned` | `All`, `Assigned`, or `Unassigned`. |
-| `--format` | `-f` | No | `functional` | Four table formats and three JSON formats; see the format table below. |
+| Option        | Short | Required | Default      | Meaning                                                                                                                         |
+| ------------- | ----- | -------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------- |
+| `--role`      | `-r`  | Yes      | None         | Exact root role name or GUID; same resolution as set-privilege.                                                                 |
+| `--table`     | `-t`  | No       | None         | Case-insensitive LIKE contains filter on a table's logical name, schema name, or display name; suppresses miscellaneous output. |
+| `--privilege` | `-p`  | No       | None         | Case-insensitive literal substring of a technical privilege name or standard action label.                                      |
+| `--show`      | `-s`  | No       | `Assigned`   | `All`, `Assigned`, or `Unassigned`.                                                                                             |
+| `--format`    | `-f`  | No       | `functional` | Four table formats and three JSON formats; see the format table below.                                                          |
 
 `--format` replaces the previous compact boolean option. Do not expose
 `--compact`, `--COMPACT`, or `-c`. Format names are case-insensitive;
@@ -137,13 +137,13 @@ Build a presentation-independent snapshot before formatting:
 Keep non-applicability separate from unassigned status. Convert SDK depths
 explicitly to the existing RoleEditor numeric mapping:
 
-| Number | Meaning |
-| --- | --- |
-| 0 | Available privilege, not assigned to this role |
-| 1 | Basic / User |
-| 2 | Local / BusinessUnit |
-| 3 | Deep / ParentChild |
-| 4 | Global / Organization |
+| Number | Meaning                                        |
+| ------ | ---------------------------------------------- |
+| 0      | Available privilege, not assigned to this role |
+| 1      | Basic / User                                   |
+| 2      | Local / BusinessUnit                           |
+| 3      | Deep / ParentChild                             |
+| 4      | Global / Organization                          |
 
 Do not cast `PrivilegeDepth` directly to these numbers. If the same assigned
 privilege appears more than once in the response, retain the widest supported
@@ -153,11 +153,11 @@ depth and do not produce duplicate rows/items.
 
 Mode selection is table-level, not cell-level:
 
-| Mode | Table rows | Miscellaneous items |
-| --- | --- | --- |
-| Assigned | At least one of the eight actions is assigned | Assigned privileges only |
-| All | Every table in the security-action universe | Every privilege |
-| Unassigned | None of the eight actions is assigned | Unassigned privileges only |
+| Mode       | Table rows                                    | Miscellaneous items        |
+| ---------- | --------------------------------------------- | -------------------------- |
+| Assigned   | At least one of the eight actions is assigned | Assigned privileges only   |
+| All        | Every table in the security-action universe   | Every privilege            |
+| Unassigned | None of the eight actions is assigned         | Unassigned privileges only |
 
 `Unassigned` does not mean tables with any missing action. A table having Read
 but no Write still belongs to Assigned, not Unassigned. This definition is
@@ -202,15 +202,15 @@ write directly to Console. JSON formats use the separate export path below.
 
 ### Formats
 
-| `--format` value | Layout | Unassigned | Basic depth | Local depth | Deep depth | Global depth |
-| --- | --- | --- | --- | --- | --- | --- |
-| `c` or `compact` | Eight-character string under `CRWDATaS` | 0 | 1 | 2 | 3 | 4 |
-| `n` or `number` | Standard grid with eight action columns | 0 | 1 | 2 | 3 | 4 |
-| `t`, `tech`, or `technical` | Standard grid with eight action columns | None | Basic | Local | Deep | Global |
-| `f`, `func`, or `functional` (default) | Standard grid with eight action columns | None | User | Business Unit | Parent Child | Organization |
-| `jsontech`, `jsontechnical`, `jt` | JSON object with string values | None | Basic | Local | Deep | Global |
-| `json`, `jsonfunc`, `jsonfunctional`, `jf` | JSON object with string values | None | User | Business Unit | Parent Child | Organization |
-| `jsonnumeric`, `jn` | JSON object with numeric values | 0 | 1 | 2 | 3 | 4 |
+| `--format` value                           | Layout                                  | Unassigned | Basic depth | Local depth   | Deep depth   | Global depth |
+| ------------------------------------------ | --------------------------------------- | ---------- | ----------- | ------------- | ------------ | ------------ |
+| `c` or `compact`                           | Eight-character string under `CRWDATaS` | 0          | 1           | 2             | 3            | 4            |
+| `n` or `number`                            | Standard grid with eight action columns | 0          | 1           | 2             | 3            | 4            |
+| `t`, `tech`, or `technical`                | Standard grid with eight action columns | None       | Basic       | Local         | Deep         | Global       |
+| `f`, `func`, or `functional` (default)     | Standard grid with eight action columns | None       | User        | Business Unit | Parent Child | Organization |
+| `jsontech`, `jsontechnical`, `jt`          | JSON object with string values          | None       | Basic       | Local         | Deep         | Global       |
+| `json`, `jsonfunc`, `jsonfunctional`, `jf` | JSON object with string values          | None       | User        | Business Unit | Parent Child | Organization |
+| `jsonnumeric`, `jn`                        | JSON object with numeric values         | 0          | 1           | 2             | 3            | 4            |
 
 All standard grids retain the same table rows and action ordering. The existing
 privilege filter may reduce visible columns. In every format, an unsupported
@@ -310,9 +310,9 @@ privilege IDs appear only once. Properties are sorted by technical name.
 
 ```json
 {
-  "prvExportToExcel": "Organization",
-  "prvReadAccount": "User",
-  "prvWriteAccount": "None"
+	"prvExportToExcel": "Organization",
+	"prvReadAccount": "User",
+	"prvWriteAccount": "None"
 }
 ```
 
@@ -320,9 +320,9 @@ The numeric counterpart uses actual JSON numbers, including unassigned zero:
 
 ```json
 {
-  "prvExportToExcel": 4,
-  "prvReadAccount": 1,
-  "prvWriteAccount": 0
+	"prvExportToExcel": 4,
+	"prvReadAccount": 1,
+	"prvWriteAccount": 0
 }
 ```
 
@@ -349,7 +349,7 @@ CLI bootstrap banners are outside this executor and are not changed here.
 - Confirmed: `--table` hides miscellaneous and uses LIKE contains matching;
   `claim` must include `new_claims` and `new_claimresponse`.
 - Confirmed: the six command forms listed above, with `security roles
-  get-privileges` primary and the remaining forms as aliases.
+get-privileges` primary and the remaining forms as aliases.
 - Confirmed: `--format` replaces the compact boolean, with `c`/`compact`,
   `n`/`number`, `t`/`tech`/`technical`, and `f`/`func`/`functional`;
   default is `functional`.

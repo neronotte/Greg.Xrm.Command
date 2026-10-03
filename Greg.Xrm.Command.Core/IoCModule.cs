@@ -40,6 +40,11 @@ namespace Greg.Xrm.Command
 			builder.RegisterType<UserQuery.Repository>().As<IUserQueryRepository>();
 			builder.RegisterType<SystemUser.Repository>().As<ISystemUserRepository>();
 			builder.RegisterType<Privilege.Repository>().AsSelf();
+			builder.RegisterType<Organization.Repository>().AsSelf();
+			builder.RegisterType<BusinessUnit.Repository>().AsSelf();
+			builder.RegisterType<Team.Repository>().AsSelf();
+			builder.RegisterType<SecurityRole.Repository>().AsSelf();
+			builder.RegisterType<Commands.Security.Roles.RoleAssignmentService>().AsSelf();
 			builder.RegisterType<ScriptExtractionService>().As<IScriptExtractionService>();
 			builder.RegisterType<ScriptMetadataExtractor>().As<IScriptMetadataExtractor>();
 			builder.RegisterType<ScriptBuilder>().As<IScriptBuilder>();

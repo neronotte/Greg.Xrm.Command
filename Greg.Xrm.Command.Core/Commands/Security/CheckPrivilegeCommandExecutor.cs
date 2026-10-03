@@ -54,7 +54,7 @@ namespace Greg.Xrm.Command.Commands.Security
 			var result = CommandResult.Success();
 			result["UserId"] = user.UserId;
 			result["Count"] = privileges.Count;
-			result["Privileges"] = privileges;
+			result["Privileges"] = privileges.Select(p => $"{p.Privilege} ({p.Depth})").Join(", ");
 			if (privileges.Count == 0)
 			{
 				return result;
