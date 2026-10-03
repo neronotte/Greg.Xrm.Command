@@ -334,74 +334,74 @@ namespace Greg.Xrm.Command.Commands.WebResources
 		}
 
 		[TestMethod]
-			public async Task ExecuteAsync_ShouldCreateNewTheme_WhenNoThemeExistsAndColorProvided()
-			{
-				var (output, repoMock, crmMock, webResourceRepositoryMock, solutionRepositoryMock, settingDefinitionRepositoryMock, appSettingRepositoryMock, organizationSettingRepositoryMock, publishXmlBuilderMock) = CreateMocks();
+		public async Task ExecuteAsync_ShouldCreateNewTheme_WhenNoThemeExistsAndColorProvided()
+		{
+			var (output, repoMock, crmMock, webResourceRepositoryMock, solutionRepositoryMock, settingDefinitionRepositoryMock, appSettingRepositoryMock, organizationSettingRepositoryMock, publishXmlBuilderMock) = CreateMocks();
 
-				var newThemeId = Guid.NewGuid();
-				var logo = CreateWebResource("new_logo.png", WebResourceType.ImagePng, null);
-				webResourceRepositoryMock
-					.Setup(r => r.GetByNameAsync(crmMock.Object, It.Is<string[]>(n => n.Length == 1 && n[0] == "new_logo.png"), false))
-					.ReturnsAsync([logo]);
+			var newThemeId = Guid.NewGuid();
+			var logo = CreateWebResource("new_logo.png", WebResourceType.ImagePng, null);
+			webResourceRepositoryMock
+				.Setup(r => r.GetByNameAsync(crmMock.Object, It.Is<string[]>(n => n.Length == 1 && n[0] == "new_logo.png"), false))
+				.ReturnsAsync([logo]);
 
-				// No existing theme webresource
-				webResourceRepositoryMock
-					.Setup(r => r.GetByNameAsync(crmMock.Object, It.Is<string[]>(n => n.Length == 1 && n[0] == "new_/themes/theme.xml"), true))
-					.ReturnsAsync([]);
+			// No existing theme webresource
+			webResourceRepositoryMock
+				.Setup(r => r.GetByNameAsync(crmMock.Object, It.Is<string[]>(n => n.Length == 1 && n[0] == "new_/themes/theme.xml"), true))
+				.ReturnsAsync([]);
 
-				var settingDefRecord = CreateSettingDefinition(Guid.NewGuid());
-				settingDefinitionRepositoryMock
-					.Setup(r => r.GetByUniqueNameAsync(crmMock.Object, "CustomThemeDefinition"))
-					.ReturnsAsync(settingDefRecord);
+			var settingDefRecord = CreateSettingDefinition(Guid.NewGuid());
+			settingDefinitionRepositoryMock
+				.Setup(r => r.GetByUniqueNameAsync(crmMock.Object, "CustomThemeDefinition"))
+				.ReturnsAsync(settingDefRecord);
 
-				organizationSettingRepositoryMock
-					.Setup(r => r.GetByDefinitionsAsync(crmMock.Object, It.IsAny<IReadOnlyList<SettingDefinition>>()))
-					.ReturnsAsync(new List<OrganizationSetting>());
+			organizationSettingRepositoryMock
+				.Setup(r => r.GetByDefinitionsAsync(crmMock.Object, It.IsAny<IReadOnlyList<SettingDefinition>>()))
+				.ReturnsAsync(new List<OrganizationSetting>());
 
-				repoMock.Setup(r => r.GetCurrentDefaultSolutionAsync()).ReturnsAsync("MySolution");
+			repoMock.Setup(r => r.GetCurrentDefaultSolutionAsync()).ReturnsAsync("MySolution");
 
-				var solution = CreateSolution("MySolution", "new");
-				solutionRepositoryMock
-					.Setup(r => r.GetByUniqueNameAsync(crmMock.Object, "MySolution"))
-					.ReturnsAsync(solution);
+			var solution = CreateSolution("MySolution", "new");
+			solutionRepositoryMock
+				.Setup(r => r.GetByUniqueNameAsync(crmMock.Object, "MySolution"))
+				.ReturnsAsync(solution);
 
-				crmMock.Setup(c => c.CreateAsync(It.IsAny<Entity>())).ReturnsAsync(newThemeId);
+			crmMock.Setup(c => c.CreateAsync(It.IsAny<Entity>())).ReturnsAsync(newThemeId);
 
-				// Mock for UpsertSolutionComponentsAsync query - return "already exists" so ExecuteMultiple has empty request
-				var existingComponent = new Entity("solutioncomponent") { Id = Guid.NewGuid() };
-				existingComponent["objectid"] = newThemeId;
-				existingComponent["componenttype"] = 61; // WebResource
-				crmMock.Setup(c => c.RetrieveMultipleAsync(It.Is<QueryExpression>(q => q.EntityName == "solutioncomponent")))
-					.ReturnsAsync(new EntityCollection([existingComponent]));
+			// Mock for UpsertSolutionComponentsAsync query - return "already exists" so ExecuteMultiple has empty request
+			var existingComponent = new Entity("solutioncomponent") { Id = Guid.NewGuid() };
+			existingComponent["objectid"] = newThemeId;
+			existingComponent["componenttype"] = 61; // WebResource
+			crmMock.Setup(c => c.RetrieveMultipleAsync(It.Is<QueryExpression>(q => q.EntityName == "solutioncomponent")))
+				.ReturnsAsync(new EntityCollection([existingComponent]));
 
-				// Mock ExecuteMultiple to return an empty response collection
-				crmMock.Setup(c => c.ExecuteAsync(It.IsAny<ExecuteMultipleRequest>()))
-					.ReturnsAsync(CreateEmptyExecuteMultipleResponse());
+			// Mock ExecuteMultiple to return an empty response collection
+			crmMock.Setup(c => c.ExecuteAsync(It.IsAny<ExecuteMultipleRequest>()))
+				.ReturnsAsync(CreateEmptyExecuteMultipleResponse());
 
-				// Mock for SaveSettingValue and PublishXml
-				crmMock.Setup(c => c.ExecuteAsync(It.Is<OrganizationRequest>(r => r.RequestName == "SaveSettingValue" || r.RequestName == "PublishXml")))
-					.ReturnsAsync(new OrganizationResponse());
+			// Mock for SaveSettingValue and PublishXml
+			crmMock.Setup(c => c.ExecuteAsync(It.Is<OrganizationRequest>(r => r.RequestName == "SaveSettingValue" || r.RequestName == "PublishXml")))
+				.ReturnsAsync(new OrganizationResponse());
 
-				var executor = CreateExecutor(output, repoMock, webResourceRepositoryMock, settingDefinitionRepositoryMock, appSettingRepositoryMock, organizationSettingRepositoryMock, publishXmlBuilderMock, solutionRepositoryMock);
-				var result = await executor.ExecuteAsync(
-					new SetEnvImageCommand
-					{
-						WebResourceUniqueName = "new_logo.png",
-						BasePaletteColor = "#0078D4"
-					},
-					CancellationToken.None);
+			var executor = CreateExecutor(output, repoMock, webResourceRepositoryMock, settingDefinitionRepositoryMock, appSettingRepositoryMock, organizationSettingRepositoryMock, publishXmlBuilderMock, solutionRepositoryMock);
+			var result = await executor.ExecuteAsync(
+				new SetEnvImageCommand
+				{
+					WebResourceUniqueName = "new_logo.png",
+					BasePaletteColor = "#0078D4"
+				},
+				CancellationToken.None);
 
-				Assert.IsTrue(result.IsSuccess, result.ErrorMessage);
+			Assert.IsTrue(result.IsSuccess, result.ErrorMessage);
 
-				// Verify theme webresource was created (any webresource entity)
-				crmMock.Verify(c => c.CreateAsync(It.Is<Entity>(e => e.LogicalName == "webresource")), Times.Once);
+			// Verify theme webresource was created (any webresource entity)
+			crmMock.Verify(c => c.CreateAsync(It.Is<Entity>(e => e.LogicalName == "webresource")), Times.Once);
 
-				// Verify SaveSettingValue was called with the correct theme name
-				crmMock.Verify(c => c.ExecuteAsync(It.Is<OrganizationRequest>(r =>
-					r.RequestName == "SaveSettingValue" &&
-					r["SettingName"].ToString() == "CustomThemeDefinition" &&
-					r["Value"].ToString() == "new_/themes/theme.xml")), Times.Once);
-			}
+			// Verify SaveSettingValue was called with the correct theme name
+			crmMock.Verify(c => c.ExecuteAsync(It.Is<OrganizationRequest>(r =>
+				r.RequestName == "SaveSettingValue" &&
+				r["SettingName"].ToString() == "CustomThemeDefinition" &&
+				r["Value"].ToString() == "new_/themes/theme.xml")), Times.Once);
+		}
 
 		#endregion
 

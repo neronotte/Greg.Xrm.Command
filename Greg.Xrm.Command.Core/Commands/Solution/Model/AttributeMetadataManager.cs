@@ -1,5 +1,3 @@
-using Greg.Xrm.Command.Commands.Solution.Extensions;
-
 namespace Greg.Xrm.Command.Commands.Solution.Model
 {
 	public class AttributeMetadataManager

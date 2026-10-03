@@ -1,9 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Greg.Xrm.Command.Services.Output;
 using NuGet.Common;
 using NuGet.Frameworks;
 using NuGet.Packaging;

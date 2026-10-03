@@ -1,13 +1,25 @@
 ---
 name: pacx-command-writer
 description: >
-  Guide for writing new PACX CLI commands (verbs) following established project conventions.
-  Use this skill when asked to create, scaffold, or add a new command to the Greg.Xrm.Command repository.
+    Guide for writing new PACX CLI commands (verbs) following established project conventions.
+    Use this skill when asked to create, scaffold, or add a new command to the Greg.Xrm.Command repository.
 ---
 
 # PACX Command Writer
 
 Every PACX command is a pair of files in `Greg.Xrm.Command.Core\Commands\<Domain>\`. There is no manual DI registration — `Extensions.RegisterCommandExecutors()` auto-scans all `ICommandExecutor<T>` implementations at startup.
+
+## Rules
+
+- Plan in advance — think through the command's options, validation, and usage examples before implementation.
+- Draft an implementation plan in markdown in the /docs folder before coding.
+    - The implementation plan must contain the list of steps required to implement the command.
+    - When you start working on a single step, update the step title putting a 🕒 before the step title
+    - When a step is completed, update the step title putting a ✅ before the step title
+    - Implementation plan must include also unit tests for all implemented steps.
+- Commit after each implementation step.
+- Before pushing, run a code review of the changes to ensure adherence to project conventions and correctness.
+- If in the code you need to use dataverse tables, create a model class in /Greg.Xrm.Command.Core/Model implementing `EntityWrapper` and a repository to manage the queries. Use `Greg.Xrm.Command.Core\Model\WebResource.cs` as a reference sample.
 
 ---
 
@@ -60,14 +72,14 @@ namespace Greg.Xrm.Command.Commands.<Domain>
 
 ### `[Option]` conventions
 
-| Property       | Rule                                                                                       |
-| -------------- | ------------------------------------------------------------------------------------------ |
-| `longName`     | **camelCase** — e.g. `schemaName`, `displayName`, `requiredLevel`                          |
-| `shortName`    | Single char or short abbreviation, unique within the command — e.g. `"n"`, `"sn"`, `"par"` |
-| `HelpText`     | Always set — shown in `pacx help` and interactive mode                                     |
-| `Order`        | Required options: 1–9; grouped optional options: 10–49; `--solution`: 50+                  |
-| `DefaultValue` | Set on the attribute when there is a meaningful default the user should see                |
-| `[Required]`   | Mark all mandatory options                                                                 |
+| Property       | Rule                                                                        |
+| -------------- | --------------------------------------------------------------------------- |
+| `longName`     | **camelCase** — e.g. `schemaName`, `displayName`, `requiredLevel`           |
+| `shortName`    | Short abbreviation, unique within the command — e.g. `"n"`, `"sn"`, `"par"` |
+| `HelpText`     | Always set — shown in `pacx help` and interactive mode                      |
+| `Order`        | Required options: 1–9; grouped optional options: 10–49; `--solution`: 50+   |
+| `DefaultValue` | Set on the attribute when there is a meaningful default the user should see |
+| `[Required]`   | Mark all mandatory options                                                  |
 
 ### `[Command]` and `[Alias]` conventions
 
@@ -138,6 +150,7 @@ namespace Greg.Xrm.Command.Commands.<Domain>
 
 ### Executor conventions
 
+- Command infrastructure (`CommandRunnerBase`) validates DataAnnotations and `IValidatableObject` before calling an executor. Do not call `Validator.TryValidateObject` again in executors or duplicate command validation there. Declare input constraints on the command; keep only business checks requiring resolved data (for example whether a privilege supports a depth) in the executor. Tests for command validation belong in the command test file, not in tests that invoke the executor directly.
 - **Never** write to `Console` directly — always use `IOutput`.
 - If you need additional output formatting you can use `IAnsiConsole` from `Greg.Xrm.Command.Services.Output`, which wraps `Spectre.Console` functionality.
 - Inline progress pattern: `output.Write("Step…")` → do async work → `output.WriteLine(" Done", ConsoleColor.Green)`.

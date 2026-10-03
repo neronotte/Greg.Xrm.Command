@@ -54,7 +54,7 @@ namespace Greg.Xrm.Command.Services.Connection
 			var repo = CreateSut("Prod", new Dictionary<string, string>
 			{
 				["Prod"] = "Url=https://prod.crm.dynamics.com;AuthType=OAuth",
-				["Dev"]  = "Url=https://dev.crm.dynamics.com;AuthType=OAuth",
+				["Dev"] = "Url=https://dev.crm.dynamics.com;AuthType=OAuth",
 			});
 
 			repo.SetEnvironmentOverride("Dev");
@@ -72,7 +72,7 @@ namespace Greg.Xrm.Command.Services.Connection
 			var repo = CreateSut("Prod", new Dictionary<string, string>
 			{
 				["Prod"] = "Url=https://prod.crm.dynamics.com;AuthType=OAuth",
-				["Dev"]  = "Url=https://dev.crm.dynamics.com;AuthType=OAuth",
+				["Dev"] = "Url=https://dev.crm.dynamics.com;AuthType=OAuth",
 			});
 
 			repo.SetEnvironmentOverride("https://dev.crm.dynamics.com");
@@ -88,7 +88,7 @@ namespace Greg.Xrm.Command.Services.Connection
 			var repo = CreateSut("Prod", new Dictionary<string, string>
 			{
 				["Prod"] = "Url=https://prod.crm.dynamics.com;AuthType=OAuth",
-				["Dev"]  = "Url=https://dev.crm.dynamics.com;AuthType=OAuth",
+				["Dev"] = "Url=https://dev.crm.dynamics.com;AuthType=OAuth",
 			});
 
 			repo.SetEnvironmentOverride("https://dev.crm.dynamics.com/");
@@ -104,7 +104,7 @@ namespace Greg.Xrm.Command.Services.Connection
 			var repo = CreateSut("Prod", new Dictionary<string, string>
 			{
 				["Prod"] = "Url=https://prod.crm.dynamics.com;AuthType=OAuth",
-				["Dev"]  = "Url=https://dev.crm.dynamics.com;AuthType=OAuth",
+				["Dev"] = "Url=https://dev.crm.dynamics.com;AuthType=OAuth",
 			});
 
 			repo.SetEnvironmentOverride("HTTPS://DEV.CRM.DYNAMICS.COM");
@@ -153,7 +153,7 @@ namespace Greg.Xrm.Command.Services.Connection
 			var repo = CreateSut("Prod", new Dictionary<string, string>
 			{
 				["Prod"] = "Url=https://prod.crm.dynamics.com;AuthType=OAuth",
-				["Dev"]  = "Url=https://dev.crm.dynamics.com;AuthType=OAuth",
+				["Dev"] = "Url=https://dev.crm.dynamics.com;AuthType=OAuth",
 			});
 
 			// No SetEnvironmentOverride call — should fall back to CurrentConnectionStringKey
@@ -246,12 +246,12 @@ namespace Greg.Xrm.Command.Services.Connection
 				plaintextConnections: new Dictionary<string, string>
 				{
 					["Prod"] = "Url=https://prod.crm.dynamics.com;AuthType=OAuth",
-					["Dev"]  = "Url=https://dev.crm.dynamics.com;AuthType=OAuth",
+					["Dev"] = "Url=https://dev.crm.dynamics.com;AuthType=OAuth",
 				},
 				defaultSolutions: new Dictionary<string, string>
 				{
 					["Prod"] = "ProdSolution",
-					["Dev"]  = "DevSolution",
+					["Dev"] = "DevSolution",
 				});
 
 			repo.SetEnvironmentOverride("Dev");
@@ -270,7 +270,7 @@ namespace Greg.Xrm.Command.Services.Connection
 				plaintextConnections: new Dictionary<string, string>
 				{
 					["Prod"] = "Url=https://prod.crm.dynamics.com;AuthType=OAuth",
-					["Dev"]  = "Url=https://dev.crm.dynamics.com;AuthType=OAuth",
+					["Dev"] = "Url=https://dev.crm.dynamics.com;AuthType=OAuth",
 				},
 				defaultSolutions: new Dictionary<string, string>
 				{
@@ -294,12 +294,12 @@ namespace Greg.Xrm.Command.Services.Connection
 				plaintextConnections: new Dictionary<string, string>
 				{
 					["Prod"] = "Url=https://prod.crm.dynamics.com;AuthType=OAuth",
-					["Dev"]  = "Url=https://dev.crm.dynamics.com;AuthType=OAuth",
+					["Dev"] = "Url=https://dev.crm.dynamics.com;AuthType=OAuth",
 				},
 				defaultSolutions: new Dictionary<string, string>
 				{
 					["Prod"] = "ProdSolution",
-					["Dev"]  = "DevSolution",
+					["Dev"] = "DevSolution",
 				});
 
 			// No SetEnvironmentOverride call — should fall back to global default (Prod)

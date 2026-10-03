@@ -4,6 +4,7 @@ using Greg.Xrm.Command.Commands.Data.Query;
 using Greg.Xrm.Command.Commands.Forms.Model;
 using Greg.Xrm.Command.Commands.Script.MetadataExtractor;
 using Greg.Xrm.Command.Commands.Script.Service;
+using Greg.Xrm.Command.Commands.Security;
 using Greg.Xrm.Command.Commands.Solution.Service;
 using Greg.Xrm.Command.Commands.Table.ExportMetadata;
 using Greg.Xrm.Command.Commands.WebResources.ApplyIconsRules;
@@ -37,6 +38,8 @@ namespace Greg.Xrm.Command
 			builder.RegisterType<IconFinder>().As<IIconFinder>();
 			builder.RegisterType<SavedQuery.Repository>().As<ISavedQueryRepository>();
 			builder.RegisterType<UserQuery.Repository>().As<IUserQueryRepository>();
+			builder.RegisterType<SystemUser.Repository>().As<ISystemUserRepository>();
+			builder.RegisterType<Privilege.Repository>().AsSelf();
 			builder.RegisterType<ScriptExtractionService>().As<IScriptExtractionService>();
 			builder.RegisterType<ScriptMetadataExtractor>().As<IScriptMetadataExtractor>();
 			builder.RegisterType<ScriptBuilder>().As<IScriptBuilder>();
@@ -49,6 +52,9 @@ namespace Greg.Xrm.Command
 			builder.RegisterType<Commands.Views.Model.ViewRetrieverService>().As<Commands.Views.Model.IViewRetrieverService>();
 			builder.RegisterType<OptionSetParser>().As<IOptionSetParser>();
 			builder.RegisterType<ObjectTypeCodeFinder>().As<IObjectTypeCodeFinder>();
+			builder.RegisterType<SecurityRoleService>().AsSelf();
+			builder.RegisterType<SecurityPrivilegeService>().AsSelf();
+			builder.RegisterType<SecurityUserResolver>().AsSelf();
 			builder.RegisterType<FormWrapperFactory>().As<IFormWrapperFactory>();
 
 

@@ -1,13 +1,12 @@
+using System.Collections.Concurrent;
 using Greg.Xrm.Command.Commands.Solution.Extensions;
-using Greg.Xrm.Command.Commands.Solution.Writers;
 using Greg.Xrm.Command.Commands.Solution.Model;
+using Greg.Xrm.Command.Commands.Solution.Writers;
 using Greg.Xrm.Command.Services.Output;
 using Microsoft.PowerPlatform.Dataverse.Client;
-using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Messages;
 using Microsoft.Xrm.Sdk.Metadata;
 using Microsoft.Xrm.Sdk.Query;
-using System.Collections.Concurrent;
 
 namespace Greg.Xrm.Command.Commands.Solution.Service
 {
@@ -118,7 +117,7 @@ namespace Greg.Xrm.Command.Commands.Solution.Service
 					.ToList();
 
 				entityCommonAttributes = new EntityMetadataManager("Entity Generic", "EntityGenericConstants", string.Empty, false, new List<string>());
-					foreach (var attr in commonAttrList)
+				foreach (var attr in commonAttrList)
 				{
 					if (attr.DisplayName.LocalizedLabels.Count <= 0)
 						continue;
@@ -255,7 +254,7 @@ namespace Greg.Xrm.Command.Commands.Solution.Service
 		}
 
 		private static AttributeMetadataManager GetAttributeElementFromMetadata(
-            AttributeMetadata attribute,
+			AttributeMetadata attribute,
 			string? entityLogicalName)
 		{
 			var label = attribute.DisplayName.LocalizedLabels.FirstOrDefault()?.Label;

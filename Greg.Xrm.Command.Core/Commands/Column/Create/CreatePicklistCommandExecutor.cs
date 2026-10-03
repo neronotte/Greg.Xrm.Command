@@ -136,7 +136,7 @@ namespace Greg.Xrm.Command.Commands.Column.Create
 		{
 			var conventions = await settingsRepository.GetAsync<Conventions.ColumnConventions>(Conventions.ColumnConventions.StorageKey) ?? new Conventions.ColumnConventions();
 
-			var suffix = multiselect ? conventions.MultiselectOptionSetSuffix: conventions.SimpleOptionSetSuffix;
+			var suffix = multiselect ? conventions.MultiselectOptionSetSuffix : conventions.SimpleOptionSetSuffix;
 
 			var newSchemaName = await base.GetSchemaName(displayName, schemaName, publisherPrefix);
 

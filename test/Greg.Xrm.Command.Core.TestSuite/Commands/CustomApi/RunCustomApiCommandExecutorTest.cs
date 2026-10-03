@@ -1,6 +1,6 @@
+using System.ServiceModel;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;
-using System.ServiceModel;
 
 namespace Greg.Xrm.Command.Commands.CustomApi
 {
@@ -47,10 +47,10 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 			var entities = defs.Select(d =>
 			{
 				var e = new Entity("customapirequestparameter") { Id = Guid.NewGuid() };
-					e["name"]        = $"GregSum-In-{d.shortName}";
-					e["uniquename"]  = d.shortName;
-				e["type"]        = new OptionSetValue(d.typeCode);
-				e["isoptional"]  = d.isOptional;
+				e["name"] = $"GregSum-In-{d.shortName}";
+				e["uniquename"] = d.shortName;
+				e["type"] = new OptionSetValue(d.typeCode);
+				e["isoptional"] = d.isOptional;
 				return e;
 			}).ToList();
 
@@ -110,7 +110,7 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 			Assert.IsTrue(result.IsSuccess, result.ErrorMessage);
 			Assert.IsNotNull(captured);
 			Assert.AreEqual(5, captured["Addend1"]);
-				Assert.AreEqual(3, captured["Addend2"]);
+			Assert.AreEqual(3, captured["Addend2"]);
 		}
 
 		[TestMethod]

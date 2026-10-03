@@ -3,7 +3,6 @@ using System.Text;
 using Greg.Xrm.Command.Commands.Column.Builders;
 using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
-using Microsoft.Extensions.Primitives;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Messages;

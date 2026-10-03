@@ -22,7 +22,7 @@ namespace Greg.Xrm.Command.Commands.Plugin
 		public Guid StepId { get; set; }
 		public bool IsInSolution { get; set; }
 
-		public string? FilteringAttributes {  get; set; }
+		public string? FilteringAttributes { get; set; }
 
 
 		private List<PluginImageInfo> images = [];

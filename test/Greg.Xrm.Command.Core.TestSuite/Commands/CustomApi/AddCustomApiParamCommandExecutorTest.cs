@@ -1,6 +1,6 @@
+using System.ServiceModel;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;
-using System.ServiceModel;
 
 namespace Greg.Xrm.Command.Commands.CustomApi
 {
@@ -18,14 +18,14 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 		private void SetupApiFound()
 		{
 			var api = new Entity("customapi") { Id = ApiId };
-				api["displayname"] = "Greg Sum";
-				this.OrganizationServiceMock
-					.Setup(x => x.RetrieveMultipleAsync(It.Is<QueryExpression>(q => q.EntityName == "customapi")))
-					.ReturnsAsync(new EntityCollection(new List<Entity> { api }));
-				this.OrganizationServiceMock
-					.Setup(x => x.RetrieveMultipleAsync(It.Is<QueryExpression>(q => q.EntityName == "customapi"), It.IsAny<CancellationToken>()))
-					.ReturnsAsync(new EntityCollection(new List<Entity> { api }));
-			}
+			api["displayname"] = "Greg Sum";
+			this.OrganizationServiceMock
+				.Setup(x => x.RetrieveMultipleAsync(It.Is<QueryExpression>(q => q.EntityName == "customapi")))
+				.ReturnsAsync(new EntityCollection(new List<Entity> { api }));
+			this.OrganizationServiceMock
+				.Setup(x => x.RetrieveMultipleAsync(It.Is<QueryExpression>(q => q.EntityName == "customapi"), It.IsAny<CancellationToken>()))
+				.ReturnsAsync(new EntityCollection(new List<Entity> { api }));
+		}
 
 		private void SetupNoExistingParam()
 		{
@@ -73,28 +73,28 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 				new AddCustomApiParamCommand { ApiUniqueName = "nn_GregSum", Param = "X?:String" },
 				CancellationToken.None);
 
-				Assert.IsTrue(capturedIsOptional);
-			}
+			Assert.IsTrue(capturedIsOptional);
+		}
 
-			[TestMethod]
-			public async Task ExecuteAsync_ShouldSetName_WhenCreatingParam()
-			{
-				// Regression: Dataverse requires 'name' to be non-null on customapirequestparameter creation.
-				SetupApiFound();
-				SetupNoExistingParam();
+		[TestMethod]
+		public async Task ExecuteAsync_ShouldSetName_WhenCreatingParam()
+		{
+			// Regression: Dataverse requires 'name' to be non-null on customapirequestparameter creation.
+			SetupApiFound();
+			SetupNoExistingParam();
 
-				string? capturedName = null;
-				this.OrganizationServiceMock
-					.Setup(x => x.CreateAsync(It.Is<Entity>(e => e.LogicalName == "customapirequestparameter")))
-					.Callback<Entity>(e => capturedName = e.GetAttributeValue<string>("name"))
-					.ReturnsAsync(Guid.NewGuid());
+			string? capturedName = null;
+			this.OrganizationServiceMock
+				.Setup(x => x.CreateAsync(It.Is<Entity>(e => e.LogicalName == "customapirequestparameter")))
+				.Callback<Entity>(e => capturedName = e.GetAttributeValue<string>("name"))
+				.ReturnsAsync(Guid.NewGuid());
 
-				await executor.ExecuteAsync(
-					new AddCustomApiParamCommand { ApiUniqueName = "nn_GregSum", Param = "X:Integer" },
-					CancellationToken.None);
+			await executor.ExecuteAsync(
+				new AddCustomApiParamCommand { ApiUniqueName = "nn_GregSum", Param = "X:Integer" },
+				CancellationToken.None);
 
-				Assert.AreEqual("GregSum-In-X", capturedName);
-			}
+			Assert.AreEqual("GregSum-In-X", capturedName);
+		}
 
 		[TestMethod]
 		public async Task ExecuteAsync_ShouldFail_WhenApiNotFound()

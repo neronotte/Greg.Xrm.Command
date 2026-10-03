@@ -1,6 +1,5 @@
 using System.Text;
 using Spectre.Console;
-using Spectre.Console.Rendering;
 
 namespace Greg.Xrm.Command.Services.Output
 {
@@ -101,7 +100,7 @@ namespace Greg.Xrm.Command.Services.Output
 					var columnValue = columns[i];
 					var color = colorPicker?.Invoke(i, row);
 					renderers[i] = getRenderer(columnValue, color);
-calculator.AddColumn(columnValue ?? string.Empty);
+					calculator.AddColumn(columnValue ?? string.Empty);
 				}
 				calculator.EndRow();
 
@@ -134,7 +133,7 @@ calculator.AddColumn(columnValue ?? string.Empty);
 				sb.Append('[');
 				sb.Append(columnNameColor.ToString());
 				sb.Append(']');
-				sb.Append(Markup.Escape((columnName+":").PadRight(maxColumnNameLength)));
+				sb.Append(Markup.Escape((columnName + ":").PadRight(maxColumnNameLength)));
 				sb.Append("[/]");
 				sb.Append('[');
 				sb.Append(actualColor.ToString());
@@ -149,7 +148,7 @@ calculator.AddColumn(columnValue ?? string.Empty);
 
 			var tree = new Tree(string.Empty);
 			var treeItems = rowHeaders().ToArray();
-			var maxColumnNameLength = treeItems.Max(c => c.Length)+2;
+			var maxColumnNameLength = treeItems.Max(c => c.Length) + 2;
 
 			foreach (var row in collection)
 			{
@@ -158,7 +157,7 @@ calculator.AddColumn(columnValue ?? string.Empty);
 
 				var columnValue = columns[0];
 				var color = colorPicker?.Invoke(0, row);
-				var renderer = getRendererForTree(treeItems[0], maxColumnNameLength+4, columnValue, Color.SandyBrown, color);
+				var renderer = getRendererForTree(treeItems[0], maxColumnNameLength + 4, columnValue, Color.SandyBrown, color);
 
 				var node = tree.AddNode(renderer);
 

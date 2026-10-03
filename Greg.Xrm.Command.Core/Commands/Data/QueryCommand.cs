@@ -7,7 +7,7 @@ namespace Greg.Xrm.Command.Commands.Data
 	[Command("data", "query", HelpText = "Commands to streamline data manipulation")]
 	public class QueryCommand : IValidatableObject, ICanProvideUsageExample
 	{
-[Option("query", "q", HelpText = "The query to execute. Can be a FetchXML or SQL query. Mutually exclusive with --query-file.")]
+		[Option("query", "q", HelpText = "The query to execute. Can be a FetchXML or SQL query. Mutually exclusive with --query-file.")]
 		public string? Query { get; set; }
 
 		[Option("query-file", "qf", HelpText = "Path to a file containing the query to execute. Mutually exclusive with --query.")]
@@ -89,7 +89,7 @@ namespace Greg.Xrm.Command.Commands.Data
 				"SQL: queries starting with 'SELECT ' (case-insensitive) are interpreted as SQL",
 				"OData: queries containing OData query options (e.g., $filter=, $select=, $top=) are interpreted as OData");
 
-writer.WriteLine("> **Please note**: If you're using PowerShell, remember to escape the $ sign using the ` character in OData queries.");
+			writer.WriteLine("> **Please note**: If you're using PowerShell, remember to escape the $ sign using the ` character in OData queries.");
 
 			writer.WriteTitle3("Input Options");
 			writer.WriteParagraph("You can provide the query in two mutually exclusive ways:");
@@ -122,7 +122,7 @@ writer.WriteLine("> **Please note**: If you're using PowerShell, remember to esc
 				"Properties ending with '@OData.Community.Display.V1.FormattedValue' are extracted as FormattedValues",
 				"Integer attributes with a corresponding FormattedValue are treated as OptionSetValue (choice fields)");
 
-			
+
 			writer.WriteTitle3("Examples");
 			writer.WriteCodeBlockStart("Powershell");
 			writer.WriteLine("# Execute a FetchXML query and display results in console");
@@ -144,6 +144,6 @@ writer.WriteLine("> **Please note**: If you're using PowerShell, remember to esc
 			writer.WriteLine("pacx data query -q \"SELECT fullname, emailaddress1 FROM contact\" -f CSV -o ./contacts.csv");
 			writer.WriteCodeBlockEnd();
 
-			}
+		}
 	}
 }

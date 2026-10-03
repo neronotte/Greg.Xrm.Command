@@ -1,19 +1,19 @@
+using System.ServiceModel;
+using Greg.Xrm.Command.Model;
 using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
 using Microsoft.Crm.Sdk.Messages;
 using Microsoft.Xrm.Sdk;
-using Microsoft.Xrm.Sdk.Query;
-using System.ServiceModel;
 
 namespace Greg.Xrm.Command.Commands.UserSettings
 {
 	public class SetCommandExecutor(
 		IOutput output,
-		IOrganizationServiceRepository organizationServiceRepository
+		IOrganizationServiceRepository organizationServiceRepository,
+		ISystemUserRepository systemUserRepository
 		) : ICommandExecutor<SetCommand>
 	{
 		private const string UserSettingsTableName = "usersettings";
-		private const string SystemUserTableName = "systemuser";
 
 		public async Task<CommandResult> ExecuteAsync(SetCommand command, CancellationToken cancellationToken)
 		{
@@ -59,21 +59,15 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 				if (!string.IsNullOrWhiteSpace(command.UserDomainName))
 				{
 					output.Write($"Looking up user '{command.UserDomainName}'...");
-					var userQuery = new QueryExpression(SystemUserTableName);
-					userQuery.ColumnSet.AddColumns("systemuserid", "fullname", "domainname");
-					userQuery.Criteria.AddCondition("domainname", ConditionOperator.Equal, command.UserDomainName);
-					userQuery.TopCount = 1;
-
-					var userResult = await crm.RetrieveMultipleAsync(userQuery);
-					if (userResult.Entities.Count == 0)
+					var user = await systemUserRepository.GetByDomainNameAsync(crm, command.UserDomainName, cancellationToken);
+					if (user == null)
 					{
 						output.WriteLine("Failed", ConsoleColor.Red);
-						return CommandResult.Fail($"No active user found with domain name '{command.UserDomainName}'.");
+						return CommandResult.Fail($"No user found with domain name '{command.UserDomainName}'.");
 					}
 
-					targetUserId = userResult.Entities[0].Id;
-					var fullName = userResult.Entities[0].GetAttributeValue<string>("fullname");
-					output.WriteLine($"Done (user: {fullName})", ConsoleColor.Green);
+					targetUserId = user.Id;
+					output.WriteLine($"Done (user: {user.DisplayName})", ConsoleColor.Green);
 				}
 				else
 				{
@@ -92,7 +86,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 						output.WriteLine($"  - {def.DisplayName} ({fieldName}) = {value}");
 						if (def.EnumType is not null && value is int intCode)
 							userSettings[fieldName] = new OptionSetValue(intCode);
-						else 
+						else
 							userSettings[fieldName] = value;
 					}
 				}

@@ -1,8 +1,7 @@
 using Greg.Xrm.Command.Commands.Solution.Model;
+using Greg.Xrm.Command.Commands.Solution.Service;
 using Greg.Xrm.Command.Services.Connection;
 using Microsoft.PowerPlatform.Dataverse.Client;
-using System.IO;
-using Greg.Xrm.Command.Commands.Solution.Service;
 
 namespace Greg.Xrm.Command.Commands.Solution
 {

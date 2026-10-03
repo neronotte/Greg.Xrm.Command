@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using Greg.Xrm.Command.Services.Plugin;
 
 namespace Greg.Xrm.Command.Commands.Plugin.Step
 {

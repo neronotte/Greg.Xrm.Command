@@ -1,4 +1,3 @@
-using System.ServiceModel;
 using System.Text;
 using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;

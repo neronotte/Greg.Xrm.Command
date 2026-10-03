@@ -24,7 +24,7 @@ namespace Greg.Xrm.Command.Commands.Script.Service.ColumnScriptGenerators
 				foreach (var child in statusOptions.Where(x => x.State == stateOption.Value))
 				{
 					var operation = (child.Value == stateOption.DefaultStatus) ? "update" : "add";
-					
+
 					script.Append($"pacx optionset {operation} --table ");
 					script.Append(state.EntityLogicalName);
 					script.Append(" --column ");

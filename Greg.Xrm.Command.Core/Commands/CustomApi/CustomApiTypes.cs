@@ -1,10 +1,9 @@
-using Greg.Xrm.Command;
 using Greg.Xrm.Command.Services.Output;
 
 namespace Greg.Xrm.Command.Commands.CustomApi
 {
-	public enum CustomApiBindingType     { Global = 0, Entity = 1, EntityCollection = 2 }
-	public enum CustomApiType            { Action = 0, Function = 1 }
+	public enum CustomApiBindingType { Global = 0, Entity = 1, EntityCollection = 2 }
+	public enum CustomApiType { Action = 0, Function = 1 }
 	public enum CustomApiAllowedStepType { None = 0, AsyncOnly = 1, SyncAndAsync = 2 }
 
 	public enum CustomApiParamType
@@ -26,7 +25,7 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 			var typePart = raw[(colonIdx + 1)..];
 
 			bool isOptional = namePart.EndsWith('?');
-			var rawName  = isOptional ? namePart[..^1] : namePart;
+			var rawName = isOptional ? namePart[..^1] : namePart;
 			var uniqueName = CustomApiDisplayNameHelper.CleanIdentifier(rawName);
 
 			if (!Enum.TryParse<CustomApiParamType>(typePart, true, out var type))
@@ -42,19 +41,19 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 		/// </summary>
 		public int TypeCode => Type switch
 		{
-			CustomApiParamType.Boolean         => 0,
-			CustomApiParamType.DateTime        => 1,
-			CustomApiParamType.Decimal         => 2,
-			CustomApiParamType.Entity          => 3,
+			CustomApiParamType.Boolean => 0,
+			CustomApiParamType.DateTime => 1,
+			CustomApiParamType.Decimal => 2,
+			CustomApiParamType.Entity => 3,
 			CustomApiParamType.EntityCollection => 4,
 			CustomApiParamType.EntityReference => 5,
-			CustomApiParamType.Float           => 6,
-			CustomApiParamType.Integer         => 7,
-			CustomApiParamType.Money           => 8,
-			CustomApiParamType.Picklist        => 9,
-			CustomApiParamType.String          => 10,
-			CustomApiParamType.StringArray     => 11,
-			CustomApiParamType.Guid            => 12,
+			CustomApiParamType.Float => 6,
+			CustomApiParamType.Integer => 7,
+			CustomApiParamType.Money => 8,
+			CustomApiParamType.Picklist => 9,
+			CustomApiParamType.String => 10,
+			CustomApiParamType.StringArray => 11,
+			CustomApiParamType.Guid => 12,
 			_ => throw new ArgumentOutOfRangeException()
 		};
 	}
@@ -123,7 +122,7 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 			IEnumerable<(string name, string type, bool optional)> inputParams,
 			IEnumerable<(string name, string type)> outputParams)
 		{
-			var inputs  = inputParams.ToList();
+			var inputs = inputParams.ToList();
 			var outputs = outputParams.ToList();
 
 			output.Write(apiName, ConsoleColor.White);
