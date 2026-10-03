@@ -41,12 +41,12 @@ Already assigned roles (assign) and absent assignments (revoke) are reported as 
 
 ## Options and Behavior
 
-| Option | Short | Accepted values |
-| --- | --- | --- |
-| `--role` | `-r` | Required exact role name, or GUID of the role copy in the selected business unit |
-| `--user` | `-u` | System user GUID, domain name, or primary email |
-| `--team` | `-t` | Team GUID or exact team name |
-| `--businessunit` | `-bu` | Business unit GUID or exact name |
+| Option           | Short | Accepted values                                                                  |
+| ---------------- | ----- | -------------------------------------------------------------------------------- |
+| `--role`         | `-r`  | Required exact role name, or GUID of the role copy in the selected business unit |
+| `--user`         | `-u`  | System user GUID, domain name, or primary email                                  |
+| `--team`         | `-t`  | Team GUID or exact team name                                                     |
+| `--businessunit` | `-bu` | Business unit GUID or exact name                                                 |
 
 Specify at least one recipient. Both `--user` and `--team` can be used in the same invocation.
 The singular noun `security role` is also supported for the commands and their aliases.
