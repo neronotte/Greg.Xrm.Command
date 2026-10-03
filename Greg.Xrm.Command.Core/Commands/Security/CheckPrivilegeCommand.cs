@@ -8,6 +8,8 @@ namespace Greg.Xrm.Command.Commands.Security
 	[Alias("security", "checkPrivilege")]
 	[Alias("security", "users", "check-privilege")]
 	[Alias("security", "users", "checkPrivilege")]
+	[Alias("security", "users", "check-access")]
+	[Alias("security", "users", "checkAccess")]
 	public class CheckPrivilegeCommand : ICanProvideUsageExample
 	{
 		public void WriteUsageExamples(MarkdownWriter writer)
