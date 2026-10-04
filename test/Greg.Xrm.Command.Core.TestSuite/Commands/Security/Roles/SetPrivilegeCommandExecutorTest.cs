@@ -6,6 +6,8 @@ using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;
 using System.ServiceModel;
 
+using Greg.Xrm.Command.Services.Security;
+
 namespace Greg.Xrm.Command.Commands.Security.Roles
 {
 	[TestClass]

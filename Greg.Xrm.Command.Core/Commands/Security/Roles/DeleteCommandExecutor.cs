@@ -7,7 +7,7 @@ namespace Greg.Xrm.Command.Commands.Security.Roles
 	public class DeleteCommandExecutor(
 		IOutput output,
 		IOrganizationServiceRepository connections,
-		SecurityRole.Repository roles) : ICommandExecutor<DeleteCommand>
+		ISecurityRoleRepository roles) : ICommandExecutor<DeleteCommand>
 	{
 		public async Task<CommandResult> ExecuteAsync(DeleteCommand command, CancellationToken cancellationToken)
 		{

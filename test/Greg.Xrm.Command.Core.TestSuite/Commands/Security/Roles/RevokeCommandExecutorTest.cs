@@ -1,3 +1,5 @@
+using Greg.Xrm.Command.Services.Security;
+
 namespace Greg.Xrm.Command.Commands.Security.Roles
 {
 	[TestClass]

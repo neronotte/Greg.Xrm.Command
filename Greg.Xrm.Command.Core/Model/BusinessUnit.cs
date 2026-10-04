@@ -9,7 +9,7 @@ namespace Greg.Xrm.Command.Model
 		private BusinessUnit(Entity entity) : base(entity) { }
 		public string name => this.Get<string>();
 
-		public class Repository
+		public class Repository : IBusinessUnitRepository
 		{
 			public async Task<IReadOnlyList<BusinessUnit>> GetByIdsAsync(IOrganizationServiceAsync2 crm, IEnumerable<Guid> identifiers, CancellationToken cancellationToken)
 			{

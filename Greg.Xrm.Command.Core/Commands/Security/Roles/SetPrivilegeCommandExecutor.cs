@@ -3,13 +3,15 @@ using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
 using Microsoft.Crm.Sdk.Messages;
 
+using Greg.Xrm.Command.Services.Security;
+
 namespace Greg.Xrm.Command.Commands.Security.Roles
 {
 	public class SetPrivilegeCommandExecutor(
 		IOutput output,
 		IOrganizationServiceRepository organizationServiceRepository,
-		SecurityRoleService securityRoleService,
-		Privilege.Repository privilegeRepository) : ICommandExecutor<SetPrivilegeCommand>
+		ISecurityRoleService securityRoleService,
+		IPrivilegeRepository privilegeRepository) : ICommandExecutor<SetPrivilegeCommand>
 	{
 		public async Task<CommandResult> ExecuteAsync(SetPrivilegeCommand command, CancellationToken cancellationToken)
 		{

@@ -8,8 +8,8 @@ namespace Greg.Xrm.Command.Commands.Security.Roles
 	public class CloneCommandExecutor(
 		IOutput output,
 		IOrganizationServiceRepository connections,
-		SecurityRole.Repository roles,
-		BusinessUnit.Repository businessUnits) : ICommandExecutor<CloneCommand>
+		ISecurityRoleRepository roles,
+		IBusinessUnitRepository businessUnits) : ICommandExecutor<CloneCommand>
 	{
 		public async Task<CommandResult> ExecuteAsync(CloneCommand command, CancellationToken cancellationToken)
 		{

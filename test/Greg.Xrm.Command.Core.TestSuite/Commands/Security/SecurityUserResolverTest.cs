@@ -3,6 +3,8 @@ using Microsoft.Crm.Sdk.Messages;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
 
+using Greg.Xrm.Command.Services.Security;
+
 namespace Greg.Xrm.Command.Commands.Security
 {
 	[TestClass]

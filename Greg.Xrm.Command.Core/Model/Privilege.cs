@@ -31,7 +31,7 @@ namespace Greg.Xrm.Command.Model
             return [.. Enum.GetValues<PrivilegeDepth>().Where(this.Supports)]; 
         }
 
-		public class Repository
+		public class Repository : IPrivilegeRepository
 		{
 			public async Task<IReadOnlyList<Privilege>> GetAllAsync(IOrganizationServiceAsync2 crm, CancellationToken cancellationToken)
 			{

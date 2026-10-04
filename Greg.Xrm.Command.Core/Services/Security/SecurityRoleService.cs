@@ -3,12 +3,15 @@ using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;
 
-namespace Greg.Xrm.Command.Commands.Security
+namespace Greg.Xrm.Command.Services.Security
 {
-	public sealed record SecurityRoleInfo(Guid RoleId, string Name, string BusinessUnit, bool IsManaged);
+	public sealed record SecurityRoleInfo(Guid RoleId, string Name, string BusinessUnit, bool IsManaged)
+	{
+		public Guid? BusinessUnitId { get; init; }
+	}
 	public sealed record SecurityRoleAssignmentInfo(SecurityRoleInfo Role, IReadOnlyCollection<string> Sources);
 
-	public sealed class SecurityRoleService
+	public sealed class SecurityRoleService : ISecurityRoleService
 	{
 		public async Task<IReadOnlyList<SecurityRoleInfo>> GetRolesByIdentifierAsync(IOrganizationServiceAsync2 crm, string identifier, CancellationToken cancellationToken)
 		{
@@ -96,7 +99,10 @@ namespace Greg.Xrm.Command.Commands.Security
 				role.GetAttributeValue<EntityReference>("businessunitid")?.Name
 					?? role.GetAttributeValue<EntityReference>("businessunitid")?.Id.ToString()
 					?? string.Empty,
-				role.GetAttributeValue<bool?>("ismanaged") ?? false);
+				role.GetAttributeValue<bool?>("ismanaged") ?? false)
+			{
+				BusinessUnitId = role.GetAttributeValue<EntityReference>("businessunitid")?.Id
+			};
 		}
 
 		private static void AddRole(Dictionary<Guid, (SecurityRoleInfo Role, HashSet<string> Sources)> assignments, SecurityRoleInfo role, string source)
@@ -110,7 +116,24 @@ namespace Greg.Xrm.Command.Commands.Security
 			assignments[role.RoleId] = entry;
 		}
 
-		private static async Task<IReadOnlyList<SecurityRoleInfo>> GetDirectRolesByUserAsync(IOrganizationServiceAsync2 crm, Guid userId, CancellationToken cancellationToken)
+		public async Task<IReadOnlyDictionary<Guid, IReadOnlyList<SecurityRoleInfo>>> GetRolesByTeamsAsync(IOrganizationServiceAsync2 crm, IEnumerable<Guid> teamIds, CancellationToken cancellationToken)
+		{
+			var ids = teamIds.Where(id => id != Guid.Empty).Distinct().ToArray();
+			if (ids.Length == 0) return new Dictionary<Guid, IReadOnlyList<SecurityRoleInfo>>();
+			var query = CreateRoleQuery();
+			var link = query.AddLink("teamroles", "roleid", "roleid", JoinOperator.Inner);
+			link.EntityAlias = "assignment";
+			link.Columns = new ColumnSet("teamid");
+			link.LinkCriteria.AddCondition("teamid", ConditionOperator.In, ids.Cast<object>().ToArray());
+			query.Orders.Add(new OrderExpression("teamid", OrderType.Ascending) { EntityName = "assignment" });
+			var rows = await crm.RetrieveAllAsync(query, entity =>
+				(TeamId: (Guid)entity.GetAttributeValue<AliasedValue>("assignment.teamid").Value, Role: MapRole(entity)), cancellationToken);
+			return rows.GroupBy(row => row.TeamId).ToDictionary(group => group.Key,
+				group => (IReadOnlyList<SecurityRoleInfo>)group.Select(row => row.Role).DistinctBy(role => role.RoleId)
+					.OrderBy(role => role.Name, StringComparer.OrdinalIgnoreCase).ThenBy(role => role.RoleId).ToArray());
+		}
+
+		public async Task<IReadOnlyList<SecurityRoleInfo>> GetDirectRolesByUserAsync(IOrganizationServiceAsync2 crm, Guid userId, CancellationToken cancellationToken)
 		{
 			var query = CreateRoleQuery();
 			var link = query.AddLink("systemuserroles", "roleid", "roleid", JoinOperator.Inner);

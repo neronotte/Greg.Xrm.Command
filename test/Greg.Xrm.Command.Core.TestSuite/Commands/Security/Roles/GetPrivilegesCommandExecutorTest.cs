@@ -10,6 +10,8 @@ using Newtonsoft.Json.Linq;
 using System.Reflection;
 using System.ServiceModel;
 
+using Greg.Xrm.Command.Services.Security;
+
 namespace Greg.Xrm.Command.Commands.Security.Roles
 {
 	[TestClass]

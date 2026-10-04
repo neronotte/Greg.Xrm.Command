@@ -1,12 +1,16 @@
 using Greg.Xrm.Command.Model;
 using Microsoft.Crm.Sdk.Messages;
 using Microsoft.PowerPlatform.Dataverse.Client;
+using Microsoft.Xrm.Sdk;
 
-namespace Greg.Xrm.Command.Commands.Security
+namespace Greg.Xrm.Command.Services.Security
 {
-	public sealed record SecurityUserInfo(Guid UserId, string FullName, string DomainName);
+	public sealed record SecurityUserInfo(Guid UserId, string FullName, string DomainName)
+	{
+		public EntityReference? BusinessUnit { get; init; }
+	}
 
-	public sealed class SecurityUserResolver(ISystemUserRepository systemUserRepository)
+	public sealed class SecurityUserResolver(ISystemUserRepository systemUserRepository) : ISecurityUserResolver
 	{
 		/// <summary>
 		/// Resolves the given user (id, domain name or primary email).
@@ -42,7 +46,7 @@ namespace Greg.Xrm.Command.Commands.Security
 				throw new CommandException(CommandException.CommandInvalidArgumentValue, $"More than one user matches '{user}'. Please specify the user id.");
 			}
 
-			return new SecurityUserInfo(users[0].Id, users[0].DisplayName, users[0].DomainName);
+			return new SecurityUserInfo(users[0].Id, users[0].DisplayName, users[0].DomainName) { BusinessUnit = users[0].BusinessUnit };
 		}
 	}
 }

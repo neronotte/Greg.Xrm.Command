@@ -7,7 +7,7 @@ description: >
 
 # PACX Command Writer
 
-Every PACX command is a pair of files in `Greg.Xrm.Command.Core\Commands\<Domain>\`. There is no manual DI registration — `Extensions.RegisterCommandExecutors()` auto-scans all `ICommandExecutor<T>` implementations at startup.
+Every PACX command is a pair of files in `Greg.Xrm.Command.Core\Commands\<Domain>\`. Executors need no manual DI registration: `Extensions.RegisterCommandExecutors()` auto-scans all `ICommandExecutor<T>` implementations at startup. Supporting services and repositories must be registered explicitly against their interfaces in `IoCModule`.
 
 ## Rules
 
@@ -150,6 +150,8 @@ namespace Greg.Xrm.Command.Commands.<Domain>
 
 ### Executor conventions
 
+- **MUST: keep `Greg.Xrm.Command.Commands` namespaces limited to commands, command executors, and command-specific helpers.** Put supporting service implementations and their interfaces under `Greg.Xrm.Command.Services` (with a domain subnamespace when useful), and models/repositories and their interfaces under `Greg.Xrm.Command.Model`. Never place services or their contracts in a command folder or namespace.
+- **MUST: inject every service, repository, resolver, and delegated executor through an interface, never a concrete implementation type.** Reuse an existing interface where available; otherwise define one alongside the implementation, implement it, and register the mapping in `IoCModule` (for example `builder.RegisterType<Team.Repository>().As<ITeamRepository>()`). Apply this rule to supporting services' constructor dependencies as well. Delegate executors through `ICommandExecutor<TCommand>`. Do not instantiate dependencies or bypass injection with static methods that perform I/O; expose those operations through the injected interface. This is mandatory so executor unit tests can mock dependencies and run entirely locally. Pure static formatting/computation helpers are allowed.
 - Command infrastructure (`CommandRunnerBase`) validates DataAnnotations and `IValidatableObject` before calling an executor. Do not call `Validator.TryValidateObject` again in executors or duplicate command validation there. Declare input constraints on the command; keep only business checks requiring resolved data (for example whether a privilege supports a depth) in the executor. Tests for command validation belong in the command test file, not in tests that invoke the executor directly.
 - **Never** write to `Console` directly — always use `IOutput`.
 - If you need additional output formatting you can use `IAnsiConsole` from `Greg.Xrm.Command.Services.Output`, which wraps `Spectre.Console` functionality.
@@ -179,6 +181,9 @@ Once the command and executor files are in place, use the **`pacx-unit-test-writ
 - [ ] `IValidatableObject.Validate()` implemented only for cross-option constraints
 - [ ] `ICanProvideUsageExample.WriteUsageExamples()` implemented for non-trivial commands
 - [ ] `<Verb>CommandExecutor.cs` placed in the same domain folder
+- [ ] Services and their interfaces live under `Services`; models/repositories and their interfaces live under `Model`, not in `Commands`
+- [ ] All executor and supporting-service constructor dependencies are interfaces, with implementation mappings registered in `IoCModule`; no concrete injected types or static I/O bypasses
+- [ ] Executor tests mock service/repository interfaces, and the executor resolves through IoC
 - [ ] Executor uses `IOutput` for all console output (never `Console.Write*`)
 - [ ] Progress pattern (`Write(…)` / `WriteLine(" Done", Green)`) used for each step
 - [ ] `FaultException<OrganizationServiceFault>` caught and mapped to `CommandResult.Fail`

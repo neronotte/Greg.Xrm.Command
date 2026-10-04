@@ -7,6 +7,8 @@ using Microsoft.Xrm.Sdk.Messages;
 using Microsoft.Xrm.Sdk.Query;
 using System.ServiceModel;
 
+using Greg.Xrm.Command.Services.Security;
+
 namespace Greg.Xrm.Command.Commands.Security.Roles
 {
 	public abstract class RoleAssignmentCommandExecutorTestBase

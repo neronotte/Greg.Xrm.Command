@@ -15,7 +15,7 @@ namespace Greg.Xrm.Command.Model
 		public OptionSetValue? isinherited => this.Get<OptionSetValue>();
 		public bool? ismanaged => this.Get<bool?>();
 
-		public class Repository
+		public class Repository : ISecurityRoleRepository
 		{
 			public async Task<SecurityRole> GetByIdentifierAsync(IOrganizationServiceAsync2 crm, string identifier, CancellationToken cancellationToken)
 			{

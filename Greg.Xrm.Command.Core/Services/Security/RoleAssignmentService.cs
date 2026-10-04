@@ -1,3 +1,4 @@
+using Greg.Xrm.Command.Commands.Security.Roles;
 using Greg.Xrm.Command.Model;
 using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
@@ -5,16 +6,16 @@ using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Messages;
 
-namespace Greg.Xrm.Command.Commands.Security.Roles
+namespace Greg.Xrm.Command.Services.Security
 {
 	public class RoleAssignmentService(
 		IOutput output,
 		IOrganizationServiceRepository connections,
 		ISystemUserRepository users,
-		Organization.Repository organizations,
-		BusinessUnit.Repository businessUnits,
-		Team.Repository teams,
-		SecurityRole.Repository roles)
+		IOrganizationRepository organizations,
+		IBusinessUnitRepository businessUnits,
+		ITeamRepository teams,
+		ISecurityRoleRepository roles) : IRoleAssignmentService
 	{
 		private sealed record Recipient(EntityReference Reference, string Name, Guid? BusinessUnitId);
 		private sealed record Assignment(Recipient Recipient, SecurityRole Role, bool Exists);

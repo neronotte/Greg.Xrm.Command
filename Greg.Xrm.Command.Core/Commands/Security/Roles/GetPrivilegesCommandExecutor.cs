@@ -2,13 +2,15 @@ using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
 using Newtonsoft.Json;
 
+using Greg.Xrm.Command.Services.Security;
+
 namespace Greg.Xrm.Command.Commands.Security.Roles
 {
 	public class GetPrivilegesCommandExecutor(
 		IOutput output,
 		IOrganizationServiceRepository organizationServiceRepository,
-		SecurityRoleService securityRoleService,
-		RolePrivilegeInspectionService inspectionService) : ICommandExecutor<GetPrivilegesCommand>
+		ISecurityRoleService securityRoleService,
+		IRolePrivilegeInspectionService inspectionService) : ICommandExecutor<GetPrivilegesCommand>
 	{
 		public async Task<CommandResult> ExecuteAsync(GetPrivilegesCommand command, CancellationToken cancellationToken)
 		{

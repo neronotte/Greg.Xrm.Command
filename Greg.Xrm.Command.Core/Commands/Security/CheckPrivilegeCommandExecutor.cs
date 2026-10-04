@@ -3,13 +3,15 @@ using Greg.Xrm.Command.Services.Output;
 using Microsoft.Xrm.Sdk;
 using System.ServiceModel;
 
+using Greg.Xrm.Command.Services.Security;
+
 namespace Greg.Xrm.Command.Commands.Security
 {
 	public class CheckPrivilegeCommandExecutor(
 		IOutput output,
 		IOrganizationServiceRepository organizationServiceRepository,
-		SecurityUserResolver userResolver,
-		SecurityPrivilegeService securityPrivilegeService) : ICommandExecutor<CheckPrivilegeCommand>
+		ISecurityUserResolver userResolver,
+		ISecurityPrivilegeService securityPrivilegeService) : ICommandExecutor<CheckPrivilegeCommand>
 	{
 		public async Task<CommandResult> ExecuteAsync(CheckPrivilegeCommand command, CancellationToken cancellationToken)
 		{

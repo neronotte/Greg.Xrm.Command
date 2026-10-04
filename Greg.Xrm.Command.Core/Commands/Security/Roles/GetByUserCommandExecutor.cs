@@ -3,13 +3,15 @@ using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
 using Microsoft.Xrm.Sdk;
 
+using Greg.Xrm.Command.Services.Security;
+
 namespace Greg.Xrm.Command.Commands.Security.Roles
 {
 	public class GetByUserCommandExecutor(
 		IOutput output,
 		IOrganizationServiceRepository organizationServiceRepository,
-		SecurityUserResolver userResolver,
-		SecurityRoleService securityRoleService) : ICommandExecutor<GetByUserCommand>
+		ISecurityUserResolver userResolver,
+		ISecurityRoleService securityRoleService) : ICommandExecutor<GetByUserCommand>
 	{
 		public async Task<CommandResult> ExecuteAsync(GetByUserCommand command, CancellationToken cancellationToken)
 		{

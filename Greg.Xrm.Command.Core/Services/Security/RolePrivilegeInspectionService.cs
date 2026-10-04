@@ -5,14 +5,14 @@ using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk.Messages;
 using Microsoft.Xrm.Sdk.Metadata;
 
-namespace Greg.Xrm.Command.Commands.Security
+namespace Greg.Xrm.Command.Services.Security
 {
 	public sealed record RolePrivilegeCell(PrivilegeType Type, Guid? PrivilegeId, string? Name, bool IsAssigned, int? Level, bool MatchesFilter);
 	public sealed record RoleTablePrivileges(string LogicalName, string DisplayName, IReadOnlyList<RolePrivilegeCell> Cells);
 	public sealed record RoleMiscellaneousPrivilege(Guid PrivilegeId, string Name, bool IsAssigned, int? Level);
 	public sealed record RolePrivilegeSnapshot(IReadOnlyList<RoleTablePrivileges> Tables, IReadOnlyList<RoleMiscellaneousPrivilege> Miscellaneous, IReadOnlyList<string> Warnings);
 
-	public class RolePrivilegeInspectionService(Privilege.Repository privilegeRepository)
+	public class RolePrivilegeInspectionService(IPrivilegeRepository privilegeRepository) : IRolePrivilegeInspectionService
 	{
 		public static IReadOnlyList<PrivilegeType> Actions { get; } = Array.AsReadOnly(new[]
 		{

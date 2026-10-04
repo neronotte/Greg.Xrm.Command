@@ -3,12 +3,14 @@ using Greg.Xrm.Command.Services.Output;
 using Microsoft.Xrm.Sdk;
 using System.ServiceModel;
 
+using Greg.Xrm.Command.Services.Security;
+
 namespace Greg.Xrm.Command.Commands.Security.Roles
 {
 	public class ListCommandExecutor(
 		IOutput output,
 		IOrganizationServiceRepository organizationServiceRepository,
-		SecurityRoleService securityRoleService) : ICommandExecutor<ListCommand>
+		ISecurityRoleService securityRoleService) : ICommandExecutor<ListCommand>
 	{
 		public async Task<CommandResult> ExecuteAsync(ListCommand command, CancellationToken cancellationToken)
 		{

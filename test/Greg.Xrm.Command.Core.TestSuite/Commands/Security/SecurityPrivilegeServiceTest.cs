@@ -8,6 +8,8 @@ using Microsoft.Xrm.Sdk.Query;
 using Moq;
 using System.Reflection;
 
+using Greg.Xrm.Command.Services.Security;
+
 namespace Greg.Xrm.Command.Commands.Security
 {
 	[TestClass]

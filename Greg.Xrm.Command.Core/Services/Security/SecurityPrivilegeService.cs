@@ -6,14 +6,14 @@ using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Messages;
 using Microsoft.Xrm.Sdk.Metadata;
 
-namespace Greg.Xrm.Command.Commands.Security
+namespace Greg.Xrm.Command.Services.Security
 {
 	/// <summary>
 	/// A privilege granted to a user. <see cref="Depth"/> is populated only for table-level checks.
 	/// </summary>
 	public sealed record SecurityPrivilegeInfo(string Privilege, PrivilegeDepth? Depth = null, Guid? BusinessUnitId = null, string? BusinessUnitName = null);
 
-	public sealed class SecurityPrivilegeService(Organization.Repository organizations, BusinessUnit.Repository businessUnits)
+	public sealed class SecurityPrivilegeService(IOrganizationRepository organizations, IBusinessUnitRepository businessUnits) : ISecurityPrivilegeService
 	{
 		private static readonly (AccessRights Flag, string Label)[] RecordAccessRights =
 		[

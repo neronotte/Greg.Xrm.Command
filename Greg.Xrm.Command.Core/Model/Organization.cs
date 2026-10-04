@@ -23,7 +23,7 @@ namespace Greg.Xrm.Command.Model
 			}
 		}
 
-		public class Repository
+		public class Repository : IOrganizationRepository
 		{
 			public async Task<Organization> GetAsync(IOrganizationServiceAsync2 crm, CancellationToken cancellationToken)
 			{

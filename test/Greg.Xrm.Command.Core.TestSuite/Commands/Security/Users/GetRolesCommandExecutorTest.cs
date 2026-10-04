@@ -3,6 +3,8 @@ using Greg.Xrm.Command.Model;
 using Greg.Xrm.Command.Services.Connection;
 using Microsoft.Extensions.DependencyInjection;
 
+using Greg.Xrm.Command.Services.Security;
+
 namespace Greg.Xrm.Command.Commands.Security.Users
 {
 	[TestClass]
@@ -15,8 +17,8 @@ namespace Greg.Xrm.Command.Commands.Security.Users
 			services.RegisterCommandExecutors(typeof(GetRolesCommand).Assembly);
 			services.AddSingleton<IOutput>(new OutputToMemory());
 			services.AddSingleton(new Mock<IOrganizationServiceRepository>().Object);
-			services.AddSingleton(new SecurityUserResolver(new Mock<ISystemUserRepository>().Object));
-			services.AddSingleton(new SecurityRoleService());
+			services.AddSingleton(new Mock<ISecurityUserResolver>().Object);
+			services.AddSingleton(new Mock<ISecurityRoleService>().Object);
 			using var provider = services.BuildServiceProvider();
 			Assert.IsInstanceOfType<GetRolesCommandExecutor>(provider.GetRequiredService<ICommandExecutor<GetRolesCommand>>());
 		}

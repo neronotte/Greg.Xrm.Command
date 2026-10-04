@@ -6,6 +6,8 @@ using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;
 
+using Greg.Xrm.Command.Services.Security;
+
 namespace Greg.Xrm.Command.Commands.Security.Roles
 {
 	[TestClass]
@@ -18,8 +20,8 @@ namespace Greg.Xrm.Command.Commands.Security.Roles
 			services.RegisterCommandExecutors(typeof(ClearPrivilegeCommand).Assembly);
 			services.AddSingleton<IOutput>(new OutputToMemory());
 			services.AddSingleton(new Mock<IOrganizationServiceRepository>().Object);
-			services.AddSingleton(new SecurityRoleService());
-			services.AddSingleton(new Privilege.Repository());
+			services.AddSingleton(new Mock<ISecurityRoleService>().Object);
+			services.AddSingleton(new Mock<IPrivilegeRepository>().Object);
 			using var provider = services.BuildServiceProvider();
 			Assert.IsInstanceOfType<ClearPrivilegeCommandExecutor>(provider.GetRequiredService<ICommandExecutor<ClearPrivilegeCommand>>());
 		}
