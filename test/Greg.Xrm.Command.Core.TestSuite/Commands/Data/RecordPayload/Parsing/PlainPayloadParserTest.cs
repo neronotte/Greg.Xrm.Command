@@ -1,5 +1,3 @@
-using Greg.Xrm.Command.Commands.Data.RecordPayload.Parsing;
-
 namespace Greg.Xrm.Command.Commands.Data.RecordPayload.Parsing
 {
 	[TestClass]

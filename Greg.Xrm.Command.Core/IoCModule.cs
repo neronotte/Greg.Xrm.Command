@@ -16,6 +16,7 @@ using Greg.Xrm.Command.Services.AttributeDeletion;
 using Greg.Xrm.Command.Services.Forms;
 using Greg.Xrm.Command.Services.OptionSet;
 using Greg.Xrm.Command.Services.Plugin;
+using Greg.Xrm.Command.Services.Security;
 
 namespace Greg.Xrm.Command
 {
@@ -37,6 +38,13 @@ namespace Greg.Xrm.Command
 			builder.RegisterType<IconFinder>().As<IIconFinder>();
 			builder.RegisterType<SavedQuery.Repository>().As<ISavedQueryRepository>();
 			builder.RegisterType<UserQuery.Repository>().As<IUserQueryRepository>();
+			builder.RegisterType<SystemUser.Repository>().As<ISystemUserRepository>();
+			builder.RegisterType<Privilege.Repository>().As<IPrivilegeRepository>();
+			builder.RegisterType<Organization.Repository>().As<IOrganizationRepository>();
+			builder.RegisterType<BusinessUnit.Repository>().As<IBusinessUnitRepository>();
+			builder.RegisterType<Team.Repository>().As<ITeamRepository>();
+			builder.RegisterType<SecurityRole.Repository>().As<ISecurityRoleRepository>();
+			builder.RegisterType<RoleAssignmentService>().As<IRoleAssignmentService>();
 			builder.RegisterType<ScriptExtractionService>().As<IScriptExtractionService>();
 			builder.RegisterType<ScriptMetadataExtractor>().As<IScriptMetadataExtractor>();
 			builder.RegisterType<ScriptBuilder>().As<IScriptBuilder>();
@@ -49,6 +57,11 @@ namespace Greg.Xrm.Command
 			builder.RegisterType<Commands.Views.Model.ViewRetrieverService>().As<Commands.Views.Model.IViewRetrieverService>();
 			builder.RegisterType<OptionSetParser>().As<IOptionSetParser>();
 			builder.RegisterType<ObjectTypeCodeFinder>().As<IObjectTypeCodeFinder>();
+			builder.RegisterType<SecurityRoleService>().As<ISecurityRoleService>();
+			builder.RegisterType<SecurityPrivilegeService>().As<ISecurityPrivilegeService>();
+			builder.RegisterType<RolePrivilegeInspectionService>().As<IRolePrivilegeInspectionService>();
+			builder.RegisterType<SecurityUserResolver>().As<ISecurityUserResolver>();
+			builder.RegisterType<SecurityUserProfileService>().As<ISecurityUserProfileService>();
 			builder.RegisterType<FormWrapperFactory>().As<IFormWrapperFactory>();
 
 

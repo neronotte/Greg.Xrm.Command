@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using DocumentFormat.OpenXml.Packaging;
 using Greg.Xrm.Command.Parsing;
 using Greg.Xrm.Command.Services;
 
@@ -61,19 +60,19 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 					"--unique-name must include a publisher prefix separated by '_' (e.g. nn_GregSum).",
 					[nameof(UniqueName)]);
 
-				if (BindingType != CustomApiBindingType.Global && string.IsNullOrWhiteSpace(BoundEntityLogicalName))
-					yield return new ValidationResult(
-						"--bound-entity is required when --binding-type is Entity or EntityCollection.",
-						[nameof(BoundEntityLogicalName)]);
+			if (BindingType != CustomApiBindingType.Global && string.IsNullOrWhiteSpace(BoundEntityLogicalName))
+				yield return new ValidationResult(
+					"--bound-entity is required when --binding-type is Entity or EntityCollection.",
+					[nameof(BoundEntityLogicalName)]);
 
-				foreach (var p in SplitSpecs(Params))
-					if (!CustomApiParamSpec.TryParse(p, out _, out var err))
-						yield return new ValidationResult($"Invalid --param '{p}': {err}");
+			foreach (var p in SplitSpecs(Params))
+				if (!CustomApiParamSpec.TryParse(p, out _, out var err))
+					yield return new ValidationResult($"Invalid --param '{p}': {err}");
 
-				foreach (var r in SplitSpecs(Responses))
-					if (!CustomApiParamSpec.TryParse(r, out _, out var err))
-						yield return new ValidationResult($"Invalid --response '{r}': {err}");
-			}
+			foreach (var r in SplitSpecs(Responses))
+				if (!CustomApiParamSpec.TryParse(r, out _, out var err))
+					yield return new ValidationResult($"Invalid --response '{r}': {err}");
+		}
 
 		internal static IEnumerable<string> SplitSpecs(string? value)
 			=> string.IsNullOrWhiteSpace(value)

@@ -7,6 +7,7 @@ namespace Greg.Xrm.Command.Services.Output
 		IOutput Write(object? text, ConsoleColor color);
 		IOutput WriteLine();
 		IOutput WriteLine(object? text);
+		IOutput WriteRawLine(object? text) => WriteLine(text);
 		IOutput WriteLine(object? text, ConsoleColor color);
 		IOutput WriteTable<TRow>(IReadOnlyList<TRow> collection, Func<string[]> rowHeaders, Func<TRow, string[]> rowData, Func<int, TRow, ConsoleColor?>? colorPicker = null);
 	}

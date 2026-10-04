@@ -1,5 +1,4 @@
 using System.ServiceModel;
-using Greg.Xrm.Command.Commands.CustomApi.Model;
 using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
 using Microsoft.Xrm.Sdk;

@@ -1,7 +1,7 @@
+using System.Text.RegularExpressions;
 using Greg.Xrm.Command.Commands.Solution.Extensions;
 using Greg.Xrm.Command.Commands.Solution.Model;
 using Greg.Xrm.Command.Services.Output;
-using System.Text.RegularExpressions;
 
 namespace Greg.Xrm.Command.Commands.Solution.Writers
 {

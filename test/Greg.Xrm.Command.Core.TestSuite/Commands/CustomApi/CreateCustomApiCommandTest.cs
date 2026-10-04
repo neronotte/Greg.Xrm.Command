@@ -13,7 +13,7 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 		[TestMethod]
 		public void ParseWithShortNameShouldWork()
 		{
-				var command = Utility.TestParseCommand<CreateCustomApiCommand>("customapi", "create", "-d", "Greg Sum", "-n", "nn_GregSum");
+			var command = Utility.TestParseCommand<CreateCustomApiCommand>("customapi", "create", "-d", "Greg Sum", "-n", "nn_GregSum");
 			Assert.AreEqual("nn_GregSum", command.UniqueName);
 		}
 
@@ -97,7 +97,7 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 			var command = new CreateCustomApiCommand
 			{
 				DisplayName = "Greg Sum",
-				UniqueName  = "GregSumNoPrefix"
+				UniqueName = "GregSumNoPrefix"
 			};
 			var results = command.Validate(new System.ComponentModel.DataAnnotations.ValidationContext(command)).ToList();
 			Assert.AreEqual(1, results.Count);

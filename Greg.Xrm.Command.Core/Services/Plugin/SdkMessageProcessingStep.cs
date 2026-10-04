@@ -1,5 +1,4 @@
 using Greg.Xrm.Command.Model;
-using Microsoft.Identity.Client;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;

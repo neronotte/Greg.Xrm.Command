@@ -34,22 +34,22 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 				output.WriteLine("Done", ConsoleColor.Green);
 
 				// Resolve the parameter
-					var paramUniqueName = $"{command.ApiUniqueName}-in-{command.ParamUniqueName}";
-					output.Write($"Resolving parameter '{paramUniqueName}'...");
-					var paramQ = new QueryExpression("customapirequestparameter") { NoLock = true, TopCount = 1 };
-					paramQ.ColumnSet.AddColumn("customapirequestparameterid");
-					paramQ.Criteria.AddCondition("uniquename", ConditionOperator.Equal, paramUniqueName);
-					paramQ.Criteria.AddCondition("customapiid", ConditionOperator.Equal, apiId);
-					var paramResult = await crm.RetrieveMultipleAsync(paramQ);
-					if (paramResult.Entities.Count == 0)
-					{
-						output.WriteLine("Not found", ConsoleColor.Red);
-						return CommandResult.Fail($"Parameter '{paramUniqueName}' not found on Custom API '{command.ApiUniqueName}'.");
-					}
-					var paramId = paramResult.Entities[0].Id;
-					output.WriteLine("Done", ConsoleColor.Green);
+				var paramUniqueName = $"{command.ApiUniqueName}-in-{command.ParamUniqueName}";
+				output.Write($"Resolving parameter '{paramUniqueName}'...");
+				var paramQ = new QueryExpression("customapirequestparameter") { NoLock = true, TopCount = 1 };
+				paramQ.ColumnSet.AddColumn("customapirequestparameterid");
+				paramQ.Criteria.AddCondition("uniquename", ConditionOperator.Equal, paramUniqueName);
+				paramQ.Criteria.AddCondition("customapiid", ConditionOperator.Equal, apiId);
+				var paramResult = await crm.RetrieveMultipleAsync(paramQ);
+				if (paramResult.Entities.Count == 0)
+				{
+					output.WriteLine("Not found", ConsoleColor.Red);
+					return CommandResult.Fail($"Parameter '{paramUniqueName}' not found on Custom API '{command.ApiUniqueName}'.");
+				}
+				var paramId = paramResult.Entities[0].Id;
+				output.WriteLine("Done", ConsoleColor.Green);
 
-					output.Write($"Deleting parameter '{paramUniqueName}'...");
+				output.Write($"Deleting parameter '{paramUniqueName}'...");
 				await crm.DeleteAsync("customapirequestparameter", paramId);
 				output.WriteLine("Done", ConsoleColor.Green);
 

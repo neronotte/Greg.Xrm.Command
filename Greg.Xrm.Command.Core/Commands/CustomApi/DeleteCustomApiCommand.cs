@@ -15,7 +15,7 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 
 		[Option("force", Order = 2, DefaultValue = false,
 				HelpText = "Skip the interactive confirmation prompt and delete immediately.")]
-			public bool Force { get; set; } = false;
+		public bool Force { get; set; } = false;
 
 		public void WriteUsageExamples(MarkdownWriter writer)
 		{

@@ -495,7 +495,7 @@ namespace Greg.Xrm.Command.Commands.Data
 		#region Cancellation Tests
 
 		[TestMethod]
-		
+
 		public async Task ExecuteAsync_WhenQueryExecutionThrowsOperationCanceled_ShouldReturnError()
 		{
 			// Arrange

@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using System.IO.Packaging;
 using System.Text;
-using Autofac.Core;
 using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
 using Microsoft.Crm.Sdk.Messages;
