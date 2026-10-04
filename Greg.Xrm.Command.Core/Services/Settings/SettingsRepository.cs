@@ -1,72 +1,131 @@
+using System.Security.AccessControl;
+using System.Security.Cryptography;
+using System.Security.Principal;
+using System.Text;
 using Newtonsoft.Json;
 
 namespace Greg.Xrm.Command.Services.Settings
 {
-	public class SettingsRepository : ISettingsRepository
+	public class SettingsRepository(IStorage storage) : ISettingsRepository
 	{
-		private string? settingsFolder = null;
-		private readonly IStorage storage;
+		public Task<T?> GetAsync<T>(string key) =>
+			WithSettingsMutexAsync(key, Read<T>);
 
-		public SettingsRepository(IStorage storage)
-		{
-			this.storage = storage;
-		}
-
-
-		private void InitializeSettings()
-		{
-			if (this.settingsFolder != null) return;
-			this.settingsFolder = this.storage.GetOrCreateStorageFolder().FullName;
-		}
-
-
-
-		public async Task<T?> GetAsync<T>(string key)
-		{
-			this.InitializeSettings();
-			if (this.settingsFolder == null)
-				throw new InvalidOperationException("Settings folder is not initialized.");
-
-			var fileName = Path.Combine(this.settingsFolder, $"{key}.json");
-
-			if (File.Exists(fileName))
+		public Task SetAsync<T>(string key, T value) =>
+			WithSettingsMutexAsync(key, fileName =>
 			{
-				var json = await File.ReadAllTextAsync(fileName);
+				WriteFileAtomically(fileName, value);
+				return true;
+			});
 
-				if (typeof(T) == typeof(string))
-					return (T)(object)json;
-
-
-				return JsonConvert.DeserializeObject<T>(json);
-			}
-
-			return default;
+		public Task<T> UpdateAsync<T>(string key, Func<T?, T> update)
+		{
+			ArgumentNullException.ThrowIfNull(update);
+			return WithSettingsMutexAsync(key, fileName =>
+			{
+				var updatedValue = update(Read<T>(fileName));
+				WriteFileAtomically(fileName, updatedValue);
+				return updatedValue;
+			});
 		}
 
-		public Task SetAsync<T>(string key, T value)
+		private Task<T> WithSettingsMutexAsync<T>(string key, Func<string, T> action)
 		{
-			this.InitializeSettings();
-			if (this.settingsFolder == null)
-				throw new InvalidOperationException("Settings folder is not initialized.");
+			var fileName = Path.GetFullPath(Path.Combine(storage.GetOrCreateStorageFolder().FullName, $"{key}.json"));
+			var identity = OperatingSystem.IsWindows() ? fileName.ToUpperInvariant() : fileName;
+			var mutexName = "Greg.Xrm.Command.Settings." + Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(identity)));
 
-			var fileName = Path.Combine(this.settingsFolder, $"{key}.json");
-			using (var writer = new StreamWriter(fileName, false, System.Text.Encoding.UTF8))
+			// Mutex ownership belongs to a thread. Keep the entire critical section
+			// synchronous on one worker, including acquisition and release.
+			return Task.Run(() =>
 			{
-				if (typeof(T) == typeof(string))
+				using var mutex = new Mutex(false, mutexName, new NamedWaitHandleOptions
 				{
-					writer.Write(value);
-					return Task.CompletedTask;
+					CurrentUserOnly = true,
+					CurrentSessionOnly = false
+				});
+				try
+				{
+					mutex.WaitOne();
+				}
+				catch (AbandonedMutexException)
+				{
+					// Ownership was acquired after a previous writer exited. Atomic
+					// replacement leaves the last committed settings file intact.
 				}
 
-
-				var serializer = new JsonSerializer
+				try
 				{
-					Formatting = Formatting.Indented
-				};
-				serializer.Serialize(writer, value);
+					return action(fileName);
+				}
+				finally
+				{
+					mutex.ReleaseMutex();
+				}
+			});
+		}
+
+		private static T? Read<T>(string fileName)
+		{
+			if (!File.Exists(fileName)) return default;
+			var text = File.ReadAllText(fileName);
+			return typeof(T) == typeof(string) ? (T)(object)text : JsonConvert.DeserializeObject<T>(text);
+		}
+
+		private static void WriteFileAtomically<T>(string fileName, T value)
+		{
+			var temporaryFileName = fileName + $".{Guid.NewGuid():N}.tmp";
+			try
+			{
+				using (var stream = CreatePrivateFile(temporaryFileName))
+				{
+					using (var writer = new StreamWriter(stream, Encoding.UTF8, leaveOpen: true))
+					{
+						if (typeof(T) == typeof(string)) writer.Write(value);
+						else new JsonSerializer { Formatting = Formatting.Indented }.Serialize(writer, value);
+					}
+					stream.Flush(flushToDisk: true);
+				}
+
+				if (File.Exists(fileName))
+				{
+					if (!OperatingSystem.IsWindows())
+						File.SetUnixFileMode(temporaryFileName, File.GetUnixFileMode(fileName));
+
+					// Replace preserves the destination ACL on Windows. On Unix the
+					// mode was copied above. Both files are on the same filesystem.
+					File.Replace(temporaryFileName, fileName, null);
+				}
+				else
+				{
+					File.Move(temporaryFileName, fileName);
+				}
+			}
+			finally
+			{
+				File.Delete(temporaryFileName);
+			}
+		}
+
+		private static FileStream CreatePrivateFile(string fileName)
+		{
+			if (OperatingSystem.IsWindows())
+			{
+				using var identity = WindowsIdentity.GetCurrent();
+				var security = new FileSecurity();
+				security.SetAccessRuleProtection(isProtected: true, preserveInheritance: false);
+				security.AddAccessRule(new FileSystemAccessRule(identity.User!, FileSystemRights.FullControl, AccessControlType.Allow));
+				return FileSystemAclExtensions.Create(new FileInfo(fileName), FileMode.CreateNew,
+					FileSystemRights.FullControl, FileShare.None, 4096, FileOptions.None, security);
 			}
 
-			return Task.CompletedTask;
+			return new FileStream(fileName, new FileStreamOptions
+			{
+				Mode = FileMode.CreateNew,
+				Access = FileAccess.Write,
+				Share = FileShare.None,
+				UnixCreateMode = UnixFileMode.UserRead | UnixFileMode.UserWrite
+			});
 		}
 	}
 }

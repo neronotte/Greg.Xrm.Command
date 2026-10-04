@@ -15,10 +15,12 @@ namespace Greg.Xrm.Command.Services.CommandHistory
 
 		public async Task AddAsync(params string[] command)
 		{
-			var history = await this.settings.GetAsync<CommandHistory>(CommandHistoryKey);
-			history ??= new CommandHistory();
-			history.Add(command);
-			await this.settings.SetAsync(CommandHistoryKey, history);
+			await this.settings.UpdateAsync<CommandHistory>(CommandHistoryKey, history =>
+			{
+				history ??= new CommandHistory();
+				history.Add(command);
+				return history;
+			});
 		}
 
 		public async Task<IReadOnlyList<string>> GetLastAsync(int? count)
@@ -44,25 +46,28 @@ namespace Greg.Xrm.Command.Services.CommandHistory
 
 		public async Task SetMaxLengthAsync(int maxLength)
 		{
-			var history = await this.settings.GetAsync<CommandHistory>(CommandHistoryKey);
-			history ??= new CommandHistory();
-			history.MaxSize = maxLength;
-
-			if (history.Commands.Count > maxLength)
+			await this.settings.UpdateAsync<CommandHistory>(CommandHistoryKey, history =>
 			{
-				history.Commands = history.Commands.Skip(history.Commands.Count - maxLength).ToList();
-			}
+				history ??= new CommandHistory();
+				history.MaxSize = maxLength;
 
-			await this.settings.SetAsync(CommandHistoryKey, history);
+				if (history.Commands.Count > maxLength)
+				{
+					history.Commands = history.Commands.Skip(history.Commands.Count - maxLength).ToList();
+				}
+
+				return history;
+			});
 		}
 
 		public async Task ClearAsync()
 		{
-			var history = await this.settings.GetAsync<CommandHistory>(CommandHistoryKey);
-			if (history == null) return;
-
-			history.Commands.Clear();
-			await this.settings.SetAsync(CommandHistoryKey, history);
+			await this.settings.UpdateAsync<CommandHistory>(CommandHistoryKey, history =>
+			{
+				history ??= new CommandHistory();
+				history.Commands.Clear();
+				return history;
+			});
 		}
 	}
 
