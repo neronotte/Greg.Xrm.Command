@@ -26,7 +26,7 @@ namespace Greg.Xrm.Command.Commands.Security.BusinessUnits
 				var roots = BuildHierarchy(units, cancellationToken);
 				if (json)
 				{
-					output.WriteLine(JsonConvert.SerializeObject(new { BusinessUnits = roots }, Formatting.Indented));
+					output.WriteRawLine(JsonConvert.SerializeObject(new { BusinessUnits = roots }, Formatting.Indented));
 					return CommandResult.Success();
 				}
 				output.WriteLine("Done", ConsoleColor.Green);

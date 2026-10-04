@@ -35,6 +35,15 @@ namespace Greg.Xrm.Command.Services.Output
 			return this;
 		}
 
+		public IOutput WriteRawLine(object? text)
+		{
+			lock (syncRoot)
+			{
+				ansiConsole.Profile.Out.Writer.WriteLine(text?.ToString() ?? "");
+			}
+			return this;
+		}
+
 		public IOutput WriteLine()
 		{
 			lock (syncRoot)

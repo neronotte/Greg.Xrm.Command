@@ -68,6 +68,32 @@ namespace Greg.Xrm.Command.Commands.Security.Users
 		}
 
 		[TestMethod]
+		public async Task JsonShouldNotWrapLongValuesWithAnsiConsoleOutput()
+		{
+			const string longName = "A user, team, or role name that exceeds the console width";
+			context.Teams[0]["name"] = longName;
+			context.DirectRoles[0]["name"] = longName;
+			context.Users.Setup(repository => repository.GetByDomainNameOrEmailAsync(context.Crm.Object, "john@contoso.com", 2, It.IsAny<CancellationToken>()))
+				.ReturnsAsync(new[] { new Greg.Xrm.Command.Model.SystemUser(context.UserId, "john@contoso.com", fullName: longName, businessUnit: new EntityReference("businessunit", context.BusinessUnitId)) });
+			using var rendered = new StringWriter();
+			var narrowConsole = AnsiConsole.Create(new AnsiConsoleSettings
+			{
+				Out = new AnsiConsoleOutput(rendered), Ansi = AnsiSupport.No, ColorSystem = ColorSystemSupport.NoColors
+			});
+			narrowConsole.Profile.Width = 20;
+			var output = new OutputToAnsiConsole(narrowConsole);
+			var executor = new ProfileCommandExecutor(output, context.Connections.Object, context.Profiles, narrowConsole);
+
+			var result = await executor.ExecuteAsync(new ProfileCommand { User = "john@contoso.com", Format = ProfileOutputFormat.Json }, CancellationToken.None);
+
+			Assert.IsTrue(result.IsSuccess, result.ErrorMessage);
+			var profile = JObject.Parse(rendered.ToString());
+			Assert.AreEqual(longName, profile["FullName"]!.ToString());
+			Assert.AreEqual(longName, profile["Roles"]![0]!["Role"]!["Name"]!.ToString());
+			Assert.AreEqual(longName, profile["Teams"]!.Single(team => team["TeamId"]!.ToString() == context.TeamId.ToString())["Name"]!.ToString());
+		}
+
+		[TestMethod]
 		public async Task RoleSharedByMultipleTeamsShouldRemainUnderEachTeamWithoutDuplicatingUserRoles()
 		{
 			context.Membership.Add(context.Teams[2]);

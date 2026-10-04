@@ -27,7 +27,7 @@ namespace Greg.Xrm.Command.Commands.Security.Users
 				var profile = await profiles.GetAsync(crm, command.User, cancellationToken);
 				if (json)
 				{
-					output.WriteLine(JsonConvert.SerializeObject(profile, Formatting.Indented));
+					output.WriteRawLine(JsonConvert.SerializeObject(profile, Formatting.Indented));
 					return CommandResult.Success();
 				}
 				

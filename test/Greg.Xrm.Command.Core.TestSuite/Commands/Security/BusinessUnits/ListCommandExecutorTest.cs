@@ -80,6 +80,25 @@ namespace Greg.Xrm.Command.Commands.Security.BusinessUnits
 		}
 
 		[TestMethod]
+		public async Task JsonShouldNotWrapLongNamesWithAnsiConsoleOutput()
+		{
+			const string longName = "A business unit name that exceeds the console width";
+			await SetupUnitsAsync(Unit(Guid.NewGuid(), longName));
+			using var rendered = new StringWriter();
+			var narrowConsole = AnsiConsole.Create(new AnsiConsoleSettings
+			{
+				Out = new AnsiConsoleOutput(rendered), Ansi = AnsiSupport.No, ColorSystem = ColorSystemSupport.NoColors
+			});
+			narrowConsole.Profile.Width = 20;
+			var executor = new ListCommandExecutor(new OutputToAnsiConsole(narrowConsole), connections.Object, units.Object, narrowConsole);
+
+			var result = await executor.ExecuteAsync(new ListCommand { Format = BusinessUnitOutputFormat.Json }, CancellationToken.None);
+
+			Assert.IsTrue(result.IsSuccess, result.ErrorMessage);
+			Assert.AreEqual(longName, JObject.Parse(rendered.ToString())["BusinessUnits"]![0]!["Name"]!.ToString());
+		}
+
+		[TestMethod]
 		public async Task TreeShouldRenderEscapedNamesAndCounts()
 		{
 			var rootId = Guid.NewGuid();
