@@ -29,11 +29,8 @@ namespace Greg.Xrm.Command.Services.Security
 			var teamProfiles = membership.DistinctBy(team => team.Id).OrderBy(team => team.name, StringComparer.OrdinalIgnoreCase).ThenBy(team => team.Id)
 				.Select(team => new SecurityTeamProfile(team.Id, team.name, team.TypeName, team.businessunitid?.Id,
 					team.BusinessUnitName, byTeam.TryGetValue(team.Id, out var assigned) ? assigned : [])).ToArray();
-			var assignments = direct.Select(role => (Role: role, Source: "Direct"))
-				.Concat(teamProfiles.SelectMany(team => team.Roles.Select(role => (Role: role, Source: "Team"))))
-				.GroupBy(assignment => assignment.Role.RoleId)
-				.Select(group => new SecurityRoleAssignmentInfo(group.First().Role,
-					group.Select(assignment => assignment.Source).Distinct().Order().ToArray()))
+			var assignments = direct.DistinctBy(role => role.RoleId)
+				.Select(role => new SecurityRoleAssignmentInfo(role, ["Direct"]))
 				.OrderBy(assignment => assignment.Role.Name, StringComparer.OrdinalIgnoreCase).ThenBy(assignment => assignment.Role.RoleId).ToArray();
 			return new SecurityUserProfile(user.UserId, user.FullName, user.DomainName, businessUnit, assignments, teamProfiles);
 		}

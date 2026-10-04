@@ -100,6 +100,29 @@ namespace Greg.Xrm.Command.Commands.Security.BusinessUnits
 		}
 
 		[TestMethod]
+		public async Task TreeShouldUsePaletteColorsAndStartWithBlankLine()
+		{
+			await SetupUnitsAsync(Unit(Guid.NewGuid(), "Europe"));
+			using var rendered = new StringWriter();
+			var coloredConsole = AnsiConsole.Create(new AnsiConsoleSettings
+			{
+				Out = new AnsiConsoleOutput(rendered), Ansi = AnsiSupport.Yes, ColorSystem = ColorSystemSupport.TrueColor
+			});
+			coloredConsole.Profile.Width = 240;
+			var executor = new ListCommandExecutor(output, connections.Object, units.Object, coloredConsole);
+
+			var result = await executor.ExecuteAsync(new ListCommand(), CancellationToken.None);
+
+			Assert.IsTrue(result.IsSuccess, result.ErrorMessage);
+			var text = rendered.ToString();
+			var labelAnsi = "\u001b[38;5;111m";
+			var valueAnsi = "\u001b[38;5;215m";
+			Assert.IsTrue(text.StartsWith(Environment.NewLine, StringComparison.Ordinal));
+			StringAssert.Contains(text, $"{labelAnsi}Business units\u001b[0m");
+			StringAssert.Contains(text, $"{valueAnsi}Europe\u001b[0m");
+		}
+
+		[TestMethod]
 		public async Task MissingParentShouldRetainUnitAsSortedRoot()
 		{
 			var missingId = Guid.NewGuid();

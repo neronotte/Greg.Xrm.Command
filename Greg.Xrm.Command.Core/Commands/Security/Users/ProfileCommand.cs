@@ -24,7 +24,7 @@ namespace Greg.Xrm.Command.Commands.Security.Users
 			writer.WriteCodeBlock("pacx user profile", "Powershell");
 			writer.WriteCodeBlock("pacx user profile --user john.doe@contoso.com --format Tree", "Powershell");
 			writer.WriteCodeBlock("pacx user profile -u john.doe@contoso.com -f Json --nologo", "Powershell");
-			writer.WriteParagraph("Roles include Direct and Team sources. Each membership team lists its assigned roles, including teams with no roles. Microsoft Entra group-team membership reflects Dataverse synchronization; users who have never accessed the environment may have incomplete membership information.");
+			writer.WriteParagraph("The user's Roles section contains only directly assigned roles. Team roles appear under their respective membership teams, including teams with no roles. Microsoft Entra group-team membership reflects Dataverse synchronization; users who have never accessed the environment may have incomplete membership information.");
 		}
 	}
 }

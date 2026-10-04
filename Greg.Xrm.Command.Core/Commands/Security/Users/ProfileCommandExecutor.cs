@@ -17,7 +17,7 @@ namespace Greg.Xrm.Command.Commands.Security.Users
 		{
 			try
 			{
-				
+				cancellationToken.ThrowIfCancellationRequested();
 				var json = command.Format == ProfileOutputFormat.Json;
 
 				if (!json) output.Write("Connecting to the current dataverse environment...");
@@ -31,29 +31,30 @@ namespace Greg.Xrm.Command.Commands.Security.Users
 					return CommandResult.Success();
 				}
 				
-				var tree = new Tree(Markup.Escape($"{profile.FullName} ({profile.UserId})"));
-				tree.AddNode(Markup.Escape($"Domain: {profile.DomainName}"));
-				tree.AddNode(Markup.Escape(profile.BusinessUnit == null ? "Business unit: not available"
-					: $"Business unit: {profile.BusinessUnit.Name} ({profile.BusinessUnit.Id})"));
+				var tree = new Tree($"{Value(profile.FullName)} [Gray]({profile.UserId})[/]");
+				tree.AddNode($"[SkyBlue2]Domain:[/] {Value(profile.DomainName)}");
+				tree.AddNode(profile.BusinessUnit == null ? "[SkyBlue2]Business unit:[/] [Gray]not available[/]"
+					: $"[SkyBlue2]Business unit:[/] {Value(profile.BusinessUnit.Name)} [Gray]({profile.BusinessUnit.Id})[/]");
 				
-				var roleNode = tree.AddNode($"Roles ({profile.Roles.Count})");
+				var roleNode = tree.AddNode($"[SkyBlue2]Roles[/] [Gray]({profile.Roles.Count})[/]");
 				
 				foreach (var assignment in profile.Roles)
-					roleNode.AddNode(Markup.Escape($"{RoleLabel(assignment.Role)} | Sources: {string.Join(", ", assignment.Sources)}"));
+					roleNode.AddNode(RoleLabel(assignment.Role));
 				
-				if (profile.Roles.Count == 0) roleNode.AddNode("No roles");
+				if (profile.Roles.Count == 0) roleNode.AddNode("[Gray]No roles[/]");
 				
-				var teamNode = tree.AddNode($"Teams ({profile.Teams.Count})");
+				var teamNode = tree.AddNode($"[SkyBlue2]Teams[/] [Gray]({profile.Teams.Count})[/]");
 				foreach (var team in profile.Teams)
 				{
-					var node = teamNode.AddNode(Markup.Escape($"{team.Name} ({team.TeamId}) | {team.Type} | BU: {team.BusinessUnit}"));
-					var assigned = node.AddNode($"Roles ({team.Roles.Count})");
-					foreach (var role in team.Roles) assigned.AddNode(Markup.Escape(RoleLabel(role)));
-					if (team.Roles.Count == 0) assigned.AddNode("No roles");
+					var node = teamNode.AddNode($"{Value(team.Name)} [Gray]({team.TeamId})[/] | {Value(team.Type)} | [SkyBlue2]BU:[/] {Value(team.BusinessUnit)}");
+					var assigned = node.AddNode($"[SkyBlue2]Roles[/] [Gray]({team.Roles.Count})[/]");
+					foreach (var role in team.Roles) assigned.AddNode(RoleLabel(role));
+					if (team.Roles.Count == 0) assigned.AddNode("[Gray]No roles[/]");
 				}
 				
-				if (profile.Teams.Count == 0) teamNode.AddNode("No teams");
+				if (profile.Teams.Count == 0) teamNode.AddNode("[Gray]No teams[/]");
 				
+				console.WriteLine();
 				console.Write(tree);
 				
 				var result = CommandResult.Success();
@@ -67,6 +68,8 @@ namespace Greg.Xrm.Command.Commands.Security.Users
 		}
 
 		private static string RoleLabel(SecurityRoleInfo role) =>
-			$"{role.Name} ({role.RoleId}) | BU: {role.BusinessUnit} | {(role.IsManaged ? "Managed" : "Unmanaged")}";
+			$"{Value(role.Name)} [Gray]({role.RoleId})[/] | [SkyBlue2]BU:[/] {Value(role.BusinessUnit)} | [Gray]{(role.IsManaged ? "Managed" : "Unmanaged")}[/]";
+
+		private static string Value(string value) => $"[SandyBrown]{Markup.Escape(value)}[/]";
 	}
 }

@@ -19,7 +19,32 @@ namespace Greg.Xrm.Command.Commands.Security.Users
 		private ProfileCommandExecutor Executor() => new(context.Output, context.Connections.Object, context.Profiles, context.Console);
 
 		[TestMethod]
-		public async Task JsonShouldIncludeBusinessUnitMergedRolesAndTeamsWithoutProgress()
+		[DataRow(ProfileOutputFormat.Tree)]
+		[DataRow(ProfileOutputFormat.Json)]
+		public async Task TeamOnlyRolesShouldAppearOnlyUnderTeams(ProfileOutputFormat format)
+		{
+			context.DirectRoles.Clear();
+			var result = await Executor().ExecuteAsync(new ProfileCommand { User = "john@contoso.com", Format = format }, CancellationToken.None);
+			Assert.IsTrue(result.IsSuccess, result.ErrorMessage);
+			if (format == ProfileOutputFormat.Json)
+			{
+				var profile = JObject.Parse(context.Output.ToString());
+				Assert.IsEmpty((JArray)profile["Roles"]!);
+				var team = ((JArray)profile["Teams"]!).Single(item => item["TeamId"]!.ToString() == context.TeamId.ToString());
+				Assert.HasCount(2, (JArray)team["Roles"]!);
+			}
+			else
+			{
+				Assert.AreEqual(0, result["RoleCount"]);
+				var tree = context.TreeOutput.ToString();
+				StringAssert.Contains(tree, "Roles (0)");
+				Assert.AreEqual(1, tree.Split("Salesperson", StringSplitOptions.None).Length - 1);
+				Assert.AreEqual(1, tree.Split("Regional", StringSplitOptions.None).Length - 1);
+			}
+		}
+
+		[TestMethod]
+		public async Task JsonShouldIncludeBusinessUnitDirectRolesAndTeamsWithoutProgress()
 		{
 			var result = await Executor().ExecuteAsync(new ProfileCommand { User = "john@contoso.com", Format = ProfileOutputFormat.Json }, CancellationToken.None);
 			Assert.IsTrue(result.IsSuccess, result.ErrorMessage);
@@ -29,9 +54,9 @@ namespace Greg.Xrm.Command.Commands.Security.Users
 			Assert.AreEqual("Europe", json["BusinessUnit"]!["Name"]!.ToString());
 			Assert.AreEqual(context.BusinessUnitId.ToString(), json["BusinessUnit"]!["Id"]!.ToString());
 			var roles = (JArray)json["Roles"]!;
-			Assert.HasCount(3, roles);
+			Assert.HasCount(2, roles);
 			var shared = roles.Single(assignment => assignment["Role"]!["RoleId"]!.ToString() == context.SharedRoleId.ToString());
-			CollectionAssert.AreEqual(new[] { "Direct", "Team" }, shared["Sources"]!.Values<string>().ToArray());
+			CollectionAssert.AreEqual(new[] { "Direct" }, shared["Sources"]!.Values<string>().ToArray());
 			var teams = (JArray)json["Teams"]!;
 			Assert.HasCount(2, teams);
 			Assert.HasCount(0, (JArray)teams.Single(team => team["TeamId"]!.ToString() == context.AccessTeamId.ToString())["Roles"]!);
@@ -51,7 +76,7 @@ namespace Greg.Xrm.Command.Commands.Security.Users
 			var result = await Executor().ExecuteAsync(new ProfileCommand { User = "john@contoso.com", Format = ProfileOutputFormat.Json }, CancellationToken.None);
 			Assert.IsTrue(result.IsSuccess, result.ErrorMessage);
 			var json = JObject.Parse(context.Output.ToString());
-			Assert.HasCount(3, (JArray)json["Roles"]!);
+			Assert.HasCount(2, (JArray)json["Roles"]!);
 			var teams = (JArray)json["Teams"]!;
 			Assert.HasCount(3, teams);
 			Assert.HasCount(2, (JArray)teams.Single(team => team["TeamId"]!.ToString() == context.TeamId.ToString())["Roles"]!);
@@ -94,21 +119,47 @@ namespace Greg.Xrm.Command.Commands.Security.Users
 		}
 
 		[TestMethod]
-		public async Task TreeShouldRenderEscapedNamesAndBothRoleSources()
+		public async Task TreeShouldRenderEscapedNamesAndDirectRoleCount()
 		{
 			context.Teams[0]["name"] = "[red]Sales[/]";
 			context.DirectRoles[0]["name"] = "[blue]Role[/]";
 			var result = await Executor().ExecuteAsync(new ProfileCommand { User = context.UserId.ToString() }, CancellationToken.None);
 			Assert.IsTrue(result.IsSuccess, result.ErrorMessage);
-			Assert.AreEqual(3, result["RoleCount"]);
+			Assert.AreEqual(2, result["RoleCount"]);
 			Assert.AreEqual(2, result["TeamCount"]);
 			var tree = context.TreeOutput.ToString();
 			StringAssert.Contains(tree, "John Doe");
 			StringAssert.Contains(tree, "Europe");
-			StringAssert.Contains(tree, "Direct, Team");
+			StringAssert.Contains(tree, "Roles (2)");
 			StringAssert.Contains(tree, "[red]Sales[/]");
 			StringAssert.Contains(tree, "[blue]Role[/]");
 			StringAssert.Contains(tree, "No roles");
+		}
+
+		[TestMethod]
+		public async Task TreeShouldUseDistinctColorsForLabelsAndValues()
+		{
+			using var rendered = new StringWriter();
+			var coloredConsole = AnsiConsole.Create(new AnsiConsoleSettings
+			{
+				Out = new AnsiConsoleOutput(rendered), Ansi = AnsiSupport.Yes, ColorSystem = ColorSystemSupport.TrueColor
+			});
+			coloredConsole.Profile.Width = 240;
+			var executor = new ProfileCommandExecutor(context.Output, context.Connections.Object, context.Profiles, coloredConsole);
+
+			var result = await executor.ExecuteAsync(new ProfileCommand { User = "john@contoso.com" }, CancellationToken.None);
+
+			Assert.IsTrue(result.IsSuccess, result.ErrorMessage);
+			var text = rendered.ToString();
+			var labelAnsi = "\u001b[38;5;111m";
+			var valueAnsi = "\u001b[38;5;215m";
+			Assert.IsTrue(text.StartsWith(Environment.NewLine, StringComparison.Ordinal));
+			StringAssert.Contains(text, $"{labelAnsi}Domain:\u001b[0m");
+			StringAssert.Contains(text, $"{labelAnsi}Business unit:\u001b[0m");
+			StringAssert.Contains(text, $"{labelAnsi}Roles\u001b[0m");
+			StringAssert.Contains(text, $"{labelAnsi}Teams\u001b[0m");
+			StringAssert.Contains(text, $"{valueAnsi}John Doe\u001b[0m");
+			StringAssert.Contains(text, $"{valueAnsi}Salesperson\u001b[0m");
 		}
 
 		[TestMethod]
@@ -126,11 +177,11 @@ namespace Greg.Xrm.Command.Commands.Security.Users
 			var different = context.TeamRole(Guid.NewGuid(), "Salesperson", context.TeamId);
 			var businessUnitId = Guid.NewGuid();
 			different["businessunitid"] = new EntityReference("businessunit", businessUnitId) { Name = "America" };
-			context.TeamRoles.Add(different);
+			context.DirectRoles.Add(different);
 			var result = await Executor().ExecuteAsync(new ProfileCommand { User = "john@contoso.com", Format = ProfileOutputFormat.Json }, CancellationToken.None);
 			Assert.IsTrue(result.IsSuccess, result.ErrorMessage);
 			var roles = (JArray)JObject.Parse(context.Output.ToString())["Roles"]!;
-			Assert.HasCount(4, roles);
+			Assert.HasCount(3, roles);
 			Assert.AreEqual(businessUnitId.ToString(), roles.Single(role => role["Role"]!["RoleId"]!.ToString() == different.Id.ToString())["Role"]!["BusinessUnitId"]!.ToString());
 		}
 

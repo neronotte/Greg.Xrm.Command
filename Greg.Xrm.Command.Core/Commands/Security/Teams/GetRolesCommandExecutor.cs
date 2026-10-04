@@ -15,6 +15,7 @@ namespace Greg.Xrm.Command.Commands.Security.Teams
 		{
 			try
 			{
+				cancellationToken.ThrowIfCancellationRequested();
 				output.Write("Connecting to the current dataverse environment...");
 				var crm = await connections.GetCurrentConnectionAsync();
 				output.WriteLine("Done", ConsoleColor.Green);

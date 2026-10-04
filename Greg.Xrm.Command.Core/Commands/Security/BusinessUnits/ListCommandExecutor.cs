@@ -30,10 +30,11 @@ namespace Greg.Xrm.Command.Commands.Security.BusinessUnits
 					return CommandResult.Success();
 				}
 				output.WriteLine("Done", ConsoleColor.Green);
-				var tree = new Tree($"Business units ({units.Count})");
+				var tree = new Tree($"[SkyBlue2]Business units[/] [Gray]({units.Count})[/]");
 				foreach (var root in roots)
 					AddChildren(tree.AddNode(Label(root)), root.Children);
-				if (roots.Count == 0) tree.AddNode("No business units");
+				if (roots.Count == 0) tree.AddNode("[Gray]No business units[/]");
+				console.WriteLine();
 				console.Write(tree);
 				var result = CommandResult.Success();
 				result["Count"] = units.Count;
@@ -77,7 +78,7 @@ namespace Greg.Xrm.Command.Commands.Security.BusinessUnits
 			return roots;
 		}
 
-		private static string Label(BusinessUnitNode node) => Markup.Escape($"{node.Name} ({node.Id})");
+		private static string Label(BusinessUnitNode node) => $"[SandyBrown]{Markup.Escape(node.Name)}[/] [Gray]({node.Id})[/]";
 
 		private static void AddChildren(TreeNode parent, IReadOnlyList<BusinessUnitNode> children)
 		{
