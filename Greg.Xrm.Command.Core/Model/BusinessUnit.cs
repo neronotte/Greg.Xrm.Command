@@ -8,9 +8,21 @@ namespace Greg.Xrm.Command.Model
 	{
 		private BusinessUnit(Entity entity) : base(entity) { }
 		public string name => this.Get<string>();
+		public EntityReference? parentbusinessunitid => this.Get<EntityReference>();
 
 		public class Repository : IBusinessUnitRepository
 		{
+			public async Task<IReadOnlyList<BusinessUnit>> GetAllAsync(IOrganizationServiceAsync2 crm, CancellationToken cancellationToken)
+			{
+				cancellationToken.ThrowIfCancellationRequested();
+				var query = new QueryExpression("businessunit")
+				{
+					ColumnSet = new ColumnSet("name", "parentbusinessunitid"),
+					Orders = { new OrderExpression("businessunitid", OrderType.Ascending) }
+				};
+				return await crm.RetrieveAllAsync(query, entity => new BusinessUnit(entity), cancellationToken);
+			}
+
 			public async Task<IReadOnlyList<BusinessUnit>> GetByIdsAsync(IOrganizationServiceAsync2 crm, IEnumerable<Guid> identifiers, CancellationToken cancellationToken)
 			{
 				var ids = identifiers.Where(identifier => identifier != Guid.Empty).Distinct().ToArray();
