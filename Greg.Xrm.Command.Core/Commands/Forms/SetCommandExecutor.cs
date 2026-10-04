@@ -26,7 +26,10 @@ namespace Greg.Xrm.Command.Commands.Forms
 				if (!FormXmlFileHelper.TryValidateOutputPath(command.BackupFile, out var pathError))
 					return CommandResult.Fail(pathError!);
 
-				if (Path.GetFullPath(command.FileName).Equals(Path.GetFullPath(command.BackupFile), StringComparison.OrdinalIgnoreCase))
+var inputPath = Path.GetFullPath(command.FileName);
+				var backupPath = Path.GetFullPath(command.BackupFile);
+				var pathComparison = OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+				if (inputPath.Equals(backupPath, pathComparison))
 					return CommandResult.Fail("The --backup file must differ from the --file input.");
 			}
 
