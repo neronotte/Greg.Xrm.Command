@@ -17,7 +17,7 @@
 - Render escaped names and IDs through `IAnsiConsole`, or a nested JSON object through `IOutput` without progress output.
 - Test parsing, hierarchy, output, failures, interface-based IoC resolution, and cancellation.
 
-### 🕒 3. Verify and Document
+### ✅ 3. Verify and Document
 
 - Run the focused tests and full suite; report unrelated existing failures.
 - Document usage and the JSON structure.
@@ -31,3 +31,31 @@ pacx security bu list --format Json --nologo
 ```
 
 JSON is an object with a `BusinessUnits` array containing root nodes. Each node contains `Id`, `Name`, `ParentId`, and a recursively nested `Children` array. Empty environments return `{ "BusinessUnits": [] }`.
+
+```json
+{
+	"BusinessUnits": [
+		{
+			"Id": "00000000-0000-0000-0000-000000000001",
+			"Name": "Contoso",
+			"ParentId": null,
+			"Children": [
+				{
+					"Id": "00000000-0000-0000-0000-000000000002",
+					"Name": "Europe",
+					"ParentId": "00000000-0000-0000-0000-000000000001",
+					"Children": []
+				}
+			]
+		}
+	]
+}
+```
+
+The command reads all pages without filtering out disabled business units. Root nodes and siblings are sorted by name (case-insensitive), then ID. Missing parents do not hide their children; cyclic parent relationships fail before any JSON is written.
+
+## Verification
+
+- Build and all 21 command/repository tests passed locally without Dataverse access.
+- Full suite: 1,358 passed, 2 failed. The existing `CancellationShouldPropagateBeforeConnecting` tests for user profiles and team roles still fail; no new failures were introduced.
+- No live-environment execution was performed.
