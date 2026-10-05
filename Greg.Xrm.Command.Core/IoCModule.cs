@@ -30,6 +30,8 @@ namespace Greg.Xrm.Command
 			builder.RegisterType<ExportMetadataStrategyFactory>().As<IExportMetadataStrategyFactory>();
 			builder.RegisterType<Dependency.Repository>().As<IDependencyRepository>();
 			builder.RegisterType<Workflow.Repository>().As<IWorkflowRepository>();
+			builder.RegisterType<ConnectionReference.Repository>().As<IConnectionReferenceRepository>();
+			builder.RegisterType<Commands.Workflows.WorkflowDefinitionValidator>().As<Commands.Workflows.IWorkflowDefinitionValidator>();
 			builder.RegisterType<ProcessTrigger.Repository>().As<IProcessTriggerRepository>();
 			builder.RegisterType<WebResource.Repository>().As<IWebResourceRepository>();
 			builder.RegisterType<Solution.Repository>().As<ISolutionRepository>();
