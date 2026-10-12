@@ -80,7 +80,14 @@ namespace Greg.Xrm.Command.Commands.Ribbon
 				: "Unknown";
 			var objectId = component.GetAttributeValue<Guid>("objectid");
 			var details = $"First invalid component: type={typeName} ({typeNumber?.ToString() ?? "unknown"}), objectId={objectId}, solutionComponentId={component.Id}";
-			var rootId = component.GetAttributeValue<Guid?>("rootsolutioncomponentid");
+Guid? rootId = component.Attributes.TryGetValue("rootsolutioncomponentid", out var rootValue)
+				? rootValue switch
+				{
+					EntityReference reference => reference.Id,
+					Guid id => id,
+					_ => null
+				}
+				: null;
 			if (rootId.HasValue)
 				details += $", rootSolutionComponentId={rootId.Value}";
 			var behavior = Choice(component, "rootcomponentbehavior");
