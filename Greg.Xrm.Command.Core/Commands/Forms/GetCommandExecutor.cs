@@ -15,7 +15,10 @@ namespace Greg.Xrm.Command.Commands.Forms
 			if (!string.IsNullOrWhiteSpace(command.OutputFile) && !command.OutputFile.TryValidateOutputPath(out var error))
 				return CommandResult.Fail(error!);
 
+			output.Write("Connecting to the current dataverse environment...");
 			var crm = await organizationServiceRepository.GetCurrentConnectionAsync();
+			output.WriteLine("Done", ConsoleColor.Green);
+
 			var (result, form) = await formRepository.GetByNameAsync(crm, command.TableName, command.FormName, announce: false);
 			if (!result.IsSuccess)
 				return result;

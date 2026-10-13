@@ -28,6 +28,7 @@ namespace Greg.Xrm.Command.Commands.Forms
 			repository.Verify(service => service.GetByNameAsync(OrganizationServiceMock.Object, "account", "", true), Times.Once);
 			renderer.Verify(service => service.Render(It.Is<XElement>(xml => xml.Name == "form" && xml.Element("tabs") != null), LayoutDisplay.Names, "Information"), Times.Once);
 			StringAssert.Contains(Output.ToString(), "rendered layout");
+			StringAssert.Contains(Output.ToString(), "Connecting to the current dataverse environment...");
 		}
 
 		[TestMethod]

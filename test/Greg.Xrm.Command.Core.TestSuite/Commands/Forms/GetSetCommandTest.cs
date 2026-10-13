@@ -25,7 +25,7 @@ namespace Greg.Xrm.Command.Commands.Forms
 		}
 
 		[TestMethod]
-		public async Task GetPrintsOnlyRawXml()
+		public async Task GetPrintsProgressAndRawXml()
 		{
 			SetupForm("<form><tabs /></form>");
 			var executor = new GetCommandExecutor(OrganizationServiceRepositoryMock.Object, forms.Object, Output);
@@ -33,7 +33,8 @@ namespace Greg.Xrm.Command.Commands.Forms
 			var result = await executor.ExecuteAsync(new GetCommand { TableName = "account" }, CancellationToken.None);
 
 			Assert.IsTrue(result.IsSuccess);
-			Assert.AreEqual("<form><tabs /></form>" + Environment.NewLine, Output.ToString());
+			Assert.AreEqual("Connecting to the current dataverse environment...<Green>Done</Green>" + Environment.NewLine +
+				"<form><tabs /></form>" + Environment.NewLine, Output.ToString());
 		}
 
 		[TestMethod]

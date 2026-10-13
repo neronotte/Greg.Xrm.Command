@@ -49,7 +49,9 @@ namespace Greg.Xrm.Command.Commands.Forms.Model
 		{
 			public async Task<(CommandResult, Form?)> GetByNameAsync(IOrganizationServiceAsync2 crm, string tableName, string? formName, bool announce = true)
 			{
+				output.Write($"Retrieving main form of table {tableName}...");
 				var forms = await GetMainFormByTableNameAsync(crm, tableName);
+				output.WriteLine("Done", ConsoleColor.Green);
 
 				if (forms.Count == 0)
 					return (CommandResult.Fail($"No main form found for table {tableName}"), null);

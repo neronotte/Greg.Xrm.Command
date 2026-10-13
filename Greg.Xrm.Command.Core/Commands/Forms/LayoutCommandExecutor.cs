@@ -16,7 +16,10 @@ namespace Greg.Xrm.Command.Commands.Forms
 	{
 		public async Task<CommandResult> ExecuteAsync(LayoutCommand command, CancellationToken cancellationToken)
 		{
+			output.Write("Connecting to the current dataverse environment...");
 			var crm = await organizationServiceRepository.GetCurrentConnectionAsync();
+			output.WriteLine("Done", ConsoleColor.Green);
+
 			var (result, form) = await formRepository.GetByNameAsync(crm, command.TableName, command.FormName);
 			if (!result.IsSuccess)
 				return result;

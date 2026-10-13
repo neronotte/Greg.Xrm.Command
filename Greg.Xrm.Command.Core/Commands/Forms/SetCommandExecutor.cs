@@ -52,7 +52,10 @@ var inputPath = Path.GetFullPath(command.FileName);
 				return CommandResult.Fail($"Unable to read form XML from <{command.FileName}>: {ex.Message}", ex);
 			}
 
+			output.Write("Connecting to the current dataverse environment...");
 			var crm = await organizationServiceRepository.GetCurrentConnectionAsync();
+			output.WriteLine("Done", ConsoleColor.Green);
+
 			var (result, form) = await formRepository.GetByNameAsync(crm, command.TableName, command.FormName);
 			if (!result.IsSuccess)
 				return result;
@@ -86,7 +89,9 @@ var inputPath = Path.GetFullPath(command.FileName);
 					output.WriteLine("WARNING: --fast updates formxml directly. formjson may remain out of sync. Before publishing in production, apply the final XML without --fast.", ConsoleColor.Yellow);
 					var update = new Entity("systemform", form.Id);
 					update["formxml"] = replacementXml;
+					output.Write("Updating form XML...");
 					await crm.UpdateAsync(update, cancellationToken);
+					output.WriteLine("Done", ConsoleColor.Green);
 
 					if (command.Publish)
 					{
@@ -95,7 +100,9 @@ var inputPath = Path.GetFullPath(command.FileName);
 							ParameterXml = new XElement("importexportxml",
 								new XElement("entities", new XElement("entity", command.TableName))).ToString(SaveOptions.DisableFormatting)
 						};
+						output.Write($"Publishing table {command.TableName}...");
 						await crm.ExecuteAsync(request, cancellationToken);
+						output.WriteLine("Done", ConsoleColor.Green);
 					}
 				}
 				else
