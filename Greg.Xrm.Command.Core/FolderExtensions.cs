@@ -1,8 +1,8 @@
-namespace Greg.Xrm.Command.Commands.Forms
+namespace Greg.Xrm.Command
 {
-	internal static class FormXmlFileHelper
+	public static class FolderExtensions
 	{
-		public static bool TryValidateOutputPath(string path, out string? error)
+		public static bool TryValidateOutputPath(this string path, out string? error)
 		{
 			try
 			{

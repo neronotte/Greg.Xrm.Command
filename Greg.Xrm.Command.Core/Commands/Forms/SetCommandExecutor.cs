@@ -23,7 +23,7 @@ namespace Greg.Xrm.Command.Commands.Forms
 
 			if (!string.IsNullOrWhiteSpace(command.BackupFile))
 			{
-				if (!FormXmlFileHelper.TryValidateOutputPath(command.BackupFile, out var pathError))
+				if (!command.BackupFile.TryValidateOutputPath(out var pathError))
 					return CommandResult.Fail(pathError!);
 
 var inputPath = Path.GetFullPath(command.FileName);

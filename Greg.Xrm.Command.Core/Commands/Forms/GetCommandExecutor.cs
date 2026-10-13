@@ -12,7 +12,7 @@ namespace Greg.Xrm.Command.Commands.Forms
 	{
 		public async Task<CommandResult> ExecuteAsync(GetCommand command, CancellationToken cancellationToken)
 		{
-			if (!string.IsNullOrWhiteSpace(command.OutputFile) && !FormXmlFileHelper.TryValidateOutputPath(command.OutputFile, out var error))
+			if (!string.IsNullOrWhiteSpace(command.OutputFile) && !command.OutputFile.TryValidateOutputPath(out var error))
 				return CommandResult.Fail(error!);
 
 			var crm = await organizationServiceRepository.GetCurrentConnectionAsync();
