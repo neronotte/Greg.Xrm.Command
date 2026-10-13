@@ -76,7 +76,7 @@ namespace Greg.Xrm.Command.Commands.Forms
 			var backup = Path.GetTempFileName();
 			try
 			{
-				await File.WriteAllTextAsync(path, "<form><tabs><tab name=\"new\" /></tabs></form>");
+				await File.WriteAllTextAsync(path, "<form><tabs><tab name=\"new\"><columns><column width=\"100%\" /></columns></tab></tabs></form>");
 				var executor = NewSetExecutor();
 				var result = await executor.ExecuteAsync(new SetCommand { TableName = "account", FileName = path, BackupFile = backup, Fast = true, Publish = true }, CancellationToken.None);
 				Assert.IsTrue(result.IsSuccess);
@@ -95,7 +95,7 @@ namespace Greg.Xrm.Command.Commands.Forms
 			var path = Path.GetTempFileName();
 			try
 			{
-				await File.WriteAllTextAsync(path, "<form><tabs><tab name=\"new\" /></tabs></form>");
+				await File.WriteAllTextAsync(path, "<form><tabs><tab name=\"new\"><columns><column width=\"100%\" /></columns></tab></tabs></form>");
 				var temporary = new Mock<ITemporarySolution>();
 				temporary.Setup(temp => temp.DownloadAsync()).ReturnsAsync(new SolutionZipArchive(CreateSolutionZip()));
 				solutions.Setup(repo => repo.CreateHoldingSolutionAsync(OrganizationServiceMock.Object, null)).ReturnsAsync((CommandResult.Success(), temporary.Object));
@@ -126,7 +126,7 @@ namespace Greg.Xrm.Command.Commands.Forms
 			return form;
 		}
 
-		private SetCommandExecutor NewSetExecutor() => new(OrganizationServiceRepositoryMock.Object, forms.Object, solutions.Object, Output);
+		private SetCommandExecutor NewSetExecutor() => new(OrganizationServiceRepositoryMock.Object, forms.Object, solutions.Object, new FormXmlValidator(), Output);
 
 
 		private static byte[] CreateSolutionZip()

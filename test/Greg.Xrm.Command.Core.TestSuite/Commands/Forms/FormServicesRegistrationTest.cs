@@ -25,6 +25,7 @@ namespace Greg.Xrm.Command.Commands.Forms
 			Assert.IsInstanceOfType<Form.Repository>(container.Resolve<IFormRepository>());
 			Assert.IsInstanceOfType<Greg.Xrm.Command.Model.Solution.Repository>(container.Resolve<ISolutionRepository>());
 			Assert.IsInstanceOfType<FormLayoutRenderer>(container.Resolve<IFormLayoutRenderer>());
+			Assert.IsInstanceOfType<FormXmlValidator>(container.Resolve<IFormXmlValidator>());
 			Assert.IsNotNull(container.Resolve<GetCommandExecutor>());
 			Assert.IsNotNull(container.Resolve<LayoutCommandExecutor>());
 			Assert.IsNotNull(container.Resolve<SetCommandExecutor>());

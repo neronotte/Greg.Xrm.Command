@@ -4,6 +4,7 @@ using System.Xml.XPath;
 using Greg.Xrm.Command.Commands.Forms.Model;
 using Greg.Xrm.Command.Model;
 using Greg.Xrm.Command.Services.Connection;
+using Greg.Xrm.Command.Services.Forms;
 using Greg.Xrm.Command.Services.Output;
 using Microsoft.Crm.Sdk.Messages;
 using Microsoft.Xrm.Sdk;
@@ -14,6 +15,7 @@ namespace Greg.Xrm.Command.Commands.Forms
 		IOrganizationServiceRepository organizationServiceRepository,
 		IFormRepository formRepository,
 		ISolutionRepository solutionRepository,
+		IFormXmlValidator formXmlValidator,
 		IOutput output) : ICommandExecutor<SetCommand>
 	{
 		public async Task<CommandResult> ExecuteAsync(SetCommand command, CancellationToken cancellationToken)
@@ -26,7 +28,7 @@ namespace Greg.Xrm.Command.Commands.Forms
 				if (!command.BackupFile.TryValidateOutputPath(out var pathError))
 					return CommandResult.Fail(pathError!);
 
-var inputPath = Path.GetFullPath(command.FileName);
+				var inputPath = Path.GetFullPath(command.FileName);
 				var backupPath = Path.GetFullPath(command.BackupFile);
 				var pathComparison = OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
 				if (inputPath.Equals(backupPath, pathComparison))
@@ -45,12 +47,20 @@ var inputPath = Path.GetFullPath(command.FileName);
 				// Solution exports of forms layered over a managed base carry solutionaction diff markers instead of the complete form.
 				if (replacement.DescendantsAndSelf().Any(e => e.Attribute("solutionaction") != null))
 					return CommandResult.Fail("The input XML is a solution diff (it contains solutionaction attributes), not a complete form. Use the output of 'pacx forms get' instead.");
-				replacementXml = replacement.ToString(SaveOptions.DisableFormatting);
 			}
 			catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or XmlException)
 			{
 				return CommandResult.Fail($"Unable to read form XML from <{command.FileName}>: {ex.Message}", ex);
 			}
+
+			output.Write("Validating form XML...");
+			if (!formXmlValidator.TryValidate(replacementXml, out var validationErrors))
+			{
+				output.WriteLine("Failed", ConsoleColor.Red);
+				return CommandResult.Fail("Form XML validation failed:" + Environment.NewLine + string.Join(Environment.NewLine, validationErrors));
+			}
+			output.WriteLine("Done", ConsoleColor.Green);
+			replacementXml = replacement.ToString(SaveOptions.DisableFormatting);
 
 			output.Write("Connecting to the current dataverse environment...");
 			var crm = await organizationServiceRepository.GetCurrentConnectionAsync();

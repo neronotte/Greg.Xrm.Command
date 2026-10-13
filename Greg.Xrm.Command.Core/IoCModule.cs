@@ -51,6 +51,7 @@ namespace Greg.Xrm.Command
 			builder.RegisterType<ObjectTypeCodeFinder>().As<IObjectTypeCodeFinder>();
 			builder.RegisterType<FormWrapperFactory>().As<IFormWrapperFactory>();
 			builder.RegisterType<FormLayoutRenderer>().As<IFormLayoutRenderer>();
+			builder.RegisterType<FormXmlValidator>().As<IFormXmlValidator>();
 
 
 			builder.RegisterType<FolderResolver>().As<IFolderResolver>();
