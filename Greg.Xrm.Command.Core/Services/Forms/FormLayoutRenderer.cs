@@ -1,3 +1,4 @@
+using System.Text;
 using System.Xml.Linq;
 using Greg.Xrm.Command.Commands.Forms;
 
@@ -10,7 +11,9 @@ namespace Greg.Xrm.Command.Services.Forms
 		{
 			var rootVisible = IsVisible(form);
 			var title = !string.IsNullOrWhiteSpace(formName) ? formName : (string?)form.Attribute("name");
-			yield return $"Form{(string.IsNullOrWhiteSpace(title) ? "" : " " + title)} ({Visibility(form, true)})";
+			var heading = new StringBuilder("Form");
+			if (!string.IsNullOrWhiteSpace(title)) heading.Append(' ').Append(title);
+			yield return heading.Append(" (").Append(Visibility(form, true)).Append(')').ToString();
 
 			var nodes = new List<LayoutNode>();
 			var header = form.Element("header");
@@ -41,8 +44,9 @@ namespace Greg.Xrm.Command.Services.Forms
 				for (var sectionIndex = 0; sectionIndex < sections.Length; sectionIndex++)
 				{
 					var section = sections[sectionIndex];
-					var position = $"column={columnIndex + 1}, section={sectionIndex + 1}" + OrderMetadata(column, "column.");
-					var sectionNode = new LayoutNode(section, "Section", position, columnVisible);
+					var position = new StringBuilder().Append("column=").Append(columnIndex + 1)
+						.Append(", section=").Append(sectionIndex + 1).Append(OrderMetadata(column, "column."));
+					var sectionNode = new LayoutNode(section, "Section", position.ToString(), columnVisible);
 					sectionNode.Children.AddRange(BuildControls(section, sectionNode.EffectiveVisible));
 					node.Children.Add(sectionNode);
 				}
@@ -62,19 +66,21 @@ namespace Greg.Xrm.Command.Services.Forms
 				{
 					var cell = cells[cellIndex];
 					var cellVisible = rowVisible && IsVisible(cell);
-					var position = $"row={rowIndex + 1}, cell={cellIndex + 1}" + OrderMetadata(row, "row.") + OrderMetadata(cell, "cell.");
+					var position = new StringBuilder().Append("row=").Append(rowIndex + 1)
+						.Append(", cell=").Append(cellIndex + 1).Append(OrderMetadata(row, "row.")).Append(OrderMetadata(cell, "cell."));
 					var controls = cell.Elements("control").ToArray();
 					if (controls.Length == 0)
 					{
-						yield return new LayoutNode(cell, "Spacer", position, rowVisible);
+						yield return new LayoutNode(cell, "Spacer", position.ToString(), rowVisible);
 						continue;
 					}
 					for (var controlIndex = 0; controlIndex < controls.Length; controlIndex++)
 					{
 						var control = controls[controlIndex];
 						var kind = string.IsNullOrWhiteSpace((string?)control.Attribute("datafieldname")) ? "Control" : "Field";
-						var controlPosition = position + (controls.Length > 1 ? $", control={controlIndex + 1}" : "");
-						yield return new LayoutNode(control, kind, controlPosition, cellVisible);
+						var controlPosition = new StringBuilder(position.ToString());
+						if (controls.Length > 1) controlPosition.Append(", control=").Append(controlIndex + 1);
+						yield return new LayoutNode(control, kind, controlPosition.ToString(), cellVisible);
 					}
 				}
 			}
@@ -86,8 +92,9 @@ namespace Greg.Xrm.Command.Services.Forms
 			{
 				var node = nodes[i];
 				var last = i == nodes.Count - 1;
-				yield return prefix + (last ? "`-- " : "|-- ") + Describe(node, display);
-				foreach (var line in Print(node.Children, prefix + (last ? "    " : "|   "), display)) yield return line;
+				yield return new StringBuilder(prefix).Append(last ? "`-- " : "|-- ").Append(Describe(node, display)).ToString();
+				var childPrefix = new StringBuilder(prefix).Append(last ? "    " : "|   ").ToString();
+				foreach (var line in Print(node.Children, childPrefix, display)) yield return line;
 			}
 		}
 
@@ -99,15 +106,15 @@ namespace Greg.Xrm.Command.Services.Forms
 					?? (node.Kind is "Field" or "Control" ? (string?)element.Attribute("id") : null);
 			var label = (string?)element.Element("labels")?.Elements("label").FirstOrDefault()?.Attribute("description")
 				?? (element.Name.LocalName == "control" ? (string?)element.Parent?.Element("labels")?.Elements("label").FirstOrDefault()?.Attribute("description") : null);
-			var identity = display switch
-			{
-				LayoutDisplay.Names => name,
-				LayoutDisplay.Labels => label ?? name,
-				_ => string.IsNullOrWhiteSpace(label) ? name : string.IsNullOrWhiteSpace(name) || label == name ? label : $"{label} [name={name}]"
-			};
-			var title = string.IsNullOrWhiteSpace(identity) ? node.Kind : $"{node.Kind} {identity}";
-			var position = string.IsNullOrEmpty(node.Position) ? "" : $" [{node.Position}]";
-			return $"{title}{position} ({Visibility(element, node.ParentVisible)})";
+			var identity = display == LayoutDisplay.Names ? name : label ?? name;
+			var showBoth = display != LayoutDisplay.Names && display != LayoutDisplay.Labels;
+			if (showBoth && string.IsNullOrWhiteSpace(label)) identity = name;
+			var text = new StringBuilder(node.Kind);
+			if (!string.IsNullOrWhiteSpace(identity)) text.Append(' ').Append(identity);
+			if (showBoth && !string.IsNullOrWhiteSpace(label) && !string.IsNullOrWhiteSpace(name) && label != name)
+				text.Append(" [name=").Append(name).Append(']');
+			if (!string.IsNullOrEmpty(node.Position)) text.Append(" [").Append(node.Position).Append(']');
+			return text.Append(" (").Append(Visibility(element, node.ParentVisible)).Append(')').ToString();
 		}
 
 		private static string Visibility(XElement element, bool parentVisible) =>
@@ -119,17 +126,22 @@ namespace Greg.Xrm.Command.Services.Forms
 			return !string.Equals(value, "false", StringComparison.OrdinalIgnoreCase) && value != "0";
 		}
 
-		private static string OrderMetadata(XElement element, string prefix = "") => string.Concat(
-			new[] { "ordinal", "order", "sequence" }
-				.Select(key => element.Attribute(key))
-				.Where(attribute => attribute != null)
-				.Select(attribute => $", {prefix}{attribute!.Name.LocalName}={attribute.Value}"));
+		private static string OrderMetadata(XElement element, string prefix = "")
+		{
+			var text = new StringBuilder();
+			foreach (var key in new[] { "ordinal", "order", "sequence" })
+			{
+				var attribute = element.Attribute(key);
+				if (attribute != null) text.Append(", ").Append(prefix).Append(key).Append('=').Append(attribute.Value);
+			}
+			return text.ToString();
+		}
 
 		private sealed class LayoutNode(XElement element, string kind, string position, bool parentVisible)
 		{
 			public XElement Element { get; } = element;
 			public string Kind { get; } = kind;
-			public string Position { get; } = (position + OrderMetadata(element)).TrimStart(',', ' ');
+			public string Position { get; } = new StringBuilder(position).Append(OrderMetadata(element)).ToString().TrimStart(',', ' ');
 			public bool ParentVisible { get; } = parentVisible;
 			public bool EffectiveVisible => ParentVisible && IsVisible(Element);
 			public List<LayoutNode> Children { get; } = [];
