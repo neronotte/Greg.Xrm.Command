@@ -54,7 +54,6 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Services\Forms\Schemas\*.xsd" />
-    <EmbeddedResource Include="Services\Forms\Schemas\LICENSE.txt" />
   </ItemGroup>
 
   <ItemGroup>

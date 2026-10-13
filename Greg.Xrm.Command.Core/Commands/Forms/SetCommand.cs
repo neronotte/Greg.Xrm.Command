@@ -4,7 +4,7 @@ using Greg.Xrm.Command.Services;
 
 namespace Greg.Xrm.Command.Commands.Forms
 {
-	[Command("forms", "set", HelpText = "Replace the XML of a main form")]
+	[Command("forms", "set", HelpText = "Update the XML definition of a main form")]
 	[Alias("form", "set")]
 	public class SetCommand : ICanProvideUsageExample
 	{
@@ -33,9 +33,10 @@ namespace Greg.Xrm.Command.Commands.Forms
 
 		public void WriteUsageExamples(MarkdownWriter writer)
 		{
+			writer.WriteParagraph("Use forms set to apply changes to an existing main form from an edited XML file. First export the complete definition with forms get, edit the file, then use forms set to validate and import it. Use --backup to save the current definition before updating, and --publish true when you are ready to make the changes available to users.");
 			writer.WriteCodeBlock("pacx forms get -t account -o account-form.xml", "Powershell");
 			writer.WriteCodeBlock("pacx forms set -t account --file account-form.xml --backup account-form-before.xml --publish true", "Powershell");
-			writer.WriteParagraph("The input must contain one complete <form> element. Form XML taken from a solution export that contains solutionaction diff markers is rejected. By default, set imports the replacement through a temporary solution and leaves it unpublished. --publish publishes the table and its associated forms.");
+			writer.WriteParagraph("The input must contain one complete <form> element and pass FormXML schema validation before connecting to Dataverse. Form XML taken from a solution export that contains solutionaction diff markers is rejected. By default, set imports the replacement through a temporary solution and leaves it unpublished. --publish publishes the table and its associated forms.");
 			writer.WriteParagraph("--fast updates formxml directly. Dataverse also stores a formjson representation, which may not be synchronized by a direct formxml update. Before publishing in production, apply the final XML without --fast and with --publish true.");
 		}
 	}

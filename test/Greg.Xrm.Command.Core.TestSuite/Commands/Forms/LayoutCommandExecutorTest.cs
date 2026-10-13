@@ -42,8 +42,9 @@ namespace Greg.Xrm.Command.Commands.Forms
 			var result = await executor.ExecuteAsync(new LayoutCommand { TableName = "account", FormName = "Second" }, CancellationToken.None);
 
 			Assert.IsTrue(result.IsSuccess);
-			StringAssert.Contains(Output.ToString(), "Form Second (visible)");
-			StringAssert.Contains(Output.ToString(), "Tab chosen [tab=1] (visible)");
+			StringAssert.Contains(Output.ToString(), "Form Second" + Environment.NewLine);
+			StringAssert.Contains(Output.ToString(), "Tab chosen [tab=1]" + Environment.NewLine);
+			Assert.IsFalse(Output.ToString().Contains("(visible)"));
 		}
 
 		[TestMethod]

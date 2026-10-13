@@ -13,7 +13,7 @@ namespace Greg.Xrm.Command.Services.Forms
 			var title = !string.IsNullOrWhiteSpace(formName) ? formName : (string?)form.Attribute("name");
 			var heading = new StringBuilder("Form");
 			if (!string.IsNullOrWhiteSpace(title)) heading.Append(' ').Append(title);
-			yield return heading.Append(" (").Append(Visibility(form, true)).Append(')').ToString();
+			yield return heading.Append(Visibility(form, true)).ToString();
 
 			var nodes = new List<LayoutNode>();
 			var header = form.Element("header");
@@ -114,11 +114,11 @@ namespace Greg.Xrm.Command.Services.Forms
 			if (showBoth && !string.IsNullOrWhiteSpace(label) && !string.IsNullOrWhiteSpace(name) && label != name)
 				text.Append(" [name=").Append(name).Append(']');
 			if (!string.IsNullOrEmpty(node.Position)) text.Append(" [").Append(node.Position).Append(']');
-			return text.Append(" (").Append(Visibility(element, node.ParentVisible)).Append(')').ToString();
+			return text.Append(Visibility(element, node.ParentVisible)).ToString();
 		}
 
 		private static string Visibility(XElement element, bool parentVisible) =>
-			!parentVisible ? "hidden: parent" : IsVisible(element) ? "visible" : "hidden";
+			!parentVisible ? " (hidden: parent)" : IsVisible(element) ? string.Empty : " (hidden)";
 
 		private static bool IsVisible(XElement element)
 		{

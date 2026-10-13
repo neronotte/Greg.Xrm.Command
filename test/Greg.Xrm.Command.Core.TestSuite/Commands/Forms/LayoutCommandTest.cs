@@ -35,14 +35,37 @@ namespace Greg.Xrm.Command.Commands.Forms
 		public void RenderHierarchyWithPositionsOrderAndInheritedVisibility()
 		{
 			var lines = new FormLayoutRenderer().Render(XElement.Parse(FormXml), LayoutDisplay.Both).ToArray();
-			Assert.IsTrue(lines.Any(line => line.StartsWith("|-- Header (visible)")));
-			Assert.IsTrue(lines.Any(line => line.Contains("Field Owner [name=ownerid] [row=1, cell=1] (visible)")));
+			Assert.AreEqual("Form", lines[0]);
+			Assert.IsTrue(lines.Contains("|-- Header"));
+			Assert.IsTrue(lines.Any(line => line.Contains("Field Owner [name=ownerid] [row=1, cell=1]")));
 			Assert.IsTrue(lines.Any(line => line.Contains("Tab General [name=general] [tab=1, ordinal=4] (hidden)")));
-			Assert.IsTrue(lines.Any(line => line.Contains("Tab more [tab=2] (visible)")));
+			Assert.IsTrue(lines.Contains("|-- Tab more [tab=2]"));
 			Assert.IsTrue(lines.Any(line => line.Contains("Section details [column=1, section=1] (hidden: parent)")));
 			Assert.IsTrue(lines.Any(line => line.Contains("Field Account Name [name=name] [row=1, cell=1] (hidden: parent)")));
-			Assert.IsTrue(lines.Any(line => line.Contains("`-- Footer (visible)")));
+			Assert.IsTrue(lines.Contains("`-- Footer"));
+			Assert.IsFalse(lines.Any(line => line.Contains("(visible)")));
 			Assert.IsFalse(lines.Any(line => line.Contains("Column ") || line.Contains("Row ") || line.Contains("Cell ")));
+		}
+
+		[TestMethod]
+		[DataRow("false")]
+		[DataRow("0")]
+		public void RenderMarksHiddenFormAndInheritedVisibility(string visible)
+		{
+			var form = new XElement("form", new XAttribute("visible", visible), new XElement("header"), new XElement("footer"));
+			var lines = new FormLayoutRenderer().Render(form, LayoutDisplay.Names).ToArray();
+
+			CollectionAssert.AreEqual(new[] { "Form (hidden)", "|-- Header (hidden: parent)", "`-- Footer (hidden: parent)" }, lines);
+		}
+
+		[TestMethod]
+		public void RenderMarksHiddenControlWithVisibleParents()
+		{
+			var form = XElement.Parse("<form><tabs><tab name=\"general\"><columns><column><sections><section><rows><row><cell><control id=\"name\" datafieldname=\"name\" visible=\"false\" /></cell></row></rows></section></sections></column></columns></tab></tabs></form>");
+			var lines = new FormLayoutRenderer().Render(form, LayoutDisplay.Names).ToArray();
+
+			Assert.IsTrue(lines.Any(line => line.EndsWith("Field name [row=1, cell=1] (hidden)")));
+			Assert.IsFalse(lines.Any(line => line.Contains("(visible)") || line.Contains("(hidden: parent)")));
 		}
 
 		[TestMethod]
