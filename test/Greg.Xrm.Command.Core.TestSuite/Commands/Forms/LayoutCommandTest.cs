@@ -1,3 +1,4 @@
+using Greg.Xrm.Command.Services.Forms;
 using System.Xml.Linq;
 
 namespace Greg.Xrm.Command.Commands.Forms
@@ -33,7 +34,7 @@ namespace Greg.Xrm.Command.Commands.Forms
 		[TestMethod]
 		public void RenderHierarchyWithPositionsOrderAndInheritedVisibility()
 		{
-			var lines = FormLayoutRenderer.Render(XElement.Parse(FormXml), LayoutDisplay.Both).ToArray();
+			var lines = new FormLayoutRenderer().Render(XElement.Parse(FormXml), LayoutDisplay.Both).ToArray();
 			Assert.IsTrue(lines.Any(line => line.StartsWith("|-- Header (visible)")));
 			Assert.IsTrue(lines.Any(line => line.Contains("Field Owner [name=ownerid] [row=1, cell=1] (visible)")));
 			Assert.IsTrue(lines.Any(line => line.Contains("Tab General [name=general] [tab=1, ordinal=4] (hidden)")));
@@ -48,8 +49,8 @@ namespace Greg.Xrm.Command.Commands.Forms
 		public void RenderRespectsLabelAndNameModes()
 		{
 			var form = XElement.Parse(FormXml);
-			var labels = string.Join('\n', FormLayoutRenderer.Render(form, LayoutDisplay.Labels));
-			var names = string.Join('\n', FormLayoutRenderer.Render(form, LayoutDisplay.Names));
+			var labels = string.Join('\n', new FormLayoutRenderer().Render(form, LayoutDisplay.Labels));
+			var names = string.Join('\n', new FormLayoutRenderer().Render(form, LayoutDisplay.Names));
 			StringAssert.Contains(labels, "Field Account Name [row=1, cell=1]");
 			Assert.IsFalse(labels.Contains("name=name"));
 			StringAssert.Contains(names, "Field name [row=1, cell=1]");

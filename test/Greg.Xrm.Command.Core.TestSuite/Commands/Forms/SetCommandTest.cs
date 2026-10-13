@@ -1,3 +1,4 @@
+using Greg.Xrm.Command.Services.Forms;
 using System.IO.Compression;
 using Greg.Xrm.Command.Commands.Forms.Model;
 using Greg.Xrm.Command.Model;
@@ -123,15 +124,9 @@ namespace Greg.Xrm.Command.Commands.Forms
 			try
 			{
 				await File.WriteAllTextAsync(path, "<form><tabs><tab name=\"new\" /></tabs></form>");
-				OrganizationServiceRepositoryMock.Setup(repo => repo.GetCurrentDefaultSolutionAsync()).ReturnsAsync("Default");
-				var publisher = new EntityReference("publisher", Guid.NewGuid());
-				var solutionEntity = new Entity("solution", Guid.NewGuid());
-				solutionEntity["publisherid"] = publisher;
-				solutions.Setup(repo => repo.GetByUniqueNameAsync(OrganizationServiceMock.Object, "Default"))
-					.ReturnsAsync(new TestSolution(solutionEntity));
 				var temporary = new Mock<ITemporarySolution>();
 				temporary.Setup(temp => temp.DownloadAsync()).ReturnsAsync(new SolutionZipArchive(CreateSolutionZip()));
-				solutions.Setup(repo => repo.CreateTemporarySolutionAsync(OrganizationServiceMock.Object, publisher)).ReturnsAsync(temporary.Object);
+				solutions.Setup(repo => repo.CreateHoldingSolutionAsync(OrganizationServiceMock.Object, null)).ReturnsAsync((CommandResult.Success(), temporary.Object));
 				byte[]? uploaded = null;
 				temporary.Setup(temp => temp.UploadAsync(It.IsAny<byte[]>()))
 					.Callback<byte[]>(bytes => uploaded = bytes).Returns(Task.CompletedTask);
@@ -160,9 +155,10 @@ namespace Greg.Xrm.Command.Commands.Forms
 			entity["name"] = "Information";
 			entity["formxml"] = "<form><tabs /></form>";
 			var form = new Form(entity);
-			forms.Setup(repo => repo.GetMainFormByTableNameAsync(OrganizationServiceMock.Object, "account")).ReturnsAsync([form]);
+			forms.Setup(repo => repo.GetByNameAsync(OrganizationServiceMock.Object, "account", It.IsAny<string>(), It.IsAny<bool>())).ReturnsAsync((CommandResult.Success(), form));
 			return form;
 		}
+
 
 		private sealed class TestSolution(Entity entity) : Greg.Xrm.Command.Model.Solution(entity);
 

@@ -1,11 +1,12 @@
 using System.Xml.Linq;
+using Greg.Xrm.Command.Commands.Forms;
 
-namespace Greg.Xrm.Command.Commands.Forms
+namespace Greg.Xrm.Command.Services.Forms
 {
 	/// <summary>Projects form XML onto the hierarchy shown by the model-driven form designer.</summary>
-	public static class FormLayoutRenderer
+	public class FormLayoutRenderer : IFormLayoutRenderer
 	{
-		public static IEnumerable<string> Render(XElement form, LayoutDisplay display, string? formName = null)
+		public IEnumerable<string> Render(XElement form, LayoutDisplay display, string? formName = null)
 		{
 			var rootVisible = IsVisible(form);
 			var title = !string.IsNullOrWhiteSpace(formName) ? formName : (string?)form.Attribute("name");

@@ -16,9 +16,9 @@ namespace Greg.Xrm.Command.Commands.Forms
 				return CommandResult.Fail(error!);
 
 			var crm = await organizationServiceRepository.GetCurrentConnectionAsync();
-			var forms = await formRepository.GetMainFormByTableNameAsync(crm, command.TableName);
-			if (!FormCommandHelpers.TryGetForm(output, command.TableName, command.FormName, forms, out var form, out var result, announce: false))
-				return result ?? CommandResult.Fail("Error retrieving the form");
+			var (result, form) = await formRepository.GetByNameAsync(crm, command.TableName, command.FormName, announce: false);
+			if (!result.IsSuccess)
+				return result;
 
 			if (string.IsNullOrWhiteSpace(form?.formxml))
 				return CommandResult.Fail("No formxml found!");

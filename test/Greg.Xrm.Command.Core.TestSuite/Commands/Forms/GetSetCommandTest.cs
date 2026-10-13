@@ -1,3 +1,4 @@
+using Greg.Xrm.Command.Services.Forms;
 using System.IO.Compression;
 using System.Xml.Linq;
 using Greg.Xrm.Command.Commands.Forms.Model;
@@ -94,15 +95,9 @@ namespace Greg.Xrm.Command.Commands.Forms
 			try
 			{
 				await File.WriteAllTextAsync(path, "<form><tabs><tab name=\"new\" /></tabs></form>");
-				OrganizationServiceRepositoryMock.Setup(repo => repo.GetCurrentDefaultSolutionAsync()).ReturnsAsync("Default");
-				var publisher = new EntityReference("publisher", Guid.NewGuid());
-				var solutionEntity = new Entity("solution", Guid.NewGuid());
-				solutionEntity["publisherid"] = publisher;
-				var solution = new TestSolution(solutionEntity);
-				solutions.Setup(repo => repo.GetByUniqueNameAsync(OrganizationServiceMock.Object, "Default")).ReturnsAsync(solution);
 				var temporary = new Mock<ITemporarySolution>();
 				temporary.Setup(temp => temp.DownloadAsync()).ReturnsAsync(new SolutionZipArchive(CreateSolutionZip()));
-				solutions.Setup(repo => repo.CreateTemporarySolutionAsync(OrganizationServiceMock.Object, publisher)).ReturnsAsync(temporary.Object);
+				solutions.Setup(repo => repo.CreateHoldingSolutionAsync(OrganizationServiceMock.Object, null)).ReturnsAsync((CommandResult.Success(), temporary.Object));
 				byte[]? uploaded = null;
 				temporary.Setup(temp => temp.UploadAndPublishAsync(It.IsAny<byte[]>(), It.IsAny<string[]>()))
 					.Callback<byte[], string[]>((bytes, _) => uploaded = bytes).Returns(Task.CompletedTask);
@@ -125,14 +120,13 @@ namespace Greg.Xrm.Command.Commands.Forms
 			entity["name"] = "Information";
 			entity["formxml"] = xml;
 			var form = new Form(entity);
-			forms.Setup(repo => repo.GetMainFormByTableNameAsync(OrganizationServiceMock.Object, "account"))
-				.ReturnsAsync([form]);
+			forms.Setup(repo => repo.GetByNameAsync(OrganizationServiceMock.Object, "account", It.IsAny<string>(), It.IsAny<bool>()))
+				.ReturnsAsync((CommandResult.Success(), form));
 			return form;
 		}
 
 		private SetCommandExecutor NewSetExecutor() => new(OrganizationServiceRepositoryMock.Object, forms.Object, solutions.Object, Output);
 
-		private sealed class TestSolution(Entity entity) : Greg.Xrm.Command.Model.Solution(entity);
 
 		private static byte[] CreateSolutionZip()
 		{

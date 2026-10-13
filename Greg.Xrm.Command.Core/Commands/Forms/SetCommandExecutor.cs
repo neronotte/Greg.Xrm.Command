@@ -53,9 +53,9 @@ var inputPath = Path.GetFullPath(command.FileName);
 			}
 
 			var crm = await organizationServiceRepository.GetCurrentConnectionAsync();
-			var forms = await formRepository.GetMainFormByTableNameAsync(crm, command.TableName);
-			if (!FormCommandHelpers.TryGetForm(output, command.TableName, command.FormName, forms, out var form, out var result))
-				return result ?? CommandResult.Fail("Error retrieving the form");
+			var (result, form) = await formRepository.GetByNameAsync(crm, command.TableName, command.FormName);
+			if (!result.IsSuccess)
+				return result;
 
 			if (string.IsNullOrWhiteSpace(form?.formxml))
 				return CommandResult.Fail("No formxml found!");
@@ -100,10 +100,10 @@ var inputPath = Path.GetFullPath(command.FileName);
 				}
 				else
 				{
-					var (success, failure, solution) = await FormCommandHelpers.CreateHoldingSolutionAsync(
-						organizationServiceRepository, solutionRepository, output, crm, command.SolutionName);
-					if (!success || solution == null)
-						return failure ?? CommandResult.Fail("Error creating the holding solution");
+					var (solutionResult, solution) = await solutionRepository.CreateHoldingSolutionAsync(
+						crm, command.SolutionName);
+					if (!solutionResult.IsSuccess || solution == null)
+						return solutionResult;
 
 					using (solution)
 					{

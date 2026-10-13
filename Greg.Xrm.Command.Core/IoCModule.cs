@@ -50,6 +50,7 @@ namespace Greg.Xrm.Command
 			builder.RegisterType<OptionSetParser>().As<IOptionSetParser>();
 			builder.RegisterType<ObjectTypeCodeFinder>().As<IObjectTypeCodeFinder>();
 			builder.RegisterType<FormWrapperFactory>().As<IFormWrapperFactory>();
+			builder.RegisterType<FormLayoutRenderer>().As<IFormLayoutRenderer>();
 
 
 			builder.RegisterType<FolderResolver>().As<IFolderResolver>();
