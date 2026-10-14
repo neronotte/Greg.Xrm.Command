@@ -1,5 +1,4 @@
 using System.ServiceModel;
-using DocumentFormat.OpenXml.Spreadsheet;
 using Greg.Xrm.Command.Commands.Column.Conventions;
 using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;

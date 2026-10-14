@@ -5,7 +5,7 @@ namespace Greg.Xrm.Command.Services
 	public class ObjectTypeCodeFinder : IObjectTypeCodeFinder
 	{
 		private Dictionary<string, int> cache = new Dictionary<string, int>();
-		
+
 
 		public async Task<int> GetObjectTypeCodeForTableAsync(IOrganizationServiceAsync2 crm, string tableLogicalName, CancellationToken cancellationToken)
 		{

@@ -81,15 +81,15 @@ namespace Greg.Xrm.Command.Commands.Solution
 						EntityFilters = EntityFilters.Entity
 					};
 
-					var response2  = (RetrieveAllEntitiesResponse)await crm.ExecuteAsync(request2, cancellationToken);
+					var response2 = (RetrieveAllEntitiesResponse)await crm.ExecuteAsync(request2, cancellationToken);
 
 					entity = response2.EntityMetadata
-						.FirstOrDefault(e => string.Equals( e.DisplayName?.UserLocalizedLabel?.Label, command.TableName, StringComparison.OrdinalIgnoreCase));
+						.FirstOrDefault(e => string.Equals(e.DisplayName?.UserLocalizedLabel?.Label, command.TableName, StringComparison.OrdinalIgnoreCase));
 				}
 
 				componentId = entity?.MetadataId;
 			}
-			catch(Exception ex)
+			catch (Exception ex)
 			{
 				output.WriteLine("Failed", ConsoleColor.Red);
 				return CommandResult.Fail(ex.Message, ex);

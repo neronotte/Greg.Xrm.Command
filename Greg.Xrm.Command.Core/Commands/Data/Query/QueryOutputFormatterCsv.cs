@@ -32,7 +32,7 @@ namespace Greg.Xrm.Command.Commands.Data.Query
 
 
 			var sb = new StringBuilder();
-sb.AppendLine(string.Join(Separator, columns.Select(x => $"{Delimiter}{x.Replace("\"", "\"\"")}{Delimiter}")));
+			sb.AppendLine(string.Join(Separator, columns.Select(x => $"{Delimiter}{x.Replace("\"", "\"\"")}{Delimiter}")));
 
 
 
@@ -43,12 +43,12 @@ sb.AppendLine(string.Join(Separator, columns.Select(x => $"{Delimiter}{x.Replace
 				{
 					if (entity.Attributes.Contains(column))
 					{
-var formattedValue = base.GetPrintableString(entity, column);
-var safeValue = formattedValue.Length > 0 && "=+-@\t\r".Contains(formattedValue[0])
-	? "'" + formattedValue
-	: formattedValue;
-var escapedValue = safeValue.Replace("\"", "\"\"");
-row.Add($"{Delimiter}{escapedValue}{Delimiter}");
+						var formattedValue = base.GetPrintableString(entity, column);
+						var safeValue = formattedValue.Length > 0 && "=+-@\t\r".Contains(formattedValue[0])
+							? "'" + formattedValue
+							: formattedValue;
+						var escapedValue = safeValue.Replace("\"", "\"\"");
+						row.Add($"{Delimiter}{escapedValue}{Delimiter}");
 					}
 					else
 					{

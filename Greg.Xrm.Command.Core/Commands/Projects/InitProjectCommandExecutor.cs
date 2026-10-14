@@ -2,7 +2,6 @@ using Greg.Xrm.Command.Model;
 using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
 using Greg.Xrm.Command.Services.Project;
-using Newtonsoft.Json;
 
 namespace Greg.Xrm.Command.Commands.Projects
 {

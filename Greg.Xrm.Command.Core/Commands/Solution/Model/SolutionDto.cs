@@ -1,4 +1,3 @@
-using Greg.Xrm.Command.Model;
 using Microsoft.Xrm.Sdk;
 
 namespace Greg.Xrm.Command.Commands.Solution.Model

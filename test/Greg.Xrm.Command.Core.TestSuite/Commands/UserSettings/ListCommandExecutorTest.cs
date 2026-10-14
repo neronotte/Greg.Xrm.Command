@@ -1,15 +1,18 @@
+﻿using System.ServiceModel;
+using Greg.Xrm.Command.Model;
 using Greg.Xrm.Command.Services.Connection;
 using Microsoft.Crm.Sdk.Messages;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;
-using System.ServiceModel;
 
 namespace Greg.Xrm.Command.Commands.UserSettings
 {
 	[TestClass]
 	public class ListCommandExecutorTest
 	{
+		private readonly Mock<ISystemUserRepository> userRepoMock = new();
+
 		private static (
 			OutputToMemory output,
 			Mock<IOrganizationServiceRepository> repoMock,
@@ -27,10 +30,10 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 		private static Entity BuildSettingsEntity(Guid userId)
 		{
 			var e = new Entity("usersettings") { Id = userId };
-			e["uilanguageid"]   = 1040;
+			e["uilanguageid"] = 1040;
 			e["helplanguageid"] = 1040;
-			e["localeid"]       = 1040;
-			e["paginglimit"]    = 250;
+			e["localeid"] = 1040;
+			e["paginglimit"] = 250;
 			e["showweeknumber"] = true;
 			e["timeformatcode"] = 1;
 			return e;
@@ -76,7 +79,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 
 			SetupRetrieveMultiple(crmMock, new EntityCollection(), new EntityCollection([settings]));
 
-			var executor = new ListCommandExecutor(output, repoMock.Object);
+			var executor = new ListCommandExecutor(output, repoMock.Object, this.userRepoMock.Object);
 			var result = await executor.ExecuteAsync(new ListCommand(), CancellationToken.None);
 
 			Assert.IsTrue(result.IsSuccess, result.ErrorMessage);
@@ -98,15 +101,18 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 			var userId = Guid.NewGuid();
 
 			var userEntity = new Entity("systemuser") { Id = userId };
-			userEntity["fullname"]   = "John Doe";
+			userEntity["fullname"] = "John Doe";
 			userEntity["domainname"] = @"DOMAIN\john.doe";
+			this.userRepoMock
+				.Setup(r => r.GetByDomainNameAsync(crmMock.Object, @"DOMAIN\john.doe", It.IsAny<CancellationToken>()))
+				.ReturnsAsync(new SystemUser(userEntity));
 
 			SetupRetrieveMultiple(
 				crmMock,
 				new EntityCollection([userEntity]),
 				new EntityCollection([BuildSettingsEntity(userId)]));
 
-			var executor = new ListCommandExecutor(output, repoMock.Object);
+			var executor = new ListCommandExecutor(output, repoMock.Object, this.userRepoMock.Object);
 			var result = await executor.ExecuteAsync(
 				new ListCommand { UserDomainName = @"DOMAIN\john.doe" },
 				CancellationToken.None);
@@ -135,7 +141,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 			crmMock.Setup(c => c.ExecuteAsync(It.IsAny<WhoAmIRequest>())).ReturnsAsync(whoAmI);
 			SetupRetrieveMultiple(crmMock, new EntityCollection(), new EntityCollection([settings]));
 
-			var executor = new ListCommandExecutor(output, repoMock.Object);
+			var executor = new ListCommandExecutor(output, repoMock.Object, this.userRepoMock.Object);
 			var result = await executor.ExecuteAsync(new ListCommand(), CancellationToken.None);
 
 			Assert.IsTrue(result.IsSuccess, result.ErrorMessage);
@@ -145,7 +151,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 		// ── Happy path — boolean field rendered as lowercase string ───────────
 
 		[TestMethod]
-		[DataRow(true,  "true")]
+		[DataRow(true, "true")]
 		[DataRow(false, "false")]
 		public async Task ExecuteAsync_ShouldFormatBooleanAsLowercase(bool rawValue, string expected)
 		{
@@ -161,7 +167,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 			crmMock.Setup(c => c.ExecuteAsync(It.IsAny<WhoAmIRequest>())).ReturnsAsync(whoAmI);
 			SetupRetrieveMultiple(crmMock, new EntityCollection(), new EntityCollection([settings]));
 
-			var executor = new ListCommandExecutor(output, repoMock.Object);
+			var executor = new ListCommandExecutor(output, repoMock.Object, this.userRepoMock.Object);
 			var result = await executor.ExecuteAsync(new ListCommand(), CancellationToken.None);
 
 			Assert.IsTrue(result.IsSuccess, result.ErrorMessage);
@@ -178,7 +184,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 			// systemuser query returns empty; usersettings query should never be reached
 			SetupRetrieveMultiple(crmMock, new EntityCollection(), new EntityCollection());
 
-			var executor = new ListCommandExecutor(output, repoMock.Object);
+			var executor = new ListCommandExecutor(output, repoMock.Object, this.userRepoMock.Object);
 			var result = await executor.ExecuteAsync(
 				new ListCommand { UserDomainName = @"DOMAIN\ghost" },
 				CancellationToken.None);
@@ -202,7 +208,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 			// usersettings query returns empty
 			SetupRetrieveMultiple(crmMock, new EntityCollection(), new EntityCollection());
 
-			var executor = new ListCommandExecutor(output, repoMock.Object);
+			var executor = new ListCommandExecutor(output, repoMock.Object, this.userRepoMock.Object);
 			var result = await executor.ExecuteAsync(new ListCommand(), CancellationToken.None);
 
 			Assert.IsFalse(result.IsSuccess);
@@ -221,7 +227,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 				.ThrowsAsync(new FaultException<OrganizationServiceFault>(
 					new OrganizationServiceFault(), "Simulated fault"));
 
-			var executor = new ListCommandExecutor(output, repoMock.Object);
+			var executor = new ListCommandExecutor(output, repoMock.Object, this.userRepoMock.Object);
 			var result = await executor.ExecuteAsync(new ListCommand(), CancellationToken.None);
 
 			Assert.IsFalse(result.IsSuccess);

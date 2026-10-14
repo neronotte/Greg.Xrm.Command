@@ -25,124 +25,124 @@ namespace Greg.Xrm.Command.Benchmark;
 [RankColumn]
 public class ChildScopeBenchmarks
 {
-    private IContainer _container = null!;
-    private ICommandRegistry _registry = null!;
+	private IContainer _container = null!;
+	private ICommandRegistry _registry = null!;
 
-    [GlobalSetup]
-    public void Setup()
-    {
-        var serviceCollection = new ServiceCollection();
-        
-        serviceCollection.AddSingleton<IStorage>(new Storage());
-        serviceCollection.AddSingleton<ICommandLineArguments>(new CommandLineArguments([]));
-        serviceCollection.AddSingleton<ICommandRegistry, CommandRegistry>();
-        serviceCollection.AddSingleton<ICommandParser, CommandParser>();
-        serviceCollection.RegisterCommandExecutors(typeof(CommandAttribute).Assembly);
-        serviceCollection.AddTransient<ICommandExecutorFactory, CommandExecutorFactory>();
-        serviceCollection.AddTransient<IPluralizationFactory, PluralizationFactory>();
-        serviceCollection.AddTransient<ISettingsRepository, SettingsRepository>();
-        serviceCollection.AddTransient<IPacxProjectRepository, PacxProjectRepository>();
-        serviceCollection.AddSingleton<IOrganizationServiceRepository, OrganizationServiceRepository>();
-        serviceCollection.AddSingleton<IOutput, OutputToMemory>();
-        serviceCollection.AddTransient<IHistoryTracker, HistoryTracker>();
+	[GlobalSetup]
+	public void Setup()
+	{
+		var serviceCollection = new ServiceCollection();
 
-        serviceCollection.AddAutofac();
-        serviceCollection.AddLogging(logging =>
-        {
-            logging.ClearProviders();
-            logging.AddDebug();
-        });
+		serviceCollection.AddSingleton<IStorage>(new Storage());
+		serviceCollection.AddSingleton<ICommandLineArguments>(new CommandLineArguments([]));
+		serviceCollection.AddSingleton<ICommandRegistry, CommandRegistry>();
+		serviceCollection.AddSingleton<ICommandParser, CommandParser>();
+		serviceCollection.RegisterCommandExecutors(typeof(CommandAttribute).Assembly);
+		serviceCollection.AddTransient<ICommandExecutorFactory, CommandExecutorFactory>();
+		serviceCollection.AddTransient<IPluralizationFactory, PluralizationFactory>();
+		serviceCollection.AddTransient<ISettingsRepository, SettingsRepository>();
+		serviceCollection.AddTransient<IPacxProjectRepository, PacxProjectRepository>();
+		serviceCollection.AddSingleton<IOrganizationServiceRepository, OrganizationServiceRepository>();
+		serviceCollection.AddSingleton<IOutput, OutputToMemory>();
+		serviceCollection.AddTransient<IHistoryTracker, HistoryTracker>();
 
-        var containerBuilder = new ContainerBuilder();
-        containerBuilder.Populate(serviceCollection);
+		serviceCollection.AddAutofac();
+		serviceCollection.AddLogging(logging =>
+		{
+			logging.ClearProviders();
+			logging.AddDebug();
+		});
 
-        _container = containerBuilder.Build();
+		var containerBuilder = new ContainerBuilder();
+		containerBuilder.Populate(serviceCollection);
 
-        // Initialize registry
-        using var scope = _container.BeginLifetimeScope();
-        _registry = scope.Resolve<ICommandRegistry>();
-        _registry.InitializeFromAssembly(typeof(HelpCommand).Assembly);
-    }
+		_container = containerBuilder.Build();
 
-    [GlobalCleanup]
-    public void Cleanup()
-    {
-        _container?.Dispose();
-    }
+		// Initialize registry
+		using var scope = _container.BeginLifetimeScope();
+		_registry = scope.Resolve<ICommandRegistry>();
+		_registry.InitializeFromAssembly(typeof(HelpCommand).Assembly);
+	}
 
-    /// <summary>
-    /// Measures creating a simple child scope (no dynamic registrations)
-    /// </summary>
-    [Benchmark(Description = "Child Scope (Simple)")]
-    public void CreateSimpleChildScope()
-    {
-        using var scope = _container.BeginLifetimeScope("simple");
-    }
+	[GlobalCleanup]
+	public void Cleanup()
+	{
+		_container?.Dispose();
+	}
 
-    /// <summary>
-    /// Measures creating a child scope with dynamic module registration
-    /// (similar to CommandExecutorFactory pattern)
-    /// </summary>
-    [Benchmark(Description = "Child Scope (With Module Registration)")]
-    public void CreateChildScopeWithModules()
-    {
-        using var scope = _container.BeginLifetimeScope("executor", builder =>
-        {
-            foreach (var module in _registry.Modules)
-            {
-                builder.RegisterModule(module);
-            }
-        });
-    }
+	/// <summary>
+	/// Measures creating a simple child scope (no dynamic registrations)
+	/// </summary>
+	[Benchmark(Description = "Child Scope (Simple)")]
+	public void CreateSimpleChildScope()
+	{
+		using var scope = _container.BeginLifetimeScope("simple");
+	}
 
-    /// <summary>
-    /// Measures creating a child scope with dynamic assembly scanning
-    /// (similar to CommandExecutorFactory pattern)
-    /// </summary>
-    [Benchmark(Description = "Child Scope (With Assembly Scanning)")]
-    public void CreateChildScopeWithAssemblyScanning()
-    {
-        var assembly = typeof(HelpCommand).Assembly;
-        
-        using var scope = _container.BeginLifetimeScope("executor", builder => builder
+	/// <summary>
+	/// Measures creating a child scope with dynamic module registration
+	/// (similar to CommandExecutorFactory pattern)
+	/// </summary>
+	[Benchmark(Description = "Child Scope (With Module Registration)")]
+	public void CreateChildScopeWithModules()
+	{
+		using var scope = _container.BeginLifetimeScope("executor", builder =>
+		{
+			foreach (var module in _registry.Modules)
+			{
+				builder.RegisterModule(module);
+			}
+		});
+	}
+
+	/// <summary>
+	/// Measures creating a child scope with dynamic assembly scanning
+	/// (similar to CommandExecutorFactory pattern)
+	/// </summary>
+	[Benchmark(Description = "Child Scope (With Assembly Scanning)")]
+	public void CreateChildScopeWithAssemblyScanning()
+	{
+		var assembly = typeof(HelpCommand).Assembly;
+
+		using var scope = _container.BeginLifetimeScope("executor", builder => builder
 				.RegisterAssemblyTypes(assembly)
 				.Where(t => t.GetInterfaces().Any(x => x.IsGenericType && x.GetGenericTypeDefinition() == typeof(ICommandExecutor<>)))
 				.AsSelf()
 				.AsImplementedInterfaces());
-    }
+	}
 
-    /// <summary>
-    /// Measures the full CommandExecutorFactory pattern
-    /// </summary>
-    [Benchmark(Description = "Child Scope (Full CommandExecutorFactory Pattern)")]
-    public void CreateChildScopeFullPattern()
-    {
-        var assembly = typeof(HelpCommand).Assembly;
-        
-        using var scope = _container.BeginLifetimeScope("executor", builder =>
-        {
-            foreach (var module in _registry.Modules)
-            {
-                builder.RegisterModule(module);
-            }
+	/// <summary>
+	/// Measures the full CommandExecutorFactory pattern
+	/// </summary>
+	[Benchmark(Description = "Child Scope (Full CommandExecutorFactory Pattern)")]
+	public void CreateChildScopeFullPattern()
+	{
+		var assembly = typeof(HelpCommand).Assembly;
 
-            builder
-                .RegisterAssemblyTypes(assembly)
-                .Where(t => t.GetInterfaces().Any(x => x.IsGenericType && x.GetGenericTypeDefinition() == typeof(ICommandExecutor<>)))
-                .AsSelf()
-                .AsImplementedInterfaces();
-        });
-    }
+		using var scope = _container.BeginLifetimeScope("executor", builder =>
+		{
+			foreach (var module in _registry.Modules)
+			{
+				builder.RegisterModule(module);
+			}
 
-    /// <summary>
-    /// Measures resolving a command executor through the factory
-    /// </summary>
-    [Benchmark(Description = "CommandExecutorFactory.CreateFor")]
-    public object? ResolveCommandExecutorViaFactory()
-    {
-        using var scope = _container.BeginLifetimeScope("activation");
-        var factory = scope.Resolve<ICommandExecutorFactory>();
-        var executor = factory.CreateFor(typeof(HelpCommand));
-        return executor;
-    }
+			builder
+				.RegisterAssemblyTypes(assembly)
+				.Where(t => t.GetInterfaces().Any(x => x.IsGenericType && x.GetGenericTypeDefinition() == typeof(ICommandExecutor<>)))
+				.AsSelf()
+				.AsImplementedInterfaces();
+		});
+	}
+
+	/// <summary>
+	/// Measures resolving a command executor through the factory
+	/// </summary>
+	[Benchmark(Description = "CommandExecutorFactory.CreateFor")]
+	public object? ResolveCommandExecutorViaFactory()
+	{
+		using var scope = _container.BeginLifetimeScope("activation");
+		var factory = scope.Resolve<ICommandExecutorFactory>();
+		var executor = factory.CreateFor(typeof(HelpCommand));
+		return executor;
+	}
 }
