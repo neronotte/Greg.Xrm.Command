@@ -82,7 +82,7 @@ escaped quotes.
 - Document command usage and validation behavior.
 - Ensure output and `CommandResult` contain only scalar values.
 
-### 🕒 7. Validate the implementation
+### ✅ 7. Validate the implementation
 
 - Run targeted translation tests.
 - Run `dotnet build`.
