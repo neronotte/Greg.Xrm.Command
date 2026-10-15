@@ -32,7 +32,7 @@ escaped quotes.
   trailing/empty entries.
 - Add local unit tests for valid and invalid syntax.
 
-### 🕒 2. Implement and test active Dataverse language validation
+### ✅ 2. Implement and test active Dataverse language validation
 
 - Create a language resolver service under `Services/Translations`.
 - Retrieve active `languagelocale` rows.
@@ -43,7 +43,7 @@ escaped quotes.
 - Add unit tests for valid, inactive, uninstalled, unknown, and base-language
   LCIDs.
 
-### 3. Implement `column translate`
+### 🕒 3. Implement `column translate`
 
 - Add `TranslateCommand` and `TranslateCommandExecutor` under
   `Commands/Column`.
