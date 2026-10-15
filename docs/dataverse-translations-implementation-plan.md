@@ -134,6 +134,49 @@ escaped quotes.
 - Preserve support for global option values and local/state/status values.
 - Add command validation, request-shape, publishing, and regression tests.
 
+### ✅ 13. Add solution translation package export/import
+
+- Place the commands in `Commands/Solution/Translations` so the folder matches
+  the `Greg.Xrm.Command.Commands.Solution.Translations` namespace.
+- Add a dedicated `NamespaceHelperBase` helper for the new
+  `solution translation` verb namespace.
+- Add `pacx solution translation export` and `pacx solution translation import`.
+- Export translations via `ExportTranslationRequest` and write the returned zip
+  to disk.
+- Support `--unpack` on export so the returned archive is expanded into a
+  sibling folder.
+- Support importing either a zip file or a folder path.
+- Support `--repack` on import so a folder can be bundled into a zip before the
+  `ImportTranslationRequest` is issued.
+- Poll the generated `importjob`, report its progress, and keep the command
+  running until the job is complete.
+- Reject a folder path when `--repack` is not supplied, before connecting to
+  Dataverse.
+- Validate that the target folder or archive exists and that the payload is not
+  empty.
+- Add parser and executor tests covering success and failure paths.
+- Update the user-facing docs with the new CLI syntax and expected behavior.
+
+### ✅ 14. Add non-blocking translation import
+
+- Add the `--nowait` (`-nw`) flag to `solution translation import`.
+- Keep polling enabled by default.
+- When `--nowait` is supplied, return immediately after Dataverse accepts the
+  `ImportTranslationRequest`.
+- Return the import job ID so callers can monitor it independently.
+- Add parser and executor tests proving that no polling request is made.
+- Document the non-blocking behavior.
+
+### ✅ 15. Resolve the default solution during translation export
+
+- Make the export `--solution` option optional.
+- Use the current default solution when the option is omitted.
+- Fail before exporting when neither an explicit nor a default solution exists.
+- Use the resolved solution name for the request, default file name, output, and
+  command result.
+- Add parser and executor tests for explicit, default, and missing solutions.
+- Document the default-solution behavior.
+
 ## Definition of done
 
 - All three commands are discoverable through the command registry.
