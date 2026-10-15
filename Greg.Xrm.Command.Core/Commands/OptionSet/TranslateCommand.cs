@@ -45,11 +45,12 @@ namespace Greg.Xrm.Command.Commands.OptionSet
 					[nameof(Name), nameof(TableName), nameof(ColumnName)]);
 			}
 
-			if ("statecode".Equals(ColumnName, StringComparison.OrdinalIgnoreCase))
+			if ("statecode".Equals(ColumnName, StringComparison.OrdinalIgnoreCase) &&
+				!string.IsNullOrWhiteSpace(Name))
 			{
 				yield return new ValidationResult(
-					"StateCode translations are not supported.",
-					[nameof(ColumnName)]);
+					"StateCode must be addressed through a table and column.",
+					[nameof(Name), nameof(TableName), nameof(ColumnName)]);
 			}
 		}
 

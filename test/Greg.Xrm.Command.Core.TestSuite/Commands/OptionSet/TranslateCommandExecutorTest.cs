@@ -57,6 +57,63 @@ namespace Greg.Xrm.Command.Commands.OptionSet
 			publisher.Verify(x => x.AddGlobalOptionSet("new_status"), Times.Once);
 		}
 
+		[TestMethod]
+		public async Task ExecuteAsync_ShouldUpdateStateCodeWithStateRequest()
+		{
+			var (output, repository, crm) = CreateMocks();
+			var parser = new Mock<ITranslationParser>();
+			parser.Setup(x => x.Parse(It.IsAny<string>()))
+				.Returns(new Dictionary<int, string> { [1033] = "Active" });
+			var languages = new Mock<IActiveLanguageService>();
+			var publisher = new Mock<IPublishXmlBuilder>();
+			publisher.Setup(x => x.Build()).Returns(new PublishXmlRequest());
+			OrganizationRequest? stateRequest = null;
+			var stateOptions = new OptionSetMetadata();
+			stateOptions.Options.Add(new StateOptionMetadata
+			{
+				Value = 0,
+				DefaultStatus = 1,
+				Label = new Label("Active", 1033),
+			});
+			crm.Setup(x => x.ExecuteAsync(It.IsAny<OrganizationRequest>(), It.IsAny<CancellationToken>()))
+				.ReturnsAsync((OrganizationRequest request, CancellationToken _) =>
+				{
+					if (request is RetrieveAttributeRequest)
+						return new RetrieveAttributeResponse
+						{
+							Results =
+							{
+								["AttributeMetadata"] = new StateAttributeMetadata
+								{
+									LogicalName = "statecode",
+									OptionSet = stateOptions,
+								},
+							},
+						};
+					if (request is UpdateStateValueRequest)
+						stateRequest = request;
+					return request is PublishXmlRequest
+						? new PublishXmlResponse()
+						: new UpdateStateValueResponse();
+				});
+
+			var executor = new TranslateCommandExecutor(output, repository.Object, parser.Object, languages.Object, publisher.Object);
+			var result = await executor.ExecuteAsync(
+				new TranslateCommand
+				{
+					TableName = "account",
+					ColumnName = "statecode",
+					Value = 0,
+					Labels = "ignored",
+				},
+				CancellationToken.None);
+
+			Assert.IsTrue(result.IsSuccess, result.ErrorMessage);
+			Assert.IsInstanceOfType<UpdateStateValueRequest>(stateRequest);
+			Assert.IsTrue(((UpdateStateValueRequest)stateRequest!).MergeLabels);
+			publisher.Verify(x => x.AddTable("account"), Times.Once);
+		}
+
 		private static (OutputToMemory output, Mock<IOrganizationServiceRepository> repository, Mock<IOrganizationServiceAsync2> crm) CreateMocks()
 		{
 			var output = new OutputToMemory();

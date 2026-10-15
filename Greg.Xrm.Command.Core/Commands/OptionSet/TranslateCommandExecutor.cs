@@ -31,17 +31,33 @@ namespace Greg.Xrm.Command.Commands.OptionSet
 				await EnsureOptionExistsAsync(crm, command, cancellationToken);
 
 				output.Write($"Updating option set value '{command.Value}'...");
-				await crm.ExecuteAsync(
-					new UpdateOptionValueRequest
-					{
-						OptionSetName = string.IsNullOrWhiteSpace(command.Name) ? null : command.Name,
-						EntityLogicalName = string.IsNullOrWhiteSpace(command.Name) ? command.TableName : null,
-						AttributeLogicalName = string.IsNullOrWhiteSpace(command.Name) ? command.ColumnName : null,
-						Value = command.Value,
-						Label = CreateLabel(translations),
-						MergeLabels = true,
-					},
-					cancellationToken);
+				if ("statecode".Equals(command.ColumnName, StringComparison.OrdinalIgnoreCase))
+				{
+					await crm.ExecuteAsync(
+						new UpdateStateValueRequest
+						{
+							EntityLogicalName = command.TableName,
+							AttributeLogicalName = command.ColumnName,
+							Value = command.Value,
+							Label = CreateLabel(translations),
+							MergeLabels = true,
+						},
+						cancellationToken);
+				}
+				else
+				{
+					await crm.ExecuteAsync(
+						new UpdateOptionValueRequest
+						{
+							OptionSetName = string.IsNullOrWhiteSpace(command.Name) ? null : command.Name,
+							EntityLogicalName = string.IsNullOrWhiteSpace(command.Name) ? command.TableName : null,
+							AttributeLogicalName = string.IsNullOrWhiteSpace(command.Name) ? command.ColumnName : null,
+							Value = command.Value,
+							Label = CreateLabel(translations),
+							MergeLabels = true,
+						},
+						cancellationToken);
+				}
 				output.WriteLine("Done", ConsoleColor.Green);
 
 				if (!command.NoPublish)

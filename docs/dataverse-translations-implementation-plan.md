@@ -89,7 +89,7 @@ escaped quotes.
 - Run the complete core test suite.
 - Review the final diff for repository conventions and accidental changes.
 
-### 🕒 8. Extend table and column metadata translations
+### ✅ 8. Extend table and column metadata translations
 
 - Add table descriptions to `table translate`.
 - Add column descriptions to `column translate`.
@@ -97,7 +97,7 @@ escaped quotes.
 - Validate metadata types before updating Boolean labels.
 - Add command and executor tests.
 
-### 9. Extend option set translations to state and status
+### ✅ 9. Extend option set translations to state and status
 
 - Keep global option sets supported by `optionset translate`.
 - Support local `statuscode` through `UpdateOptionValueRequest`.
@@ -105,7 +105,7 @@ escaped quotes.
 - Validate that state and status values exist before updating.
 - Add request-shape and publishing tests.
 
-### 10. Update translation documentation and run regression tests
+### 🕒 10. Update translation documentation and run regression tests
 
 - Document descriptions, Boolean labels, statecode, and statuscode.
 - Explicitly exclude record-content translations handled by `pacx data create`.

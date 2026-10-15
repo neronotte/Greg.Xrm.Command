@@ -34,5 +34,21 @@ namespace Greg.Xrm.Command.Commands.Column
 			Assert.AreEqual("new_name", command.ColumnName);
 			Assert.IsTrue(command.NoPublish);
 		}
+
+		[TestMethod]
+		public void ParseDescriptionAndBooleanLabelsShouldWork()
+		{
+			var command = Utility.TestParseCommand<TranslateCommand>(
+				"column", "translate",
+				"-t", "account",
+				"-c", "new_ispreferred",
+				"-d", "1033:\"Preferred customer\"",
+				"-tl", "1033:\"Yes\"",
+				"-fl", "1033:\"No\"");
+
+			Assert.AreEqual("1033:\"Preferred customer\"", command.Description);
+			Assert.AreEqual("1033:\"Yes\"", command.TrueLabel);
+			Assert.AreEqual("1033:\"No\"", command.FalseLabel);
+		}
 	}
 }

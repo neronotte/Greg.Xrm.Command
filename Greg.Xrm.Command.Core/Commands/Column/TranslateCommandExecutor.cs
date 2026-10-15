@@ -26,8 +26,18 @@ namespace Greg.Xrm.Command.Commands.Column
 
 			try
 			{
-				var translations = translationParser.Parse(command.Labels!);
-				await activeLanguageService.ValidateAsync(crm, translations.Keys, cancellationToken);
+				var translations = ParseOptional(command.Labels);
+				var description = ParseOptional(command.Description);
+				var trueLabel = ParseOptional(command.TrueLabel);
+				var falseLabel = ParseOptional(command.FalseLabel);
+				var allLcids = translations.Keys
+					.Concat(description.Keys)
+					.Concat(trueLabel.Keys)
+					.Concat(falseLabel.Keys)
+					.Distinct();
+				if (!allLcids.Any())
+					return CommandResult.Fail("At least one translation must be provided.");
+				await activeLanguageService.ValidateAsync(crm, allLcids, cancellationToken);
 
 				output.Write($"Retrieving metadata for column '{command.TableName}.{command.ColumnName}'...");
 				var retrieveResponse = (RetrieveAttributeResponse)await crm.ExecuteAsync(
@@ -42,7 +52,24 @@ namespace Greg.Xrm.Command.Commands.Column
 
 				var attribute = retrieveResponse.AttributeMetadata
 					?? throw new CommandException(CommandException.XrmError, "Dataverse returned no column metadata.");
-				attribute.DisplayName = CreateLabel(translations);
+				if (translations.Count > 0)
+					attribute.DisplayName = CreateLabel(translations);
+				if (description.Count > 0)
+					attribute.Description = CreateLabel(description);
+				if (trueLabel.Count > 0 || falseLabel.Count > 0)
+				{
+					if (attribute is not BooleanAttributeMetadata booleanAttribute ||
+						booleanAttribute.OptionSet is null)
+					{
+						return CommandResult.Fail(
+							"True and false labels can only be used with Boolean columns.");
+					}
+
+					if (trueLabel.Count > 0)
+						booleanAttribute.OptionSet.TrueOption.Label = CreateLabel(trueLabel);
+					if (falseLabel.Count > 0)
+						booleanAttribute.OptionSet.FalseOption.Label = CreateLabel(falseLabel);
+				}
 
 				output.Write($"Updating column '{command.TableName}.{command.ColumnName}'...");
 				await crm.ExecuteAsync(
@@ -68,7 +95,7 @@ namespace Greg.Xrm.Command.Commands.Column
 				var result = CommandResult.Success();
 				result["Table"] = command.TableName!;
 				result["Column"] = command.ColumnName!;
-				result["TranslatedLanguages"] = translations.Count;
+				result["TranslatedLanguages"] = allLcids.Count();
 				result["Published"] = !command.NoPublish;
 				return result;
 			}
@@ -91,6 +118,13 @@ namespace Greg.Xrm.Command.Commands.Column
 				label.LocalizedLabels.Add(new LocalizedLabel(translation.Value, translation.Key));
 
 			return label;
+		}
+
+		private IReadOnlyDictionary<int, string> ParseOptional(string? value)
+		{
+			return string.IsNullOrWhiteSpace(value)
+				? new Dictionary<int, string>()
+				: translationParser.Parse(value);
 		}
 	}
 }

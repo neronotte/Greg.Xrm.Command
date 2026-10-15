@@ -30,7 +30,13 @@ namespace Greg.Xrm.Command.Commands.Table
 				if (!singular.Keys.OrderBy(x => x).SequenceEqual(plural.Keys.OrderBy(x => x)))
 					return CommandResult.Fail("The singular and plural translations must contain the same LCIDs.");
 
-				await activeLanguageService.ValidateAsync(crm, singular.Keys, cancellationToken);
+				var description = string.IsNullOrWhiteSpace(command.Description)
+					? null
+					: translationParser.Parse(command.Description);
+				var allLcids = singular.Keys
+					.Concat(description?.Keys ?? [])
+					.Distinct();
+				await activeLanguageService.ValidateAsync(crm, allLcids, cancellationToken);
 
 				output.Write($"Retrieving metadata for table '{command.TableName}'...");
 				var retrieveResponse = (RetrieveEntityResponse)await crm.ExecuteAsync(
@@ -47,6 +53,8 @@ namespace Greg.Xrm.Command.Commands.Table
 					?? throw new CommandException(CommandException.XrmError, "Dataverse returned no table metadata.");
 				table.DisplayName = CreateLabel(singular);
 				table.DisplayCollectionName = CreateLabel(plural);
+				if (description is not null)
+					table.Description = CreateLabel(description);
 
 				output.Write($"Updating table '{command.TableName}'...");
 				await crm.ExecuteAsync(
@@ -70,7 +78,10 @@ namespace Greg.Xrm.Command.Commands.Table
 
 				var result = CommandResult.Success();
 				result["Table"] = command.TableName!;
-				result["TranslatedLanguages"] = singular.Count;
+				result["TranslatedLanguages"] = singular.Keys
+					.Concat(description?.Keys ?? [])
+					.Distinct()
+					.Count();
 				result["Published"] = !command.NoPublish;
 				return result;
 			}

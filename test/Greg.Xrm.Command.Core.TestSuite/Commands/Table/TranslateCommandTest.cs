@@ -21,6 +21,19 @@ namespace Greg.Xrm.Command.Commands.Table
 		}
 
 		[TestMethod]
+		public void ParseDescriptionShouldWork()
+		{
+			var command = Utility.TestParseCommand<TranslateCommand>(
+				"table", "translate",
+				"--table", "account",
+				"--singular", "1033:\"Account\"",
+				"--plural", "1033:\"Accounts\"",
+				"--description", "1033:\"Customer account\"");
+
+			Assert.AreEqual("1033:\"Customer account\"", command.Description);
+		}
+
+		[TestMethod]
 		public void ParseWithShortNamesShouldWork()
 		{
 			var command = Utility.TestParseCommand<TranslateCommand>(

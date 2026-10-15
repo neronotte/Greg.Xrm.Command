@@ -20,6 +20,9 @@ namespace Greg.Xrm.Command.Commands.Table
 		[Required]
 		public string? Plural { get; set; }
 
+		[Option("description", "d", Order = 4, HelpText = "Localized table descriptions in the format LCID:\"label\".")]
+		public string? Description { get; set; }
+
 		[Option("no-publish", "np", Order = 50, DefaultValue = false, HelpText = "Skips publishing the metadata changes.")]
 		public bool NoPublish { get; set; }
 
