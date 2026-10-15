@@ -43,7 +43,7 @@ escaped quotes.
 - Add unit tests for valid, inactive, uninstalled, unknown, and base-language
   LCIDs.
 
-### 🕒 3. Implement `column translate`
+### ✅ 3. Implement `column translate`
 
 - Add `TranslateCommand` and `TranslateCommandExecutor` under
   `Commands/Column`.
@@ -53,7 +53,7 @@ escaped quotes.
 - Publish the table unless `--no-publish` is supplied.
 - Add command parsing, validation, and executor tests.
 
-### 4. Implement `table translate`
+### 🕒 4. Implement `table translate`
 
 - Add `TranslateCommand` and `TranslateCommandExecutor` under
   `Commands/Table`.
