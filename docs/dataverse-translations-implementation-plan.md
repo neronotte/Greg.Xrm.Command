@@ -111,6 +111,17 @@ escaped quotes.
 - Explicitly exclude record-content translations handled by `pacx data create`.
 - Run the full build and core test suite.
 
+### 🕒 11. Implement system view translations
+
+- Keep `view translate` aligned with the existing CLI namespace.
+- Add `views translate` as a plural compatibility alias.
+- Resolve a system view by name and optional table name.
+- Translate the localized `name` and `description` attributes through
+  `SetLocLabelsRequest`.
+- Validate all LCIDs before updating the view.
+- Publish the owning table unless `--no-publish` is supplied.
+- Add command parsing, request-shape, publishing, and failure tests.
+
 ## Definition of done
 
 - All three commands are discoverable through the command registry.

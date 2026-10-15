@@ -102,3 +102,19 @@ pacx org language list
 
 Email templates, knowledge articles, and other content records are not metadata
 translation commands. They can be managed as records with `pacx data create`.
+
+## System views
+
+System view names and descriptions can be translated with the canonical
+`view translate` command. `views translate` is available as a plural alias.
+
+```powershell
+pacx view translate `
+  --name "Active Accounts" `
+  --table account `
+  --labels '1033:"Active Accounts", 1040:"Aziende attive"' `
+  --description '1033:"Active customer accounts", 1040:"Aziende cliente attive"'
+```
+
+Personal views are not included because they are user-owned records rather than
+solution-localized system view components.
