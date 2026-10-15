@@ -65,7 +65,7 @@ escaped quotes.
 - Publish the table unless `--no-publish` is supplied.
 - Add command parsing, validation, and executor tests.
 
-### 🕒 5. Implement `optionset translate`
+### ✅ 5. Implement `optionset translate`
 
 - Add `TranslateCommand` and `TranslateCommandExecutor` under
   `Commands/OptionSet`.
@@ -76,13 +76,13 @@ escaped quotes.
 - Reject `statecode` in the first version.
 - Add command parsing, validation, and executor tests.
 
-### 6. Register services and update documentation
+### ✅ 6. Register services and update documentation
 
 - Register all supporting services in `IoCModule`.
 - Document command usage and validation behavior.
 - Ensure output and `CommandResult` contain only scalar values.
 
-### 7. Validate the implementation
+### 🕒 7. Validate the implementation
 
 - Run targeted translation tests.
 - Run `dotnet build`.
