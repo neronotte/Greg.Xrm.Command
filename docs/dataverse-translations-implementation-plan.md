@@ -105,7 +105,7 @@ escaped quotes.
 - Validate that state and status values exist before updating.
 - Add request-shape and publishing tests.
 
-### 🕒 10. Update translation documentation and run regression tests
+### ✅ 10. Update translation documentation and run regression tests
 
 - Document descriptions, Boolean labels, statecode, and statuscode.
 - Explicitly exclude record-content translations handled by `pacx data create`.
