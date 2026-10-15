@@ -111,7 +111,7 @@ escaped quotes.
 - Explicitly exclude record-content translations handled by `pacx data create`.
 - Run the full build and core test suite.
 
-### 🕒 11. Implement system view translations
+### ✅ 11. Implement system view translations
 
 - Keep `view translate` aligned with the existing CLI namespace.
 - Add `views translate` as a plural compatibility alias.
