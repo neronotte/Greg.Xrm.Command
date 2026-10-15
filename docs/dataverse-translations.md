@@ -111,6 +111,34 @@ organization:
 pacx org language list
 ```
 
+## Solution translation package
+
+The solution-level translation flow is handled by the package commands rather than
+by direct app/sitemap metadata operations:
+
+```powershell
+pacx solution translation export --solution MySolution --path C:\temp\MySolution.zip --unpack
+pacx solution translation export --path C:\temp\CurrentSolution.zip
+pacx solution translation import --path C:\temp\MySolution.zip
+pacx solution translation import --path C:\temp\MySolutionFolder --repack
+pacx solution translation import --path C:\temp\MySolution.zip --nowait
+```
+
+- `ExportTranslationRequest` is used to export the solution translation package.
+- `--solution` is optional. When omitted, export uses the current default
+  solution configured in PACX; the command fails if no default solution exists.
+- `--unpack` expands the zip into a sibling folder next to the archive.
+- `--repack` creates a zip from a folder before calling
+  `ImportTranslationRequest`.
+- `ImportTranslationRequest` expects the final compressed translation payload.
+- After starting the import, the command polls the Dataverse `importjob` record,
+  reports its progress, and returns only after the job has completed.
+- `--nowait` skips polling and returns immediately after Dataverse accepts the
+  import. The command result still includes `ImportJobId` for external
+  monitoring.
+- Passing a folder to `import` without `--repack` fails before any call to
+  Dataverse is made.
+
 ## Scope exclusions
 
 Email templates, knowledge articles, and other content records are not metadata
