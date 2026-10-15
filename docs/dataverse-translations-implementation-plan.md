@@ -122,6 +122,18 @@ escaped quotes.
 - Publish the owning table unless `--no-publish` is supplied.
 - Add command parsing, request-shape, publishing, and failure tests.
 
+### 🕒 12. Translate global option set metadata
+
+- Extend `optionset translate` without adding a new CLI namespace.
+- Make `--value` and `--labels` optional when translating global metadata.
+- Add `--display-name` and `--description` for global option sets.
+- Keep value translation available in the same invocation when `--value` and
+  `--labels` are provided.
+- Reject global metadata options for local choices, statecode, and statuscode.
+- Update metadata through `UpdateOptionSetRequest` with `MergeLabels = true`.
+- Preserve support for global option values and local/state/status values.
+- Add command validation, request-shape, publishing, and regression tests.
+
 ## Definition of done
 
 - All three commands are discoverable through the command registry.

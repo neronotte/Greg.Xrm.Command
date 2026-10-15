@@ -55,6 +55,19 @@ pacx optionset translate `
   --labels '1033:"Pending", 1040:"In attesa"'
 ```
 
+The global option set display name and description can be translated without
+targeting a value:
+
+```powershell
+pacx optionset translate `
+  --name new_status `
+  --display-name '1033:"Contract status", 1040:"Stato contratto"' `
+  --description '1033:"Available contract statuses", 1040:"Stati disponibili del contratto"'
+```
+
+Global metadata and an option value may be translated in the same invocation by
+combining `--display-name` or `--description` with `--value` and `--labels`.
+
 Local choice:
 
 ```powershell
