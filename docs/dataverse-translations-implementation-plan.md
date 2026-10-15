@@ -24,7 +24,7 @@ escaped quotes.
 
 ## Execution steps
 
-### 🕒 1. Implement and test the translation parser
+### ✅ 1. Implement and test the translation parser
 
 - Create a shared parser under `Services/Translations`.
 - Parse `LCID:"label"` pairs, including quoted and escaped content.
@@ -32,7 +32,7 @@ escaped quotes.
   trailing/empty entries.
 - Add local unit tests for valid and invalid syntax.
 
-### 2. Implement and test active Dataverse language validation
+### 🕒 2. Implement and test active Dataverse language validation
 
 - Create a language resolver service under `Services/Translations`.
 - Retrieve active `languagelocale` rows.

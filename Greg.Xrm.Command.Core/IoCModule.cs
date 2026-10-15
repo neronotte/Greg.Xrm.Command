@@ -17,6 +17,7 @@ using Greg.Xrm.Command.Services.Forms;
 using Greg.Xrm.Command.Services.OptionSet;
 using Greg.Xrm.Command.Services.Plugin;
 using Greg.Xrm.Command.Services.Security;
+using Greg.Xrm.Command.Services.Translations;
 
 namespace Greg.Xrm.Command
 {
@@ -63,6 +64,7 @@ namespace Greg.Xrm.Command
 			builder.RegisterType<SecurityUserResolver>().As<ISecurityUserResolver>();
 			builder.RegisterType<SecurityUserProfileService>().As<ISecurityUserProfileService>();
 			builder.RegisterType<FormWrapperFactory>().As<IFormWrapperFactory>();
+			builder.RegisterType<TranslationParser>().As<ITranslationParser>();
 
 
 			builder.RegisterType<FolderResolver>().As<IFolderResolver>();
