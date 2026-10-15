@@ -114,6 +114,59 @@ namespace Greg.Xrm.Command.Commands.OptionSet
 			publisher.Verify(x => x.AddTable("account"), Times.Once);
 		}
 
+		[TestMethod]
+		public async Task ExecuteAsync_ShouldUpdateGlobalOptionSetMetadata()
+		{
+			var (output, repository, crm) = CreateMocks();
+			var parser = new Mock<ITranslationParser>();
+			parser.Setup(x => x.Parse("displayName"))
+				.Returns(new Dictionary<int, string> { [1033] = "Contract status", [1040] = "Stato contratto" });
+			parser.Setup(x => x.Parse("description"))
+				.Returns(new Dictionary<int, string> { [1033] = "Available statuses" });
+			var languages = new Mock<IActiveLanguageService>();
+			var publisher = new Mock<IPublishXmlBuilder>();
+			publisher.Setup(x => x.Build()).Returns(new PublishXmlRequest());
+			UpdateOptionSetRequest? updateRequest = null;
+			crm.Setup(x => x.ExecuteAsync(It.IsAny<OrganizationRequest>(), It.IsAny<CancellationToken>()))
+				.ReturnsAsync((OrganizationRequest request, CancellationToken _) =>
+				{
+					if (request is RetrieveOptionSetRequest)
+						return new RetrieveOptionSetResponse
+						{
+							Results =
+							{
+								["OptionSetMetadata"] = new OptionSetMetadata
+								{
+									Name = "new_status",
+									DisplayName = new Label("Status", 1033),
+								},
+							},
+						};
+					if (request is UpdateOptionSetRequest optionSetRequest)
+						updateRequest = optionSetRequest;
+					return request is PublishXmlRequest
+						? new PublishXmlResponse()
+						: new UpdateOptionSetResponse();
+				});
+
+			var executor = new TranslateCommandExecutor(output, repository.Object, parser.Object, languages.Object, publisher.Object);
+			var result = await executor.ExecuteAsync(
+				new TranslateCommand
+				{
+					Name = "new_status",
+					DisplayName = "displayName",
+					Description = "description",
+				},
+				CancellationToken.None);
+
+			Assert.IsTrue(result.IsSuccess, result.ErrorMessage);
+			Assert.IsNotNull(updateRequest);
+			Assert.IsTrue(updateRequest.MergeLabels);
+			Assert.AreEqual(2, updateRequest.OptionSet.DisplayName.LocalizedLabels.Count);
+			Assert.AreEqual(1, updateRequest.OptionSet.Description.LocalizedLabels.Count);
+			publisher.Verify(x => x.AddGlobalOptionSet("new_status"), Times.Once);
+		}
+
 		private static (OutputToMemory output, Mock<IOrganizationServiceRepository> repository, Mock<IOrganizationServiceAsync2> crm) CreateMocks()
 		{
 			var output = new OutputToMemory();

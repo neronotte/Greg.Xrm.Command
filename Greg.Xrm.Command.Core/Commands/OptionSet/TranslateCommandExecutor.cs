@@ -26,39 +26,81 @@ namespace Greg.Xrm.Command.Commands.OptionSet
 
 			try
 			{
-				var translations = translationParser.Parse(command.Labels!);
-				await activeLanguageService.ValidateAsync(crm, translations.Keys, cancellationToken);
-				await EnsureOptionExistsAsync(crm, command, cancellationToken);
+				var translations = ParseOptional(command.Labels);
+				var displayName = ParseOptional(command.DisplayName);
+				var description = ParseOptional(command.Description);
+				var allLcids = translations.Keys
+					.Concat(displayName.Keys)
+					.Concat(description.Keys)
+					.Distinct()
+					.ToArray();
+				if (allLcids.Length == 0)
+					return CommandResult.Fail("At least one translation must be provided.");
+				await activeLanguageService.ValidateAsync(crm, allLcids, cancellationToken);
 
-				output.Write($"Updating option set value '{command.Value}'...");
-				if ("statecode".Equals(command.ColumnName, StringComparison.OrdinalIgnoreCase))
+				OptionSetMetadata? globalOptionSet = null;
+				if (!string.IsNullOrWhiteSpace(command.Name))
 				{
+					globalOptionSet = await RetrieveGlobalOptionSetAsync(crm, command.Name, cancellationToken);
+					if (command.Value.HasValue)
+						EnsureOptionExists(globalOptionSet.Options, command.Value.Value, $"option set '{command.Name}'");
+				}
+				else if (command.Value.HasValue)
+				{
+					var localOptions = await RetrieveLocalOptionsAsync(crm, command, cancellationToken);
+					EnsureOptionExists(localOptions, command.Value.Value, $"'{command.TableName}.{command.ColumnName}'");
+				}
+
+				if (globalOptionSet is not null && (displayName.Count > 0 || description.Count > 0))
+				{
+					if (displayName.Count > 0)
+						globalOptionSet.DisplayName = CreateLabel(displayName);
+					if (description.Count > 0)
+						globalOptionSet.Description = CreateLabel(description);
+
+					output.Write($"Updating global option set '{command.Name}'...");
 					await crm.ExecuteAsync(
-						new UpdateStateValueRequest
+						new UpdateOptionSetRequest
 						{
-							EntityLogicalName = command.TableName,
-							AttributeLogicalName = command.ColumnName,
-							Value = command.Value,
-							Label = CreateLabel(translations),
+							OptionSet = globalOptionSet,
 							MergeLabels = true,
 						},
 						cancellationToken);
+					output.WriteLine("Done", ConsoleColor.Green);
 				}
-				else
+
+				if (command.Value.HasValue)
 				{
-					await crm.ExecuteAsync(
-						new UpdateOptionValueRequest
-						{
-							OptionSetName = string.IsNullOrWhiteSpace(command.Name) ? null : command.Name,
-							EntityLogicalName = string.IsNullOrWhiteSpace(command.Name) ? command.TableName : null,
-							AttributeLogicalName = string.IsNullOrWhiteSpace(command.Name) ? command.ColumnName : null,
-							Value = command.Value,
-							Label = CreateLabel(translations),
-							MergeLabels = true,
-						},
-						cancellationToken);
+					output.Write($"Updating option set value '{command.Value}'...");
+					if ("statecode".Equals(command.ColumnName, StringComparison.OrdinalIgnoreCase))
+					{
+						await crm.ExecuteAsync(
+							new UpdateStateValueRequest
+							{
+								EntityLogicalName = command.TableName,
+								AttributeLogicalName = command.ColumnName,
+								Value = command.Value.Value,
+								Label = CreateLabel(translations),
+								MergeLabels = true,
+							},
+							cancellationToken);
+					}
+					else
+					{
+						await crm.ExecuteAsync(
+							new UpdateOptionValueRequest
+							{
+								OptionSetName = string.IsNullOrWhiteSpace(command.Name) ? null : command.Name,
+								EntityLogicalName = string.IsNullOrWhiteSpace(command.Name) ? command.TableName : null,
+								AttributeLogicalName = string.IsNullOrWhiteSpace(command.Name) ? command.ColumnName : null,
+								Value = command.Value.Value,
+								Label = CreateLabel(translations),
+								MergeLabels = true,
+							},
+							cancellationToken);
+					}
+					output.WriteLine("Done", ConsoleColor.Green);
 				}
-				output.WriteLine("Done", ConsoleColor.Green);
 
 				if (!command.NoPublish)
 				{
@@ -75,8 +117,9 @@ namespace Greg.Xrm.Command.Commands.OptionSet
 				}
 
 				var result = CommandResult.Success();
-				result["Value"] = command.Value;
-				result["TranslatedLanguages"] = translations.Count;
+				if (command.Value.HasValue)
+					result["Value"] = command.Value.Value;
+				result["TranslatedLanguages"] = allLcids.Length;
 				result["Published"] = !command.NoPublish;
 				return result;
 			}
@@ -92,24 +135,25 @@ namespace Greg.Xrm.Command.Commands.OptionSet
 			}
 		}
 
-		private static async Task EnsureOptionExistsAsync(
+		private static async Task<OptionSetMetadata> RetrieveGlobalOptionSetAsync(
+			Microsoft.PowerPlatform.Dataverse.Client.IOrganizationServiceAsync2 organizationService,
+			string optionSetName,
+			CancellationToken cancellationToken)
+		{
+			var response = (RetrieveOptionSetResponse)await organizationService.ExecuteAsync(
+				new RetrieveOptionSetRequest { Name = optionSetName },
+				cancellationToken);
+			return response.OptionSetMetadata as OptionSetMetadata
+				?? throw new CommandException(
+					CommandException.XrmError,
+					$"Dataverse returned no metadata for global option set '{optionSetName}'.");
+		}
+
+		private static async Task<OptionMetadataCollection> RetrieveLocalOptionsAsync(
 			Microsoft.PowerPlatform.Dataverse.Client.IOrganizationServiceAsync2 organizationService,
 			TranslateCommand command,
 			CancellationToken cancellationToken)
 		{
-			if (!string.IsNullOrWhiteSpace(command.Name))
-			{
-				var response = (RetrieveOptionSetResponse)await organizationService.ExecuteAsync(
-					new RetrieveOptionSetRequest { Name = command.Name },
-					cancellationToken);
-				var optionSet = response.OptionSetMetadata as OptionSetMetadata;
-				var globalOptions = optionSet?.Options ?? [];
-				if (!globalOptions.Any(option => option.Value == command.Value))
-					throw new CommandException(CommandException.CommandInvalidArgumentValue,
-						$"Option value {command.Value} does not exist in option set '{command.Name}'.");
-				return;
-			}
-
 			var attributeResponse = (RetrieveAttributeResponse)await organizationService.ExecuteAsync(
 				new RetrieveAttributeRequest
 				{
@@ -119,12 +163,19 @@ namespace Greg.Xrm.Command.Commands.OptionSet
 				},
 				cancellationToken);
 			var attribute = attributeResponse.AttributeMetadata;
-			var localOptions = attribute is EnumAttributeMetadata enumMetadata
+			return attribute is EnumAttributeMetadata enumMetadata
 				? enumMetadata.OptionSet?.Options ?? []
 				: [];
-			if (!localOptions.Any(option => option.Value == command.Value))
+		}
+
+		private static void EnsureOptionExists(
+			IEnumerable<OptionMetadata> options,
+			int value,
+			string target)
+		{
+			if (!options.Any(option => option.Value == value))
 				throw new CommandException(CommandException.CommandInvalidArgumentValue,
-					$"Option value {command.Value} does not exist in '{command.TableName}.{command.ColumnName}'.");
+					$"Option value {value} does not exist in {target}.");
 		}
 
 		private static Label CreateLabel(IReadOnlyDictionary<int, string> translations)
@@ -134,6 +185,13 @@ namespace Greg.Xrm.Command.Commands.OptionSet
 				label.LocalizedLabels.Add(new LocalizedLabel(translation.Value, translation.Key));
 
 			return label;
+		}
+
+		private IReadOnlyDictionary<int, string> ParseOptional(string? value)
+		{
+			return string.IsNullOrWhiteSpace(value)
+				? new Dictionary<int, string>()
+				: translationParser.Parse(value);
 		}
 	}
 }

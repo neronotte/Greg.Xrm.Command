@@ -61,12 +61,12 @@ targeting a value:
 ```powershell
 pacx optionset translate `
   --name new_status `
-  --display-name '1033:"Contract status", 1040:"Stato contratto"' `
+  --displayName '1033:"Contract status", 1040:"Stato contratto"' `
   --description '1033:"Available contract statuses", 1040:"Stati disponibili del contratto"'
 ```
 
 Global metadata and an option value may be translated in the same invocation by
-combining `--display-name` or `--description` with `--value` and `--labels`.
+combining `--displayName` or `--description` with `--value` and `--labels`.
 
 Local choice:
 

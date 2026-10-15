@@ -122,7 +122,7 @@ escaped quotes.
 - Publish the owning table unless `--no-publish` is supplied.
 - Add command parsing, request-shape, publishing, and failure tests.
 
-### 🕒 12. Translate global option set metadata
+### ✅ 12. Translate global option set metadata
 
 - Extend `optionset translate` without adding a new CLI namespace.
 - Make `--value` and `--labels` optional when translating global metadata.

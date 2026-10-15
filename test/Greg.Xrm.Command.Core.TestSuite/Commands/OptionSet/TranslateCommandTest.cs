@@ -42,7 +42,24 @@ namespace Greg.Xrm.Command.Commands.OptionSet
 
 			var results = command.Validate(new ValidationContext(command)).ToList();
 
-			Assert.HasCount(1, results);
+			Assert.IsTrue(results.Any(result =>
+				result.ErrorMessage?.Contains("cannot be combined", StringComparison.Ordinal) == true));
+		}
+
+		[TestMethod]
+		public void ParseGlobalMetadataTranslationsShouldWork()
+		{
+			var command = Utility.TestParseCommand<TranslateCommand>(
+				"optionset", "translate",
+				"--name", "new_status",
+				"--displayName", "1033:\"Contract status\"",
+				"--description", "1033:\"Available statuses\"");
+
+			Assert.AreEqual("new_status", command.Name);
+			Assert.AreEqual("1033:\"Contract status\"", command.DisplayName);
+			Assert.AreEqual("1033:\"Available statuses\"", command.Description);
+			Assert.IsNull(command.Value);
+			Assert.IsNull(command.Labels);
 		}
 	}
 }
