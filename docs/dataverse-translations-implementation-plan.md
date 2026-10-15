@@ -53,7 +53,7 @@ escaped quotes.
 - Publish the table unless `--no-publish` is supplied.
 - Add command parsing, validation, and executor tests.
 
-### 🕒 4. Implement `table translate`
+### ✅ 4. Implement `table translate`
 
 - Add `TranslateCommand` and `TranslateCommandExecutor` under
   `Commands/Table`.
@@ -65,7 +65,7 @@ escaped quotes.
 - Publish the table unless `--no-publish` is supplied.
 - Add command parsing, validation, and executor tests.
 
-### 5. Implement `optionset translate`
+### 🕒 5. Implement `optionset translate`
 
 - Add `TranslateCommand` and `TranslateCommandExecutor` under
   `Commands/OptionSet`.
