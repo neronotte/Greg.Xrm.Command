@@ -62,7 +62,7 @@ namespace Greg.Xrm.Command.Commands.Column.Builders
 				optionSet.IsGlobal = false;
 				optionSet.IsCustomOptionSet = true;
 				optionSet.IsCustomizable = new BooleanManagedProperty(true);
-				optionSet.Name = GetOptionSetName(command.EntityName, attribute.SchemaName); // se non è global. Se è global, il nome è quello del global option set
+				optionSet.Name = GetOptionSetName(command.EntityName, attribute.SchemaName, publisherPrefix); // se non è global. Se è global, il nome è quello del global option set
 
 				var optionString = command.Options;
 				if (string.IsNullOrWhiteSpace(optionString))
@@ -114,9 +114,17 @@ namespace Greg.Xrm.Command.Commands.Column.Builders
 			return [];
 		}
 
-		private static string GetOptionSetName(string? entityName, string schemaName)
+		private static string GetOptionSetName(string? entityName, string schemaName, string publisherPrefix)
 		{
-			return $"{entityName}_{schemaName}";
+			// Aggiungi il prefix del publisher se entityName non ce l'ha (tabelle OOB)
+			var prefixedEntityName = entityName ?? string.Empty;
+
+			if (!prefixedEntityName.StartsWith(publisherPrefix + "_", StringComparison.OrdinalIgnoreCase))
+			{
+				prefixedEntityName = $"{publisherPrefix}_{prefixedEntityName}";
+			}
+
+			return $"{prefixedEntityName}_{schemaName}";
 		}
 
 		protected override string GetSchemaName(string? displayName, string? schemaName, string publisherPrefix)
