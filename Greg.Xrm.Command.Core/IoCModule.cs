@@ -64,6 +64,8 @@ namespace Greg.Xrm.Command
 			builder.RegisterType<SecurityUserResolver>().As<ISecurityUserResolver>();
 			builder.RegisterType<SecurityUserProfileService>().As<ISecurityUserProfileService>();
 			builder.RegisterType<FormWrapperFactory>().As<IFormWrapperFactory>();
+			builder.RegisterType<FormLayoutRenderer>().As<IFormLayoutRenderer>();
+			builder.RegisterType<FormXmlValidator>().As<IFormXmlValidator>();
 			builder.RegisterType<TranslationParser>().As<ITranslationParser>();
 			builder.RegisterType<ActiveLanguageService>().As<IActiveLanguageService>();
 
