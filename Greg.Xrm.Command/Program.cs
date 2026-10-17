@@ -30,6 +30,7 @@ internal class Program
 		serviceCollection.AddTransient<ICommandExecutorFactory, CommandExecutorFactory>();
 		serviceCollection.AddTransient<IPluralizationFactory, PluralizationFactory>();
 		serviceCollection.AddTransient<ISettingsRepository, SettingsRepository>();
+		serviceCollection.AddTransient<IAtomicSettingsRepository, SettingsRepository>();
 		serviceCollection.AddSingleton<IAutoUpdater, AutoUpdater>();
 		serviceCollection.AddTransient<IPacxProjectRepository, PacxProjectRepository>();
 		serviceCollection.AddSingleton<IOrganizationServiceRepository, OrganizationServiceRepository>();
