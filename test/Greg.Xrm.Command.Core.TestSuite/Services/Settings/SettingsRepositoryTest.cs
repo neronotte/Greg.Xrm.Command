@@ -8,7 +8,7 @@ namespace Greg.Xrm.Command.Services.Settings
 	public class SettingsRepositoryTest
 	{
 		private string folder = null!;
-		private SettingsRepository CreateRepository() => new(new TestStorage(folder));
+		private IAtomicSettingsRepository CreateRepository() => new SettingsRepository(new TestStorage(folder));
 
 		[TestInitialize]
 		public void Initialize() => folder = Path.Combine(Path.GetTempPath(), "pacx-settings-test-" + Guid.NewGuid().ToString("N"));
@@ -20,11 +20,55 @@ namespace Greg.Xrm.Command.Services.Settings
 		}
 
 		[TestMethod]
+		public void OriginalInterfaceRetainsLegacyContract()
+		{
+			CollectionAssert.AreEquivalent(
+				new[] { "GetAsync", "SetAsync" },
+				typeof(ISettingsRepository).GetMethods().Select(method => method.Name).ToArray());
+		}
+
+		[TestMethod]
 		public async Task ConcurrentUpdatesAcrossInstancesRetainEveryChange()
 		{
 			await Task.WhenAll(Enumerable.Range(0, 40).Select(_ =>
 				CreateRepository().UpdateAsync<int>("counter", value => value + 1)));
 			Assert.AreEqual(40, await CreateRepository().GetAsync<int>("counter"));
+		}
+
+		[TestMethod]
+		public async Task UpdateInvokesCallbackOnceWithDefaultAndReturnsPersistedValue()
+		{
+			var repository = CreateRepository();
+			var invocationCount = 0;
+			var result = await repository.UpdateAsync<int>("counter", value =>
+			{
+				invocationCount++;
+				Assert.AreEqual(0, value);
+				return 42;
+			});
+
+			Assert.AreEqual(1, invocationCount);
+			Assert.AreEqual(42, result);
+			Assert.AreEqual(result, await repository.GetAsync<int>("counter"));
+		}
+
+		[TestMethod]
+		public async Task UpdateCallbackFailurePreservesCommittedValueAndReleasesMutex()
+		{
+			var repository = CreateRepository();
+			await repository.SetAsync("counter", 42);
+
+			await Assert.ThrowsAsync<InvalidOperationException>(() => repository.UpdateAsync<int>("counter", _ =>
+				throw new InvalidOperationException("Update failed deliberately.")));
+
+			Assert.AreEqual(42, await repository.GetAsync<int>("counter"));
+			Assert.AreEqual(43, await repository.UpdateAsync<int>("counter", value => value + 1));
+		}
+
+		[TestMethod]
+		public void UpdateRejectsNullCallback()
+		{
+			Assert.Throws<ArgumentNullException>(() => CreateRepository().UpdateAsync<int>("counter", null!));
 		}
 
 		[TestMethod]

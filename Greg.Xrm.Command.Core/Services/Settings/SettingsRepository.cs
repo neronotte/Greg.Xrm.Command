@@ -6,7 +6,7 @@ using Newtonsoft.Json;
 
 namespace Greg.Xrm.Command.Services.Settings
 {
-	public class SettingsRepository(IStorage storage) : ISettingsRepository
+	public class SettingsRepository(IStorage storage) : IAtomicSettingsRepository
 	{
 		public Task<T?> GetAsync<T>(string key) =>
 			WithSettingsMutexAsync(key, Read<T>);

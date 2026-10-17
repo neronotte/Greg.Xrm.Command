@@ -4,11 +4,11 @@ namespace Greg.Xrm.Command.Services.CommandHistory
 {
 	public class HistoryTracker : IHistoryTracker
 	{
-		private readonly ISettingsRepository settings;
+		private readonly IAtomicSettingsRepository settings;
 		const string CommandHistoryKey = "commandHistory";
 
 
-		public HistoryTracker(ISettingsRepository settings)
+		public HistoryTracker(IAtomicSettingsRepository settings)
 		{
 			this.settings = settings;
 		}
