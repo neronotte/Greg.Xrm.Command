@@ -60,7 +60,7 @@ namespace Greg.Xrm.Command.Commands.Script.Models
 			}
 			foreach (var a in fields)
 			{
-				
+
 				//var field = new Extractor_FieldMetadata
 				//{
 				//	LogicalName = a.LogicalName,

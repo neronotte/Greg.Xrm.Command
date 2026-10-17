@@ -15,13 +15,13 @@ namespace Greg.Xrm.Command.Commands.CustomApi.Model
 			set => SetValue(value);
 		}
 
-			public string? uniquename
-			{
-				get => Get<string>();
-				set => SetValue(value);
-			}
+		public string? uniquename
+		{
+			get => Get<string>();
+			set => SetValue(value);
+		}
 
-			public string? displayname
+		public string? displayname
 		{
 			get => Get<string>();
 			set => SetValue(value);

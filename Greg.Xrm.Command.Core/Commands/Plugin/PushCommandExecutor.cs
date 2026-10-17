@@ -1,6 +1,7 @@
 using System.ServiceModel;
 using System.Text;
 using Greg.Xrm.Command.Model;
+using Greg.Xrm.Command.Services;
 using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
 using Greg.Xrm.Command.Services.Plugin;
@@ -19,7 +20,8 @@ namespace Greg.Xrm.Command.Commands.Plugin
 		IPluginPackageReader pluginPackageReader,
 		IPluginPackageRepository pluginPackageRepository,
 		IPluginAssemblyRepository pluginAssemblyRepository,
-		IPluginTypeRepository pluginTypeRepository
+		IPluginTypeRepository pluginTypeRepository,
+		IObjectTypeCodeFinder objectTypeCodeFinder
 	) : ICommandExecutor<PushCommand>
 	{
 		public async Task<CommandResult> ExecuteAsync(PushCommand command, CancellationToken cancellationToken)
@@ -69,10 +71,6 @@ namespace Greg.Xrm.Command.Commands.Plugin
 
 			try
 			{
-				if (!File.Exists(command.Path))
-				{
-					return CommandResult.Fail($"File {command.Path} does not exist");
-				}
 				var fileInfo = new FileInfo(command.Path);
 				if (string.Equals(fileInfo.Extension, ".nupkg", StringComparison.OrdinalIgnoreCase))
 				{
@@ -154,8 +152,14 @@ namespace Greg.Xrm.Command.Commands.Plugin
 			var pluginPackage = await pluginPackageRepository.GetByIdAsync(crm, packageId, cancellationToken);
 			output.WriteLine("Done", ConsoleColor.Green);
 
+			int? pluginPackageObjectTypeCode = null;
 			if (pluginPackage == null)
 			{
+				pluginPackageObjectTypeCode = await objectTypeCodeFinder.GetObjectTypeCodeForTableAsync(
+					crm,
+					"pluginpackage",
+					cancellationToken);
+
 				output.Write($"Creating package {packageData.PackageId} ({packageData.PackageVersion})...");
 				pluginPackage = new PluginPackage
 				{
@@ -180,6 +184,20 @@ namespace Greg.Xrm.Command.Commands.Plugin
 			await pluginPackage.SaveOrUpdateAsync(crm);
 			output.WriteLine("Done", ConsoleColor.Green);
 
+			if (pluginPackageObjectTypeCode.HasValue)
+			{
+				output.Write($"Adding package {packageData.PackageId} ({packageData.PackageVersion}) to solution {solution.uniquename}...");
+
+				var request = new AddSolutionComponentRequest
+				{
+					SolutionUniqueName = solution.uniquename,
+					ComponentId = pluginPackage.Id,
+					ComponentType = pluginPackageObjectTypeCode.Value
+				};
+
+				await crm.ExecuteAsync(request, cancellationToken);
+				output.WriteLine("Done", ConsoleColor.Green);
+			}
 
 			output.Write($"Retrieving assemblies associated with package {packageData.PackageId}...");
 			output.WriteLine("Done", ConsoleColor.Green);

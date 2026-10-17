@@ -1,4 +1,3 @@
-using Greg.Xrm.Command.Commands.Data.Create;
 using System.ComponentModel.DataAnnotations;
 
 namespace Greg.Xrm.Command.Commands.Data.Create

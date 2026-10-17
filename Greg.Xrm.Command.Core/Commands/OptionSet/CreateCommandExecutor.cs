@@ -1,4 +1,3 @@
-using Autofac.Core;
 using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.OptionSet;
 using Greg.Xrm.Command.Services.Output;

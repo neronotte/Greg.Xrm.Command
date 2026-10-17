@@ -51,7 +51,7 @@ namespace Greg.Xrm.Command.Commands.Data.Query
 				foreach (var column in columns)
 				{
 					++col;
-					
+
 					if (!entity.Attributes.Contains(column)) continue;
 
 					var formattedValue = base.GetPrintableString(entity, column);

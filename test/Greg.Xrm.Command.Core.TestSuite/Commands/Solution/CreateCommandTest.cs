@@ -1,5 +1,3 @@
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-
 namespace Greg.Xrm.Command.Commands.Solution
 {
 	[TestClass]

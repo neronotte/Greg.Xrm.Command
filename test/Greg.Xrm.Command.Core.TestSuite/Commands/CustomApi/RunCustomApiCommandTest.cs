@@ -56,9 +56,9 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 		{
 			var command = new RunCustomApiCommand
 			{
-				UniqueName  = "nn_GregSum",
-				Input       = "{\"X\":1}",
-				InputFile   = "params.json"
+				UniqueName = "nn_GregSum",
+				Input = "{\"X\":1}",
+				InputFile = "params.json"
 			};
 
 			var results = command.Validate(new System.ComponentModel.DataAnnotations.ValidationContext(command)).ToList();
