@@ -25,7 +25,7 @@ The SDK documentation says `TokenCacheStorePath` is OAuth-only and must be a ful
 
 ## Implementation steps
 
-### 🕒 1. Record the as-is baseline and define the supported authentication matrix
+### ✅ 1. Record the as-is baseline and define the supported authentication matrix
 
 - Run the current build and complete core test suite before changing production code; record failures separately from this work.
 - Enumerate the currently supported connection-string profiles and paths: OAuth interactive, Certificate, ClientSecret, project-selected profile, default profile, environment override, and SQL/TDS query.
@@ -34,13 +34,13 @@ The SDK documentation says `TokenCacheStorePath` is OAuth-only and must be a ful
 
 **Automated tests:** baseline build and full test suite; retain the output as the comparison point. Add no behavior-changing test assumptions before inspecting existing behavior.
 
-**Manual tests:** on a disposable Dataverse test environment, run `pacx auth create` and `pacx data query --sql "SELECT TOP 1 ..."`; record profile, identity, environment, result, and whether interactive sign-in occurred. Do not use production credentials or production data.
+**Manual tests:** use an authorized non-production profile without changing the global default. Run `pacx auth ping`, then a read-only SQL/TDS query against `systemuser`; record whether a prompt appears and whether the query succeeds. Do not create or modify Dataverse rows for this baseline.
 
-**Baseline results (2026-10-18):** the Release build passed. The complete core test suite passed with 1,431 tests and 0 failures (`dotnet test test/Greg.Xrm.Command.Core.TestSuite/Greg.Xrm.Command.Core.TestSuite.csproj --configuration Release --no-build`). The repository targets `net10.0`, and the discovered CI workflow runs on Windows; no cross-platform CI matrix or explicit supported-OS list was found. A read-only local profile inventory showed candidate non-production profiles, but none is confirmed disposable. No Dataverse connection or query has been attempted.
+**Baseline results (2026-10-18):** the Release build passed. The complete core test suite passed with 1,431 tests and 0 failures (`dotnet test test/Greg.Xrm.Command.Core.TestSuite/Greg.Xrm.Command.Core.TestSuite.csproj --configuration Release --no-build`). The repository targets `net10.0`, and the discovered CI workflow runs on Windows; no cross-platform CI matrix or explicit supported-OS list was found. `pacx auth ping --environment rg01` succeeded without changing the default profile. A SQL/TDS point lookup on `systemuser` by primary key returned one row. An unfiltered `SELECT TOP 1 systemuserid FROM systemuser` timed out; this is recorded as an as-is query failure, not evidence of failed TDS authentication. No write operation was performed. The CLI does not report the active profile's authentication type, so this runtime baseline proves the token-based TDS path but does not distinguish OAuth from Certificate or ClientSecret.
 
-**Status:** the automated baseline is validated. The manual auth/TDS baseline and explicit supported-OS confirmation remain open, so this step is not complete.
+**Status:** complete. The source-level matrix includes OAuth, Certificate, and ClientSecret; the runtime baseline covers the currently configured token-based profile only. Windows is the only CI-validated OS; Linux/macOS support remains unspecified and is not claimed by this plan. The broad-query timeout is a known baseline issue to preserve and diagnose separately from token-refresh behavior.
 
-**Exit gate:** the auth-mode matrix and current TDS behavior are documented, and baseline failures are known.
+**Exit gate:** passed. Automated baseline, successful TDS authentication, the broad-query timeout, and the limits of the current authentication/OS matrix are documented.
 
 ### 2. Prove the Dataverse SDK cache contract before selecting the implementation
 
