@@ -42,7 +42,7 @@ The SDK documentation says `TokenCacheStorePath` is OAuth-only and must be a ful
 
 **Exit gate:** passed. Automated baseline, successful TDS authentication, the broad-query timeout, and the limits of the current authentication/OS matrix are documented.
 
-### 2. Prove the Dataverse SDK cache contract before selecting the implementation
+### ✅ 2. Prove the Dataverse SDK cache contract before selecting the implementation
 
 - Against the repository's pinned Dataverse Client version, verify that `TokenCacheStorePath` accepts and writes to a full file path, including parent-directory handling.
 - Verify OAuth interactive cache lookup across fresh processes and what connection-string identity fields (including `Username`/`OAuthUserId`) are needed to select the intended account.
@@ -55,27 +55,72 @@ The SDK documentation says `TokenCacheStorePath` is OAuth-only and must be a ful
 
 **Manual tests:** repeat the authentication in a fresh process with the same test profile; inspect the cache file without printing or logging its contents; test expired-token refresh, concurrent `pacx` processes, and cache-file access denied/corrupt cases on every supported OS.
 
-**Exit gate:** document proven SDK behavior and the chosen cache architecture. If cache encryption is not proven on an OS, either provide a secure supported implementation for that OS or explicitly defer rollout there.
+**Evidence so far (2026-10-18):** production and test projects pin `Microsoft.PowerPlatform.Dataverse.Client` 1.2.26, with `Microsoft.Identity.Client` and `Microsoft.Identity.Client.Extensions.Msal` 4.84.2. The pinned package XML describes `TokenCacheStorePath` as a path and file name. The SDK source inspected uses `MsalCacheHelper`, registers the cache with the public-client user's MSAL cache, splits the supplied value into a file name and directory, configures Linux keyring and macOS Keychain integration, and uses a case-insensitive username hint to find an account for `AcquireTokenSilent`. This is source evidence; the inspected source revision is not yet proven to be the exact source revision for package 1.2.26, and the on-disk protection of that exact package has not yet been validated.
+
+Creating the explicitly authorized temporary OAuth profile through the current PACX executable produced a 2,781-byte `tokens.json`; no token contents were read. No separate MSAL cache file appeared in PACX's configured cache directory or its parent directory. The temporary profile was deleted, and the legacy cache file returned to 2 bytes. An earlier cleanup check reported `generali-dev` as the global default; a later read-only `pacx auth list` now reports `rulmeca-preventivi` and an additional profile not present in the initial inventory. No profile selection was changed after noticing this discrepancy; treat the current profile/default state as user-owned and restore only with explicit confirmation. The terminal showed no interactive sign-in prompt, so this does not prove a fresh interactive login. This confirms the current plaintext-cache risk and means further OAuth runtime tests must use a path that does not persist PACX bearer tokens.
+
+**Status:** complete. All runtime verifications are complete on Windows and Linux (below) and the cache architecture has been approved by the maintainer.
+
+**Isolated SDK harness results (2026-10-18, Windows, rg01, OAuth interactive user):** a throwaway console harness outside the repository (same `Dataverse.Client` 1.2.26 and `Microsoft.Data.SqlClient` 7.0.2) created `ServiceClient` from `AuthType=OAuth;Url=…;RedirectUri=http://localhost;LoginPrompt=Auto;TokenCacheStorePath=<temp>\cache\nested\msal.cache`. No token or cache content was printed.
+
+- Full file path: accepted; the missing nested parent directories were created.
+- Encryption at rest (Windows): the cache file is not JSON, contains no plaintext `AccessToken`/`RefreshToken` markers, and DPAPI `CurrentUser` unprotects it. Linux keyring and macOS Keychain remain unverified.
+- First login: interactive (completed in the browser); `WhoAmI` and a TDS point query using `ServiceClient.CurrentAccessToken` succeeded.
+- Cross-process reuse with `LoginPrompt=Auto` + `Username=<authenticated UPN>`: a new process obtained the **same** cached token (identical expiry), connected in ~1 s, and `WhoAmI` + TDS succeeded. Reuse proven.
+- Without `Username`: the SDK did not find the cached account and fell back to interactive acquisition (new token expiry, ~71 s, satisfied silently only by browser SSO). **`Username` is required** for cache reuse; PACX must persist the authenticated UPN in OAuth profiles that omit it.
+- `LoginPrompt=Never`: in SDK 1.2.26 this calls `AcquireTokenInteractive` with `NoPrompt` and never reads the cache (each run returned a new token). PACX must keep `LoginPrompt=Auto` for OAuth profiles.
+- The OAuth user (`3586c4d5…`) differs from the user of the existing `rg01` PACX profile (`40595c8f…`), so that profile is likely not OAuth interactive; the Step 1 TDS baseline therefore covered a non-interactive auth type.
+- Long-running refresh (proven): a soak on a single `ServiceClient` ran `WhoAmI` + TDS every 5 minutes from 14:57Z to 16:27Z. All 19 probes succeeded. The token expiring at 16:10:11Z was refreshed by the SDK, and the 16:12:17Z probe used a new token (expiry 17:19:22Z) without any prompt. `CurrentAccessToken` returned the refreshed token and TDS accepted it in the 4 probes after the refresh. The soak was stopped after these post-refresh confirmations.
+- Refresh after process restart (proven): at 17:20Z the cached access token had expired (17:19:22Z). New processes silently renewed it from the cached refresh token (no browser, ~2 s) and `WhoAmI` + TDS succeeded.
+- Concurrent processes (proven): 3 processes started in parallel on the same cache all succeeded (`WhoAmI` + TDS). Two refreshed concurrently and obtained different tokens, which is harmless; the cache file remained valid and DPAPI-protected.
+- Corrupt cache (proven): a separate cache file filled with 4 KB of random bytes caused no error. The SDK ignored it, re-acquired interactively (~15 s, completed by browser SSO) and overwrote it with a valid DPAPI-protected cache.
+- Inaccessible cache (proven): a copy of the cache with read/write denied to the current user caused no SDK error. The SDK re-acquired interactively, `WhoAmI` + TDS succeeded, and nothing could be persisted. (The harness's own post-run file inspection threw `UnauthorizedAccessException`; this is the test tool, not the SDK.) The ACL was restored afterwards.
+- These runtime results were obtained with the exact pinned package binaries, which resolves the earlier caveat about the inspected source revision.
+
+**OS scope decision (2026-10-18, approved by the maintainer):** this change is validated and declared supported on Windows only, matching the Windows-only CI. Linux keyring and macOS Keychain cache protection are not verified and are out of the declared scope; "every supported OS" in later steps means Windows.
+
+**Linux results (2026-10-18, WSL 2, Ubuntu 26.04.1, .NET SDK 10.0.402, libsecret + gnome-keyring, same harness and packages):** the maintainer then provided WSL to extend verification. macOS remains unverified.
+
+- Keyring available and unlocked: first OAuth login, `WhoAmI` and TDS succeeded from Linux. The `TokenCacheStorePath` file is created empty (0 bytes); the MSAL cache is stored in the keyring (item labelled `Token Storage for <process name>`). Cross-process reuse with `Username` proven (same token expiry, no browser).
+- Desktop session with the keyring daemon stopped: D-Bus auto-activates `gnome-keyring`; if the keyring is locked, the user is prompted to unlock it. When unlocked, behaviour equals the previous case.
+- Keyring reachable but locked and not unlocked: no error, no cache persisted, nothing written to disk.
+- Headless (no reachable D-Bus/keyring): no error, `WhoAmI` and TDS succeed, **no cache file and no token written anywhere**. The cache is therefore in-memory only: every new process needs a fresh interactive login.
+- A scan of files modified in the user's home during the tests found no `RefreshToken` marker; only the encrypted keyring files and empty cache files were touched.
+
+**Finding to resolve in Steps 3-6 (possible regression on headless Linux):** today PACX reuses the raw `tokens.json` bearer for later processes even without a keyring. With the SDK cache only, OAuth interactive users on headless Linux would be prompted on every command (and fail without a browser). The design must make this explicit, e.g. detect persistence unavailability (`MsalCacheHelper.VerifyPersistence`) and warn, and recommend ClientSecret/Certificate profiles for headless automation. It must not fall back to plaintext token storage.
+
+**Chosen cache architecture (approved by the maintainer, 2026-10-18):**
+
+1. **Capability-based selection, not OS-based.** At runtime PACX checks whether the OS secure storage is usable (`MsalCacheHelper.VerifyPersistence`: DPAPI on Windows, keyring on Linux, Keychain on macOS). The check uses no tokens.
+2. **Secure storage available** (Windows; Linux with a usable keyring): OAuth profiles use the SDK MSAL cache (`TokenCacheStorePath` = full file path, `LoginPrompt=Auto`, `Username` = authenticated UPN). PACX no longer writes `tokens.json` for them. The SDK refreshes tokens within a command and across processes.
+3. **Secure storage unavailable** (headless Linux, WSL without keyring, locked/refused keyring): keep the as-is legacy `tokens.json` behaviour, so there is no regression. Mitigations: file restricted to the owner (`0600`) on Unix, an explicit warning when the profile is created, and a recommendation to use ClientSecret/Certificate profiles for headless automation. In this mode the issue 217 limitation (no refresh beyond the cached access token) remains and is documented. A plaintext MSAL cache (`WithUnprotectedFile`) is rejected: it would persist a long-lived refresh token unencrypted, and the SDK does not expose it anyway.
+4. **One shared MSAL cache file for all profiles**, instead of one per profile. Reasons: on Linux the keyring entry is keyed by fixed SDK attributes, not by file name, so per-profile files would share one entry anyway; MSAL natively stores multiple accounts and `Username` selects the right one; profiles of the same tenant share one sign-in. Consequently `auth delete` and `auth rename` do not modify the MSAL cache (the account can still be used by other profiles); they keep handling the legacy `tokens.json` entry as today.
+5. **Non-interactive profiles (ClientSecret, Certificate) are unchanged**: the SDK already refreshes confidential-client tokens in memory, and OAuth-only cache parameters are not added to their connection strings.
+6. **Comments:** the maintainer requires the implementation to document the reasons for each of these decisions in code comments.
+
+**Exit gate:** passed. SDK behaviour is proven on Windows and Linux (keyring and headless), and the cache architecture is chosen and approved. macOS is not verified and not claimed.
 
 ### 3. Add deterministic local tests around token and connection-string decisions
 
 - Add test seams at the smallest boundary needed to test connection-string construction and token selection without Dataverse credentials or network access.
-- Make the cache path a full file path under the PACX application-data location. Prefer per-profile cache isolation so deleting or renaming one profile cannot clear or reuse another profile's token. Derive paths safely; never place raw profile names or secrets in filesystem paths.
+- Make the cache path a full file path under the PACX application-data location: one shared MSAL cache file (see the chosen architecture in Step 2; per-profile files would not isolate anything on Linux).
 - Use a connection-string parser/builder rather than substring checks when adding defaults. Preserve user-provided values and case-insensitive key spelling; do not append duplicate `Username` or `TokenCacheStorePath` parameters.
 - For OAuth interactive login, persist the authenticated username only when the profile omitted it, and only after successful authentication. Preserve a configured username even if the authenticated account differs; surface that mismatch rather than silently rewriting user intent.
 - Keep OAuth-only cache parameters out of Certificate and ClientSecret profiles.
-- Preserve per-profile semantics across `auth rename` and `auth delete`: rename the corresponding cache association safely; delete only that profile's native cache, never a shared cache used by other profiles.
+- Preserve as-is semantics of `auth rename` and `auth delete`: they keep handling the legacy `tokens.json` entry and never clear the shared MSAL cache.
+- Add the capability-based mode selection (secure MSAL cache vs legacy fallback) as a pure, testable decision, with the secure-storage probe behind an interface so tests do not touch the real OS storage.
 
-**Automated tests:** cover missing/explicit path, file-vs-directory path, duplicate keys, existing username, missing username, usernames containing valid connection-string characters, case-insensitive parameter names, OAuth vs non-OAuth auth types, cache path isolation, profile names requiring path-safe encoding, rename, delete, and two profiles targeting different environments/accounts. Verify failures leave stored connection settings unchanged.
+**Automated tests:** cover missing/explicit path, file-vs-directory path, duplicate keys, existing username (all aliases), missing username, values requiring quoting, case-insensitive parameter names, OAuth vs non-OAuth auth types, mode selection for every auth type and storage availability, and the username persistence rules (added only when missing, only for OAuth, never overwriting, stored settings unchanged on failure).
 
-**Manual tests:** create two OAuth profiles for different test identities/environments, use both, rename one, delete one, then verify the other still authenticates and its cache remains usable.
+**Manual tests:** none required for this step; it is covered end-to-end by the manual tests of Steps 4-7 (two OAuth profiles, rename, delete, cache reuse).
 
 **Exit gate:** local tests prove deterministic configuration and profile isolation without contacting Dataverse.
 
 ### 4. Route Dataverse operations through the refresh-capable SDK client
 
-- Make the connection-string/MSAL-backed `ServiceClient` the normal path for OAuth profiles so the SDK owns token acquisition and refresh for the lifetime of a command.
-- Remove the static access-token callback path from normal OAuth connection creation only after Step 2 proves the SDK cache can replace its cross-process behavior.
+- Make the connection-string/MSAL-backed `ServiceClient` the normal path for OAuth profiles when secure storage is available, so the SDK owns token acquisition and refresh for the lifetime of a command.
+- Keep the static access-token callback path only for the legacy fallback (secure storage unavailable), unchanged from today.
+- Persist the authenticated `Username` into OAuth profiles that omit it, both at `auth create` and on the first successful connection of existing profiles (one-time interactive sign-in after upgrade).
 - Retain Certificate and ClientSecret construction paths unchanged except for regression-tested shared connection-string plumbing.
 - Handle invalid/missing native cache through the existing supported sign-in behavior. Do not fall back silently to an expired PACX token or another profile.
 - Preserve profile selection rules for global default, project profile, named connection, and environment override.
@@ -102,7 +147,7 @@ The SDK documentation says `TokenCacheStorePath` is OAuth-only and must be a ful
 
 ### 6. Retire the legacy raw-token cache with a safe migration
 
-- Stop writing new raw bearer tokens to `tokens.json`.
+- Stop writing new raw bearer tokens to `tokens.json` when secure storage is available; keep it only for the approved legacy fallback, restricted to the owner (`0600`) on Unix and announced by a warning at profile creation.
 - Define cleanup for existing cache entries without treating access tokens as refresh tokens. Never import a legacy bearer into the MSAL cache; it lacks the refresh-token/cache state needed to prove silent renewal.
 - Remove an individual legacy entry only after its profile has successfully authenticated through the new path, or provide an explicit one-time cleanup/migration command. Do not delete a shared legacy file before accounting for all profiles.
 - Document any unavoidable one-time reauthentication on upgrade. Because a raw access token cannot reconstruct the SDK/MSAL refresh cache, do not claim zero-prompt migration unless a test proves it. If this transition violates the no-regression gate, pause rollout and agree a staged compatibility policy before merging.
