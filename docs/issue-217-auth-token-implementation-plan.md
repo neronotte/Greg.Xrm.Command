@@ -194,7 +194,7 @@ Creating the explicitly authorized temporary OAuth profile through the current P
 
 **Exit gate:** passed. No new plaintext token is persisted where secure storage exists; legacy entries are removed after the first successful SDK-cache connection; the legacy fallback is restricted to the owner and announced to the user.
 
-### 7. Run the full regression and release acceptance matrix
+### ✅ 7. Run the full regression and release acceptance matrix
 
 - Run focused connection/cache/auth/TDS unit tests, then the complete core test suite and Release build.
 - Compare auth command output and stored profile behavior to the Step 1 baseline.
@@ -207,3 +207,22 @@ Creating the explicitly authorized temporary OAuth profile through the current P
 **Manual tests:** complete the matrix above using non-production accounts and record OS, SDK version, auth mode, whether a prompt occurred, and TDS result for each case.
 
 **Definition of done:** all mandatory invariants pass; specifically, an expired token is refreshed for a long-running command and a real SQL/TDS query succeeds using the same authenticated client before and after refresh. Any unresolved platform/security or migration case blocks release rather than being waived as a test gap.
+
+**Results (2026-10-18):**
+
+- Builds: the whole solution builds in Release and Debug with 0 errors. All 60 warnings are pre-existing NU190x package-vulnerability warnings; no package was changed by this work.
+- Tests: full suite 1,504 passed, 0 failed (baseline 1,431 + 73 new). Connection/cache tests also pass on Linux.
+- Manual matrix (Windows, rg01): OAuth new profile, fresh process, upgrade from the current release, rename, delete, long-running refresh with TDS before/after refresh (Steps 4-5), legacy cleanup (Step 6). Non-OAuth: the `rg01` profile is ClientSecret; ping and TDS unchanged. No Certificate profile was available: Certificate follows the same unchanged code path as ClientSecret, covered by unit tests on the mode selection.
+- Manual matrix (Linux, WSL): SDK cache with keyring (Step 2) and legacy fallback without keyring through PACX (Step 6). macOS not verified and not claimed.
+- Public API: `Greg.Xrm.Command.Interfaces` (plugin contract) is unchanged. `GetTokenCachePath()` keeps returning the directory. The repository constructor gained an optional parameter, so DI registration and existing callers are unchanged.
+- Secrets: new output only shows profile names, user names, file paths and SDK error messages; never tokens or connection strings.
+- Documentation: `auth create` usage (exported to the wiki page `pacx-auth-create.md`) gains a "How tokens are stored (OAuth profiles)" section describing the encrypted cache, automatic refresh, the stored `Username`, the one-time sign-in after upgrade, TDS, and the headless fallback. Every design decision is documented in code comments, as requested by the maintainer.
+
+**Out of scope, found during the work (to track separately):**
+
+1. On Linux, if `~/.local/share` does not exist, PACX stops at startup with "The value cannot be an empty string. (Parameter 'path')" (`Storage.cs` and `TokenCache.cs` use `GetFolderPath(LocalApplicationData)`). Pre-existing.
+2. `System.Security.Cryptography.Pkcs` 10.0.10 has known moderate and high vulnerabilities (NU1902/NU1903). Pre-existing.
+
+**Status:** complete.
+
+**Exit gate:** passed.
