@@ -120,7 +120,7 @@ Creating the explicitly authorized temporary OAuth profile through the current P
 
 **Exit gate:** passed. Local tests prove deterministic configuration and mode selection without contacting Dataverse.
 
-### 4. Route Dataverse operations through the refresh-capable SDK client
+### 🕒 4. Route Dataverse operations through the refresh-capable SDK client
 
 - Make the connection-string/MSAL-backed `ServiceClient` the normal path for OAuth profiles when secure storage is available, so the SDK owns token acquisition and refresh for the lifetime of a command.
 - Keep the static access-token callback path only for the legacy fallback (secure storage unavailable), unchanged from today.
@@ -135,7 +135,18 @@ Creating the explicitly authorized temporary OAuth profile through the current P
 
 **Exit gate:** Dataverse commands pass both long-running and new-process scenarios on all supported OS/auth modes.
 
-### 5. Make TDS token selection a first-class, same-client contract
+**Results so far (2026-10-18, Windows, rg01, PACX built from this branch):** full suite 1,486 passed (9 new repository username tests).
+
+- A. `auth create` of a new OAuth profile: one browser sign-in; `msal_token_cache.bin` created (8,662 bytes, DPAPI); `tokens.json` not written.
+- B. New processes on that profile: `auth ping` (4 s) and a TDS query (3 s) reused the cache with no browser, which also proves `Username` was stored.
+- C. Upgrade of a profile created by the current release (`master` build, which wrote a 2,721-byte plaintext token to `tokens.json`): first branch command signed in once (9 s, satisfied by browser SSO) and stored `Username`; the next command was silent (3 s).
+- D. `auth rename`: the renamed profile stayed silent (3 s). `auth delete`: the other profile kept working silently (2 s); the shared MSAL cache was not touched.
+- E. Pre-existing non-OAuth `rg01` profile: `auth ping` and a TDS query behave as in the Step 1 baseline.
+- Long-running command: a temporary plugin (outside the repository, loaded with `--tool`) holds ONE connection from `GetCurrentConnectionAsync` and runs `WhoAmI` + TDS through the real `QueryExecutorSql` every 5 minutes across the token expiry (19:34:39Z). Started 18:16Z; result pending.
+
+**Status:** in progress (waiting for the long-running result). The legacy `tokens.json` entry of an upgraded profile is still present: its cleanup belongs to Step 6.
+
+### 🕒 5. Make TDS token selection a first-class, same-client contract
 
 - Update `QueryExecutorSql` so the TDS token comes from the authenticated `ServiceClient` used for that query, rather than creating/resolving another connection and potentially obtaining a stale or differently scoped token.
 - Retrieve the token through the SDK's refresh-capable token property immediately before opening the SQL connection; do not retain it in a long-lived executor or cache it in PACX.
@@ -148,6 +159,10 @@ Creating the explicitly authorized temporary OAuth profile through the current P
 **Manual tests:** run `pacx data query --sql` against a disposable environment with TDS enabled and a user that has TDS permission. Verify a result row is returned. Repeat after access-token expiry while the process/client remains alive and from a fresh process. Confirm disabled-TDS and missing-privilege cases still produce their specific guidance. Test OAuth first; test Certificate/ClientSecret TDS only where those modes are currently supported by the environment.
 
 **Exit gate:** the exact `ServiceClient` used for the command supplies a current bearer token and a real TDS query succeeds before and after refresh.
+
+**Results so far (2026-10-18):** `QueryExecutorSql` now takes the token from the `ServiceClient` running the query (`ResolveAccessTokenAsync`), falling back to the unchanged repository token only when the client has none (fixed-token legacy clients). 5 new tests; full suite 1,491 passed. TDS queries succeeded through PACX in manual tests B, E and in the first probe of the long-running test. Before/after-refresh evidence comes from the same long-running test as Step 4; legacy-mode TDS is validated in Step 6.
+
+**Status:** in progress (waiting for the long-running result).
 
 ### 6. Retire the legacy raw-token cache with a safe migration
 

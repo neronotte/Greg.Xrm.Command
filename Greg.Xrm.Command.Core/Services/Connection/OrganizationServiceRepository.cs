@@ -10,24 +10,55 @@ using Microsoft.Xrm.Sdk;
 
 namespace Greg.Xrm.Command.Services.Connection
 {
+	/// <summary>
+	/// Stores the authentication profiles and creates the Dataverse connections used by every command.
+	/// </summary>
+	/// <remarks>
+	/// <para>
+	/// TOKEN CACHING (issue #217, see docs/issue-217-auth-token-implementation-plan.md).
+	/// Before #217 an OAuth profile reused the last access token stored in plain text in <c>tokens.json</c>
+	/// through a <see cref="ServiceClient"/> built from a fixed-token callback. That client can never refresh the
+	/// token, so commands running longer than the token lifetime (about one hour) failed with
+	/// "unauthorized ... scheme 'Anonymous'". The token was also exposed in plain text on disk.
+	/// </para>
+	/// <para>
+	/// Each connection now follows one of the paths described by <see cref="TokenCacheMode"/>:
+	/// OAuth profiles on systems with OS secure storage let the SDK own the encrypted MSAL cache (persisted,
+	/// shared across processes, refreshed automatically); OAuth profiles without secure storage and all
+	/// non-interactive profiles keep the exact pre-#217 code path, so nothing regresses for them.
+	/// </para>
+	/// </remarks>
 	public class OrganizationServiceRepository(
 		IOutput output,
 		ISettingsRepository settings,
-		IPacxProjectRepository pacxProjectRepository
+		IPacxProjectRepository pacxProjectRepository,
+		ISecureTokenStorageProbe? secureTokenStorageProbe = null
 		) : IOrganizationServiceRepository
 	{
 		private readonly ISettingsRepository settings = settings ?? throw new ArgumentNullException(nameof(settings));
 		private readonly IPacxProjectRepository pacxProjectRepository = pacxProjectRepository ?? throw new ArgumentNullException(nameof(pacxProjectRepository));
 
+		// Issue #217: tells whether OAuth profiles can use the encrypted SDK MSAL cache on this machine.
+		// Optional so that the DI registration and existing callers need no change; tests inject a fake.
+		private readonly ISecureTokenStorageProbe secureTokenStorageProbe = secureTokenStorageProbe ?? new MsalSecureTokenStorageProbe(TokenCache.GetTokenCachePath);
+
+		/// <summary>
+		/// Returns the PACX token cache DIRECTORY.
+		/// </summary>
+		/// <remarks>
+		/// Kept as-is for compatibility with plugins, even though the interface describes it as the MSAL cache file:
+		/// changing the returned value could break callers that combine it with their own file names.
+		/// The MSAL cache file actually used is <see cref="TokenCache.GetMsalCacheFilePath"/>.
+		/// </remarks>
 		public string GetTokenCachePath()
 		{
 			return TokenCache.GetTokenCachePath();
 		}
 
 
-		private static byte[] GetAesKey() => Convert.FromBase64String(Properties.Resources.AesKey);
+		internal static byte[] GetAesKey() => Convert.FromBase64String(Properties.Resources.AesKey);
 
-		private static byte[] GetAesIV() => Convert.FromBase64String(Properties.Resources.AesIV);
+		internal static byte[] GetAesIV() => Convert.FromBase64String(Properties.Resources.AesIV);
 
 
 
@@ -267,6 +298,13 @@ namespace Greg.Xrm.Command.Services.Connection
 				var crm = await CreateServiceClientAsync(name, connectionString);
 				await crm.ExecuteAsync(new WhoAmIRequest());
 
+				// Issue #217: store the UPN of the account that just signed in. The SDK needs it to find that account
+				// in its MSAL cache in later processes; without it every command would require a new browser sign-in.
+				// Only added to OAuth profiles that do not already specify a user (see OAuthConnectionString).
+				if (OAuthConnectionString.TryAddUsername(connectionString, crm.OAuthUserId, out var connectionStringWithUsername))
+				{
+					connectionString = connectionStringWithUsername;
+				}
 
 				var connectionStrings = await GetConnectionSettingAsync();
 				connectionStrings ??= new ConnectionSetting() { IsSecured = true };
@@ -314,6 +352,10 @@ namespace Greg.Xrm.Command.Services.Connection
 			}
 
 			connectionStrings.Remove(name);
+
+			// Only the legacy tokens.json entry is per-profile. The SDK MSAL cache (issue #217) is shared by all
+			// profiles and the signed-in account may still be used by other profiles of the same tenant, so it is
+			// intentionally left untouched here.
 			await TokenCache.ClearAccessTokenAsync(name);
 
 			await this.settings.SetAsync("connections", connectionStrings);
@@ -406,6 +448,17 @@ namespace Greg.Xrm.Command.Services.Connection
 		/// <returns></returns>
 		private async Task<ServiceClient> CreateServiceClientAsync(string connectionName, string connectionString)
 		{
+			// Issue #217: OAuth profiles on systems with OS secure storage use the SDK MSAL cache, which is encrypted
+			// and refreshes tokens. Everything else falls through to the pre-#217 code below, intentionally unchanged.
+			var mode = TokenCacheModeSelector.Select(connectionString, this.secureTokenStorageProbe.IsAvailable);
+			if (mode == TokenCacheMode.SdkSecureCache)
+			{
+				return await CreateServiceClientWithSdkTokenCacheAsync(connectionName, connectionString);
+			}
+
+			// Pre-#217 path, used for TokenCacheMode.NotApplicable (ClientSecret, Certificate, unparsable strings)
+			// and TokenCacheMode.LegacyPacxCache (OAuth without secure storage). Do not change it without
+			// re-validating those scenarios: it is the "no regression" guarantee of #217.
 			var accessToken = await TokenCache.TryGetAccessTokenAsync(connectionName);
 			if (accessToken == null)
 			{
@@ -447,6 +500,94 @@ namespace Greg.Xrm.Command.Services.Connection
 				output.WriteLine($"Inner exception ({level}): {ex.InnerException.Message}", ConsoleColor.Yellow);
 				RecourseInnerExceptions(ex.InnerException, level + 1);
 			}
+		}
+
+
+		/// <summary>
+		/// Creates an OAuth <see cref="ServiceClient"/> that relies on the SDK MSAL token cache (issue #217).
+		/// </summary>
+		/// <remarks>
+		/// <para>
+		/// The SDK is given the connection string plus <c>TokenCacheStorePath</c> = the shared cache FILE. With
+		/// <c>Username</c> and <c>LoginPrompt=Auto</c> in the profile, the SDK then: reuses the cached account
+		/// silently in every new process, refreshes the access token with the cached refresh token, also in the
+		/// middle of a long-running command, and asks for an interactive sign-in only when nothing usable is cached.
+		/// All of this was verified at runtime with SDK 1.2.26 on 2026-10-18 (including expiry during a
+		/// 90-minute run, 3 parallel processes, corrupt and inaccessible cache files).
+		/// </para>
+		/// <para>
+		/// <c>tokens.json</c> is neither read nor written here: its tokens are not refreshable and are stored in
+		/// plain text, which is exactly what #217 removes.
+		/// </para>
+		/// </remarks>
+		private async Task<ServiceClient> CreateServiceClientWithSdkTokenCacheAsync(string connectionName, string connectionString)
+		{
+			var sdkConnectionString = OAuthConnectionString.WithTokenCachePath(connectionString, TokenCache.GetMsalCacheFilePath());
+
+			ServiceClient crm;
+			try
+			{
+				crm = new ServiceClient(sdkConnectionString);
+			}
+			catch (DataverseConnectionException ex)
+			{
+				output.WriteLine($"Failed to create ServiceClient for connection '{connectionName}': {ex.Message}", ConsoleColor.Yellow);
+				RecourseInnerExceptions(ex, 1);
+				throw;
+			}
+
+			if (crm.IsReady)
+			{
+				// Upgrades OAuth profiles created before #217: they have no Username, so without this every command
+				// would ignore the cache and sign in again. After this first sign-in they reuse the cache silently.
+				await PersistAuthenticatedUsernameAsync(connectionName, connectionString, crm.OAuthUserId);
+			}
+
+			return crm;
+		}
+
+
+		/// <summary>
+		/// Stores the signed-in UPN into an existing OAuth profile that does not specify a user yet (issue #217).
+		/// </summary>
+		/// <remarks>
+		/// <list type="bullet">
+		/// <item>Never overwrites a user name the profile already contains: if it differs from the account that
+		/// signed in, a warning is shown and the profile is left untouched, because the user chose that value.</item>
+		/// <item>Only updates the profile if it still stores exactly the connection string used for this sign-in.
+		/// This avoids overwriting a profile changed meanwhile (e.g. by another PACX process) and does nothing when
+		/// the profile is not stored yet, as during <c>auth create</c>, which adds the user name itself.</item>
+		/// <item>Non-OAuth profiles and sign-ins without a known user are ignored.</item>
+		/// </list>
+		/// </remarks>
+		/// <param name="connectionName">Name of the profile used for the sign-in.</param>
+		/// <param name="usedConnectionString">The connection string as stored in the profile and used to connect.</param>
+		/// <param name="signedInUser">The UPN returned by the SDK (<see cref="ServiceClient.OAuthUserId"/>).</param>
+		internal async Task PersistAuthenticatedUsernameAsync(string connectionName, string usedConnectionString, string? signedInUser)
+		{
+			if (string.IsNullOrWhiteSpace(signedInUser)) return;
+			if (!OAuthConnectionString.IsOAuth(usedConnectionString)) return;
+
+			var configuredUser = OAuthConnectionString.GetUsername(usedConnectionString);
+			if (configuredUser != null)
+			{
+				if (!string.Equals(configuredUser, signedInUser.Trim(), StringComparison.OrdinalIgnoreCase))
+				{
+					output.WriteLine($"Warning: authentication profile '{connectionName}' is configured for user '{configuredUser}', but '{signedInUser}' signed in. The profile has not been changed.", ConsoleColor.Yellow);
+				}
+				return;
+			}
+
+			if (!OAuthConnectionString.TryAddUsername(usedConnectionString, signedInUser, out var updatedConnectionString)) return;
+
+			var connectionStrings = await GetConnectionSettingAsync();
+			if (connectionStrings == null) return;
+
+			if (!connectionStrings.TryGetConnectionString(connectionName, GetAesKey(), GetAesIV(), out var storedConnectionString)) return;
+			if (!string.Equals(storedConnectionString, usedConnectionString, StringComparison.Ordinal)) return;
+
+			connectionStrings.UpsertConnectionString(connectionName, updatedConnectionString, GetAesKey(), GetAesIV());
+			await this.settings.SetAsync("connections", connectionStrings);
 		}
 
 		private async Task<ServiceClient> CreateServiceClientFromConnectionString(string connectionName, string connectionString)
