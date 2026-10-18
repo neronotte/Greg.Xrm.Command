@@ -306,6 +306,8 @@ namespace Greg.Xrm.Command.Services.Connection
 					connectionString = connectionStringWithUsername;
 				}
 
+				WriteLegacyCacheWarningIfNeeded(connectionString);
+
 				var connectionStrings = await GetConnectionSettingAsync();
 				connectionStrings ??= new ConnectionSetting() { IsSecured = true };
 
@@ -541,9 +543,74 @@ namespace Greg.Xrm.Command.Services.Connection
 				// Upgrades OAuth profiles created before #217: they have no Username, so without this every command
 				// would ignore the cache and sign in again. After this first sign-in they reuse the cache silently.
 				await PersistAuthenticatedUsernameAsync(connectionName, connectionString, crm.OAuthUserId);
+
+				// The profile now works through the encrypted SDK cache: its plain-text token in tokens.json is no
+				// longer needed and is removed (only after a successful connection, so a failure never loses it).
+				await TryRetireLegacyTokenAsync(TokenCache.GetTokenCachePath(), connectionName);
 			}
 
 			return crm;
+		}
+
+
+		/// <summary>
+		/// Removes the plain-text <c>tokens.json</c> entry of a profile that now uses the SDK MSAL cache (issue #217).
+		/// </summary>
+		/// <remarks>
+		/// <para>
+		/// BEST EFFORT on purpose: this is cleanup, not part of connecting. A locked file (another PACX process
+		/// writing it), a permission problem or a corrupt file must never make a working connection fail, so such
+		/// errors are swallowed and the entry is simply retried on the next connection of the profile.
+		/// </para>
+		/// <para>
+		/// Two processes cleaning different profiles at the same time can lose one removal (read-modify-write on the
+		/// same file). The effect is harmless: the remaining entry is never used for that profile again (SDK mode does
+		/// not read tokens.json) and is removed on its next successful connection.
+		/// </para>
+		/// <para>
+		/// A legacy token is never imported into the MSAL cache: it is only an access token, without the refresh
+		/// token MSAL needs, so it could not provide silent renewal. Upgraded profiles sign in once instead.
+		/// </para>
+		/// </remarks>
+		/// <returns><c>true</c> if the cleanup completed (including "nothing to remove"), <c>false</c> if it failed.</returns>
+		internal static async Task<bool> TryRetireLegacyTokenAsync(string tokenCacheDirectory, string connectionName)
+		{
+			try
+			{
+				await TokenCache.ClearAccessTokenAsync(tokenCacheDirectory, connectionName);
+				return true;
+			}
+			catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or Newtonsoft.Json.JsonException)
+			{
+				return false;
+			}
+		}
+
+
+		/// <summary>
+		/// Warns the user, at profile creation, that this system cannot store tokens securely (issue #217).
+		/// </summary>
+		/// <remarks>
+		/// In <see cref="TokenCacheMode.LegacyPacxCache"/> mode PACX keeps its pre-#217 behavior to avoid a
+		/// regression (approved on 2026-10-18), but that behavior has two drawbacks the user must know about:
+		/// the token is stored in plain text, and it cannot be refreshed. Shown only by <c>auth create</c>, where the
+		/// user can still choose another authentication type, and not on every command, so that the output of other
+		/// commands (often parsed by scripts) does not change.
+		/// </remarks>
+		/// <returns><c>true</c> if the warning has been written.</returns>
+		internal bool WriteLegacyCacheWarningIfNeeded(string connectionString)
+		{
+			var mode = TokenCacheModeSelector.Select(connectionString, this.secureTokenStorageProbe.IsAvailable);
+			if (mode != TokenCacheMode.LegacyPacxCache) return false;
+
+			var legacyFile = Path.Combine(TokenCache.GetTokenCachePath(), TokenCache.LegacyTokenFileName);
+
+			output.WriteLine();
+			output.WriteLine("Warning: no secure token storage is available on this system (for example, no OS keyring on Linux).", ConsoleColor.Yellow);
+			output.WriteLine($"PACX will reuse the access token stored in plain text (readable only by your user) in: {legacyFile}", ConsoleColor.Yellow);
+			output.WriteLine("That token cannot be refreshed: commands running longer than its lifetime (about 1 hour) may fail.", ConsoleColor.Yellow);
+			output.WriteLine("For unattended or headless use, prefer a ClientSecret or Certificate authentication profile.", ConsoleColor.Yellow);
+			return true;
 		}
 
 

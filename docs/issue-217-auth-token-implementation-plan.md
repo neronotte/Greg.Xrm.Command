@@ -168,7 +168,7 @@ Creating the explicitly authorized temporary OAuth profile through the current P
 
 **Exit gate:** passed. The `ServiceClient` running the command supplies a current token, and a real TDS query succeeds before and after the refresh.
 
-### 🕒 6. Retire the legacy raw-token cache with a safe migration
+### ✅ 6. Retire the legacy raw-token cache with a safe migration
 
 - Stop writing new raw bearer tokens to `tokens.json` when secure storage is available; keep it only for the approved legacy fallback, restricted to the owner (`0600`) on Unix and announced by a warning at profile creation.
 - Define cleanup for existing cache entries without treating access tokens as refresh tokens. Never import a legacy bearer into the MSAL cache; it lacks the refresh-token/cache state needed to prove silent renewal.
@@ -181,6 +181,18 @@ Creating the explicitly authorized temporary OAuth profile through the current P
 **Manual tests:** inspect file names, permissions, and metadata only (never print token content); upgrade a disposable installation with existing `tokens.json`, verify the documented migration behavior, use multiple profiles, and confirm cleanup does not affect unrelated profiles.
 
 **Exit gate:** no newly issued plaintext token is persisted, and existing cache cleanup has an explicit user-visible upgrade behavior.
+
+**Results (2026-10-18):**
+
+- Code: `TokenCache` writes `tokens.json` owner-only (`0600`, applied before writing, also to files created by older versions) on Unix and unchanged on Windows; internal directory-based overloads make it testable on a temporary folder. `OrganizationServiceRepository` retires the profile's `tokens.json` entry after each successful SDK-cache connection (best effort: locked/corrupt/unreadable files never fail the connection) and `auth create` warns when the profile falls into legacy mode. Legacy tokens are never imported into the MSAL cache.
+- Automated: 13 new tests (round-trip, profile-scoped and idempotent removal, no file creation/rewrite when nothing to remove, corrupt and locked files, owner-only permissions on new and pre-existing files, warning shown only for OAuth without secure storage and never probing for non-OAuth). Full suite 1,504 passed on Windows; the connection/cache tests (59) also pass on Linux (WSL), where the `0600` test is effective.
+- Manual, Windows: the upgraded `issue217-old` profile (2,721-byte plaintext entry left by the `master` build) connected through the SDK cache with no prompt and `tokens.json` dropped to 2 bytes; the non-OAuth `rg01` profile is unchanged.
+- Manual, headless Linux (WSL, no reachable D-Bus/keyring, isolated PACX data folder): `auth create` showed the legacy warning; `tokens.json` was created with mode `600`; in new processes `auth ping` (2 s) and a TDS query (3 s) reused the stored token with no browser, exactly as before #217.
+- Diagnostic note: three earlier Linux attempts timed out only because nobody completed the browser sign-in. A first diagnosis that suggested a hang before the browser launch was wrong (in WSL `xdg-open` opens the Windows browser through `explorer.exe` and ignores `$BROWSER`); a corrected diagnosis showed PACX launches the browser within 1 s.
+
+**Status:** complete.
+
+**Exit gate:** passed. No new plaintext token is persisted where secure storage exists; legacy entries are removed after the first successful SDK-cache connection; the legacy fallback is restricted to the owner and announced to the user.
 
 ### 7. Run the full regression and release acceptance matrix
 

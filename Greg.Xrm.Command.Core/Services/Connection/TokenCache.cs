@@ -59,10 +59,66 @@ namespace Greg.Xrm.Command.Services.Connection
 
 		public async Task SaveAsync()
 		{
-			var tokenCachePath = GetTokenCachePath();
-			var tokenCacheFile = Path.Combine(tokenCachePath, "tokens.json");
+			await SaveAsync(GetTokenCachePath());
+		}
+
+		internal async Task SaveAsync(string tokenCacheDirectory)
+		{
+			var tokenCacheFile = Path.Combine(tokenCacheDirectory, LegacyTokenFileName);
 			var json = JsonConvert.SerializeObject(this, Formatting.Indented);
-			await File.WriteAllTextAsync(tokenCacheFile, json);
+			await WriteOwnerOnlyAsync(tokenCacheFile, json);
+		}
+
+
+		/// <summary>
+		/// File name of the legacy plain-text token cache.
+		/// </summary>
+		internal const string LegacyTokenFileName = "tokens.json";
+
+
+		/// <summary>
+		/// Writes <paramref name="content"/> so that, on Linux and macOS, only the current user can read the file.
+		/// </summary>
+		/// <remarks>
+		/// <para>
+		/// Issue #217: <c>tokens.json</c> contains bearer tokens in PLAIN TEXT. It is still written in
+		/// <see cref="TokenCacheMode.LegacyPacxCache"/> mode (no OS secure storage, typically headless Linux),
+		/// approved to avoid a regression there. Restricting the file to the owner (<c>0600</c>) is the mitigation
+		/// agreed for that mode: other local users cannot read the token.
+		/// </para>
+		/// <para>
+		/// The mode is applied BEFORE the content is written, both to a new file (<c>UnixCreateMode</c>) and to an
+		/// existing one created by an older PACX with the default umask, so the token is never readable by others.
+		/// On Windows the file is written exactly as before #217: it lives in the user's own LocalAppData, whose
+		/// default ACL already restricts it to the user, and keeping the code identical avoids any regression.
+		/// </para>
+		/// </remarks>
+		internal static async Task WriteOwnerOnlyAsync(string path, string content)
+		{
+			if (OperatingSystem.IsWindows())
+			{
+				await File.WriteAllTextAsync(path, content);
+				return;
+			}
+
+			const UnixFileMode ownerReadWrite = UnixFileMode.UserRead | UnixFileMode.UserWrite;
+
+			if (File.Exists(path))
+			{
+				File.SetUnixFileMode(path, ownerReadWrite);
+			}
+
+			var options = new FileStreamOptions
+			{
+				Mode = FileMode.Create,
+				Access = FileAccess.Write,
+				Share = FileShare.None,
+				UnixCreateMode = ownerReadWrite,
+			};
+
+			await using var stream = new FileStream(path, options);
+			await using var writer = new StreamWriter(stream);
+			await writer.WriteAsync(content);
 		}
 
 
@@ -91,40 +147,57 @@ namespace Greg.Xrm.Command.Services.Connection
 		}
 
 
-		private static async Task<TokenCache> GetOrCreateAsync()
+		private static async Task<TokenCache> GetOrCreateAsync(string tokenCacheDirectory)
 		{
-			var tokenCachePath = GetTokenCachePath();
-			var tokenCacheFile = Path.Combine(tokenCachePath, "tokens.json");
+			var tokenCacheFile = Path.Combine(tokenCacheDirectory, LegacyTokenFileName);
 			if (!File.Exists(tokenCacheFile)) return new TokenCache();
 			var json = await File.ReadAllTextAsync(tokenCacheFile);
 			return JsonConvert.DeserializeObject<TokenCache>(json) ?? [];
 		}
 
 
-		public static async Task<TokenDefinition?> TryGetAccessTokenAsync(string connectionName)
+		public static Task<TokenDefinition?> TryGetAccessTokenAsync(string connectionName)
 		{
-			var tokenCache = await GetOrCreateAsync();
+			return TryGetAccessTokenAsync(GetTokenCachePath(), connectionName);
+		}
+
+		internal static async Task<TokenDefinition?> TryGetAccessTokenAsync(string tokenCacheDirectory, string connectionName)
+		{
+			var tokenCache = await GetOrCreateAsync(tokenCacheDirectory);
 			if (!tokenCache.TryGetValue(connectionName, out var accessToken)) return null;
 			if (accessToken == null || !accessToken.IsValid) return null;
 			return accessToken;
 		}
 
 
-		public static async Task SaveAccessTokenAsync(string name, Uri serviceUri, string currentAccessToken)
+		public static Task SaveAccessTokenAsync(string name, Uri serviceUri, string currentAccessToken)
 		{
-			var tokenCache = await GetOrCreateAsync();
-			tokenCache.Set(name, serviceUri, currentAccessToken);
-
-			await tokenCache.SaveAsync();
+			return SaveAccessTokenAsync(GetTokenCachePath(), name, serviceUri, currentAccessToken);
 		}
 
-		public static async Task ClearAccessTokenAsync(string connectionName)
+		internal static async Task SaveAccessTokenAsync(string tokenCacheDirectory, string name, Uri serviceUri, string currentAccessToken)
 		{
-			var tokenCache = await GetOrCreateAsync();
+			var tokenCache = await GetOrCreateAsync(tokenCacheDirectory);
+			tokenCache.Set(name, serviceUri, currentAccessToken);
+
+			await tokenCache.SaveAsync(tokenCacheDirectory);
+		}
+
+		public static Task ClearAccessTokenAsync(string connectionName)
+		{
+			return ClearAccessTokenAsync(GetTokenCachePath(), connectionName);
+		}
+
+		/// <summary>
+		/// Removes the legacy token of one profile. Does not create or rewrite the file when there is nothing to remove.
+		/// </summary>
+		internal static async Task ClearAccessTokenAsync(string tokenCacheDirectory, string connectionName)
+		{
+			var tokenCache = await GetOrCreateAsync(tokenCacheDirectory);
 			if (!tokenCache.ContainsKey(connectionName)) return;
 
 			tokenCache.Remove(connectionName);
-			await tokenCache.SaveAsync();
+			await tokenCache.SaveAsync(tokenCacheDirectory);
 		}
 	}
 }
