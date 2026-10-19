@@ -598,12 +598,19 @@ namespace Greg.Xrm.Command.Services.Connection
 		/// commands (often parsed by scripts) does not change.
 		/// </remarks>
 		/// <returns><c>true</c> if the warning has been written.</returns>
-		internal bool WriteLegacyCacheWarningIfNeeded(string connectionString)
+		/// <param name="connectionString">The connection string of the profile being created.</param>
+		/// <param name="getTokenCacheDirectory">
+		/// Returns the folder that holds <c>tokens.json</c>, shown in the message. Evaluated only when the warning is
+		/// shown, because <see cref="TokenCache.GetTokenCachePath"/> creates folders under the user's real data folder;
+		/// tests pass a temporary folder (review of PR #257).
+		/// </param>
+		internal bool WriteLegacyCacheWarningIfNeeded(string connectionString, Func<string>? getTokenCacheDirectory = null)
 		{
 			var mode = TokenCacheModeSelector.Select(connectionString, this.secureTokenStorageProbe.IsAvailable);
 			if (mode != TokenCacheMode.LegacyPacxCache) return false;
 
-			var legacyFile = Path.Combine(TokenCache.GetTokenCachePath(), TokenCache.LegacyTokenFileName);
+			var tokenCacheDirectory = (getTokenCacheDirectory ?? TokenCache.GetTokenCachePath)();
+			var legacyFile = Path.Combine(tokenCacheDirectory, TokenCache.LegacyTokenFileName);
 
 			output.WriteLine();
 			output.WriteLine("Warning: no secure token storage is available on this system (for example, no OS keyring on Linux).", ConsoleColor.Yellow);
@@ -632,6 +639,12 @@ namespace Greg.Xrm.Command.Services.Connection
 		/// meanwhile (a profile created or deleted, a different default). If the injected settings repository has no
 		/// atomic update, the profile is left unchanged: losing the user name only costs one more sign-in later,
 		/// while overwriting concurrent changes would lose user data.
+		/// </item>
+		/// <item>
+		/// NEVER FAILS THE COMMAND (review of PR #257): this runs after the SDK client is already authenticated, and
+		/// storing the user name is only an optimization for later commands. If the settings cannot be read or saved
+		/// (I/O error, file locked beyond the retry, permissions, corrupt or undecryptable settings) a warning is shown
+		/// and the authenticated client is still used; the next command simply signs in again and retries the save.
 		/// </item>
 		/// </list>
 		/// </remarks>
@@ -683,6 +696,14 @@ namespace Greg.Xrm.Command.Services.Connection
 			catch (KeepSettingsUnchangedException)
 			{
 				// UpdateAsync keeps the persisted value when the callback throws: nothing has been written.
+				return;
+			}
+			catch (Exception ex) when (ex is IOException
+				or UnauthorizedAccessException
+				or Newtonsoft.Json.JsonException
+				or System.Security.Cryptography.CryptographicException)
+			{
+				output.WriteLine($"Warning: could not save the signed-in user into authentication profile '{connectionName}': {ex.Message}. The next command may ask you to sign in again.", ConsoleColor.Yellow);
 				return;
 			}
 

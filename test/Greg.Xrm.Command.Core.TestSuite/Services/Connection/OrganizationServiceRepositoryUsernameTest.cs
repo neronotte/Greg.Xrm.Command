@@ -29,6 +29,7 @@ namespace Greg.Xrm.Command.Services.Connection
 		private sealed class Sut
 		{
 			public required OrganizationServiceRepository Repository { get; init; }
+			public required Mock<IAtomicSettingsRepository> Settings { get; init; }
 			public required OutputToMemory Output { get; init; }
 			public required ConnectionSetting Snapshot { get; init; }
 			public ConnectionSetting? Disk { get; set; }
@@ -68,6 +69,7 @@ namespace Greg.Xrm.Command.Services.Connection
 			var sut = new Sut
 			{
 				Repository = new OrganizationServiceRepository(output, settings.Object, project.Object, new Mock<ISecureTokenStorageProbe>(MockBehavior.Strict).Object),
+				Settings = settings,
 				Output = output,
 				Snapshot = snapshot,
 				Disk = disk,
@@ -239,6 +241,25 @@ namespace Greg.Xrm.Command.Services.Connection
 
 			Assert.AreEqual(0, sut.Commits);
 			Assert.AreEqual(changedMeanwhile, sut.DiskConnectionString(ProfileName));
+		}
+
+		[TestMethod]
+		[DataRow(typeof(IOException))]
+		[DataRow(typeof(UnauthorizedAccessException))]
+		public async Task Persist_WhenSavingFails_ShouldWarnAndNotFailTheAuthenticatedCommand(Type failure)
+		{
+			// Review of PR #257: the SDK client is already authenticated; the Username is only an optimization.
+			var sut = CreateSut(OAuthProfile);
+			sut.Settings
+				.Setup(s => s.UpdateAsync<ConnectionSetting>("connections", It.IsAny<Func<ConnectionSetting?, ConnectionSetting>>()))
+				.ThrowsAsync((Exception)Activator.CreateInstance(failure, "settings file is locked")!);
+
+			await sut.Repository.PersistAuthenticatedUsernameAsync(ProfileName, OAuthProfile, SignedInUser);
+
+			Assert.AreEqual(OAuthProfile, sut.DiskConnectionString(ProfileName));
+			var text = sut.Output.ToString();
+			Assert.IsTrue(text.Contains("could not save the signed-in user", StringComparison.Ordinal), text);
+			Assert.IsTrue(text.Contains("settings file is locked", StringComparison.Ordinal), text);
 		}
 
 		[TestMethod]

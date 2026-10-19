@@ -223,13 +223,14 @@ namespace Greg.Xrm.Command.Services.Connection
 		{
 			var (repository, output, _) = CreateRepository(secureStorageAvailable: false);
 
-			var written = repository.WriteLegacyCacheWarningIfNeeded("AuthType=OAuth;Url=https://dev.crm4.dynamics.com");
+			var written = repository.WriteLegacyCacheWarningIfNeeded("AuthType=OAuth;Url=https://dev.crm4.dynamics.com", () => this.directory);
 
 			Assert.IsTrue(written);
 			var text = output.ToString();
 			Assert.IsTrue(text.Contains("plain text", StringComparison.Ordinal), text);
 			Assert.IsTrue(text.Contains("cannot be refreshed", StringComparison.Ordinal), text);
 			Assert.IsTrue(text.Contains("ClientSecret or Certificate", StringComparison.Ordinal), text);
+			Assert.IsTrue(text.Contains(this.LegacyFile, StringComparison.Ordinal), "The message must show the legacy file path: " + text);
 		}
 
 		[TestMethod]
@@ -237,7 +238,7 @@ namespace Greg.Xrm.Command.Services.Connection
 		{
 			var (repository, output, _) = CreateRepository(secureStorageAvailable: true);
 
-			var written = repository.WriteLegacyCacheWarningIfNeeded("AuthType=OAuth;Url=https://dev.crm4.dynamics.com");
+			var written = repository.WriteLegacyCacheWarningIfNeeded("AuthType=OAuth;Url=https://dev.crm4.dynamics.com", DirectoryMustNotBeResolved);
 
 			Assert.IsFalse(written);
 			Assert.AreEqual(string.Empty, output.ToString().Trim());
@@ -248,11 +249,15 @@ namespace Greg.Xrm.Command.Services.Connection
 		{
 			var (repository, output, probe) = CreateRepository(secureStorageAvailable: false);
 
-			var written = repository.WriteLegacyCacheWarningIfNeeded("AuthType=ClientSecret;Url=https://dev.crm4.dynamics.com;ClientId=id;ClientSecret=s");
+			var written = repository.WriteLegacyCacheWarningIfNeeded("AuthType=ClientSecret;Url=https://dev.crm4.dynamics.com;ClientId=id;ClientSecret=s", DirectoryMustNotBeResolved);
 
 			Assert.IsFalse(written);
 			Assert.AreEqual(string.Empty, output.ToString().Trim());
 			probe.Verify(p => p.IsAvailable(), Times.Never);
 		}
+
+		// Resolving the real cache folder would create directories under the user's LocalApplicationData.
+		private static string DirectoryMustNotBeResolved() =>
+			throw new AssertFailedException("The token cache directory must only be resolved when the warning is shown.");
 	}
 }
