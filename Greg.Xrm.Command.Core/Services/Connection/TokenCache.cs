@@ -151,8 +151,51 @@ namespace Greg.Xrm.Command.Services.Connection
 		{
 			var tokenCacheFile = Path.Combine(tokenCacheDirectory, LegacyTokenFileName);
 			if (!File.Exists(tokenCacheFile)) return new TokenCache();
+
+			RestrictExistingFileToOwner(tokenCacheFile);
+
 			var json = await File.ReadAllTextAsync(tokenCacheFile);
 			return JsonConvert.DeserializeObject<TokenCache>(json) ?? [];
+		}
+
+
+		/// <summary>
+		/// On Linux and macOS, removes group and other permissions from an existing <c>tokens.json</c>.
+		/// </summary>
+		/// <remarks>
+		/// <para>
+		/// Issue #217, review of PR #257: releases before #217 created <c>tokens.json</c> with the default umask
+		/// (typically <c>0644</c>, readable by every local user). <see cref="WriteOwnerOnlyAsync"/> only fixes that
+		/// when the file is written, but PACX often just READS it: in legacy mode a still-valid token is reused
+		/// without rewriting the file, and with secure storage the entries of other profiles stay untouched. So the
+		/// permissions are also tightened on every read, BEFORE the content is read.
+		/// </para>
+		/// <para>
+		/// Owner bits are kept as they are; only group/other bits are removed. Best effort: if the mode cannot be
+		/// changed (e.g. the file belongs to another user) the read proceeds as before #217 instead of failing.
+		/// Nothing to do on Windows: the file lives in the user's own LocalAppData, restricted by its default ACL.
+		/// </para>
+		/// </remarks>
+		internal static void RestrictExistingFileToOwner(string path)
+		{
+			if (OperatingSystem.IsWindows()) return;
+
+			const UnixFileMode groupAndOther =
+				UnixFileMode.GroupRead | UnixFileMode.GroupWrite | UnixFileMode.GroupExecute |
+				UnixFileMode.OtherRead | UnixFileMode.OtherWrite | UnixFileMode.OtherExecute;
+
+			try
+			{
+				var mode = File.GetUnixFileMode(path);
+				if ((mode & groupAndOther) != 0)
+				{
+					File.SetUnixFileMode(path, mode & ~groupAndOther);
+				}
+			}
+			catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+			{
+				// Best effort, see remarks.
+			}
 		}
 
 

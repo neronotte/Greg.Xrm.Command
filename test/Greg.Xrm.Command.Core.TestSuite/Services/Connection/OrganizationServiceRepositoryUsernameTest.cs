@@ -6,7 +6,9 @@ namespace Greg.Xrm.Command.Services.Connection
 {
 	/// <summary>
 	/// Issue #217: after a sign-in, the UPN must be stored in OAuth profiles that do not have one, otherwise the
-	/// SDK cannot find the account in its MSAL cache and every command signs in again. These tests pin the rules.
+	/// SDK cannot find the account in its MSAL cache and every command signs in again. These tests pin the rules,
+	/// including the atomic update on fresh settings required by the review of PR #257: the in-memory snapshot is
+	/// read before the sign-in and must never overwrite what another PACX process changed meanwhile.
 	/// </summary>
 	[TestClass]
 	public class OrganizationServiceRepositoryUsernameTest
@@ -16,53 +18,78 @@ namespace Greg.Xrm.Command.Services.Connection
 		private const string ClientSecretProfile = "AuthType=ClientSecret;Url=https://dev.crm4.dynamics.com;ClientId=id;ClientSecret=secret";
 		private const string SignedInUser = "user@contoso.com";
 
+		private static byte[] Key => OrganizationServiceRepository.GetAesKey();
+		private static byte[] IV => OrganizationServiceRepository.GetAesIV();
 
+
+		/// <summary>
+		/// Simulates connections.json: <see cref="Snapshot"/> is what the repository caches at startup,
+		/// <see cref="Disk"/> is what UpdateAsync reads under the lock and what it commits.
+		/// </summary>
 		private sealed class Sut
 		{
 			public required OrganizationServiceRepository Repository { get; init; }
-			public required Mock<ISettingsRepository> Settings { get; init; }
 			public required OutputToMemory Output { get; init; }
-			public required ConnectionSetting Setting { get; init; }
+			public required ConnectionSetting Snapshot { get; init; }
+			public ConnectionSetting? Disk { get; set; }
+			public int Commits { get; set; }
 
-			public string? StoredConnectionString(string name)
+			public string? DiskConnectionString(string name)
 			{
-				this.Setting.TryGetConnectionString(name, OrganizationServiceRepository.GetAesKey(), OrganizationServiceRepository.GetAesIV(), out var connectionString);
+				string? connectionString = null;
+				this.Disk?.TryGetConnectionString(name, Key, IV, out connectionString);
 				return connectionString;
 			}
 		}
 
-		private static Sut CreateSut(string? storedConnectionString)
+		private static ConnectionSetting CreateSetting(string? storedConnectionString)
 		{
-			var setting = JsonConvert.DeserializeObject<ConnectionSetting>("{ \"IsSecured\": false }")!;
-			if (storedConnectionString != null)
-			{
-				setting = JsonConvert.DeserializeObject<ConnectionSetting>(
-					JsonConvert.SerializeObject(new { ConnectionStrings = new Dictionary<string, string> { [ProfileName] = storedConnectionString }, IsSecured = false }))!;
-			}
+			var connectionStrings = new Dictionary<string, string>();
+			if (storedConnectionString != null) connectionStrings[ProfileName] = storedConnectionString;
 
-			// Secure upfront, as on disk: otherwise the repository would re-save the settings on first read,
-			// which would hide whether the username logic saved anything.
-			setting.SecureSettings(OrganizationServiceRepository.GetAesKey(), OrganizationServiceRepository.GetAesIV());
+			var setting = JsonConvert.DeserializeObject<ConnectionSetting>(
+				JsonConvert.SerializeObject(new { ConnectionStrings = connectionStrings, CurrentConnectionStringKey = ProfileName, IsSecured = false }))!;
 
-			var settings = new Mock<ISettingsRepository>();
-			settings.Setup(s => s.GetAsync<ConnectionSetting>("connections")).ReturnsAsync(setting);
-			settings.Setup(s => s.SetAsync(It.IsAny<string>(), It.IsAny<ConnectionSetting>())).Returns(Task.CompletedTask);
-
-			var project = new Mock<IPacxProjectRepository>();
-			project.Setup(p => p.GetCurrentProjectAsync()).ReturnsAsync((PacxProjectDefinition?)null);
-
-			var probe = new Mock<ISecureTokenStorageProbe>(MockBehavior.Strict);
-			var output = new OutputToMemory();
-
-			return new Sut
-			{
-				Repository = new OrganizationServiceRepository(output, settings.Object, project.Object, probe.Object),
-				Settings = settings,
-				Output = output,
-				Setting = setting,
-			};
+			// Secure upfront, as on disk: otherwise the repository would re-save the settings on first read.
+			setting.SecureSettings(Key, IV);
+			return setting;
 		}
 
+		private static Sut CreateSut(string? storedConnectionString)
+		{
+			var snapshot = CreateSetting(storedConnectionString);
+			var disk = CreateSetting(storedConnectionString);
+
+			var settings = new Mock<IAtomicSettingsRepository>(MockBehavior.Strict);
+			var project = new Mock<IPacxProjectRepository>();
+			project.Setup(p => p.GetCurrentProjectAsync()).ReturnsAsync((PacxProjectDefinition?)null);
+			var output = new OutputToMemory();
+
+			var sut = new Sut
+			{
+				Repository = new OrganizationServiceRepository(output, settings.Object, project.Object, new Mock<ISecureTokenStorageProbe>(MockBehavior.Strict).Object),
+				Output = output,
+				Snapshot = snapshot,
+				Disk = disk,
+			};
+
+			settings.Setup(s => s.GetAsync<ConnectionSetting>("connections")).ReturnsAsync(snapshot);
+			settings
+				.Setup(s => s.UpdateAsync<ConnectionSetting>("connections", It.IsAny<Func<ConnectionSetting?, ConnectionSetting>>()))
+				.Returns<string, Func<ConnectionSetting?, ConnectionSetting>>((_, update) =>
+				{
+					// Like the real repository: if the callback throws, nothing is committed.
+					var updated = update(sut.Disk);
+					sut.Disk = updated;
+					sut.Commits++;
+					return Task.FromResult(updated);
+				});
+
+			return sut;
+		}
+
+
+		// ── Basic rules ───────────────────────────────────────────────────────
 
 		[TestMethod]
 		public async Task Persist_OAuthProfileWithoutUsername_ShouldStoreTheSignedInUser()
@@ -71,8 +98,8 @@ namespace Greg.Xrm.Command.Services.Connection
 
 			await sut.Repository.PersistAuthenticatedUsernameAsync(ProfileName, OAuthProfile, SignedInUser);
 
-			sut.Settings.Verify(s => s.SetAsync("connections", It.IsAny<ConnectionSetting>()), Times.Once);
-			Assert.AreEqual(OAuthProfile + ";Username=" + SignedInUser, sut.StoredConnectionString(ProfileName));
+			Assert.AreEqual(1, sut.Commits);
+			Assert.AreEqual(OAuthProfile + ";Username=" + SignedInUser, sut.DiskConnectionString(ProfileName));
 		}
 
 		[TestMethod]
@@ -83,8 +110,8 @@ namespace Greg.Xrm.Command.Services.Connection
 
 			await sut.Repository.PersistAuthenticatedUsernameAsync(ProfileName, stored, SignedInUser);
 
-			sut.Settings.Verify(s => s.SetAsync(It.IsAny<string>(), It.IsAny<ConnectionSetting>()), Times.Never);
-			Assert.AreEqual(stored, sut.StoredConnectionString(ProfileName));
+			Assert.AreEqual(0, sut.Commits);
+			Assert.AreEqual(stored, sut.DiskConnectionString(ProfileName));
 			Assert.AreEqual(string.Empty, sut.Output.ToString().Trim());
 		}
 
@@ -96,8 +123,8 @@ namespace Greg.Xrm.Command.Services.Connection
 
 			await sut.Repository.PersistAuthenticatedUsernameAsync(ProfileName, stored, SignedInUser);
 
-			sut.Settings.Verify(s => s.SetAsync(It.IsAny<string>(), It.IsAny<ConnectionSetting>()), Times.Never);
-			Assert.AreEqual(stored, sut.StoredConnectionString(ProfileName));
+			Assert.AreEqual(0, sut.Commits);
+			Assert.AreEqual(stored, sut.DiskConnectionString(ProfileName));
 			var text = sut.Output.ToString();
 			Assert.IsTrue(text.Contains("configured@contoso.com", StringComparison.Ordinal), text);
 			Assert.IsTrue(text.Contains(SignedInUser, StringComparison.Ordinal), text);
@@ -110,8 +137,8 @@ namespace Greg.Xrm.Command.Services.Connection
 
 			await sut.Repository.PersistAuthenticatedUsernameAsync(ProfileName, ClientSecretProfile, SignedInUser);
 
-			sut.Settings.Verify(s => s.SetAsync(It.IsAny<string>(), It.IsAny<ConnectionSetting>()), Times.Never);
-			Assert.AreEqual(ClientSecretProfile, sut.StoredConnectionString(ProfileName));
+			Assert.AreEqual(0, sut.Commits);
+			Assert.AreEqual(ClientSecretProfile, sut.DiskConnectionString(ProfileName));
 		}
 
 		[TestMethod]
@@ -124,20 +151,8 @@ namespace Greg.Xrm.Command.Services.Connection
 
 			await sut.Repository.PersistAuthenticatedUsernameAsync(ProfileName, OAuthProfile, signedInUser);
 
-			sut.Settings.Verify(s => s.SetAsync(It.IsAny<string>(), It.IsAny<ConnectionSetting>()), Times.Never);
-			Assert.AreEqual(OAuthProfile, sut.StoredConnectionString(ProfileName));
-		}
-
-		[TestMethod]
-		public async Task Persist_WhenStoredProfileChangedMeanwhile_ShouldNotOverwriteIt()
-		{
-			var changedMeanwhile = OAuthProfile.Replace("dev.crm4", "dev2.crm4", StringComparison.Ordinal);
-			var sut = CreateSut(changedMeanwhile);
-
-			await sut.Repository.PersistAuthenticatedUsernameAsync(ProfileName, OAuthProfile, SignedInUser);
-
-			sut.Settings.Verify(s => s.SetAsync(It.IsAny<string>(), It.IsAny<ConnectionSetting>()), Times.Never);
-			Assert.AreEqual(changedMeanwhile, sut.StoredConnectionString(ProfileName));
+			Assert.AreEqual(0, sut.Commits);
+			Assert.AreEqual(OAuthProfile, sut.DiskConnectionString(ProfileName));
 		}
 
 		[TestMethod]
@@ -148,8 +163,97 @@ namespace Greg.Xrm.Command.Services.Connection
 
 			await sut.Repository.PersistAuthenticatedUsernameAsync(ProfileName, OAuthProfile, SignedInUser);
 
-			sut.Settings.Verify(s => s.SetAsync(It.IsAny<string>(), It.IsAny<ConnectionSetting>()), Times.Never);
-			Assert.IsNull(sut.StoredConnectionString(ProfileName));
+			Assert.AreEqual(0, sut.Commits);
+			Assert.IsNull(sut.DiskConnectionString(ProfileName));
+		}
+
+		[TestMethod]
+		public async Task Persist_WhenSettingsFileDoesNotExist_ShouldNotCreateIt()
+		{
+			var sut = CreateSut(OAuthProfile);
+			sut.Disk = null;
+
+			await sut.Repository.PersistAuthenticatedUsernameAsync(ProfileName, OAuthProfile, SignedInUser);
+
+			Assert.AreEqual(0, sut.Commits);
+			Assert.IsNull(sut.Disk);
+		}
+
+
+		// ── Concurrency (review of PR #257) ───────────────────────────────────
+
+		[TestMethod]
+		public async Task Persist_ShouldKeepChangesMadeByAnotherProcessDuringTheSignIn()
+		{
+			var sut = CreateSut(OAuthProfile);
+			await sut.Repository.GetAllConnectionDefinitionsAsync(); // snapshot cached at startup, before the sign-in
+
+			// Meanwhile another PACX process creates a profile and makes it the default.
+			sut.Disk!.UpsertConnectionString("Other", ClientSecretProfile, Key, IV);
+			sut.Disk.CurrentConnectionStringKey = "Other";
+
+			await sut.Repository.PersistAuthenticatedUsernameAsync(ProfileName, OAuthProfile, SignedInUser);
+
+			Assert.AreEqual(1, sut.Commits);
+			Assert.AreEqual(OAuthProfile + ";Username=" + SignedInUser, sut.DiskConnectionString(ProfileName));
+			Assert.AreEqual(ClientSecretProfile, sut.DiskConnectionString("Other"), "A profile created concurrently must not be lost.");
+			Assert.AreEqual("Other", sut.Disk.CurrentConnectionStringKey, "A default changed concurrently must not be reverted.");
+			Assert.IsFalse(sut.Snapshot.Exists("Other"), "Sanity check: the stale snapshot did not contain the new profile.");
+		}
+
+		[TestMethod]
+		public async Task Persist_ShouldRefreshTheInMemoryCopyWithTheFreshSettings()
+		{
+			var sut = CreateSut(OAuthProfile);
+			await sut.Repository.GetAllConnectionDefinitionsAsync();
+			sut.Disk!.UpsertConnectionString("Other", ClientSecretProfile, Key, IV);
+
+			await sut.Repository.PersistAuthenticatedUsernameAsync(ProfileName, OAuthProfile, SignedInUser);
+
+			var inMemory = await sut.Repository.GetAllConnectionDefinitionsAsync();
+			Assert.IsTrue(inMemory.Exists("Other"), "Later saves in this process must not start again from the stale snapshot.");
+		}
+
+		[TestMethod]
+		public async Task Persist_WhenProfileWasDeletedByAnotherProcess_ShouldNotRecreateIt()
+		{
+			var sut = CreateSut(OAuthProfile);
+			await sut.Repository.GetAllConnectionDefinitionsAsync();
+			sut.Disk!.Remove(ProfileName);
+
+			await sut.Repository.PersistAuthenticatedUsernameAsync(ProfileName, OAuthProfile, SignedInUser);
+
+			Assert.AreEqual(0, sut.Commits);
+			Assert.IsFalse(sut.Disk.Exists(ProfileName));
+		}
+
+		[TestMethod]
+		public async Task Persist_WhenProfileWasChangedByAnotherProcess_ShouldNotOverwriteIt()
+		{
+			var changedMeanwhile = OAuthProfile.Replace("dev.crm4", "dev2.crm4", StringComparison.Ordinal);
+			var sut = CreateSut(OAuthProfile);
+			await sut.Repository.GetAllConnectionDefinitionsAsync();
+			sut.Disk!.UpsertConnectionString(ProfileName, changedMeanwhile, Key, IV);
+
+			await sut.Repository.PersistAuthenticatedUsernameAsync(ProfileName, OAuthProfile, SignedInUser);
+
+			Assert.AreEqual(0, sut.Commits);
+			Assert.AreEqual(changedMeanwhile, sut.DiskConnectionString(ProfileName));
+		}
+
+		[TestMethod]
+		public async Task Persist_WithoutAtomicSettingsRepository_ShouldNotWriteAnything()
+		{
+			// Without a cross-process atomic update the only safe choice is not to write: a missing Username
+			// costs one more sign-in, a lost concurrent change would lose user data.
+			var settings = new Mock<ISettingsRepository>(MockBehavior.Strict);
+			settings.Setup(s => s.GetAsync<ConnectionSetting>("connections")).ReturnsAsync(CreateSetting(OAuthProfile));
+			var project = new Mock<IPacxProjectRepository>();
+			var repository = new OrganizationServiceRepository(new OutputToMemory(), settings.Object, project.Object, new Mock<ISecureTokenStorageProbe>().Object);
+
+			await repository.PersistAuthenticatedUsernameAsync(ProfileName, OAuthProfile, SignedInUser);
+
+			settings.Verify(s => s.SetAsync(It.IsAny<string>(), It.IsAny<ConnectionSetting>()), Times.Never);
 		}
 	}
 }

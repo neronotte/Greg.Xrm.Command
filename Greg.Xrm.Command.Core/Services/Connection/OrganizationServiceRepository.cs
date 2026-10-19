@@ -625,6 +625,14 @@ namespace Greg.Xrm.Command.Services.Connection
 		/// This avoids overwriting a profile changed meanwhile (e.g. by another PACX process) and does nothing when
 		/// the profile is not stored yet, as during <c>auth create</c>, which adds the user name itself.</item>
 		/// <item>Non-OAuth profiles and sign-ins without a known user are ignored.</item>
+		/// <item>
+		/// The update is an atomic, cross-process read-modify-write (<see cref="IAtomicSettingsRepository.UpdateAsync"/>)
+		/// on the settings READ FROM DISK, never on the in-memory snapshot (review of PR #257). The snapshot is loaded
+		/// before the sign-in, which can take minutes; saving it would silently revert what another PACX process did
+		/// meanwhile (a profile created or deleted, a different default). If the injected settings repository has no
+		/// atomic update, the profile is left unchanged: losing the user name only costs one more sign-in later,
+		/// while overwriting concurrent changes would lose user data.
+		/// </item>
 		/// </list>
 		/// </remarks>
 		/// <param name="connectionName">Name of the profile used for the sign-in.</param>
@@ -647,14 +655,48 @@ namespace Greg.Xrm.Command.Services.Connection
 
 			if (!OAuthConnectionString.TryAddUsername(usedConnectionString, signedInUser, out var updatedConnectionString)) return;
 
-			var connectionStrings = await GetConnectionSettingAsync();
-			if (connectionStrings == null) return;
+			if (this.settings is not IAtomicSettingsRepository atomicSettings) return;
 
-			if (!connectionStrings.TryGetConnectionString(connectionName, GetAesKey(), GetAesIV(), out var storedConnectionString)) return;
-			if (!string.Equals(storedConnectionString, usedConnectionString, StringComparison.Ordinal)) return;
+			ConnectionSetting persisted;
+			try
+			{
+				persisted = await atomicSettings.UpdateAsync<ConnectionSetting>("connections", current =>
+				{
+					if (current == null) throw new KeepSettingsUnchangedException();
 
-			connectionStrings.UpsertConnectionString(connectionName, updatedConnectionString, GetAesKey(), GetAesIV());
-			await this.settings.SetAsync("connections", connectionStrings);
+					// Same normalization as GetConnectionSettingAsync: stored strings are always encrypted.
+					if (!current.IsSecured.GetValueOrDefault())
+					{
+						current.SecureSettings(GetAesKey(), GetAesIV());
+					}
+
+					if (!current.TryGetConnectionString(connectionName, GetAesKey(), GetAesIV(), out var storedConnectionString)
+						|| !string.Equals(storedConnectionString, usedConnectionString, StringComparison.Ordinal))
+					{
+						throw new KeepSettingsUnchangedException();
+					}
+
+					current.UpsertConnectionString(connectionName, updatedConnectionString, GetAesKey(), GetAesIV());
+					return current;
+				});
+			}
+			catch (KeepSettingsUnchangedException)
+			{
+				// UpdateAsync keeps the persisted value when the callback throws: nothing has been written.
+				return;
+			}
+
+			// The fresh settings become the in-memory copy, so later saves in this process do not reuse the stale one.
+			this.cache = persisted;
+		}
+
+
+		/// <summary>
+		/// Thrown inside an <see cref="IAtomicSettingsRepository.UpdateAsync"/> callback to leave the settings
+		/// exactly as they are on disk: the contract of UpdateAsync preserves the persisted value and releases the lock.
+		/// </summary>
+		private sealed class KeepSettingsUnchangedException : Exception
+		{
 		}
 
 		private async Task<ServiceClient> CreateServiceClientFromConnectionString(string connectionName, string connectionString)

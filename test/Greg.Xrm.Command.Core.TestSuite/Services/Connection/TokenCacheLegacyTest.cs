@@ -109,6 +109,48 @@ namespace Greg.Xrm.Command.Services.Connection
 			Assert.AreEqual("existing", await File.ReadAllTextAsync(this.LegacyFile));
 		}
 
+		[TestMethod]
+		public async Task Read_OnUnix_ShouldRestrictAPermissiveFileWithoutRewritingIt()
+		{
+			if (OperatingSystem.IsWindows())
+			{
+				// No group/other mode bits on Windows; the file lives in the user's own LocalAppData.
+				return;
+			}
+
+			// File left by a release before #217 (default umask) with a still-valid token: PR #257 review.
+			var json = Newtonsoft.Json.JsonConvert.SerializeObject(new Dictionary<string, TokenDefinition> { ["Dev"] = new(ServiceUri, "token-dev") });
+			await File.WriteAllTextAsync(this.LegacyFile, json);
+			File.SetUnixFileMode(this.LegacyFile, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.GroupRead | UnixFileMode.OtherRead);
+			var lastWrite = File.GetLastWriteTimeUtc(this.LegacyFile);
+
+			var token = await TokenCache.TryGetAccessTokenAsync(this.directory, "Dev");
+
+			Assert.AreEqual("token-dev", token?.AccessToken);
+			Assert.AreEqual(UnixFileMode.UserRead | UnixFileMode.UserWrite, File.GetUnixFileMode(this.LegacyFile), "Reading alone must tighten the permissions.");
+			Assert.AreEqual(lastWrite, File.GetLastWriteTimeUtc(this.LegacyFile), "The fix must not depend on rewriting the file.");
+			Assert.AreEqual(json, await File.ReadAllTextAsync(this.LegacyFile));
+		}
+
+		[TestMethod]
+		public void RestrictExistingFileToOwner_OnUnix_ShouldKeepOwnerBits()
+		{
+			if (OperatingSystem.IsWindows()) return;
+
+			File.WriteAllText(this.LegacyFile, "{}");
+			File.SetUnixFileMode(this.LegacyFile, UnixFileMode.UserRead | UnixFileMode.GroupRead | UnixFileMode.GroupWrite | UnixFileMode.OtherRead);
+
+			TokenCache.RestrictExistingFileToOwner(this.LegacyFile);
+
+			Assert.AreEqual(UnixFileMode.UserRead, File.GetUnixFileMode(this.LegacyFile));
+		}
+
+		[TestMethod]
+		public void RestrictExistingFileToOwner_WhenFileIsMissing_ShouldNotThrow()
+		{
+			TokenCache.RestrictExistingFileToOwner(Path.Combine(this.directory, "missing.json"));
+		}
+
 
 		// ── Retirement after a successful SDK-cache connection ───────────────
 
