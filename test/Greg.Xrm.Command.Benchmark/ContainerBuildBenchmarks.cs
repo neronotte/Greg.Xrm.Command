@@ -41,6 +41,7 @@ public class ContainerBuildBenchmarks
 		serviceCollection.AddTransient<ICommandExecutorFactory, CommandExecutorFactory>();
 		serviceCollection.AddTransient<IPluralizationFactory, PluralizationFactory>();
 		serviceCollection.AddTransient<ISettingsRepository, SettingsRepository>();
+		serviceCollection.AddTransient<IAtomicSettingsRepository, SettingsRepository>();
 		serviceCollection.AddTransient<IPacxProjectRepository, PacxProjectRepository>();
 		serviceCollection.AddSingleton<IOrganizationServiceRepository, OrganizationServiceRepository>();
 		serviceCollection.AddSingleton<IOutput, OutputToMemory>();
@@ -75,6 +76,7 @@ public class ContainerBuildBenchmarks
 		serviceCollection.RegisterCommandExecutors(typeof(CommandAttribute).Assembly);
 		serviceCollection.AddTransient<IPluralizationFactory, PluralizationFactory>();
 		serviceCollection.AddTransient<ISettingsRepository, SettingsRepository>();
+		serviceCollection.AddTransient<IAtomicSettingsRepository, SettingsRepository>();
 		serviceCollection.AddTransient<IPacxProjectRepository, PacxProjectRepository>();
 		serviceCollection.AddSingleton<IOrganizationServiceRepository, OrganizationServiceRepository>();
 		serviceCollection.AddSingleton<IOutput, OutputToMemory>();
