@@ -1,11 +1,9 @@
 using System.Diagnostics;
 using System.ServiceModel;
-using System.Text.Json;
 using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Messages;
-using Microsoft.Xrm.Sdk.Metadata;
 using Newtonsoft.Json;
 
 namespace Greg.Xrm.Command.Commands.Column

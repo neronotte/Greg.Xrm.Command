@@ -66,8 +66,8 @@ namespace Greg.Xrm.Command.Commands.Script
 			}
 			finally
 			{
-   				Utility.DeleteFolder(tempFolder);	
-			}	
+				Utility.DeleteFolder(tempFolder);
+			}
 		}
 
 		[TestMethod]

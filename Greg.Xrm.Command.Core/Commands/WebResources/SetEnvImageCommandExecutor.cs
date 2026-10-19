@@ -150,11 +150,11 @@ namespace Greg.Xrm.Command.Commands.WebResources
 					themeWebResourceName = appContext != null
 						? $"{publisherFolderName}/theme/{appContext.UniqueName.ToLowerInvariant()}.theme.xml"
 						: $"{publisherFolderName}/themes/{ThemeFileName}";
-if (string.IsNullOrWhiteSpace(command.BasePaletteColor))
-{
-	return CommandResult.Fail("The --color option is required when creating a new theme.");
-}
-themeXml = CreateNewThemeXml(command.WebResourceUniqueName, command.BasePaletteColor);
+					if (string.IsNullOrWhiteSpace(command.BasePaletteColor))
+					{
+						return CommandResult.Fail("The --color option is required when creating a new theme.");
+					}
+					themeXml = CreateNewThemeXml(command.WebResourceUniqueName, command.BasePaletteColor);
 				}
 
 				themeWebResource = await UpsertThemeWebResourceAsync(crm, themeWebResourceName, themeXml);
@@ -255,7 +255,7 @@ themeXml = CreateNewThemeXml(command.WebResourceUniqueName, command.BasePaletteC
 			if ("CustomTheme".Equals(document.Root.Name.LocalName, StringComparison.OrdinalIgnoreCase))
 			{
 				document.Root.SetAttributeValue("logoWebResource", logoWebResourceName);
-if (!string.IsNullOrWhiteSpace(basePaletteColor))
+				if (!string.IsNullOrWhiteSpace(basePaletteColor))
 				{
 					document.Root.SetAttributeValue("basePaletteColor", basePaletteColor.ToHexColor());
 				}
@@ -270,17 +270,17 @@ if (!string.IsNullOrWhiteSpace(basePaletteColor))
 
 			//if ("AppHeaderColors".Equals(document.Root.Name.LocalName, StringComparison.OrdinalIgnoreCase))
 			//{
-if (string.IsNullOrWhiteSpace(basePaletteColor))
-{
-	throw new CommandException(CommandException.CommandRequiredArgumentNotProvided, "The --color option is required when the theme root is AppHeaderColors.");
-}
+			if (string.IsNullOrWhiteSpace(basePaletteColor))
+			{
+				throw new CommandException(CommandException.CommandRequiredArgumentNotProvided, "The --color option is required when the theme root is AppHeaderColors.");
+			}
 
-var document2 = new XDocument(
-	new XElement("CustomTheme",
-		new XAttribute("basePaletteColor", basePaletteColor.ToHexColor()),
-					new XAttribute("logoWebResource", logoWebResourceName)
-				)
-			);
+			var document2 = new XDocument(
+				new XElement("CustomTheme",
+					new XAttribute("basePaletteColor", basePaletteColor.ToHexColor()),
+								new XAttribute("logoWebResource", logoWebResourceName)
+							)
+						);
 			document2.Root!.Add(document.Root);
 			return document2.ToString();
 			//}
@@ -312,7 +312,7 @@ var document2 = new XDocument(
 			}
 
 			var result = await crm.RetrieveMultipleAsync(query);
-if (result.Entities.Count > 1)
+			if (result.Entities.Count > 1)
 			{
 				output.WriteLine("FAILED", ConsoleColor.Red);
 				output.WriteLine("More than one app found with the specified name. Please specify the app by its unique ID using --appId.", ConsoleColor.Red);
@@ -381,7 +381,7 @@ if (result.Entities.Count > 1)
 			output.Write("Adding theme webresource to solution...");
 			var response = await solution.UpsertSolutionComponentsAsync(crm, [webResource], ComponentType.WebResource);
 
-if (response.ComponentsWithErrors.Count > 0)
+			if (response.ComponentsWithErrors.Count > 0)
 			{
 				var message = "Failed to add theme webresource to solution: " + response.ComponentsWithErrors.First().Fault.Message;
 				output.WriteLine(message, ConsoleColor.Red);
@@ -439,9 +439,9 @@ if (response.ComponentsWithErrors.Count > 0)
 			var root = FolderTree.RecurseBackFolderContainingFile(".wr.pacx", new DirectoryInfo(Path.GetDirectoryName(fullPath)!));
 			if (root != null)
 			{
-var relative = Path.GetRelativePath(root.FullName, fullPath).Replace('\\', '/');
-if (!string.IsNullOrWhiteSpace(relative)
-					&& relative.StartsWith(prefixSegment, StringComparison.OrdinalIgnoreCase))
+				var relative = Path.GetRelativePath(root.FullName, fullPath).Replace('\\', '/');
+				if (!string.IsNullOrWhiteSpace(relative)
+									&& relative.StartsWith(prefixSegment, StringComparison.OrdinalIgnoreCase))
 				{
 					return relative;
 				}

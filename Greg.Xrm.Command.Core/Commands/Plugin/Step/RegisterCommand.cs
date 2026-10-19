@@ -106,7 +106,7 @@ namespace Greg.Xrm.Command.Commands.Plugin.Step
 
 		private static IEnumerable<ValidationResult> ValidateAttributeList(string? attributes, string propertyName)
 		{
-if (attributes is null)
+			if (attributes is null)
 				yield break;
 
 			if (string.IsNullOrWhiteSpace(attributes))

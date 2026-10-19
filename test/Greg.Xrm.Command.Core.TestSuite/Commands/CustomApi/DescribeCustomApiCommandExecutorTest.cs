@@ -1,6 +1,6 @@
+using System.ServiceModel;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;
-using System.ServiceModel;
 
 namespace Greg.Xrm.Command.Commands.CustomApi
 {
@@ -20,11 +20,11 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 		private Entity MakeApi(string uniqueName = "nn_GregSum", bool isFunction = false, string? description = null)
 		{
 			var e = new Entity("customapi") { Id = ApiId };
-			e["uniquename"]    = uniqueName;
-			e["displayname"]   = "Greg Sum";
-			e["isfunction"]    = isFunction;
-			e["isprivate"]     = false;
-			e["bindingtype"]   = new OptionSetValue(0);   // Global
+			e["uniquename"] = uniqueName;
+			e["displayname"] = "Greg Sum";
+			e["isfunction"] = isFunction;
+			e["isprivate"] = false;
+			e["bindingtype"] = new OptionSetValue(0);   // Global
 			e["allowedcustomprocessingsteptype"] = new OptionSetValue(2); // SyncAndAsync
 			if (description != null) e["description"] = description;
 			return e;
@@ -33,25 +33,25 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 		private Entity MakeParam(string shortName, int typeCode = 7 /* Integer */, bool isOptional = false, string? description = null)
 		{
 			var e = new Entity("customapirequestparameter") { Id = Guid.NewGuid() };
-					e["name"]        = $"GregSum-In-{shortName}";
-					e["uniquename"]  = shortName;
-				e["displayname"] = shortName;
-				e["type"]        = new OptionSetValue(typeCode);
-				e["isoptional"]  = isOptional;
-				if (description != null) e["description"] = description;
-				return e;
-			}
+			e["name"] = $"GregSum-In-{shortName}";
+			e["uniquename"] = shortName;
+			e["displayname"] = shortName;
+			e["type"] = new OptionSetValue(typeCode);
+			e["isoptional"] = isOptional;
+			if (description != null) e["description"] = description;
+			return e;
+		}
 
-			private Entity MakeResponse(string shortName, int typeCode = 7 /* Integer */, string? description = null)
-			{
-				var e = new Entity("customapiresponseproperty") { Id = Guid.NewGuid() };
-					e["name"]        = $"GregSum-Out-{shortName}";
-					e["uniquename"]  = shortName;
-				e["displayname"] = shortName;
-				e["type"]        = new OptionSetValue(typeCode);
-				if (description != null) e["description"] = description;
-				return e;
-			}
+		private Entity MakeResponse(string shortName, int typeCode = 7 /* Integer */, string? description = null)
+		{
+			var e = new Entity("customapiresponseproperty") { Id = Guid.NewGuid() };
+			e["name"] = $"GregSum-Out-{shortName}";
+			e["uniquename"] = shortName;
+			e["displayname"] = shortName;
+			e["type"] = new OptionSetValue(typeCode);
+			if (description != null) e["description"] = description;
+			return e;
+		}
 
 		private void SetupApiFound(Entity api)
 		{
@@ -210,12 +210,12 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 				CancellationToken.None);
 
 			var plain = StripColors(Output.ToString());
-				// Required arg — no brackets
+			// Required arg — no brackets
 			StringAssert.Contains(plain, "X: Integer");
-				// Optional arg — with [] brackets
+			// Optional arg — with [] brackets
 			StringAssert.Contains(plain, "[Note: String]");
-				// Response with arrow
-				StringAssert.Contains(plain, "-> Result: Integer");
+			// Response with arrow
+			StringAssert.Contains(plain, "-> Result: Integer");
 		}
 
 		private static string StripColors(string text)

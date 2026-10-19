@@ -93,7 +93,7 @@ namespace Greg.Xrm.Command.Commands.Data.Query
 				var propertyName = property.Name;
 
 				// Skip OData metadata properties and formatted values (already processed)
-if (propertyName.Contains('@'))
+				if (propertyName.Contains('@'))
 				{
 					continue;
 				}
@@ -115,17 +115,17 @@ if (propertyName.Contains('@'))
 					}
 				}
 				else
-					{
-						// Check if this is an OptionSetValue (integer with a formatted value)
-						var hasFormattedValue = formattedValues.TryGetValue(propertyName, out var formattedValue);
-						var attributeValue = ParseAttributeValue(property.Value, hasFormattedValue);
-						entity.Attributes[propertyName] = attributeValue;
+				{
+					// Check if this is an OptionSetValue (integer with a formatted value)
+					var hasFormattedValue = formattedValues.TryGetValue(propertyName, out var formattedValue);
+					var attributeValue = ParseAttributeValue(property.Value, hasFormattedValue);
+					entity.Attributes[propertyName] = attributeValue;
 
-						if (hasFormattedValue)
-						{
-							entity.FormattedValues[propertyName] = formattedValue!;
-						}
+					if (hasFormattedValue)
+					{
+						entity.FormattedValues[propertyName] = formattedValue!;
 					}
+				}
 			}
 
 			return entity;

@@ -1,10 +1,10 @@
+using System.ServiceModel;
 using Greg.Xrm.Command.Model;
 using Greg.Xrm.Command.Services;
 using Microsoft.Crm.Sdk.Messages;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;
-using System.ServiceModel;
 
 namespace Greg.Xrm.Command.Commands.CustomApi
 {
@@ -220,9 +220,9 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 				new CreateCustomApiCommand
 				{
 					DisplayName = "Greg Sum",
-					UniqueName  = "nn_GregSum",
-					Params      = "Addend1:Integer,Addend2:Integer",
-					Responses   = "Result:Integer"
+					UniqueName = "nn_GregSum",
+					Params = "Addend1:Integer,Addend2:Integer",
+					Responses = "Result:Integer"
 				},
 				CancellationToken.None);
 
@@ -326,171 +326,171 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 			Assert.IsFalse(result.IsSuccess);
 		}
 
-				#region ExecutePrivilegeName validation tests
+		#region ExecutePrivilegeName validation tests
 
-				[TestMethod]
-				public async Task ExecuteAsync_ShouldSucceed_WhenExecutePrivilegeNameIsNull()
+		[TestMethod]
+		public async Task ExecuteAsync_ShouldSucceed_WhenExecutePrivilegeNameIsNull()
+		{
+			SetupNoExistingApi();
+			SetupCreateReturnsNewId("customapi");
+
+			var result = await executor.ExecuteAsync(
+				new CreateCustomApiCommand
 				{
-					SetupNoExistingApi();
-					SetupCreateReturnsNewId("customapi");
+					DisplayName = "Greg Sum",
+					UniqueName = "nn_GregSum",
+					ExecutePrivilegeName = string.Empty
+				},
+				CancellationToken.None);
 
-					var result = await executor.ExecuteAsync(
-						new CreateCustomApiCommand
-						{
-							DisplayName = "Greg Sum",
-							UniqueName = "nn_GregSum",
-							ExecutePrivilegeName = string.Empty
-						},
-						CancellationToken.None);
+			Assert.IsTrue(result.IsSuccess, result.ErrorMessage);
+		}
 
-					Assert.IsTrue(result.IsSuccess, result.ErrorMessage);
-				}
+		[TestMethod]
+		public async Task ExecuteAsync_ShouldSucceed_WhenExactPrivilegeMatchFound()
+		{
+			SetupNoExistingApi();
+			SetupCreateReturnsNewId("customapi");
 
-				[TestMethod]
-				public async Task ExecuteAsync_ShouldSucceed_WhenExactPrivilegeMatchFound()
+			// Exact match query returns one privilege
+			var exactMatchPrivilege = new Entity("privilege") { Id = Guid.NewGuid() };
+			exactMatchPrivilege["name"] = "prvReadAccount";
+
+			this.OrganizationServiceMock
+				.Setup(x => x.RetrieveMultipleAsync(It.Is<QueryExpression>(q =>
+					q.EntityName == "privilege" &&
+					q.Criteria.Conditions.Any(c => c.Operator == ConditionOperator.Equal))))
+				.ReturnsAsync(new EntityCollection(new List<Entity> { exactMatchPrivilege }));
+
+			string? capturedPrivilegeName = null;
+			this.OrganizationServiceMock
+				.Setup(x => x.CreateAsync(It.Is<Entity>(e => e.LogicalName == "customapi")))
+				.Callback<Entity>(e => capturedPrivilegeName = e.GetAttributeValue<string>("executeprivilegename"))
+				.ReturnsAsync(Guid.NewGuid());
+
+			var result = await executor.ExecuteAsync(
+				new CreateCustomApiCommand
 				{
-					SetupNoExistingApi();
-					SetupCreateReturnsNewId("customapi");
+					DisplayName = "Greg Sum",
+					UniqueName = "nn_GregSum",
+					ExecutePrivilegeName = "prvReadAccount"
+				},
+				CancellationToken.None);
 
-					// Exact match query returns one privilege
-					var exactMatchPrivilege = new Entity("privilege") { Id = Guid.NewGuid() };
-					exactMatchPrivilege["name"] = "prvReadAccount";
+			Assert.IsTrue(result.IsSuccess, result.ErrorMessage);
+			Assert.AreEqual("prvReadAccount", capturedPrivilegeName);
+		}
 
-					this.OrganizationServiceMock
-						.Setup(x => x.RetrieveMultipleAsync(It.Is<QueryExpression>(q =>
-							q.EntityName == "privilege" &&
-							q.Criteria.Conditions.Any(c => c.Operator == ConditionOperator.Equal))))
-						.ReturnsAsync(new EntityCollection(new List<Entity> { exactMatchPrivilege }));
+		[TestMethod]
+		public async Task ExecuteAsync_ShouldSucceed_WhenOneFuzzyPrivilegeMatchFound()
+		{
+			SetupNoExistingApi();
+			SetupCreateReturnsNewId("customapi");
 
-					string? capturedPrivilegeName = null;
-					this.OrganizationServiceMock
-						.Setup(x => x.CreateAsync(It.Is<Entity>(e => e.LogicalName == "customapi")))
-						.Callback<Entity>(e => capturedPrivilegeName = e.GetAttributeValue<string>("executeprivilegename"))
-						.ReturnsAsync(Guid.NewGuid());
+			// Exact match returns nothing
+			this.OrganizationServiceMock
+				.Setup(x => x.RetrieveMultipleAsync(It.Is<QueryExpression>(q =>
+					q.EntityName == "privilege" &&
+					q.Criteria.Conditions.Any(c => c.Operator == ConditionOperator.Equal))))
+				.ReturnsAsync(new EntityCollection());
 
-					var result = await executor.ExecuteAsync(
-						new CreateCustomApiCommand
-						{
-							DisplayName = "Greg Sum",
-							UniqueName = "nn_GregSum",
-							ExecutePrivilegeName = "prvReadAccount"
-						},
-						CancellationToken.None);
+			// Fuzzy match returns one privilege
+			var fuzzyMatchPrivilege = new Entity("privilege") { Id = Guid.NewGuid() };
+			fuzzyMatchPrivilege["name"] = "prvReadAccount";
 
-					Assert.IsTrue(result.IsSuccess, result.ErrorMessage);
-					Assert.AreEqual("prvReadAccount", capturedPrivilegeName);
-				}
+			this.OrganizationServiceMock
+				.Setup(x => x.RetrieveMultipleAsync(It.Is<QueryExpression>(q =>
+					q.EntityName == "privilege" &&
+					q.Criteria.Conditions.Any(c => c.Operator == ConditionOperator.Like))))
+				.ReturnsAsync(new EntityCollection(new List<Entity> { fuzzyMatchPrivilege }));
 
-				[TestMethod]
-				public async Task ExecuteAsync_ShouldSucceed_WhenOneFuzzyPrivilegeMatchFound()
+			string? capturedPrivilegeName = null;
+			this.OrganizationServiceMock
+				.Setup(x => x.CreateAsync(It.Is<Entity>(e => e.LogicalName == "customapi")))
+				.Callback<Entity>(e => capturedPrivilegeName = e.GetAttributeValue<string>("executeprivilegename"))
+				.ReturnsAsync(Guid.NewGuid());
+
+			var result = await executor.ExecuteAsync(
+				new CreateCustomApiCommand
 				{
-					SetupNoExistingApi();
-					SetupCreateReturnsNewId("customapi");
+					DisplayName = "Greg Sum",
+					UniqueName = "nn_GregSum",
+					ExecutePrivilegeName = "ReadAccount"
+				},
+				CancellationToken.None);
 
-					// Exact match returns nothing
-					this.OrganizationServiceMock
-						.Setup(x => x.RetrieveMultipleAsync(It.Is<QueryExpression>(q =>
-							q.EntityName == "privilege" &&
-							q.Criteria.Conditions.Any(c => c.Operator == ConditionOperator.Equal))))
-						.ReturnsAsync(new EntityCollection());
+			Assert.IsTrue(result.IsSuccess, result.ErrorMessage);
+			Assert.AreEqual("prvReadAccount", capturedPrivilegeName);
+		}
 
-					// Fuzzy match returns one privilege
-					var fuzzyMatchPrivilege = new Entity("privilege") { Id = Guid.NewGuid() };
-					fuzzyMatchPrivilege["name"] = "prvReadAccount";
+		[TestMethod]
+		public async Task ExecuteAsync_ShouldFail_WhenNoPrivilegeMatchFound()
+		{
+			SetupNoExistingApi();
 
-					this.OrganizationServiceMock
-						.Setup(x => x.RetrieveMultipleAsync(It.Is<QueryExpression>(q =>
-							q.EntityName == "privilege" &&
-							q.Criteria.Conditions.Any(c => c.Operator == ConditionOperator.Like))))
-						.ReturnsAsync(new EntityCollection(new List<Entity> { fuzzyMatchPrivilege }));
+			// Exact match returns nothing
+			this.OrganizationServiceMock
+				.Setup(x => x.RetrieveMultipleAsync(It.Is<QueryExpression>(q =>
+					q.EntityName == "privilege" &&
+					q.Criteria.Conditions.Any(c => c.Operator == ConditionOperator.Equal))))
+				.ReturnsAsync(new EntityCollection());
 
-					string? capturedPrivilegeName = null;
-					this.OrganizationServiceMock
-						.Setup(x => x.CreateAsync(It.Is<Entity>(e => e.LogicalName == "customapi")))
-						.Callback<Entity>(e => capturedPrivilegeName = e.GetAttributeValue<string>("executeprivilegename"))
-						.ReturnsAsync(Guid.NewGuid());
+			// Fuzzy match returns nothing
+			this.OrganizationServiceMock
+				.Setup(x => x.RetrieveMultipleAsync(It.Is<QueryExpression>(q =>
+					q.EntityName == "privilege" &&
+					q.Criteria.Conditions.Any(c => c.Operator == ConditionOperator.Like))))
+				.ReturnsAsync(new EntityCollection());
 
-					var result = await executor.ExecuteAsync(
-						new CreateCustomApiCommand
-						{
-							DisplayName = "Greg Sum",
-							UniqueName = "nn_GregSum",
-							ExecutePrivilegeName = "ReadAccount"
-						},
-						CancellationToken.None);
-
-					Assert.IsTrue(result.IsSuccess, result.ErrorMessage);
-					Assert.AreEqual("prvReadAccount", capturedPrivilegeName);
-				}
-
-				[TestMethod]
-				public async Task ExecuteAsync_ShouldFail_WhenNoPrivilegeMatchFound()
+			var result = await executor.ExecuteAsync(
+				new CreateCustomApiCommand
 				{
-					SetupNoExistingApi();
+					DisplayName = "Greg Sum",
+					UniqueName = "nn_GregSum",
+					ExecutePrivilegeName = "NonExistentPrivilege"
+				},
+				CancellationToken.None);
 
-					// Exact match returns nothing
-					this.OrganizationServiceMock
-						.Setup(x => x.RetrieveMultipleAsync(It.Is<QueryExpression>(q =>
-							q.EntityName == "privilege" &&
-							q.Criteria.Conditions.Any(c => c.Operator == ConditionOperator.Equal))))
-						.ReturnsAsync(new EntityCollection());
+			Assert.IsFalse(result.IsSuccess);
+			StringAssert.Contains(result.ErrorMessage, "Invalid execute privilege name");
+		}
 
-					// Fuzzy match returns nothing
-					this.OrganizationServiceMock
-						.Setup(x => x.RetrieveMultipleAsync(It.Is<QueryExpression>(q =>
-							q.EntityName == "privilege" &&
-							q.Criteria.Conditions.Any(c => c.Operator == ConditionOperator.Like))))
-						.ReturnsAsync(new EntityCollection());
+		[TestMethod]
+		public async Task ExecuteAsync_ShouldFail_WhenMultipleFuzzyPrivilegeMatchesFound()
+		{
+			SetupNoExistingApi();
 
-					var result = await executor.ExecuteAsync(
-						new CreateCustomApiCommand
-						{
-							DisplayName = "Greg Sum",
-							UniqueName = "nn_GregSum",
-							ExecutePrivilegeName = "NonExistentPrivilege"
-						},
-						CancellationToken.None);
+			// Exact match returns nothing
+			this.OrganizationServiceMock
+				.Setup(x => x.RetrieveMultipleAsync(It.Is<QueryExpression>(q =>
+					q.EntityName == "privilege" &&
+					q.Criteria.Conditions.Any(c => c.Operator == ConditionOperator.Equal))))
+				.ReturnsAsync(new EntityCollection());
 
-					Assert.IsFalse(result.IsSuccess);
-					StringAssert.Contains(result.ErrorMessage, "Invalid execute privilege name");
-				}
+			// Fuzzy match returns multiple privileges (ambiguity)
+			var privilege1 = new Entity("privilege") { Id = Guid.NewGuid() };
+			privilege1["name"] = "prvReadAccount";
+			var privilege2 = new Entity("privilege") { Id = Guid.NewGuid() };
+			privilege2["name"] = "prvWriteAccount";
 
-				[TestMethod]
-				public async Task ExecuteAsync_ShouldFail_WhenMultipleFuzzyPrivilegeMatchesFound()
+			this.OrganizationServiceMock
+				.Setup(x => x.RetrieveMultipleAsync(It.Is<QueryExpression>(q =>
+					q.EntityName == "privilege" &&
+					q.Criteria.Conditions.Any(c => c.Operator == ConditionOperator.Like))))
+				.ReturnsAsync(new EntityCollection(new List<Entity> { privilege1, privilege2 }));
+
+			var result = await executor.ExecuteAsync(
+				new CreateCustomApiCommand
 				{
-					SetupNoExistingApi();
+					DisplayName = "Greg Sum",
+					UniqueName = "nn_GregSum",
+					ExecutePrivilegeName = "Account"
+				},
+				CancellationToken.None);
 
-					// Exact match returns nothing
-					this.OrganizationServiceMock
-						.Setup(x => x.RetrieveMultipleAsync(It.Is<QueryExpression>(q =>
-							q.EntityName == "privilege" &&
-							q.Criteria.Conditions.Any(c => c.Operator == ConditionOperator.Equal))))
-						.ReturnsAsync(new EntityCollection());
-
-					// Fuzzy match returns multiple privileges (ambiguity)
-					var privilege1 = new Entity("privilege") { Id = Guid.NewGuid() };
-					privilege1["name"] = "prvReadAccount";
-					var privilege2 = new Entity("privilege") { Id = Guid.NewGuid() };
-					privilege2["name"] = "prvWriteAccount";
-
-					this.OrganizationServiceMock
-						.Setup(x => x.RetrieveMultipleAsync(It.Is<QueryExpression>(q =>
-							q.EntityName == "privilege" &&
-							q.Criteria.Conditions.Any(c => c.Operator == ConditionOperator.Like))))
-						.ReturnsAsync(new EntityCollection(new List<Entity> { privilege1, privilege2 }));
-
-					var result = await executor.ExecuteAsync(
-						new CreateCustomApiCommand
-						{
-							DisplayName = "Greg Sum",
-							UniqueName = "nn_GregSum",
-							ExecutePrivilegeName = "Account"
-						},
-						CancellationToken.None);
-
-					Assert.IsFalse(result.IsSuccess);
-					StringAssert.Contains(result.ErrorMessage, "Invalid execute privilege name");
-				}
+			Assert.IsFalse(result.IsSuccess);
+			StringAssert.Contains(result.ErrorMessage, "Invalid execute privilege name");
+		}
 
 		[TestMethod]
 		public async Task ExecuteAsync_ShouldEscapeWildcardCharactersInPrivilegeSearch()
@@ -534,60 +534,60 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 			StringAssert.Contains(capturedLikeValue, "[[]");  // [ escaped
 		}
 
-				[TestMethod]
-				public async Task ExecuteAsync_ShouldPreferExactMatchOverFuzzyMatch()
+		[TestMethod]
+		public async Task ExecuteAsync_ShouldPreferExactMatchOverFuzzyMatch()
+		{
+			SetupNoExistingApi();
+			SetupCreateReturnsNewId("customapi");
+
+			// Exact match returns the exact privilege
+			var exactMatchPrivilege = new Entity("privilege") { Id = Guid.NewGuid() };
+			exactMatchPrivilege["name"] = "prvRead";
+
+			this.OrganizationServiceMock
+				.Setup(x => x.RetrieveMultipleAsync(It.Is<QueryExpression>(q =>
+					q.EntityName == "privilege" &&
+					q.Criteria.Conditions.Any(c => c.Operator == ConditionOperator.Equal))))
+				.ReturnsAsync(new EntityCollection(new List<Entity> { exactMatchPrivilege }));
+
+			// Fuzzy match would return multiple (but shouldn't be called)
+			var fuzzyMatch1 = new Entity("privilege") { Id = Guid.NewGuid() };
+			fuzzyMatch1["name"] = "prvRead";
+			var fuzzyMatch2 = new Entity("privilege") { Id = Guid.NewGuid() };
+			fuzzyMatch2["name"] = "prvReadAccount";
+
+			this.OrganizationServiceMock
+				.Setup(x => x.RetrieveMultipleAsync(It.Is<QueryExpression>(q =>
+					q.EntityName == "privilege" &&
+					q.Criteria.Conditions.Any(c => c.Operator == ConditionOperator.Like))))
+				.ReturnsAsync(new EntityCollection(new List<Entity> { fuzzyMatch1, fuzzyMatch2 }));
+
+			string? capturedPrivilegeName = null;
+			this.OrganizationServiceMock
+				.Setup(x => x.CreateAsync(It.Is<Entity>(e => e.LogicalName == "customapi")))
+				.Callback<Entity>(e => capturedPrivilegeName = e.GetAttributeValue<string>("executeprivilegename"))
+				.ReturnsAsync(Guid.NewGuid());
+
+			var result = await executor.ExecuteAsync(
+				new CreateCustomApiCommand
 				{
-					SetupNoExistingApi();
-					SetupCreateReturnsNewId("customapi");
+					DisplayName = "Greg Sum",
+					UniqueName = "nn_GregSum",
+					ExecutePrivilegeName = "prvRead"
+				},
+				CancellationToken.None);
 
-					// Exact match returns the exact privilege
-					var exactMatchPrivilege = new Entity("privilege") { Id = Guid.NewGuid() };
-					exactMatchPrivilege["name"] = "prvRead";
+			Assert.IsTrue(result.IsSuccess, result.ErrorMessage);
+			Assert.AreEqual("prvRead", capturedPrivilegeName);
 
-					this.OrganizationServiceMock
-						.Setup(x => x.RetrieveMultipleAsync(It.Is<QueryExpression>(q =>
-							q.EntityName == "privilege" &&
-							q.Criteria.Conditions.Any(c => c.Operator == ConditionOperator.Equal))))
-						.ReturnsAsync(new EntityCollection(new List<Entity> { exactMatchPrivilege }));
-
-					// Fuzzy match would return multiple (but shouldn't be called)
-					var fuzzyMatch1 = new Entity("privilege") { Id = Guid.NewGuid() };
-					fuzzyMatch1["name"] = "prvRead";
-					var fuzzyMatch2 = new Entity("privilege") { Id = Guid.NewGuid() };
-					fuzzyMatch2["name"] = "prvReadAccount";
-
-					this.OrganizationServiceMock
-						.Setup(x => x.RetrieveMultipleAsync(It.Is<QueryExpression>(q =>
-							q.EntityName == "privilege" &&
-							q.Criteria.Conditions.Any(c => c.Operator == ConditionOperator.Like))))
-						.ReturnsAsync(new EntityCollection(new List<Entity> { fuzzyMatch1, fuzzyMatch2 }));
-
-					string? capturedPrivilegeName = null;
-					this.OrganizationServiceMock
-						.Setup(x => x.CreateAsync(It.Is<Entity>(e => e.LogicalName == "customapi")))
-						.Callback<Entity>(e => capturedPrivilegeName = e.GetAttributeValue<string>("executeprivilegename"))
-						.ReturnsAsync(Guid.NewGuid());
-
-					var result = await executor.ExecuteAsync(
-						new CreateCustomApiCommand
-						{
-							DisplayName = "Greg Sum",
-							UniqueName = "nn_GregSum",
-							ExecutePrivilegeName = "prvRead"
-						},
-						CancellationToken.None);
-
-					Assert.IsTrue(result.IsSuccess, result.ErrorMessage);
-					Assert.AreEqual("prvRead", capturedPrivilegeName);
-
-					// Verify exact match was used, not fuzzy
-					this.OrganizationServiceMock.Verify(
-						x => x.RetrieveMultipleAsync(It.Is<QueryExpression>(q =>
-							q.EntityName == "privilege" &&
-							q.Criteria.Conditions.Any(c => c.Operator == ConditionOperator.Like))),
-						Times.Never);
-				}
-
-				#endregion
-			}
+			// Verify exact match was used, not fuzzy
+			this.OrganizationServiceMock.Verify(
+				x => x.RetrieveMultipleAsync(It.Is<QueryExpression>(q =>
+					q.EntityName == "privilege" &&
+					q.Criteria.Conditions.Any(c => c.Operator == ConditionOperator.Like))),
+				Times.Never);
 		}
+
+		#endregion
+	}
+}
