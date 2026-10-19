@@ -263,6 +263,21 @@ namespace Greg.Xrm.Command.Services.Connection
 		}
 
 		[TestMethod]
+		public async Task Persist_WhenStoredProfileIsMalformed_ShouldWarnAndNotFailTheAuthenticatedCommand()
+		{
+			// Review of PR #257: a corrupted encrypted value makes Convert.FromBase64String throw FormatException.
+			var sut = CreateSut(OAuthProfile);
+			sut.Disk = JsonConvert.DeserializeObject<ConnectionSetting>(
+				JsonConvert.SerializeObject(new { ConnectionStrings = new Dictionary<string, string> { [ProfileName] = "not-valid-base64!!" }, IsSecured = true }))!;
+
+			await sut.Repository.PersistAuthenticatedUsernameAsync(ProfileName, OAuthProfile, SignedInUser);
+
+			Assert.AreEqual(0, sut.Commits);
+			var text = sut.Output.ToString();
+			Assert.IsTrue(text.Contains("could not save the signed-in user", StringComparison.Ordinal), text);
+		}
+
+		[TestMethod]
 		public async Task Persist_WithoutAtomicSettingsRepository_ShouldNotWriteAnything()
 		{
 			// Without a cross-process atomic update the only safe choice is not to write: a missing Username

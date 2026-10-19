@@ -701,7 +701,8 @@ namespace Greg.Xrm.Command.Services.Connection
 			catch (Exception ex) when (ex is IOException
 				or UnauthorizedAccessException
 				or Newtonsoft.Json.JsonException
-				or System.Security.Cryptography.CryptographicException)
+				or System.Security.Cryptography.CryptographicException
+				or FormatException) // malformed Base64 ciphertext in the stored profile (AesEncryption.Decrypt)
 			{
 				output.WriteLine($"Warning: could not save the signed-in user into authentication profile '{connectionName}': {ex.Message}. The next command may ask you to sign in again.", ConsoleColor.Yellow);
 				return;
