@@ -1,4 +1,3 @@
-using System.Data;
 using System.Xml;
 using Greg.Xrm.Command.Model;
 using Microsoft.Crm.Sdk;

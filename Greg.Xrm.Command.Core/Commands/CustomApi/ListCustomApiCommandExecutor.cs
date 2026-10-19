@@ -91,31 +91,31 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 
 					var paramsByApi = allParams.GroupBy(p => p.GetAttributeValue<EntityReference>("customapiid")?.Id ?? Guid.Empty)
 						.ToDictionary(g => g.Key, g => g.ToList());
-					var respsByApi  = allResps.GroupBy(r => r.GetAttributeValue<EntityReference>("customapiid")?.Id ?? Guid.Empty)
+					var respsByApi = allResps.GroupBy(r => r.GetAttributeValue<EntityReference>("customapiid")?.Id ?? Guid.Empty)
 						.ToDictionary(g => g.Key, g => g.ToList());
 
 					foreach (var api in list)
 					{
-						var uniqueName   = api.GetAttributeValue<string>("uniquename") ?? "";
-						var description  = api.GetAttributeValue<string>("description");
-						var isFunction   = api.GetAttributeValue<bool>("isfunction");
-						var binding      = BindingTypeLabel(api.GetAttributeValue<OptionSetValue>("bindingtype"));
-						var boundEntity  = api.GetAttributeValue<string>("boundentitylogicalname");
-						var bound        = api.GetAttributeValue<EntityReference>("plugintypeid") != null;
+						var uniqueName = api.GetAttributeValue<string>("uniquename") ?? "";
+						var description = api.GetAttributeValue<string>("description");
+						var isFunction = api.GetAttributeValue<bool>("isfunction");
+						var binding = BindingTypeLabel(api.GetAttributeValue<OptionSetValue>("bindingtype"));
+						var boundEntity = api.GetAttributeValue<string>("boundentitylogicalname");
+						var bound = api.GetAttributeValue<EntityReference>("plugintypeid") != null;
 
 						var bindingLabel = string.IsNullOrWhiteSpace(boundEntity)
 							? $"[{(isFunction ? "Function" : "Action")}/{binding}]"
 							: $"[{(isFunction ? "Function" : "Action")}/{binding}:{boundEntity}]";
 
 						var apiParams = paramsByApi.GetValueOrDefault(api.Id) ?? [];
-						var apiResps  = respsByApi.GetValueOrDefault(api.Id) ?? [];
+						var apiResps = respsByApi.GetValueOrDefault(api.Id) ?? [];
 
 						var inputParams = apiParams
 								.OrderBy(p => p.GetAttributeValue<bool>("isoptional"))
 								.Select(p => (
 									name: p.GetAttributeValue<string>("uniquename") ?? "",
 									type: TypeLabel(p.GetAttributeValue<OptionSetValue>("type")),
-									opt:  p.GetAttributeValue<bool>("isoptional")));
+									opt: p.GetAttributeValue<bool>("isoptional")));
 						var outputParams = apiResps.Select(r => (
 							name: r.GetAttributeValue<string>("uniquename") ?? "",
 							type: TypeLabel(r.GetAttributeValue<OptionSetValue>("type"))));
@@ -148,20 +148,20 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 
 		private static string TypeLabel(OptionSetValue? value) => value?.Value switch
 		{
-			0  => "Boolean",
-			1  => "DateTime",
-			2  => "Decimal",
-			3  => "Entity",
-			4  => "EntityCollection",
-			5  => "EntityReference",
-			6  => "Float",
-			7  => "Integer",
-			8  => "Money",
-			9  => "Picklist",
+			0 => "Boolean",
+			1 => "DateTime",
+			2 => "Decimal",
+			3 => "Entity",
+			4 => "EntityCollection",
+			5 => "EntityReference",
+			6 => "Float",
+			7 => "Integer",
+			8 => "Money",
+			9 => "Picklist",
 			10 => "String",
 			11 => "StringArray",
 			12 => "Guid",
-			_  => "Unknown"
+			_ => "Unknown"
 		};
 	}
 }

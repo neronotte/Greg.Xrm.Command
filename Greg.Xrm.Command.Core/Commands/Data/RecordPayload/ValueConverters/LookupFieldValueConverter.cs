@@ -1,6 +1,5 @@
 using Greg.Xrm.Command.Commands.Data.RecordPayload.Parsing;
 using Microsoft.PowerPlatform.Dataverse.Client;
-using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Metadata;
 
 namespace Greg.Xrm.Command.Commands.Data.RecordPayload.ValueConverters

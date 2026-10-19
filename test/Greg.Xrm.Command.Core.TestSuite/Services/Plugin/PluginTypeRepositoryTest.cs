@@ -1,7 +1,6 @@
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;
-using Moq;
 
 namespace Greg.Xrm.Command.Services.Plugin
 {

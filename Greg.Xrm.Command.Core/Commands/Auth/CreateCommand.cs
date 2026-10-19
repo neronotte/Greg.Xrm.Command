@@ -106,6 +106,19 @@ namespace Greg.Xrm.Command.Commands.Auth
 			writer.WriteLine("auth create -n MyProfile -env \"https://contosotest.crm.dynamics.com\" -id \"1CF992AE-7203-4722-A53D-034D18C4593A\"  -cs \"REDACTED\"");
 			writer.WriteCodeBlockEnd();
 			writer.WriteLine();
+
+			// User-facing summary of the issue #217 token caching (see docs/issue-217-auth-token-implementation-plan.md).
+			writer.WriteLine("### How tokens are stored (OAuth profiles)").WriteLine();
+			writer.WriteLine("For interactive OAuth profiles PACX relies on the token cache of the Dataverse SDK (MSAL):");
+			writer.WriteLine();
+			writer.WriteLine("- Tokens are encrypted at rest using the OS secure storage: DPAPI on Windows, the Secret Service keyring on Linux, the Keychain on macOS. The cache file is `%LOCALAPPDATA%/Greg.Xrm.Command/tokenCache/msal_token_cache.bin` (on Linux it only marks the keyring entry and stays empty).");
+			writer.WriteLine("- Tokens are refreshed automatically, also while a long-running command is executing and across separate PACX commands. You sign in again only when the refresh token itself expires or is revoked.");
+			writer.WriteLine("- After the first sign-in PACX stores the signed-in user (`Username`) in the profile: the SDK needs it to find your account in the cache. A `Username` you specified yourself is never changed.");
+			writer.WriteLine("- Profiles created with older PACX versions ask you to sign in once after the upgrade; then they reuse the cache silently. The old plain-text token of the profile is deleted after that sign-in.");
+			writer.WriteLine("- SQL queries (`pacx data query` with a `SELECT` statement) authenticate to the TDS endpoint with the same, automatically refreshed token.");
+			writer.WriteLine();
+			writer.WriteLine("If no secure storage is available (e.g. headless Linux without a keyring), PACX warns you when the profile is created and keeps the previous behavior: the last access token is stored in plain text, readable only by your user, and it cannot be refreshed, so commands lasting longer than about one hour may fail. For unattended or headless scenarios prefer a Client ID / Secret or Certificate profile.");
+			writer.WriteLine();
 		}
 	}
 }

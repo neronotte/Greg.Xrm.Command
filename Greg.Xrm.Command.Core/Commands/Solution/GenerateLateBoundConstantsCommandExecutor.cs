@@ -1,8 +1,8 @@
+using System.ServiceModel;
 using Greg.Xrm.Command.Commands.Solution.Model;
 using Greg.Xrm.Command.Commands.Solution.Service;
 using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
-using System.ServiceModel;
 
 namespace Greg.Xrm.Command.Commands.Solution
 {

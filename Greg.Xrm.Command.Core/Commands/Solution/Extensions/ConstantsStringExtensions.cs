@@ -1,6 +1,6 @@
-using Microsoft.Xrm.Sdk.Metadata;
 using System.Globalization;
 using System.Text;
+using Microsoft.Xrm.Sdk.Metadata;
 
 namespace Greg.Xrm.Command.Commands.Solution.Extensions
 {

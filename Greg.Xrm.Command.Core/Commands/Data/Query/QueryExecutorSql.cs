@@ -12,7 +12,9 @@ namespace Greg.Xrm.Command.Commands.Data.Query
 			var serviceClient = crm as ServiceClient
 				?? throw new InvalidOperationException("The provided IOrganizationServiceAsync2 instance is not a ServiceClient.");
 
-			var accessToken = await organizationServiceRepository.GetCurrentAccessTokenAsync();
+			var accessToken = await ResolveAccessTokenAsync(
+				() => serviceClient.CurrentAccessToken,
+				organizationServiceRepository.GetCurrentAccessTokenAsync);
 			if (string.IsNullOrEmpty(accessToken))
 			{
 				throw new InvalidOperationException(
@@ -62,6 +64,38 @@ namespace Greg.Xrm.Command.Commands.Data.Query
 			}
 
 			return rows;
+		}
+
+
+		/// <summary>
+		/// Chooses the bearer token used to authenticate on the Dataverse TDS (SQL) endpoint (issue #217).
+		/// </summary>
+		/// <remarks>
+		/// <para>
+		/// FIRST CHOICE: the token of the very <see cref="ServiceClient"/> that runs this query
+		/// (<see cref="ServiceClient.CurrentAccessToken"/>). It belongs to the same profile and environment as the
+		/// rest of the command, and the SDK refreshes it when it is about to expire, so SQL queries keep working in
+		/// long-running commands. Before #217 the token always came from the repository, which builds a SECOND
+		/// connection and, for OAuth profiles, could return a non-refreshable token from <c>tokens.json</c>.
+		/// Verified on 2026-10-18: TDS accepts the OAuth token returned by this property, also after a refresh.
+		/// </para>
+		/// <para>
+		/// FALLBACK (unchanged pre-#217 behavior): the repository token. Needed because
+		/// <see cref="ServiceClient.CurrentAccessToken"/> is EMPTY for clients built from a fixed-token callback,
+		/// which is how PACX still connects in <see cref="TokenCacheMode.LegacyPacxCache"/> mode (systems without
+		/// secure token storage). The repository returns the token saved in <c>tokens.json</c> in that case.
+		/// </para>
+		/// </remarks>
+		/// <param name="getClientToken">Reads the token of the client running the query.</param>
+		/// <param name="getRepositoryToken">Pre-#217 source of the token, evaluated only if the client has none.</param>
+		/// <returns>The token to use, or <c>null</c>/empty if none is available.</returns>
+		internal static async Task<string?> ResolveAccessTokenAsync(Func<string?> getClientToken, Func<Task<string?>> getRepositoryToken)
+		{
+			var clientToken = getClientToken();
+			if (!string.IsNullOrEmpty(clientToken))
+				return clientToken;
+
+			return await getRepositoryToken();
 		}
 	}
 }

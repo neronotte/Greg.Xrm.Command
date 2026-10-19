@@ -30,7 +30,7 @@ namespace Greg.Xrm.Command.Commands.Script.Service
 
 
 			var factory = new ScriptGeneratorFactory();
-			
+
 			script.AppendLine();
 			script.AppendLine($"# ===== {entity.SchemaName.ToUpper()} COLUMNS =====");
 			foreach (var field in customFields)

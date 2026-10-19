@@ -1,17 +1,17 @@
-using Greg.Xrm.Command.Parsing;
-using Greg.Xrm.Command.Services;
 using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 using System.Reflection;
+using Greg.Xrm.Command.Parsing;
+using Greg.Xrm.Command.Services;
 
 namespace Greg.Xrm.Command.Commands.UserSettings
 {
 	/// <summary>
 	/// Sets one or more properties on the <c>usersettings</c> record of the specified (or
 	/// currently logged-in) user. Each field exposed by <see cref="UserSettingRegistry"/>
-	/// is mapped to a dedicated strongly-typed CLI option — enum for picklists, <c>int?</c>
+	/// is mapped to a dedicated strongly-typed CLI option â€” enum for picklists, <c>int?</c>
 	/// for numeric / LCID fields, <c>bool?</c> for flags, <c>string?</c> for free-text and
-	/// HH:mm time strings — so the parser rejects malformed input up-front and validation
+	/// HH:mm time strings â€” so the parser rejects malformed input up-front and validation
 	/// beyond type-checking is expressed via DataAnnotations on this class.
 	/// Example: <c>pacx usersettings set --uilanguageid 1033 --helplanguageid 1033 --paginglimit 250</c>.
 	/// </summary>
@@ -66,7 +66,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 		[Option("user", "u", Order = 1, HelpText = "Domain name of the user whose settings to update (e.g. DOMAIN\\john.doe). If omitted, the current user's settings are updated.")]
 		public string? UserDomainName { get; set; }
 
-		// Language / locale — CultureInfo-level validity is checked in IValidatableObject.Validate;
+		// Language / locale â€” CultureInfo-level validity is checked in IValidatableObject.Validate;
 		// Dataverse provisioning check runs in the executor.
 		[Option("uilanguageid", Order = 10, HelpText = "LCID of the UI language (e.g. 1033=English, 1040=Italian). The language must be provisioned in Dataverse.")]
 		public int? UILanguageId { get; set; }
@@ -166,7 +166,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 		[Option("timezonestandardyear", Order = 46, HelpText = "Year when standard time starts.")]
 		public int? TimeZoneStandardYear { get; set; }
 
-		// Workday — 5-char strings on Dataverse, HH:mm format validated in IValidatableObject.Validate.
+		// Workday â€” 5-char strings on Dataverse, HH:mm format validated in IValidatableObject.Validate.
 		[StringLength(5)]
 		[Option("workdaystarttime", Order = 50, HelpText = "Workday start time in HH:mm format (e.g. 08:00).")]
 		public string? WorkdayStartTime { get; set; }
@@ -223,11 +223,11 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 		public int? CurrencyFormatCode { get; set; }
 
 		[Range(0, 15)]
-		[Option("negativecurrencyformatcode", Order = 91, HelpText = "How negative currency values are displayed (0–15).")]
+		[Option("negativecurrencyformatcode", Order = 91, HelpText = "How negative currency values are displayed (0â€“15).")]
 		public int? NegativeCurrencyFormatCode { get; set; }
 
 		[StringLength(13)]
-		[Option("currencysymbol", Order = 92, HelpText = "Currency symbol (e.g. '$', '€', '£'). Max 13 characters.")]
+		[Option("currencysymbol", Order = 92, HelpText = "Currency symbol (e.g. '$', 'â‚¬', 'Â£'). Max 13 characters.")]
 		public string? CurrencySymbol { get; set; }
 
 		[Option("currencydecimalprecision", Order = 93, HelpText = "Number of decimal places used for currency.")]
@@ -416,7 +416,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 					"At least one user setting option must be provided (e.g. --uilanguageid 1033). ");
 			}
 
-			// Language fields — must be a recognised Windows LCID. Dataverse provisioning
+			// Language fields â€” must be a recognised Windows LCID. Dataverse provisioning
 			// is checked later by the executor.
 			foreach (var (member, lcid) in EnumerateLanguageFields())
 			{

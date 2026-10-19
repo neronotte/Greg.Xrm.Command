@@ -27,7 +27,7 @@ namespace Greg.Xrm.Command.Commands.WebResources
 		[Option("localThemeFile", "ltf", Order = 4, HelpText = "Optional path to a local theme.xml file to update and/or push.")]
 		public string? LocalThemeFile { get; set; }
 
-[Option("color", "col", Order = 5, HelpText = "Optional base palette color for the selected app or environment theme. Required when a new theme file must be created; otherwise the logo will not appear.")]
+		[Option("color", "col", Order = 5, HelpText = "Optional base palette color for the selected app or environment theme. Required when a new theme file must be created; otherwise the logo will not appear.")]
 		public string? BasePaletteColor { get; set; }
 
 		[Option("solution", "s", Order = 10, HelpText = "The solution where to save the theme webresource and setting. If not specified, the default solution is considered.")]

@@ -34,22 +34,22 @@ namespace Greg.Xrm.Command.Commands.CustomApi
 				output.WriteLine("Done", ConsoleColor.Green);
 
 				// Resolve the response property
-					var respUniqueName = $"{command.ApiUniqueName}-out-{command.ResponseUniqueName}";
-					output.Write($"Resolving response property '{respUniqueName}'...");
-					var respQ = new QueryExpression("customapiresponseproperty") { NoLock = true, TopCount = 1 };
-					respQ.ColumnSet.AddColumn("customapiresponsepropertyid");
-					respQ.Criteria.AddCondition("uniquename", ConditionOperator.Equal, respUniqueName);
-					respQ.Criteria.AddCondition("customapiid", ConditionOperator.Equal, apiId);
-					var respResult = await crm.RetrieveMultipleAsync(respQ);
-					if (respResult.Entities.Count == 0)
-					{
-						output.WriteLine("Not found", ConsoleColor.Red);
-						return CommandResult.Fail($"Response property '{respUniqueName}' not found on Custom API '{command.ApiUniqueName}'.");
-					}
-					var respId = respResult.Entities[0].Id;
-					output.WriteLine("Done", ConsoleColor.Green);
+				var respUniqueName = $"{command.ApiUniqueName}-out-{command.ResponseUniqueName}";
+				output.Write($"Resolving response property '{respUniqueName}'...");
+				var respQ = new QueryExpression("customapiresponseproperty") { NoLock = true, TopCount = 1 };
+				respQ.ColumnSet.AddColumn("customapiresponsepropertyid");
+				respQ.Criteria.AddCondition("uniquename", ConditionOperator.Equal, respUniqueName);
+				respQ.Criteria.AddCondition("customapiid", ConditionOperator.Equal, apiId);
+				var respResult = await crm.RetrieveMultipleAsync(respQ);
+				if (respResult.Entities.Count == 0)
+				{
+					output.WriteLine("Not found", ConsoleColor.Red);
+					return CommandResult.Fail($"Response property '{respUniqueName}' not found on Custom API '{command.ApiUniqueName}'.");
+				}
+				var respId = respResult.Entities[0].Id;
+				output.WriteLine("Done", ConsoleColor.Green);
 
-					output.Write($"Deleting response property '{respUniqueName}'...");
+				output.Write($"Deleting response property '{respUniqueName}'...");
 				await crm.DeleteAsync("customapiresponseproperty", respId);
 				output.WriteLine("Done", ConsoleColor.Green);
 

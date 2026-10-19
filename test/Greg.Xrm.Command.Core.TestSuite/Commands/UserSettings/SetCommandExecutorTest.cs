@@ -1,15 +1,18 @@
+ï»¿using System.ServiceModel;
+using Greg.Xrm.Command.Model;
 using Greg.Xrm.Command.Services.Connection;
 using Microsoft.Crm.Sdk.Messages;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;
-using System.ServiceModel;
 
 namespace Greg.Xrm.Command.Commands.UserSettings
 {
 	[TestClass]
 	public class SetCommandExecutorTest
 	{
+		private readonly Mock<ISystemUserRepository> userRepoMock = new();
+
 		private static (
 			OutputToMemory output,
 			Mock<IOrganizationServiceRepository> repoMock,
@@ -23,7 +26,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 			return (output, repoMock, crmMock);
 		}
 
-		// ?? Happy path — integer field, current user ???????????????????????????????
+		// ?? Happy path â€” integer field, current user ???????????????????????????????
 
 		[TestMethod]
 		public async Task ExecuteAsync_ShouldSucceed_IntegerField_CurrentUser()
@@ -47,7 +50,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 				.Callback<Entity>(e => capturedUpdate = e)
 				.Returns(Task.CompletedTask);
 
-			var executor = new SetCommandExecutor(output, repoMock.Object);
+			var executor = new SetCommandExecutor(output, repoMock.Object, this.userRepoMock.Object);
 			var result = await executor.ExecuteAsync(
 				new SetCommand { PagingLimit = 100 },
 				CancellationToken.None);
@@ -60,7 +63,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 			crmMock.Verify(c => c.UpdateAsync(It.IsAny<Entity>()), Times.Once);
 		}
 
-		// ?? Happy path — boolean field, current user ???????????????????????????????
+		// ?? Happy path â€” boolean field, current user ???????????????????????????????
 
 		[TestMethod]
 		[DataRow(true)]
@@ -80,7 +83,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 				.Callback<Entity>(e => capturedUpdate = e)
 				.Returns(Task.CompletedTask);
 
-			var executor = new SetCommandExecutor(output, repoMock.Object);
+			var executor = new SetCommandExecutor(output, repoMock.Object, this.userRepoMock.Object);
 			var result = await executor.ExecuteAsync(
 				new SetCommand { ShowWeekNumber = value },
 				CancellationToken.None);
@@ -90,7 +93,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 			Assert.AreEqual(value, capturedUpdate.GetAttributeValue<bool>("showweeknumber"));
 		}
 
-		// ?? Happy path — picklist via enum ?????????????????????????????????????????
+		// ?? Happy path â€” picklist via enum ?????????????????????????????????????????
 
 		[TestMethod]
 		public async Task ExecuteAsync_ShouldSucceed_EnumPicklistField()
@@ -108,7 +111,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 				.Callback<Entity>(e => capturedUpdate = e)
 				.Returns(Task.CompletedTask);
 
-			var executor = new SetCommandExecutor(output, repoMock.Object);
+			var executor = new SetCommandExecutor(output, repoMock.Object, this.userRepoMock.Object);
 			var result = await executor.ExecuteAsync(
 				new SetCommand { EntityFormModeValue = SetCommand.FormMode.Edit },
 				CancellationToken.None);
@@ -118,7 +121,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 			Assert.AreEqual(2, capturedUpdate.GetAttributeValue<OptionSetValue>("entityformmode").Value);
 		}
 
-		// ?? Happy path — language field triggers Dataverse availability check ?????
+		// ?? Happy path â€” language field triggers Dataverse availability check ?????
 
 		[TestMethod]
 		public async Task ExecuteAsync_ShouldSucceed_LanguageField_ValidatesDataverse()
@@ -146,7 +149,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 				.Callback<Entity>(e => capturedUpdate = e)
 				.Returns(Task.CompletedTask);
 
-			var executor = new SetCommandExecutor(output, repoMock.Object);
+			var executor = new SetCommandExecutor(output, repoMock.Object, this.userRepoMock.Object);
 			var result = await executor.ExecuteAsync(
 				new SetCommand { UILanguageId = 1040 },
 				CancellationToken.None);
@@ -157,7 +160,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 			crmMock.Verify(c => c.ExecuteAsync(It.IsAny<RetrieveAvailableLanguagesRequest>()), Times.Once);
 		}
 
-		// ?? Happy path — specific user by domain name ??????????????????????????????
+		// ?? Happy path â€” specific user by domain name ??????????????????????????????
 
 		[TestMethod]
 		public async Task ExecuteAsync_ShouldSucceed_WithExplicitUser()
@@ -170,16 +173,16 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 			userEntity["fullname"] = "John Doe";
 			userEntity["domainname"] = @"DOMAIN\john.doe";
 
-			crmMock
-				.Setup(c => c.RetrieveMultipleAsync(It.IsAny<QueryBase>()))
-				.ReturnsAsync(new EntityCollection(new List<Entity> { userEntity }));
+			this.userRepoMock
+				.Setup(r => r.GetByDomainNameAsync(crmMock.Object, @"DOMAIN\john.doe", It.IsAny<CancellationToken>()))
+				.ReturnsAsync(new SystemUser(userEntity));
 
 			crmMock
 				.Setup(c => c.UpdateAsync(It.IsAny<Entity>()))
 				.Callback<Entity>(e => capturedUpdate = e)
 				.Returns(Task.CompletedTask);
 
-			var executor = new SetCommandExecutor(output, repoMock.Object);
+			var executor = new SetCommandExecutor(output, repoMock.Object, this.userRepoMock.Object);
 			var result = await executor.ExecuteAsync(
 				new SetCommand { UserDomainName = @"DOMAIN\john.doe", PagingLimit = 250 },
 				CancellationToken.None);
@@ -219,7 +222,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 				.Callback<Entity>(e => capturedUpdate = e)
 				.Returns(Task.CompletedTask);
 
-			var executor = new SetCommandExecutor(output, repoMock.Object);
+			var executor = new SetCommandExecutor(output, repoMock.Object, this.userRepoMock.Object);
 			var result = await executor.ExecuteAsync(
 				new SetCommand
 				{
@@ -240,13 +243,13 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 			crmMock.Verify(c => c.ExecuteAsync(It.IsAny<RetrieveAvailableLanguagesRequest>()), Times.Once);
 		}
 
-		// ?? Failure: no settings provided (defensive — Validate() normally catches this) ??
+		// ?? Failure: no settings provided (defensive â€” Validate() normally catches this) ??
 
 		[TestMethod]
 		public async Task ExecuteAsync_ShouldFail_WhenNoSettingsProvided()
 		{
 			var (output, repoMock, crmMock) = CreateMocks();
-			var executor = new SetCommandExecutor(output, repoMock.Object);
+			var executor = new SetCommandExecutor(output, repoMock.Object, this.userRepoMock.Object);
 
 			var result = await executor.ExecuteAsync(
 				new SetCommand(),
@@ -276,7 +279,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 					throw new InvalidOperationException($"Unexpected: {r.GetType().Name}");
 				});
 
-			var executor = new SetCommandExecutor(output, repoMock.Object);
+			var executor = new SetCommandExecutor(output, repoMock.Object, this.userRepoMock.Object);
 			var result = await executor.ExecuteAsync(
 				new SetCommand { UILanguageId = 1040 },
 				CancellationToken.None);
@@ -294,11 +297,11 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 		{
 			var (output, repoMock, crmMock) = CreateMocks();
 
-			crmMock
-				.Setup(c => c.RetrieveMultipleAsync(It.IsAny<QueryBase>()))
-				.ReturnsAsync(new EntityCollection());
+			this.userRepoMock
+				.Setup(r => r.GetByDomainNameAsync(It.IsAny<IOrganizationServiceAsync2>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+				.ReturnsAsync((SystemUser?)null);
 
-			var executor = new SetCommandExecutor(output, repoMock.Object);
+			var executor = new SetCommandExecutor(output, repoMock.Object, this.userRepoMock.Object);
 			var result = await executor.ExecuteAsync(
 				new SetCommand { UserDomainName = @"DOMAIN\ghost", PagingLimit = 50 },
 				CancellationToken.None);
@@ -320,7 +323,7 @@ namespace Greg.Xrm.Command.Commands.UserSettings
 				.ThrowsAsync(new FaultException<OrganizationServiceFault>(
 					new OrganizationServiceFault(), "Simulated fault"));
 
-			var executor = new SetCommandExecutor(output, repoMock.Object);
+			var executor = new SetCommandExecutor(output, repoMock.Object, this.userRepoMock.Object);
 			var result = await executor.ExecuteAsync(
 				new SetCommand { PagingLimit = 50 },
 				CancellationToken.None);
