@@ -134,6 +134,63 @@ namespace Greg.Xrm.Command.Services.Settings
 			Assert.AreEqual("a path with spaces", await repository.GetAsync<string>("path"));
 		}
 
+		// Antivirus/indexers briefly open freshly written files without FILE_SHARE_DELETE: this caused random
+		// "Unable to remove the file to be replaced" failures. A handle without Delete sharing reproduces it.
+		private FileStream HoldLikeAnAntivirus(string key) =>
+			new(Path.Combine(folder, key + ".json"), FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+
+		[TestMethod]
+		public async Task SetRetriesWhileAnotherProcessBrieflyHoldsTheFile()
+		{
+			if (!OperatingSystem.IsWindows()) return; // Unix rename is not blocked by open handles.
+
+			var repository = CreateRepository();
+			await repository.SetAsync("setting", 1);
+
+			Task write;
+			using (HoldLikeAnAntivirus("setting"))
+			{
+				write = repository.SetAsync("setting", 2);
+				await Task.Delay(150);
+				Assert.IsFalse(write.IsCompleted, "Sanity check: the write must be blocked while the file is held.");
+			}
+			await write;
+
+			Assert.AreEqual(2, await repository.GetAsync<int>("setting"));
+			Assert.IsEmpty(Directory.GetFiles(folder, "*.tmp"));
+		}
+
+		[TestMethod]
+		public async Task SetFailsWithoutLosingDataWhenTheFileStaysLocked()
+		{
+			if (!OperatingSystem.IsWindows()) return;
+
+			var repository = CreateRepository();
+			await repository.SetAsync("setting", 1);
+
+			using (HoldLikeAnAntivirus("setting"))
+			{
+				await Assert.ThrowsAsync<IOException>(() => repository.SetAsync("setting", 2));
+			}
+
+			Assert.AreEqual(1, await repository.GetAsync<int>("setting"));
+			Assert.IsEmpty(Directory.GetFiles(folder, "*.tmp"));
+		}
+
+		[TestMethod]
+		public void ReplaceMovesTheReplacementWhenTheDestinationDisappeared()
+		{
+			Directory.CreateDirectory(folder);
+			var source = Path.Combine(folder, "setting.json.tmp");
+			var destination = Path.Combine(folder, "setting.json");
+			File.WriteAllText(source, "new");
+
+			SettingsRepository.ReplaceWithRetry(source, destination);
+
+			Assert.AreEqual("new", File.ReadAllText(destination));
+			Assert.IsFalse(File.Exists(source));
+		}
+
 		private sealed class TestStorage(string path) : IStorage
 		{
 			public DirectoryInfo GetOrCreateStorageFolder() => Directory.CreateDirectory(path);
