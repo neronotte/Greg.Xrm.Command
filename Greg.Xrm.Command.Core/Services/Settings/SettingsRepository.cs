@@ -87,25 +87,68 @@ namespace Greg.Xrm.Command.Services.Settings
 					stream.Flush(flushToDisk: true);
 				}
 
-				if (File.Exists(fileName))
-				{
-					if (!OperatingSystem.IsWindows())
-						File.SetUnixFileMode(temporaryFileName, File.GetUnixFileMode(fileName));
+				if (File.Exists(fileName) && !OperatingSystem.IsWindows())
+					File.SetUnixFileMode(temporaryFileName, File.GetUnixFileMode(fileName));
 
-					// Replace preserves the destination ACL on Windows. On Unix the
-					// mode was copied above. Both files are on the same filesystem.
-					File.Replace(temporaryFileName, fileName, null);
-				}
-				else
-				{
-					File.Move(temporaryFileName, fileName);
-				}
+				// Replace preserves the destination ACL on Windows. On Unix the
+				// mode was copied above. Both files are on the same filesystem.
+				ReplaceWithRetry(temporaryFileName, fileName);
 			}
 			finally
 			{
 				File.Delete(temporaryFileName);
 			}
 		}
+
+		/// <summary>
+		/// Moves <paramref name="source"/> over <paramref name="destination"/>, retrying briefly on transient failures.
+		/// </summary>
+		/// <remarks>
+		/// <para>
+		/// WHY: antivirus real-time protection (e.g. Microsoft Defender), search indexers and backup agents open a freshly
+		/// written file for a few milliseconds without <c>FILE_SHARE_DELETE</c>. Meanwhile <c>ReplaceFile</c> fails with
+		/// "Unable to remove the file to be replaced" or a sharing violation. PACX writes settings and the command
+		/// history on every run, so this made commands fail at random and the SettingsRepositoryTest suite flaky.
+		/// The cross-process mutex cannot prevent it: the other process is not PACX.
+		/// </para>
+		/// <para>
+		/// SAFE TO RETRY: such a failure leaves both files untouched (verified: the destination keeps its old content,
+		/// the replacement file is still there, and the same call succeeds once the handle is released). The total
+		/// wait is about one second; after that the last error is propagated and the caller deletes the temporary file,
+		/// so the previously committed value is preserved. A genuine permission problem therefore fails about one second
+		/// later than before, which is acceptable for a settings write. The delay runs on the thread that owns the mutex,
+		/// as the mutex requires.
+		/// </para>
+		/// <para>
+		/// The destination is checked on every attempt: if it no longer exists (deleted meanwhile, or removed by a
+		/// <c>ReplaceFile</c> that failed half-way) the replacement is moved into place, so the new value is not lost.
+		/// </para>
+		/// </remarks>
+		internal static void ReplaceWithRetry(string source, string destination, int maxAttempts = 10, int baseDelayMilliseconds = 25)
+		{
+			for (var attempt = 1; ; attempt++)
+			{
+				try
+				{
+					if (File.Exists(destination))
+						File.Replace(source, destination, null);
+					else
+						File.Move(source, destination);
+					return;
+				}
+				catch (Exception ex) when (attempt < maxAttempts && IsTransientFileError(ex))
+				{
+					Thread.Sleep(baseDelayMilliseconds * attempt);
+				}
+			}
+		}
+
+		// Locks held by other processes surface as IOException (sharing violation, unable to remove) or, for
+		// ReplaceFile, as UnauthorizedAccessException. Missing paths are not transient: retrying cannot fix them.
+		private static bool IsTransientFileError(Exception ex) =>
+			ex is UnauthorizedAccessException
+			|| (ex is IOException and not FileNotFoundException and not DirectoryNotFoundException and not PathTooLongException);
+
 
 		private static FileStream CreatePrivateFile(string fileName)
 		{
