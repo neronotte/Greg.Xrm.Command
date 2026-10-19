@@ -1,4 +1,5 @@
 using Greg.Xrm.Command.Model;
+using Greg.Xrm.Command.Services.Output;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;
@@ -44,8 +45,36 @@ namespace Greg.Xrm.Command.Commands.Forms.Model
 
 
 
-		public class Repository : IFormRepository
+		public class Repository(IOutput output) : IFormRepository
 		{
+			public async Task<(CommandResult, Form?)> GetByNameAsync(IOrganizationServiceAsync2 crm, string tableName, string? formName, bool announce = true)
+			{
+				output.Write($"Retrieving main form of table {tableName}...");
+				var forms = await GetMainFormByTableNameAsync(crm, tableName);
+				output.WriteLine("Done", ConsoleColor.Green);
+
+				if (forms.Count == 0)
+					return (CommandResult.Fail($"No main form found for table {tableName}"), null);
+
+				if (!string.IsNullOrWhiteSpace(formName))
+				{
+					forms = forms.Where(form => string.Equals(form.name, formName, StringComparison.OrdinalIgnoreCase)).ToList();
+					if (forms.Count == 0)
+						return (CommandResult.Fail($"Main form <{formName}> not found for table <{tableName}>"), null);
+				}
+				else if (forms.Count > 1)
+				{
+					return (CommandResult.Fail($"Table <{tableName}> has more than one main form. Please specify the form name using the --form parameter."), null);
+				}
+
+				if (forms.Count > 1)
+					return (CommandResult.Fail($"Table <{tableName}> has more than one main form called <{formName}>. Please change the name of the form to uniquely identify it."), null);
+
+				var form = forms[0];
+				if (announce) output.WriteLine($"Main form found: {form.name}");
+				return (CommandResult.Success(), form);
+			}
+
 			public async Task<List<Form>> GetMainFormByTableNameAsync(IOrganizationServiceAsync2 crm, string tableName)
 			{
 				var query = new QueryExpression("systemform");

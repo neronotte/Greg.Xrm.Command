@@ -1,3 +1,6 @@
+using Greg.Xrm.Command.Commands.WebResources.PushLogic;
+using Greg.Xrm.Command.Parsing;
+using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
 using Microsoft.Crm.Sdk.Messages;
 using Microsoft.PowerPlatform.Dataverse.Client;
@@ -131,10 +134,12 @@ namespace Greg.Xrm.Command.Model
 		{
 			private readonly Dictionary<string, Solution> cache = new();
 			private readonly IOutput output;
+			private readonly IOrganizationServiceRepository organizationServiceRepository;
 
-			public Repository(IOutput output)
+			public Repository(IOutput output, IOrganizationServiceRepository organizationServiceRepository)
 			{
 				this.output = output ?? throw new ArgumentNullException(nameof(output));
+				this.organizationServiceRepository = organizationServiceRepository ?? throw new ArgumentNullException(nameof(organizationServiceRepository));
 			}
 
 
@@ -151,6 +156,26 @@ namespace Greg.Xrm.Command.Model
 				solution.Id = await crm.CreateAsync(solution);
 
 				return new TemporarySolution(crm, this.output, new Solution(solution));
+			}
+
+			/// <summary>Creates a temporary solution using the publisher of the specified or current default solution.</summary>
+			public async Task<(CommandResult, ITemporarySolution?)> CreateHoldingSolutionAsync(IOrganizationServiceAsync2 crm, string? solutionName = null)
+			{
+				if (string.IsNullOrWhiteSpace(solutionName))
+				{
+					solutionName = await organizationServiceRepository.GetCurrentDefaultSolutionAsync();
+					if (string.IsNullOrWhiteSpace(solutionName))
+						return (CommandResult.Fail("No solution name provided and no current solution name found in the settings."), null);
+				}
+
+				output.Write("Creating temporary holding solution...");
+				var sourceSolution = await GetByUniqueNameAsync(crm, solutionName);
+				if (sourceSolution == null)
+					return (CommandResult.Fail($"Solution {solutionName} not found"), null);
+
+				var solution = await CreateTemporarySolutionAsync(crm, sourceSolution.publisherid);
+				output.WriteLine("Done", ConsoleColor.Green);
+				return (CommandResult.Success(), solution);
 			}
 
 			public async Task<Solution?> GetByUniqueNameAsync(IOrganizationServiceAsync2 crm, string uniqueName)

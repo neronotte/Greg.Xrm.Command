@@ -33,6 +33,9 @@ namespace Greg.Xrm.Command.Model
 		/// <returns></returns>
 		Task<SolutionZipArchive> DownloadAsync();
 
+		/// <summary>Imports a new version of the solution without publishing customizations.</summary>
+		Task UploadAsync(byte[] zipFile);
+
 		/// <summary>
 		/// Uploads a new version of a given solution.
 		/// </summary>
