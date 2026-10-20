@@ -1,9 +1,10 @@
+using System.Xml;
 using System.Xml.Linq;
 using Microsoft.Xrm.Sdk.Metadata;
 
 namespace Greg.Xrm.Command.Services.Views
 {
-	public class ViewXmlEditor : IViewXmlEditor
+	public class ViewXmlEditor(IViewXmlValidator validator) : IViewXmlEditor
 	{
 		private const int DefaultWidth = 100;
 
@@ -53,7 +54,7 @@ namespace Greg.Xrm.Command.Services.Views
 		public string SetFilter(string? fetchXml, string filterXml)
 		{
 			var fetch = ParseFetch(fetchXml);
-			var filter = XDocument.Parse(filterXml).Root;
+			var filter = ParseDocument(filterXml).Root;
 			if (filter?.Name != "filter") throw new ArgumentException("The filter must be a FetchXML <filter> element.");
 
 			var entity = fetch.Root!.Element("entity")!;
@@ -67,6 +68,7 @@ namespace Greg.Xrm.Command.Services.Views
 			{
 				entity.Add(filter);
 			}
+			validator.ValidateFetchXml(fetch);
 			return fetch.ToString();
 		}
 
@@ -92,6 +94,8 @@ namespace Greg.Xrm.Command.Services.Views
 				.ToList();
 			if (columns.Count == 0) throw new ArgumentException("FetchXML must specify at least one display attribute.");
 			SetLayoutColumns(layout, columns);
+			validator.ValidateFetchXml(fetch);
+			validator.ValidateLayoutXml(layout);
 			return (fetch.ToString(), layout.ToString());
 		}
 
@@ -127,6 +131,8 @@ namespace Greg.Xrm.Command.Services.Views
 				link.AddFirst(selected);
 			}
 			SetLayoutColumns(layout, columns.Where(c => !string.Equals(c, id, StringComparison.OrdinalIgnoreCase)).ToList());
+			validator.ValidateFetchXml(fetch);
+			validator.ValidateLayoutXml(layout);
 			return (fetch.ToString(), layout.ToString());
 		}
 
@@ -176,6 +182,8 @@ namespace Greg.Xrm.Command.Services.Views
 			var rowId = (string?)row.Attribute("id");
 			var unused = selected.Where(name => !displayed.Contains(name) && !string.Equals(name, rowId, StringComparison.OrdinalIgnoreCase))
 				.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+			validator.ValidateFetchXml(fetch);
+			validator.ValidateLayoutXml(layout);
 			return (fetch.ToString(), layout.ToString(), unused);
 		}
 
@@ -184,22 +192,35 @@ namespace Greg.Xrm.Command.Services.Views
 			return (string?)attribute.Attribute("alias") ?? (string?)attribute.Attribute("name") ?? string.Empty;
 		}
 
-		private static XDocument ParseFetch(string? xml)
+		private XDocument ParseFetch(string? xml)
 		{
 			if (string.IsNullOrWhiteSpace(xml)) throw new ArgumentException("The view has no FetchXML.");
-			var fetch = XDocument.Parse(xml);
-			if (fetch.Root?.Name != "fetch" || fetch.Root.Element("entity") == null)
-				throw new ArgumentException("Expected FetchXML with a <fetch><entity> structure.");
+			var fetch = ParseDocument(xml);
+			if (fetch.Root?.Name != "fetch" || fetch.Root.Elements("entity").Count() != 1)
+				throw new ArgumentException("Expected FetchXML with a <fetch> root and exactly one main <entity>.");
+			validator.ValidateFetchXml(fetch);
 			return fetch;
 		}
 
-		private static XDocument ParseLayout(string? xml)
+		private XDocument ParseLayout(string? xml)
 		{
 			if (string.IsNullOrWhiteSpace(xml)) throw new ArgumentException("The view has no LayoutXML.");
-			var layout = XDocument.Parse(xml);
+			var layout = ParseDocument(xml);
 			if (layout.Root?.Name != "grid" || layout.Root.Element("row") == null)
 				throw new ArgumentException("Expected LayoutXML with a <grid><row> structure.");
+			validator.ValidateLayoutXml(layout);
 			return layout;
+		}
+
+		private static XDocument ParseDocument(string xml)
+		{
+			using var text = new StringReader(xml);
+			using var reader = XmlReader.Create(text, new XmlReaderSettings
+			{
+				DtdProcessing = DtdProcessing.Prohibit,
+				XmlResolver = null
+			});
+			return XDocument.Load(reader, LoadOptions.SetLineInfo);
 		}
 
 		private static void SetLayoutColumns(XDocument layout, IReadOnlyList<string> columns)

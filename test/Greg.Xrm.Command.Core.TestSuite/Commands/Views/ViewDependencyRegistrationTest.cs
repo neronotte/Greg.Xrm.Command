@@ -22,6 +22,7 @@ namespace Greg.Xrm.Command.Commands.Views
 				.AsClosedTypesOf(typeof(ICommandExecutor<>));
 			using var container = builder.Build();
 
+			Assert.IsInstanceOfType<ViewXmlValidator>(container.Resolve<IViewXmlValidator>());
 			Assert.IsInstanceOfType<ViewXmlEditor>(container.Resolve<IViewXmlEditor>());
 			Assert.IsInstanceOfType<ViewRetrieverService>(container.Resolve<IViewRetrieverService>());
 			Assert.IsInstanceOfType<CreateCommandExecutor>(container.Resolve<ICommandExecutor<CreateCommand>>());

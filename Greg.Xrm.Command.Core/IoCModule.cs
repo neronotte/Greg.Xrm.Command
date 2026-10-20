@@ -56,6 +56,7 @@ namespace Greg.Xrm.Command
 			builder.RegisterType<Commands.Settings.Imports.ImportStrategyFactory>().As<Commands.Settings.Imports.IImportStrategyFactory>();
 			builder.RegisterType<Commands.Table.Migration.TableGraphBuilder>().AsSelf();
 			builder.RegisterType<Services.Views.ViewRetrieverService>().As<Services.Views.IViewRetrieverService>();
+			builder.RegisterType<Services.Views.ViewXmlValidator>().As<Services.Views.IViewXmlValidator>().SingleInstance();
 			builder.RegisterType<Services.Views.ViewXmlEditor>().As<Services.Views.IViewXmlEditor>();
 			builder.RegisterType<OptionSetParser>().As<IOptionSetParser>();
 			builder.RegisterType<ObjectTypeCodeFinder>().As<IObjectTypeCodeFinder>();

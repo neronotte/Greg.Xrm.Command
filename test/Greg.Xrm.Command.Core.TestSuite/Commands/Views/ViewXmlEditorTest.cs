@@ -6,7 +6,7 @@ namespace Greg.Xrm.Command.Commands.Views
 	[TestClass]
 	public class ViewXmlEditorTest
 	{
-		private readonly ViewXmlEditor editor = new();
+		private readonly ViewXmlEditor editor = new(new ViewXmlValidator());
 
 		private const string Layout = "<grid jump='name'><row id='accountid'><cell name='name' width='150' disableSorting='1'/><cell name='old' width='200'/><cell name='alias.city' width='125'/></row><controlDescriptions/></grid>";
 		private const string Fetch = "<fetch><entity name='account'><attribute name='old'/><attribute name='name'/><attribute name='accountid'/><order attribute='name'/><filter type='and'><condition attribute='statecode' operator='eq' value='0'/></filter><link-entity name='contact' alias='alias'><attribute name='city'/><filter><condition attribute='statecode' operator='eq' value='1'/></filter></link-entity></entity></fetch>";
@@ -114,5 +114,52 @@ namespace Greg.Xrm.Command.Commands.Views
 			Assert.ThrowsExactly<ArgumentException>(() => editor.SetView(
 				"<fetch><entity name='account'><all-attributes/></entity></fetch>", layout, "account"));
 		}
+		[TestMethod]
+		[DataRow("<filter type='xor'/>")]
+		[DataRow("<filter><condition attribute='name' operator='unknown'/></filter>")]
+		[DataRow("<filter><condition attribute='name'/></filter>")]
+		[DataRow("<filter><unexpected/></filter>")]
+		public void SetFilter_RejectsSchemaInvalidReplacement(string filter)
+		{
+			var error = Assert.ThrowsExactly<ArgumentException>(() => editor.SetFilter(Fetch, filter));
+			StringAssert.Contains(error.Message, "FetchXML");
+		}
+
+		[TestMethod]
+		[DataRow("<fetch><entity name='account'><attribute/></entity></fetch>")]
+		[DataRow("<fetch count='many'><entity name='account'><attribute name='name'/></entity></fetch>")]
+		[DataRow("<fetch><entity name='account'><unexpected/><attribute name='name'/></entity></fetch>")]
+		public void SetFetchXml_RejectsSchemaInvalidQuery(string fetch)
+		{
+			var error = Assert.ThrowsExactly<ArgumentException>(() => editor.SetFetchXml(Layout, fetch, "account"));
+			StringAssert.Contains(error.Message, "FetchXML");
+		}
+
+		[TestMethod]
+		[DataRow("<grid><row id='accountid'><cell name='name' width='wide'/></row></grid>")]
+		[DataRow("<grid><row id='accountid'><cell name='name' width='-1'/></row></grid>")]
+		[DataRow("<grid><row id='accountid'><cell name='name' disableSorting='yes'/></row></grid>")]
+		[DataRow("<grid><row id='accountid'><cell name='name'/></row><unexpected/></grid>")]
+		public void SetView_RejectsSchemaInvalidLayout(string layout)
+		{
+			var error = Assert.ThrowsExactly<ArgumentException>(() => editor.SetView(Fetch, layout, "account"));
+			StringAssert.Contains(error.Message, "LayoutXML");
+		}
+
+		[TestMethod]
+		[DataRow("<fetch/>")]
+		[DataRow("<fetch><entity name='account'/><entity name='contact'/></fetch>")]
+		public void GetTableName_RequiresExactlyOneMainEntity(string fetch)
+		{
+			Assert.ThrowsExactly<ArgumentException>(() => editor.GetTableName(fetch));
+		}
+
+		[TestMethod]
+		public void RejectsDocumentTypeDeclarations()
+		{
+			const string fetch = "<!DOCTYPE fetch [<!ENTITY table 'account'>]><fetch><entity name='&table;'/></fetch>";
+			Assert.ThrowsExactly<System.Xml.XmlException>(() => editor.GetTableName(fetch));
+		}
+
 	}
 }
