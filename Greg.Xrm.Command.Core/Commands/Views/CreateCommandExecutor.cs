@@ -1,5 +1,5 @@
+using Greg.Xrm.Command.Services.Views;
 using System.Xml;
-using Greg.Xrm.Command.Commands.Views.Model;
 using Greg.Xrm.Command.Commands.WebResources.PushLogic;
 using Greg.Xrm.Command.Model;
 using Greg.Xrm.Command.Services.Connection;
@@ -13,14 +13,15 @@ namespace Greg.Xrm.Command.Commands.Views
 	public class CreateCommandExecutor(
 		IOrganizationServiceRepository connection,
 		IOutput output,
-		IPublishXmlBuilder publisher) : ICommandExecutor<CreateCommand>
+		IPublishXmlBuilder publisher,
+		IViewXmlEditor xmlEditor) : ICommandExecutor<CreateCommand>
 	{
 		public async Task<CommandResult> ExecuteAsync(CreateCommand command, CancellationToken cancellationToken)
 		{
 			string tableName;
 			try
 			{
-				tableName = ViewXmlEditor.GetTableName(command.FetchXml);
+				tableName = xmlEditor.GetTableName(command.FetchXml);
 			}
 			catch (Exception ex) when (ex is ArgumentException or XmlException)
 			{
@@ -50,7 +51,7 @@ namespace Greg.Xrm.Command.Commands.Views
 			(string FetchXml, string LayoutXml) definition;
 			try
 			{
-				definition = ViewXmlEditor.CreateFromFetchXml(command.FetchXml, metadata);
+				definition = xmlEditor.CreateFromFetchXml(command.FetchXml, metadata);
 			}
 			catch (Exception ex) when (ex is ArgumentException or XmlException or InvalidOperationException)
 			{

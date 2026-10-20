@@ -1,8 +1,9 @@
+using Greg.Xrm.Command.Commands.Views;
 using Greg.Xrm.Command.Model;
 using Greg.Xrm.Command.Services.Output;
 using Microsoft.PowerPlatform.Dataverse.Client;
 
-namespace Greg.Xrm.Command.Commands.Views.Model
+namespace Greg.Xrm.Command.Services.Views
 {
 	public class ViewRetrieverService(
 		IOutput output,

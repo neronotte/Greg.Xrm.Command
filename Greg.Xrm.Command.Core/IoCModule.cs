@@ -55,7 +55,8 @@ namespace Greg.Xrm.Command
 			builder.RegisterType<Commands.Settings.Model.AppSetting.Repository>().As<Commands.Settings.Model.IAppSettingRepository>();
 			builder.RegisterType<Commands.Settings.Imports.ImportStrategyFactory>().As<Commands.Settings.Imports.IImportStrategyFactory>();
 			builder.RegisterType<Commands.Table.Migration.TableGraphBuilder>().AsSelf();
-			builder.RegisterType<Commands.Views.Model.ViewRetrieverService>().As<Commands.Views.Model.IViewRetrieverService>();
+			builder.RegisterType<Services.Views.ViewRetrieverService>().As<Services.Views.IViewRetrieverService>();
+			builder.RegisterType<Services.Views.ViewXmlEditor>().As<Services.Views.IViewXmlEditor>();
 			builder.RegisterType<OptionSetParser>().As<IOptionSetParser>();
 			builder.RegisterType<ObjectTypeCodeFinder>().As<IObjectTypeCodeFinder>();
 			builder.RegisterType<SecurityRoleService>().As<ISecurityRoleService>();

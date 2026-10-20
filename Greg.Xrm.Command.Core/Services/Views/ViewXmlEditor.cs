@@ -1,13 +1,13 @@
 using System.Xml.Linq;
 using Microsoft.Xrm.Sdk.Metadata;
 
-namespace Greg.Xrm.Command.Commands.Views.Model
+namespace Greg.Xrm.Command.Services.Views
 {
-	public static class ViewXmlEditor
+	public class ViewXmlEditor : IViewXmlEditor
 	{
 		private const int DefaultWidth = 100;
 
-		public static string GetTableName(string fetchXml)
+		public string GetTableName(string fetchXml)
 		{
 			var entity = ParseFetch(fetchXml).Root!.Element("entity")!;
 			var name = (string?)entity.Attribute("name");
@@ -15,7 +15,7 @@ namespace Greg.Xrm.Command.Commands.Views.Model
 			return name;
 		}
 
-		public static (string FetchXml, string LayoutXml) CreateFromFetchXml(string fetchXml, EntityMetadata metadata)
+		public (string FetchXml, string LayoutXml) CreateFromFetchXml(string fetchXml, EntityMetadata metadata)
 		{
 			if (string.IsNullOrWhiteSpace(metadata.PrimaryIdAttribute) || metadata.ObjectTypeCode == null)
 				throw new ArgumentException("Table metadata must include a primary ID attribute and object type code.");
@@ -23,7 +23,7 @@ namespace Greg.Xrm.Command.Commands.Views.Model
 				metadata.PrimaryNameAttribute, metadata.ObjectTypeCode.Value);
 		}
 
-		public static (string FetchXml, string LayoutXml) CreateFromFetchXml(
+		public (string FetchXml, string LayoutXml) CreateFromFetchXml(
 			string fetchXml, string tableLogicalName, string primaryId, string? primaryName, int objectTypeCode)
 		{
 			var tableName = GetTableName(fetchXml);
@@ -50,7 +50,7 @@ namespace Greg.Xrm.Command.Commands.Views.Model
 			return SetFetchXml(layout.ToString(), fetch.ToString(), tableName);
 		}
 
-		public static string SetFilter(string? fetchXml, string filterXml)
+		public string SetFilter(string? fetchXml, string filterXml)
 		{
 			var fetch = ParseFetch(fetchXml);
 			var filter = XDocument.Parse(filterXml).Root;
@@ -70,7 +70,7 @@ namespace Greg.Xrm.Command.Commands.Views.Model
 			return fetch.ToString();
 		}
 
-		public static (string FetchXml, string LayoutXml) SetFetchXml(string? layoutXml, string fetchXml, string tableName)
+		public (string FetchXml, string LayoutXml) SetFetchXml(string? layoutXml, string fetchXml, string tableName)
 		{
 			var fetch = ParseFetch(fetchXml);
 			var entity = fetch.Root!.Element("entity")!;
@@ -95,7 +95,7 @@ namespace Greg.Xrm.Command.Commands.Views.Model
 			return (fetch.ToString(), layout.ToString());
 		}
 
-		public static (string FetchXml, string LayoutXml) SetColumns(string? fetchXml, string? layoutXml, string columnsText)
+		public (string FetchXml, string LayoutXml) SetColumns(string? fetchXml, string? layoutXml, string columnsText)
 		{
 			var columns = columnsText.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
 			if (columns.Length == 0 || columns.Any(c => c.StartsWith('.') || c.EndsWith('.') || c.Count(ch => ch == '.') > 1) || columns.Distinct(StringComparer.OrdinalIgnoreCase).Count() != columns.Length)
@@ -130,7 +130,7 @@ namespace Greg.Xrm.Command.Commands.Views.Model
 			return (fetch.ToString(), layout.ToString());
 		}
 
-		public static (string FetchXml, string LayoutXml, IReadOnlyList<string> UnusedAttributes) SetView(
+		public (string FetchXml, string LayoutXml, IReadOnlyList<string> UnusedAttributes) SetView(
 			string fetchXml, string layoutXml, string tableName)
 		{
 			var fetch = ParseFetch(fetchXml);

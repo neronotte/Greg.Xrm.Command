@@ -1,4 +1,4 @@
-using Greg.Xrm.Command.Commands.Views.Model;
+using Greg.Xrm.Command.Services.Views;
 using Greg.Xrm.Command.Commands.WebResources.PushLogic;
 using Greg.Xrm.Command.Model;
 using Greg.Xrm.Command.Services.Connection;
@@ -65,7 +65,7 @@ namespace Greg.Xrm.Command.Commands.Views
 		public async Task SetFilterPublishesOnlyWhenRequested(bool publish)
 		{
 			var (connection, retriever, crm, output) = BuildDependencies();
-			var executor = new SetFilterCommandExecutor(connection.Object, output, retriever.Object, new PublishXmlBuilder());
+			var executor = new SetFilterCommandExecutor(connection.Object, output, retriever.Object, new PublishXmlBuilder(), new ViewXmlEditor());
 			var result = await executor.ExecuteAsync(new SetFilterCommand
 			{
 				ViewName = "My View", Publish = publish,
@@ -79,7 +79,7 @@ namespace Greg.Xrm.Command.Commands.Views
 		private static (SetCommandExecutor Executor, Mock<IOrganizationServiceAsync2> Crm, OutputToMemory Output) BuildExecutor()
 		{
 			var (connection, retriever, crm, output) = BuildDependencies();
-			return (new SetCommandExecutor(connection.Object, output, retriever.Object, new PublishXmlBuilder()), crm, output);
+			return (new SetCommandExecutor(connection.Object, output, retriever.Object, new PublishXmlBuilder(), new ViewXmlEditor()), crm, output);
 		}
 
 		private static (Mock<IOrganizationServiceRepository> Connection, Mock<IViewRetrieverService> Retriever, Mock<IOrganizationServiceAsync2> Crm, OutputToMemory Output) BuildDependencies()

@@ -1,3 +1,4 @@
+using Greg.Xrm.Command.Services.Views;
 using Greg.Xrm.Command.Commands.WebResources.PushLogic;
 using Microsoft.Crm.Sdk.Messages;
 using Microsoft.Xrm.Sdk;
@@ -48,6 +49,6 @@ namespace Greg.Xrm.Command.Commands.Views
 				r.ParameterXml.Contains("<entity>account</entity>")), It.IsAny<CancellationToken>()), Times.Once());
 		}
 
-		private CreateCommandExecutor NewExecutor() => new(OrganizationServiceRepositoryMock.Object, Output, new PublishXmlBuilder());
+		private CreateCommandExecutor NewExecutor() => new(OrganizationServiceRepositoryMock.Object, Output, new PublishXmlBuilder(), new ViewXmlEditor());
 	}
 }
