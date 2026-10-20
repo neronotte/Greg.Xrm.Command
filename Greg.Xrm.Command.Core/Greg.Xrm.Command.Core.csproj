@@ -49,6 +49,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Services\Views\Schemas\*.xsd" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Greg.Xrm.Command.Interfaces\Greg.Xrm.Command.Interfaces.csproj" />
   </ItemGroup>
 
