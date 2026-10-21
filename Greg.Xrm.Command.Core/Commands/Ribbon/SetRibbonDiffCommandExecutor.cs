@@ -93,12 +93,6 @@ namespace Greg.Xrm.Command.Commands.Ribbon
 				if (original == null)
 					return CommandResult.Fail($"RibbonDiffXml was not found in the exported solution <{solutionName}>.");
 
-				if (XNode.DeepEquals(original, replacement))
-				{
-					output.WriteLine("RibbonDiffXml is unchanged. No import needed.");
-					return CommandResult.Success();
-				}
-
 				if (!string.IsNullOrWhiteSpace(command.BackupFile))
 				{
 					await using var backupStream = new FileStream(command.BackupFile, FileMode.CreateNew, FileAccess.Write, FileShare.None);
@@ -106,6 +100,12 @@ namespace Greg.Xrm.Command.Commands.Ribbon
 					await backupWriter.WriteAsync(original.ToString().AsMemory(), cancellationToken);
 					await backupWriter.FlushAsync(cancellationToken);
 					output.WriteLine($"Original RibbonDiffXml saved to {command.BackupFile}", ConsoleColor.DarkGray);
+				}
+
+				if (XNode.DeepEquals(original, replacement))
+				{
+					output.WriteLine("RibbonDiffXml is unchanged. No import needed.");
+					return CommandResult.Success();
 				}
 
 				WriteDiff(original, replacement);

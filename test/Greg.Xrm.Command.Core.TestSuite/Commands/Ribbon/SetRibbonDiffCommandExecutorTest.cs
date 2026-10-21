@@ -136,6 +136,34 @@ namespace Greg.Xrm.Command.Commands.Ribbon
 			}
 		}
 
+		[TestMethod]
+		public async Task UnchangedRibbonStillCreatesTheRequestedBackupWithoutImporting()
+		{
+			var file = Path.GetTempFileName();
+			var backup = Path.Combine(Path.GetTempPath(), $"ribbon-{Guid.NewGuid():N}.xml");
+			try
+			{
+				await File.WriteAllTextAsync(file, "<RibbonDiffXml><OldAction /></RibbonDiffXml>");
+				var requests = RibbonDiffSolutionSetup.Setup(OrganizationServiceMock, solutionRepository, "account");
+				var executor = new SetRibbonDiffCommandExecutor(Output, OrganizationServiceRepositoryMock.Object, solutionRepository.Object);
+				var result = await executor.ExecuteAsync(new SetRibbonDiffCommand
+				{
+					FileName = file, TableName = "account", SolutionName = RibbonDiffSolutionSetup.SolutionName, BackupFile = backup
+				}, CancellationToken.None);
+
+				Assert.IsTrue(result.IsSuccess, result.ErrorMessage);
+				Assert.IsTrue(File.Exists(backup), "An explicitly requested backup must exist even when the XML is unchanged.");
+				StringAssert.Contains(await File.ReadAllTextAsync(backup), "OldAction");
+				Assert.IsFalse(requests.OfType<ImportSolutionRequest>().Any());
+				Assert.IsFalse(requests.OfType<PublishXmlRequest>().Any());
+			}
+			finally
+			{
+				File.Delete(file);
+				File.Delete(backup);
+			}
+		}
+
 		private static byte[] CreateSolutionZip()
 		{
 			using var stream = new MemoryStream();
