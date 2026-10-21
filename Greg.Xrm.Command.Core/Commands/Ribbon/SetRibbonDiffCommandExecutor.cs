@@ -34,9 +34,10 @@ namespace Greg.Xrm.Command.Commands.Ribbon
 				output.Write("Reading RibbonDiffXml from '").Write(command.FileName, ConsoleColor.Yellow).Write("'...");
 				using var text = new StringReader(await File.ReadAllTextAsync(command.FileName, cancellationToken));
 				using var reader = XmlReader.Create(text, new XmlReaderSettings { DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null, IgnoreWhitespace = true });
-				var replacement = XElement.Load(reader);
+				var replacement = XElement.Load(reader, LoadOptions.SetLineInfo);
 				if (replacement.Name != "RibbonDiffXml")
 					return CommandResult.Fail("The input file must have a RibbonDiffXml root element. The expanded XML from ribbon get cannot be imported.");
+				ribbonService.ValidateXml(replacement, command.TableName);
 				output.WriteLine("Done", ConsoleColor.Green);
 
 				output.Write("Connecting to the current dataverse environment...");

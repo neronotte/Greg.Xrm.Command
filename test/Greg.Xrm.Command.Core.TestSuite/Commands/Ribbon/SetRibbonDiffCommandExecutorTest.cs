@@ -136,6 +136,22 @@ namespace Greg.Xrm.Command.Commands.Ribbon
 		}
 
 		[TestMethod]
+		[DataRow("account")]
+		[DataRow("")]
+		public async Task SchemaInvalidRibbonFailsLocallyBeforeConnectingOrWritingBackup(string table)
+		{
+			await File.WriteAllTextAsync(InputFile, "<RibbonDiffXml>\n  <UnknownElement/>\n</RibbonDiffXml>");
+			await File.WriteAllTextAsync(BackupFile, "existing backup");
+			var result = await NewSet().ExecuteAsync(SetCommand(table), CancellationToken.None);
+			Assert.IsFalse(result.IsSuccess);
+			StringAssert.Contains(result.ErrorMessage, "Invalid RibbonDiffXml at line 2");
+			Assert.AreEqual("existing backup", await File.ReadAllTextAsync(BackupFile));
+			OrganizationServiceRepositoryMock.Verify(c => c.GetCurrentConnectionAsync(), Times.Never);
+			ConsoleInput.VerifyNoOtherCalls();
+			VerifyNoImportOrPublish();
+		}
+
+		[TestMethod]
 		public async Task MissingBackupDirectoryFailsBeforeConnecting()
 		{
 			var command = SetCommand(); command.BackupFile = Path.Combine(TempDirectory, "missing", "backup.xml");

@@ -1,6 +1,8 @@
 using System.IO.Compression;
 using System.Text;
+using System.Xml;
 using System.Xml.Linq;
+using System.Xml.Schema;
 using Greg.Xrm.Command.Model;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk.Messages;
@@ -10,6 +12,52 @@ namespace Greg.Xrm.Command.Services.Ribbon
 {
 	public class RibbonDiffService(IRibbonComponentRepository repository) : IRibbonDiffService
 	{
+		private static readonly Lazy<XmlSchemaSet> ApplicationSchema = new(() => LoadSchema(false));
+		private static readonly Lazy<XmlSchemaSet> TableSchema = new(() => LoadSchema(true));
+
+		// Microsoft Dataverse schemas, version 9.0.0.2090:
+		// https://learn.microsoft.com/en-us/power-apps/developer/model-driven-apps/ribbon-core-schema
+		// https://download.microsoft.com/download/B/9/7/B97655A4-4E46-4E51-BA0A-C669106D563F/Schemas.zip
+		private static XmlSchemaSet LoadSchema(bool tableRibbon)
+		{
+			static XmlSchema ReadSchema(string name)
+			{
+				using var stream = typeof(RibbonDiffService).Assembly.GetManifestResourceStream(
+					$"Greg.Xrm.Command.Services.Ribbon.Schemas.{name}")
+					?? throw new InvalidOperationException($"Embedded ribbon schema {name} was not found.");
+				using var reader = XmlReader.Create(stream, new XmlReaderSettings { DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null });
+				return XmlSchema.Read(reader, null)!;
+			}
+
+			var core = ReadSchema("RibbonCore.xsd");
+			foreach (XmlSchemaInclude include in core.Includes)
+				include.Schema = ReadSchema(include.SchemaLocation!);
+			if (tableRibbon)
+			{
+				// The standalone root defaults to the global type; entity ribbons use this type in customizations.xml.
+				var root = core.Items.OfType<XmlSchemaElement>().Single(e => e.Name == "RibbonDiffXml");
+				root.SchemaTypeName = new XmlQualifiedName("RibbonEntityDiffXmlType");
+			}
+			var schemas = new XmlSchemaSet { XmlResolver = null };
+			schemas.Add(core);
+			schemas.Compile();
+			return schemas;
+		}
+
+		public void ValidateXml(XElement ribbon, string tableName)
+		{
+			if (ribbon.Name != "RibbonDiffXml")
+				throw new XmlSchemaValidationException("The input file must have a RibbonDiffXml root element.");
+			var schemas = string.IsNullOrWhiteSpace(tableName) ? ApplicationSchema.Value : TableSchema.Value;
+			var document = new XDocument(ribbon);
+			document.Validate(schemas, (_, error) =>
+			{
+				var exception = error.Exception;
+				throw new XmlSchemaValidationException(
+					$"Invalid RibbonDiffXml at line {exception.LineNumber}, position {exception.LinePosition}: {error.Message}", exception);
+			});
+		}
+
 		private const int MaximumEntities = 5;
 		private const int MaximumComponents = MaximumEntities + 1; // Five tables and one application ribbon.
 		private const int DoNotIncludeSubcomponents = 1;

@@ -26,8 +26,8 @@ namespace Greg.Xrm.Command.Commands.Ribbon
 		protected readonly List<OrganizationRequest> Requests = [];
 		protected readonly byte[] OriginalZip = [1, 2, 3];
 		protected readonly byte[] UpdatedZip = [4, 5, 6];
-		protected readonly XElement Original = XElement.Parse("<RibbonDiffXml><OldAction/></RibbonDiffXml>");
-		protected readonly XElement Replacement = XElement.Parse("<RibbonDiffXml><NewAction/></RibbonDiffXml>");
+		protected readonly XElement Original = XElement.Parse("<RibbonDiffXml><CustomActions><HideCustomAction HideActionId='old' Location='Mscrm.HomepageGrid.account.MainTab' /></CustomActions></RibbonDiffXml>");
+		protected readonly XElement Replacement = XElement.Parse("<RibbonDiffXml><CustomActions><HideCustomAction HideActionId='new' Location='Mscrm.HomepageGrid.account.MainTab' /></CustomActions></RibbonDiffXml>");
 
 		private sealed class TestSolution(Entity entity) : Greg.Xrm.Command.Model.Solution(entity);
 
@@ -40,6 +40,8 @@ namespace Greg.Xrm.Command.Commands.Ribbon
 					(ComponentId, string.IsNullOrWhiteSpace(table) ? ComponentType.RibbonCustomization : ComponentType.Entity));
 			Ribbons.Setup(r => r.ValidateSolutionAsync(OrganizationServiceMock.Object, SolutionId, SolutionName, ComponentId,
 				It.IsAny<ComponentType>(), It.IsAny<CancellationToken>())).ReturnsAsync((string?)null);
+			Ribbons.Setup(r => r.ValidateXml(It.IsAny<XElement>(), It.IsAny<string>()))
+				.Callback<XElement, string>(new RibbonDiffService(new Mock<IRibbonComponentRepository>().Object).ValidateXml);
 			Ribbons.Setup(a => a.Read(OriginalZip, It.IsAny<string>())).Returns(() => new XElement(Original));
 			Ribbons.Setup(a => a.Replace(OriginalZip, It.IsAny<string>(), It.IsAny<XElement>())).Returns(UpdatedZip);
 			File.WriteAllText(InputFile, Replacement.ToString());

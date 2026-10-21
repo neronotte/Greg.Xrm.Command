@@ -1,3 +1,5 @@
+using System.Xml.Linq;
+using System.Xml.Schema;
 using Greg.Xrm.Command.Model;
 using Greg.Xrm.Command.Services.Ribbon;
 using Microsoft.PowerPlatform.Dataverse.Client;
@@ -16,6 +18,50 @@ namespace Greg.Xrm.Command.Services.Ribbon
 		private readonly Guid tableId = Guid.NewGuid();
 
 		private RibbonDiffService NewService() => new(repository.Object);
+
+		[TestMethod]
+		[DataRow("account")]
+		[DataRow("")]
+		public void ValidatesEmptyAndCustomizedRibbonAgainstEmbeddedSchemas(string table)
+		{
+			var service = NewService();
+			service.ValidateXml(XElement.Parse("<RibbonDiffXml/>"), table);
+			service.ValidateXml(XElement.Parse("""
+				<RibbonDiffXml>
+				  <CustomActions><HideCustomAction HideActionId="sample.Hide" Location="Mscrm.HomepageGrid.account.MainTab" Sequence="10" /></CustomActions>
+				  <CommandDefinitions>
+				    <CommandDefinition Id="sample.Command">
+				      <EnableRules/><DisplayRules/>
+				      <Actions><JavaScriptFunction FunctionName="sample.run" Library="$webresource:sample.js" /></Actions>
+				    </CommandDefinition>
+				  </CommandDefinitions>
+				  <RuleDefinitions><TabDisplayRules/><DisplayRules/><EnableRules/></RuleDefinitions>
+				</RibbonDiffXml>
+				"""), table);
+			repository.VerifyNoOtherCalls();
+			crm.VerifyNoOtherCalls();
+		}
+
+		[TestMethod]
+		[DataRow("<RibbonDiffXml><Unknown/></RibbonDiffXml>")]
+		[DataRow("<RibbonDiffXml><CustomActions><HideCustomAction Sequence='invalid'/></CustomActions></RibbonDiffXml>")]
+		[DataRow("<RibbonDiffXml><CommandDefinitions><CommandDefinition><EnableRules/><DisplayRules/><Actions/></CommandDefinition></CommandDefinitions></RibbonDiffXml>")]
+		[DataRow("<RibbonDiffXml><CommandDefinitions/><CustomActions/></RibbonDiffXml>")]
+		[DataRow("<RibbonDiffXml xmlns='urn:unexpected'/>")]
+		[DataRow("<RibbonDefinitions/>")]
+		public void RejectsInvalidRibbonStructureAttributesAndNamespaces(string xml)
+		{
+			foreach (var table in new[] { "", "account" })
+				Assert.ThrowsExactly<XmlSchemaValidationException>(() => NewService().ValidateXml(XElement.Parse(xml), table));
+		}
+
+		[TestMethod]
+		public void UsesTheEntitySchemaForTableRibbons()
+		{
+			var ribbon = XElement.Parse("<RibbonDiffXml><RibbonNotSupported/></RibbonDiffXml>");
+			NewService().ValidateXml(ribbon, "account");
+			Assert.ThrowsExactly<XmlSchemaValidationException>(() => NewService().ValidateXml(ribbon, ""));
+		}
 
 		private static Entity Component(ComponentType type, Guid objectId, int? behavior = null)
 		{

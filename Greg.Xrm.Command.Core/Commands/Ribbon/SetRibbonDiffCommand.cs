@@ -7,7 +7,7 @@ namespace Greg.Xrm.Command.Commands.Ribbon
 	[Command("ribbon", "setdiff", HelpText = "Replaces the application or table RibbonDiffXml from a file.")]
 	public class SetRibbonDiffCommand : ICanProvideUsageExample
 	{
-		[Option("file", "f", Order = 1, HelpText = "Path to an XML file whose root is RibbonDiffXml.")]
+		[Option("file", "f", Order = 1, HelpText = "Path to a RibbonDiffXml file. Validated locally against the ribbon schema before connecting.")]
 		[Required]
 		public string FileName { get; set; } = string.Empty;
 
