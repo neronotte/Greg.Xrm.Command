@@ -1,410 +1,218 @@
-using System.IO.Compression;
-using Greg.Xrm.Command.Model;
+using System.Xml.Linq;
 using Microsoft.Crm.Sdk.Messages;
 using Microsoft.Xrm.Sdk;
-using Microsoft.Xrm.Sdk.Messages;
-using Microsoft.Xrm.Sdk.Metadata;
-using Microsoft.Xrm.Sdk.Query;
 
 namespace Greg.Xrm.Command.Commands.Ribbon
 {
 	[TestClass]
-	public class SetRibbonDiffCommandExecutorTest : CommandExecutorTestBase
+	public class SetRibbonDiffCommandExecutorTest : RibbonDiffCommandTestBase
 	{
-		private readonly Mock<ISolutionRepository> solutionRepository = new();
-
-		private sealed class TestSolution(Entity entity) : Greg.Xrm.Command.Model.Solution(entity);
-
 		[TestMethod]
-		public async Task ExportsAndReimportsTheSelectedSolutionWithoutCreatingOne()
-		{
-			var file = Path.GetTempFileName();
-			var backup = Path.Combine(Path.GetTempPath(), $"ribbon-{Guid.NewGuid():N}.xml");
-			try
-			{
-				await File.WriteAllTextAsync(file, "<RibbonDiffXml><NewAction /></RibbonDiffXml>");
-				var metadataId = Guid.NewGuid();
-				var metadataResponse = new RetrieveEntityResponse();
-				metadataResponse.Results["EntityMetadata"] = new EntityMetadata { MetadataId = metadataId };
-				var exportResponse = new ExportSolutionResponse();
-				exportResponse.Results["ExportSolutionFile"] = CreateSolutionZip();
-				var requests = new List<OrganizationRequest>();
-				OrganizationServiceMock.Setup(x => x.ExecuteAsync(It.IsAny<OrganizationRequest>(), It.IsAny<CancellationToken>()))
-					.Callback<OrganizationRequest, CancellationToken>((request, _) => requests.Add(request))
-					.ReturnsAsync((OrganizationRequest request, CancellationToken _) => request switch
-					{
-						RetrieveEntityRequest => metadataResponse,
-						ExportSolutionRequest => exportResponse,
-						_ => new OrganizationResponse()
-					});
-
-				var solutionEntity = new Entity("solution", Guid.NewGuid());
-				solutionEntity["uniquename"] = "RibbonDiff";
-				solutionEntity["ismanaged"] = false;
-				solutionRepository.Setup(x => x.GetByUniqueNameAsync(OrganizationServiceMock.Object, "RibbonDiff"))
-					.ReturnsAsync(new TestSolution(solutionEntity));
-				var tableComponents = Enumerable.Range(0, 5).Select(index =>
-					SolutionComponent(ComponentType.Entity, index == 0 ? metadataId : Guid.NewGuid(), 1)).ToList();
-				var applicationRibbonId = Guid.NewGuid();
-				tableComponents.Add(SolutionComponent(ComponentType.RibbonCustomization, applicationRibbonId));
-				OrganizationServiceMock.Setup(x => x.RetrieveMultipleAsync(It.IsAny<QueryBase>(), It.IsAny<CancellationToken>()))
-					.ReturnsAsync((QueryBase query, CancellationToken _) =>
-						query is QueryExpression { EntityName: "ribboncustomization" }
-							? new EntityCollection([new Entity("ribboncustomization", applicationRibbonId)])
-							: new EntityCollection(tableComponents));
-
-				var executor = new SetRibbonDiffCommandExecutor(Output, OrganizationServiceRepositoryMock.Object, solutionRepository.Object);
-				var result = await executor.ExecuteAsync(new SetRibbonDiffCommand
-				{
-					FileName = file, TableName = "account", SolutionName = "RibbonDiff", BackupFile = backup
-				}, CancellationToken.None);
-
-				Assert.IsTrue(result.IsSuccess, result.ErrorMessage);
-				StringAssert.Contains(await File.ReadAllTextAsync(backup), "OldAction");
-				Assert.AreEqual("RibbonDiff", requests.OfType<ExportSolutionRequest>().Single().SolutionName);
-				var imported = requests.OfType<ImportSolutionRequest>().Single().CustomizationFile;
-				using var stream = new MemoryStream(imported);
-				using var archive = new ZipArchive(stream, ZipArchiveMode.Read);
-				using var reader = new StreamReader(archive.GetEntry("customizations.xml")!.Open());
-				StringAssert.Contains(await reader.ReadToEndAsync(), "NewAction");
-				StringAssert.Contains(requests.OfType<PublishXmlRequest>().Single().ParameterXml, "<entity>account</entity>");
-				solutionRepository.Verify(x => x.CreateTemporarySolutionAsync(It.IsAny<Microsoft.PowerPlatform.Dataverse.Client.IOrganizationServiceAsync2>(), It.IsAny<EntityReference>()), Times.Never);
-			}
-			finally
-			{
-				File.Delete(file);
-				File.Delete(backup);
-			}
-		}
-
-		[TestMethod]
-		public async Task ApplicationRibbonPublishesOnlyTheApplicationRibbon()
-		{
-			var file = Path.GetTempFileName();
-			var backup = Path.Combine(Path.GetTempPath(), $"ribbon-{Guid.NewGuid():N}.xml");
-			try
-			{
-				await File.WriteAllTextAsync(file, "<RibbonDiffXml><NewAction /></RibbonDiffXml>");
-				var requests = RibbonDiffSolutionSetup.Setup(OrganizationServiceMock, solutionRepository, "");
-				var executor = new SetRibbonDiffCommandExecutor(Output, OrganizationServiceRepositoryMock.Object, solutionRepository.Object);
-
-				var result = await executor.ExecuteAsync(new SetRibbonDiffCommand
-				{
-					FileName = file, SolutionName = RibbonDiffSolutionSetup.SolutionName, BackupFile = backup
-				}, CancellationToken.None);
-
-				Assert.IsTrue(result.IsSuccess, result.ErrorMessage);
-				Assert.AreEqual(1, requests.OfType<ImportSolutionRequest>().Count());
-				Assert.AreEqual("<importexportxml><ribbons><ribbon></ribbon></ribbons></importexportxml>", requests.OfType<PublishXmlRequest>().Single().ParameterXml);
-				Assert.IsFalse(requests.OfType<PublishAllXmlRequest>().Any());
-			}
-			finally
-			{
-				File.Delete(file);
-				File.Delete(backup);
-			}
-		}
-
-		[TestMethod]
-		[DataRow("n\n")]
+		[DataRow("account")]
 		[DataRow("")]
-		public async Task DeclinedOrMissingConfirmationFailsWithoutImporting(string input)
+		public async Task ExportsAndReimportsTheSelectedSolutionAndPublishesOnlyTheSelectedScope(string table)
 		{
-			var file = Path.GetTempFileName();
-			var originalInput = Console.In;
-			try
+			using var cancellation = new CancellationTokenSource();
+			var result = await NewSet().ExecuteAsync(SetCommand(table), cancellation.Token);
+			Assert.IsTrue(result.IsSuccess, result.ErrorMessage);
+			Assert.AreEqual(true, result["Changed"]);
+			Assert.AreEqual(true, result["Published"]);
+			Assert.AreEqual(SolutionName, Requests.OfType<ExportSolutionRequest>().Single().SolutionName);
+			var import = Requests.OfType<ImportSolutionRequest>().Single();
+			CollectionAssert.AreEqual(UpdatedZip, import.CustomizationFile);
+			Assert.IsTrue(import.OverwriteUnmanagedCustomizations);
+			Ribbons.Verify(a => a.Replace(OriginalZip, table, It.Is<XElement>(x => XNode.DeepEquals(x, Replacement))), Times.Once);
+			Assert.AreEqual(Original.ToString(), await File.ReadAllTextAsync(BackupFile));
+			ConsoleInput.VerifyNoOtherCalls();
+			var publish = Requests.OfType<PublishXmlRequest>().Single();
+			if (table.Length == 0)
 			{
-				await File.WriteAllTextAsync(file, "<RibbonDiffXml><NewAction /></RibbonDiffXml>");
-				var requests = RibbonDiffSolutionSetup.Setup(OrganizationServiceMock, solutionRepository, "account");
-				var executor = new SetRibbonDiffCommandExecutor(Output, OrganizationServiceRepositoryMock.Object, solutionRepository.Object);
-				Console.SetIn(new StringReader(input));
-
-				var result = await executor.ExecuteAsync(new SetRibbonDiffCommand
-				{
-					FileName = file, TableName = "account", SolutionName = RibbonDiffSolutionSetup.SolutionName
-				}, CancellationToken.None);
-
-				Assert.IsFalse(result.IsSuccess);
-				StringAssert.Contains(result.ErrorMessage, "Aborted");
-				Assert.IsFalse(requests.OfType<ImportSolutionRequest>().Any());
-				Assert.IsFalse(requests.OfType<PublishXmlRequest>().Any());
+				Assert.AreEqual("<importexportxml><ribbons><ribbon></ribbon></ribbons></importexportxml>", publish.ParameterXml);
+				Publisher.VerifyNoOtherCalls();
 			}
-			finally
+			else
 			{
-				Console.SetIn(originalInput);
-				File.Delete(file);
+				Publisher.Verify(p => p.AddTable("account"), Times.Once);
+				StringAssert.Contains(publish.ParameterXml, "<entity>account</entity>");
 			}
+			Assert.IsFalse(Requests.OfType<PublishAllXmlRequest>().Any());
+			OrganizationServiceMock.Verify(c => c.ExecuteAsync(It.IsAny<ImportSolutionRequest>(), cancellation.Token), Times.Once);
+			OrganizationServiceMock.Verify(c => c.ExecuteAsync(It.IsAny<PublishXmlRequest>(), cancellation.Token), Times.Once);
 		}
 
 		[TestMethod]
 		public async Task UnchangedRibbonStillCreatesTheRequestedBackupWithoutImporting()
 		{
-			var file = Path.GetTempFileName();
-			var backup = Path.Combine(Path.GetTempPath(), $"ribbon-{Guid.NewGuid():N}.xml");
-			try
-			{
-				await File.WriteAllTextAsync(file, "<RibbonDiffXml><OldAction /></RibbonDiffXml>");
-				var requests = RibbonDiffSolutionSetup.Setup(OrganizationServiceMock, solutionRepository, "account");
-				var executor = new SetRibbonDiffCommandExecutor(Output, OrganizationServiceRepositoryMock.Object, solutionRepository.Object);
-				var result = await executor.ExecuteAsync(new SetRibbonDiffCommand
-				{
-					FileName = file, TableName = "account", SolutionName = RibbonDiffSolutionSetup.SolutionName, BackupFile = backup
-				}, CancellationToken.None);
-
-				Assert.IsTrue(result.IsSuccess, result.ErrorMessage);
-				Assert.IsTrue(File.Exists(backup), "An explicitly requested backup must exist even when the XML is unchanged.");
-				StringAssert.Contains(await File.ReadAllTextAsync(backup), "OldAction");
-				Assert.IsFalse(requests.OfType<ImportSolutionRequest>().Any());
-				Assert.IsFalse(requests.OfType<PublishXmlRequest>().Any());
-			}
-			finally
-			{
-				File.Delete(file);
-				File.Delete(backup);
-			}
-		}
-
-		private static byte[] CreateSolutionZip()
-		{
-			using var stream = new MemoryStream();
-			using (var archive = new ZipArchive(stream, ZipArchiveMode.Create, true))
-			using (var writer = new StreamWriter(archive.CreateEntry("customizations.xml").Open()))
-				writer.Write("<ImportExportXml><Entities><Entity><Name>account</Name><RibbonDiffXml><OldAction /></RibbonDiffXml></Entity></Entities></ImportExportXml>");
-			return stream.ToArray();
+			await File.WriteAllTextAsync(InputFile, Original.ToString());
+			var result = await NewSet().ExecuteAsync(SetCommand(), CancellationToken.None);
+			Assert.IsTrue(result.IsSuccess, result.ErrorMessage);
+			Assert.AreEqual(false, result["Changed"]);
+			Assert.AreEqual(false, result["Published"]);
+			Assert.AreEqual(Original.ToString(), await File.ReadAllTextAsync(BackupFile));
+			Ribbons.Verify(a => a.Replace(It.IsAny<byte[]>(), It.IsAny<string>(), It.IsAny<XElement>()), Times.Never);
+			ConsoleInput.VerifyNoOtherCalls();
+			VerifyNoImportOrPublish();
 		}
 
 		[TestMethod]
-		public async Task RejectsSolutionWithMoreThanFiveTablesBeforeExport()
+		[DataRow(false)]
+		[DataRow(true)]
+		public async Task BackupCannotOverwriteAFileCreatedAfterValidation(bool unchanged)
 		{
-			var file = Path.GetTempFileName();
-			try
+			if (unchanged) await File.WriteAllTextAsync(InputFile, Original.ToString());
+			Ribbons.Setup(r => r.Read(OriginalZip, "account")).Returns(() =>
 			{
-				await File.WriteAllTextAsync(file, "<RibbonDiffXml />");
-				var metadataId = Guid.NewGuid();
-				var response = new RetrieveEntityResponse();
-				response.Results["EntityMetadata"] = new EntityMetadata { MetadataId = metadataId };
-				OrganizationServiceMock
-					.Setup(x => x.ExecuteAsync(It.IsAny<OrganizationRequest>(), It.IsAny<CancellationToken>()))
-					.ReturnsAsync(response);
-
-				var solutionEntity = new Entity("solution", Guid.NewGuid());
-				solutionEntity["publisherid"] = new EntityReference("publisher", Guid.NewGuid());
-				OrganizationServiceRepositoryMock.Setup(x => x.GetCurrentDefaultSolutionAsync()).ReturnsAsync("RibbonDiff");
-				solutionRepository.Setup(x => x.GetByUniqueNameAsync(It.IsAny<Microsoft.PowerPlatform.Dataverse.Client.IOrganizationServiceAsync2>(), "RibbonDiff"))
-					.ReturnsAsync(new TestSolution(solutionEntity));
-				QueryExpression? capturedQuery = null;
-				OrganizationServiceMock
-					.Setup(x => x.RetrieveMultipleAsync(It.IsAny<QueryBase>(), It.IsAny<CancellationToken>()))
-					.Callback<QueryBase, CancellationToken>((query, _) => capturedQuery = query as QueryExpression)
-					.ReturnsAsync(new EntityCollection(Enumerable.Range(0, 6).Select(_ =>
-					{
-						return SolutionComponent(ComponentType.Entity, Guid.NewGuid(), 1);
-					}).ToList()));
-				var executor = new SetRibbonDiffCommandExecutor(Output, OrganizationServiceRepositoryMock.Object, solutionRepository.Object);
-
-				var result = await executor.ExecuteAsync(new SetRibbonDiffCommand
-				{
-					FileName = file, TableName = "account"
-				}, CancellationToken.None);
-
-				Assert.IsFalse(result.IsSuccess);
-				StringAssert.Contains(result.ErrorMessage, "more than 5 tables");
-				StringAssert.Contains(Output.ToString(), "Using default solution <RibbonDiff>");
-				StringAssert.Contains(Output.ToString(), "--solution RibbonDiff");
-				Assert.AreEqual(7, capturedQuery?.TopCount);
-				Assert.IsNotNull(capturedQuery);
-				Assert.IsTrue(capturedQuery.Criteria.Conditions.Any(condition => condition.AttributeName == "solutionid"));
-				Assert.IsTrue(capturedQuery.ColumnSet.Columns.Contains("componenttype"));
-				Assert.IsTrue(capturedQuery.ColumnSet.Columns.Contains("rootcomponentbehavior"));
-				OrganizationServiceMock.Verify(x => x.ExecuteAsync(It.Is<ExportSolutionRequest>(_ => true), It.IsAny<CancellationToken>()), Times.Never);
-				solutionRepository.Verify(x => x.CreateTemporarySolutionAsync(It.IsAny<Microsoft.PowerPlatform.Dataverse.Client.IOrganizationServiceAsync2>(), It.IsAny<EntityReference>()), Times.Never);
-			}
-			finally
-			{
-				File.Delete(file);
-			}
-		}
-
-		private static Entity SolutionComponent(ComponentType type, Guid objectId, int? rootBehavior = null)
-		{
-			var component = new Entity("solutioncomponent", Guid.NewGuid());
-			component["componenttype"] = new OptionSetValue((int)type);
-			component["objectid"] = objectId;
-			if (rootBehavior.HasValue) component["rootcomponentbehavior"] = new OptionSetValue(rootBehavior.Value);
-			return component;
-		}
-
-		[TestMethod]
-		public async Task RejectsOtherComponentTypesBeforeExport()
-		{
-			var error = await ValidateWithoutExportAsync(id =>
-				[SolutionComponent(ComponentType.Entity, id, 1), SolutionComponent(ComponentType.SystemForm, Guid.NewGuid())]);
-			StringAssert.Contains(error, "unsupported component type");
-		}
-
-		[TestMethod]
-		public async Task InvalidFieldReportsItsTableAndComponentIds()
-		{
-			var field = SolutionComponent(ComponentType.Attribute, Guid.NewGuid());
-			var metadata = new StringAttributeMetadata { LogicalName = "new_code" };
-			typeof(AttributeMetadata).GetProperty(nameof(AttributeMetadata.EntityLogicalName))!
-				.SetValue(metadata, "account");
-			var response = new RetrieveAttributeResponse();
-			response.Results["AttributeMetadata"] = metadata;
-			var error = await ValidateWithoutExportAsync(_ => [field], response);
-
-			StringAssert.Contains(error!, "First invalid component: type=Attribute (2)");
-			StringAssert.Contains(error!, $"objectId={field.GetAttributeValue<Guid>("objectid")}");
-			StringAssert.Contains(error!, $"solutionComponentId={field.Id}");
-			StringAssert.Contains(error!, "table=account");
-			StringAssert.Contains(error!, "name=new_code");
-		}
-
-		[TestMethod]
-		public async Task DanglingFieldStillReportsComponentIdsWhenMetadataIsMissing()
-		{
-			var field = SolutionComponent(ComponentType.Attribute, Guid.NewGuid());
-			var error = await ValidateWithoutExportAsync(_ => [field]);
-
-			StringAssert.Contains(error!, "First invalid component: type=Attribute (2)");
-			StringAssert.Contains(error!, $"objectId={field.GetAttributeValue<Guid>("objectid")}");
-			StringAssert.Contains(error!, $"solutionComponentId={field.Id}");
-		}
-
-		[TestMethod]
-		public async Task InvalidFieldUsesRootTableWhenItsMetadataIsMissing()
-		{
-			var field = SolutionComponent(ComponentType.Attribute, Guid.NewGuid());
-			var error = await ValidateWithoutExportAsync(tableId =>
-			{
-				var table = SolutionComponent(ComponentType.Entity, tableId, 1);
-				field["rootsolutioncomponentid"] = table.Id;
-				return [table, field];
+				File.WriteAllText(BackupFile, "existing backup");
+				return new XElement(Original);
 			});
-
-			StringAssert.Contains(error, "type=Attribute (2)");
-			StringAssert.Contains(error, "table=account");
+			var result = await NewSet().ExecuteAsync(SetCommand(), CancellationToken.None);
+			Assert.IsFalse(result.IsSuccess);
+			Assert.AreEqual("existing backup", await File.ReadAllTextAsync(BackupFile));
+			VerifyNoImportOrPublish();
 		}
 
 		[TestMethod]
-		public async Task RejectsTableWithAllSubcomponentsBeforeExport()
+		[DataRow(false)]
+		[DataRow(true)]
+		public async Task PromptsWithoutBackupAndHonorsTheAnswer(bool confirmed)
 		{
-			var error = await ValidateWithoutExportAsync(id => [SolutionComponent(ComponentType.Entity, id, 0)]);
-			StringAssert.Contains(error, "all subcomponents");
+			SetConsoleInput(confirmed ? "y\n" : "n\n");
+			var result = await NewSet().ExecuteAsync(SetCommand(backup: null), CancellationToken.None);
+			Assert.AreEqual(confirmed, result.IsSuccess, result.ErrorMessage);
+			ConsoleInput.Verify(c => c.ReadKeyAsync(It.IsAny<bool>(), CancellationToken.None), Times.AtLeastOnce);
+			Assert.IsFalse(File.Exists(BackupFile));
+			if (!confirmed) VerifyNoImportOrPublish();
 		}
 
 		[TestMethod]
-		public async Task RejectsTableWithUnknownSegmentationBeforeExport()
+		public async Task EmptyConfirmationDefaultsToNo()
 		{
-			var error = await ValidateWithoutExportAsync(id => [SolutionComponent(ComponentType.Entity, id)]);
-			StringAssert.Contains(error, "unknown segmentation");
+			SetConsoleInput("\n");
+			var result = await NewSet().ExecuteAsync(SetCommand(backup: null), CancellationToken.None);
+			Assert.IsFalse(result.IsSuccess);
+			StringAssert.Contains(result.ErrorMessage, "Aborted");
+			VerifyNoImportOrPublish();
 		}
 
 		[TestMethod]
-		public async Task RejectsNonApplicationRibbonBeforeExport()
+		public async Task NonInteractiveInputWithoutBackupAborts()
 		{
-			var error = await ValidateWithoutExportAsync(id =>
-				[SolutionComponent(ComponentType.Entity, id, 2), SolutionComponent(ComponentType.RibbonCustomization, Guid.NewGuid())]);
-			StringAssert.Contains(error, "not Application Ribbons");
-		}
-
-		private async Task<string> ValidateWithoutExportAsync(Func<Guid, Entity[]> makeComponents, RetrieveAttributeResponse? attributeResponse = null)
-		{
-			var file = Path.GetTempFileName();
-			try
-			{
-				await File.WriteAllTextAsync(file, "<RibbonDiffXml />");
-				var metadataId = Guid.NewGuid();
-				var response = new RetrieveEntityResponse();
-			response.Results["EntityMetadata"] = new EntityMetadata { MetadataId = metadataId, LogicalName = "account" };
-			OrganizationServiceMock.Setup(x => x.ExecuteAsync(It.IsAny<OrganizationRequest>(), It.IsAny<CancellationToken>()))
-				.ReturnsAsync((OrganizationRequest request, CancellationToken _) => request is RetrieveAttributeRequest
-					? attributeResponse ?? throw new InvalidOperationException("Attribute metadata is missing")
-					: response);
-				var solutionEntity = new Entity("solution", Guid.NewGuid());
-				solutionEntity["uniquename"] = "RibbonDiff";
-				solutionRepository.Setup(x => x.GetByUniqueNameAsync(OrganizationServiceMock.Object, "RibbonDiff"))
-					.ReturnsAsync(new TestSolution(solutionEntity));
-				var components = makeComponents(metadataId);
-				OrganizationServiceMock.Setup(x => x.RetrieveMultipleAsync(It.IsAny<QueryBase>(), It.IsAny<CancellationToken>()))
-					.ReturnsAsync((QueryBase query, CancellationToken _) =>
-						query is QueryExpression { EntityName: "solutioncomponent" }
-							? new EntityCollection(components)
-							: new EntityCollection());
-				var executor = new SetRibbonDiffCommandExecutor(Output, OrganizationServiceRepositoryMock.Object, solutionRepository.Object);
-				var result = await executor.ExecuteAsync(new SetRibbonDiffCommand
-				{
-					FileName = file, TableName = "account", SolutionName = "RibbonDiff"
-				}, CancellationToken.None);
-				Assert.IsFalse(result.IsSuccess);
-				OrganizationServiceMock.Verify(x => x.ExecuteAsync(It.Is<ExportSolutionRequest>(_ => true), It.IsAny<CancellationToken>()), Times.Never);
-				return result.ErrorMessage;
-			}
-			finally { File.Delete(file); }
+			Console.Object.Profile.Capabilities.Interactive = false;
+			var result = await NewSet().ExecuteAsync(SetCommand(backup: null), CancellationToken.None);
+			Assert.IsFalse(result.IsSuccess);
+			StringAssert.Contains(result.ErrorMessage, "Aborted");
+			ConsoleInput.VerifyNoOtherCalls();
+			VerifyNoImportOrPublish();
 		}
 
 		[TestMethod]
-		public async Task RejectsExpandedRibbonBeforeConnecting()
+		public async Task UnchangedWithoutBackupNeedsNoConfirmation()
 		{
-			var file = Path.GetTempFileName();
-			try
-			{
-				await File.WriteAllTextAsync(file, "<RibbonDefinitions />");
-				var executor = new SetRibbonDiffCommandExecutor(Output, OrganizationServiceRepositoryMock.Object, solutionRepository.Object);
-
-				var result = await executor.ExecuteAsync(new SetRibbonDiffCommand { FileName = file }, CancellationToken.None);
-
-				Assert.IsFalse(result.IsSuccess);
-				StringAssert.Contains(result.ErrorMessage, "RibbonDiffXml root");
-				OrganizationServiceRepositoryMock.Verify(x => x.GetCurrentConnectionAsync(), Times.Never);
-			}
-			finally
-			{
-				File.Delete(file);
-			}
+			await File.WriteAllTextAsync(InputFile, Original.ToString());
+			var result = await NewSet().ExecuteAsync(SetCommand(backup: null), CancellationToken.None);
+			Assert.IsTrue(result.IsSuccess);
+			ConsoleInput.VerifyNoOtherCalls();
+			VerifyNoImportOrPublish();
 		}
 
 		[TestMethod]
-		public async Task RejectsMissingBackupFileDirectoryBeforeConnecting()
+		[DataRow("missing")]
+		[DataRow("expanded")]
+		[DataRow("malformed")]
+		[DataRow("dtd")]
+		public async Task InvalidInputFailsBeforeConnecting(string input)
 		{
-			var file = Path.GetTempFileName();
-			try
+			if (input == "missing") File.Delete(InputFile);
+			else await File.WriteAllTextAsync(InputFile, input switch
 			{
-				var executor = new SetRibbonDiffCommandExecutor(Output, OrganizationServiceRepositoryMock.Object, solutionRepository.Object);
-				var directory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
-
-				var result = await executor.ExecuteAsync(new SetRibbonDiffCommand { FileName = file, BackupFile = Path.Combine(directory, "backup.xml") }, CancellationToken.None);
-
-				Assert.IsFalse(result.IsSuccess);
-				StringAssert.Contains(result.ErrorMessage, "Backup file directory");
-				OrganizationServiceRepositoryMock.Verify(x => x.GetCurrentConnectionAsync(), Times.Never);
-			}
-			finally
-			{
-				File.Delete(file);
-			}
+				"expanded" => "<RibbonDefinitions/>",
+				"malformed" => "<RibbonDiffXml>",
+				_ => "<!DOCTYPE RibbonDiffXml [<!ENTITY value 'text'>]><RibbonDiffXml>&value;</RibbonDiffXml>"
+			});
+			var result = await NewSet().ExecuteAsync(SetCommand(), CancellationToken.None);
+			Assert.IsFalse(result.IsSuccess);
+			OrganizationServiceRepositoryMock.Verify(c => c.GetCurrentConnectionAsync(), Times.Never);
+			VerifyNoImportOrPublish();
 		}
 
 		[TestMethod]
-		public async Task RejectsExistingBackupFileBeforeConnecting()
+		public async Task ExistingBackupFailsBeforeConnecting()
 		{
-			var input = Path.GetTempFileName();
-			var backup = Path.GetTempFileName();
-			try
-			{
-				var executor = new SetRibbonDiffCommandExecutor(Output, OrganizationServiceRepositoryMock.Object, solutionRepository.Object);
+			await File.WriteAllTextAsync(BackupFile, "existing backup");
+			var result = await NewSet().ExecuteAsync(SetCommand(), CancellationToken.None);
+			Assert.IsFalse(result.IsSuccess);
+			Assert.AreEqual("existing backup", await File.ReadAllTextAsync(BackupFile));
+			OrganizationServiceRepositoryMock.Verify(c => c.GetCurrentConnectionAsync(), Times.Never);
+			VerifyNoImportOrPublish();
+		}
 
-				var result = await executor.ExecuteAsync(new SetRibbonDiffCommand { FileName = input, BackupFile = backup }, CancellationToken.None);
+		[TestMethod]
+		public async Task MissingBackupDirectoryFailsBeforeConnecting()
+		{
+			var command = SetCommand(); command.BackupFile = Path.Combine(TempDirectory, "missing", "backup.xml");
+			var result = await NewSet().ExecuteAsync(command, CancellationToken.None);
+			Assert.IsFalse(result.IsSuccess);
+			OrganizationServiceRepositoryMock.Verify(c => c.GetCurrentConnectionAsync(), Times.Never);
+			VerifyNoImportOrPublish();
+		}
 
-				Assert.IsFalse(result.IsSuccess);
-				StringAssert.Contains(result.ErrorMessage, "already exists");
-				OrganizationServiceRepositoryMock.Verify(x => x.GetCurrentConnectionAsync(), Times.Never);
-			}
-			finally
-			{
-				File.Delete(input);
-				File.Delete(backup);
-			}
+		[TestMethod]
+		public async Task MissingDefaultSolutionFailsBeforeExport()
+		{
+			OrganizationServiceRepositoryMock.Setup(c => c.GetCurrentDefaultSolutionAsync()).ReturnsAsync((string?)null);
+			var command = SetCommand(); command.SolutionName = null;
+			var result = await NewSet().ExecuteAsync(command, CancellationToken.None);
+			Assert.IsFalse(result.IsSuccess);
+			Assert.AreEqual(0, Requests.Count);
+		}
+
+		[TestMethod]
+		public async Task UsesAndReportsTheDefaultSolution()
+		{
+			var command = SetCommand(); command.SolutionName = null;
+			var result = await NewSet().ExecuteAsync(command, CancellationToken.None);
+			Assert.IsTrue(result.IsSuccess, result.ErrorMessage);
+			StringAssert.Contains(Output.ToString(), "Using default solution <RibbonDiff>");
+		}
+
+		[TestMethod]
+		public async Task ManagedSolutionFailsBeforeExport()
+		{
+			SetSolution(managed: true);
+			var result = await NewSet().ExecuteAsync(SetCommand(), CancellationToken.None);
+			Assert.IsFalse(result.IsSuccess);
+			Assert.AreEqual(0, Requests.Count);
+		}
+
+		[TestMethod]
+		public async Task InvalidSolutionFailsBeforeExport()
+		{
+			Ribbons.Setup(r => r.ValidateSolutionAsync(OrganizationServiceMock.Object, SolutionId, SolutionName, ComponentId, It.IsAny<ComponentType>(), It.IsAny<CancellationToken>()))
+				.ReturnsAsync("Unsafe solution");
+			var result = await NewSet().ExecuteAsync(SetCommand(), CancellationToken.None);
+			Assert.IsFalse(result.IsSuccess);
+			Assert.AreEqual(0, Requests.Count);
+			Assert.IsFalse(File.Exists(BackupFile));
+		}
+
+		[TestMethod]
+		public async Task ImportFaultReturnsFailureAndDoesNotPublish()
+		{
+			OrganizationServiceMock.Setup(c => c.ExecuteAsync(It.IsAny<ImportSolutionRequest>(), It.IsAny<CancellationToken>()))
+				.ThrowsAsync(new System.ServiceModel.FaultException<OrganizationServiceFault>(new OrganizationServiceFault(), "Import failed"));
+			var result = await NewSet().ExecuteAsync(SetCommand(), CancellationToken.None);
+			Assert.IsFalse(result.IsSuccess);
+			StringAssert.Contains(result.ErrorMessage, "Import failed");
+			OrganizationServiceMock.Verify(c => c.ExecuteAsync(It.IsAny<PublishXmlRequest>(), It.IsAny<CancellationToken>()), Times.Never);
+		}
+
+		[TestMethod]
+		public async Task CancellationPropagatesWithoutPublishing()
+		{
+			using var cancellation = new CancellationTokenSource();
+			cancellation.Cancel();
+			await Assert.ThrowsAsync<OperationCanceledException>(() => NewSet().ExecuteAsync(SetCommand(), cancellation.Token));
+			VerifyNoImportOrPublish();
 		}
 	}
 }

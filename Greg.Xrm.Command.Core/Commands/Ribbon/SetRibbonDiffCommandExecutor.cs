@@ -1,8 +1,11 @@
+using System.Xml;
 using System.Xml.Linq;
+using Spectre.Console;
+using Greg.Xrm.Command.Commands.WebResources.PushLogic;
 using Greg.Xrm.Command.Model;
 using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
-using Greg.Xrm.Command.Commands.WebResources.PushLogic;
+using Greg.Xrm.Command.Services.Ribbon;
 using Microsoft.Crm.Sdk.Messages;
 
 namespace Greg.Xrm.Command.Commands.Ribbon
@@ -10,51 +13,37 @@ namespace Greg.Xrm.Command.Commands.Ribbon
 	public class SetRibbonDiffCommandExecutor(
 		IOutput output,
 		IOrganizationServiceRepository organizationServiceRepository,
-		ISolutionRepository solutionRepository) : ICommandExecutor<SetRibbonDiffCommand>
+		ISolutionRepository solutionRepository,
+		IRibbonDiffService ribbonService,
+		IAnsiConsole console,
+		IPublishXmlBuilder publisher) : ICommandExecutor<SetRibbonDiffCommand>
 	{
 		// An empty ribbon node publishes only the application ribbon.
 		private const string ApplicationRibbonPublishXml = "<importexportxml><ribbons><ribbon></ribbon></ribbons></importexportxml>";
 
 		public async Task<CommandResult> ExecuteAsync(SetRibbonDiffCommand command, CancellationToken cancellationToken)
 		{
-			if (!File.Exists(command.FileName))
-				return CommandResult.Fail($"Ribbon XML file <{command.FileName}> does not exist.");
-			if (!string.IsNullOrWhiteSpace(command.BackupFile))
+			try
 			{
-				try
+				if (!string.IsNullOrWhiteSpace(command.BackupFile))
 				{
-					var backupPath = Path.GetFullPath(command.BackupFile);
-					if (!Directory.Exists(Path.GetDirectoryName(backupPath)))
-						return CommandResult.Fail($"Backup file directory for <{command.BackupFile}> does not exist.");
-					if (File.Exists(backupPath))
+					var path = Path.GetFullPath(command.BackupFile);
+					if (!Directory.Exists(Path.GetDirectoryName(path)) || Directory.Exists(path))
+						return CommandResult.Fail($"Invalid backup file path <{command.BackupFile}>. Specify a file in an existing directory.");
+					if (File.Exists(path))
 						return CommandResult.Fail($"Backup file <{command.BackupFile}> already exists. Choose a new path to avoid overwriting it.");
 				}
-				catch (Exception ex)
-				{
-					return CommandResult.Fail($"Invalid backup file path <{command.BackupFile}>: {ex.Message}", ex);
-				}
-			}
-
-			XElement replacement;
-			try
-			{
-				replacement = XElement.Parse(await File.ReadAllTextAsync(command.FileName, cancellationToken));
+				output.Write("Reading RibbonDiffXml from '").Write(command.FileName, ConsoleColor.Yellow).Write("'...");
+				using var text = new StringReader(await File.ReadAllTextAsync(command.FileName, cancellationToken));
+				using var reader = XmlReader.Create(text, new XmlReaderSettings { DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null, IgnoreWhitespace = true });
+				var replacement = XElement.Load(reader);
 				if (replacement.Name != "RibbonDiffXml")
 					return CommandResult.Fail("The input file must have a RibbonDiffXml root element. The expanded XML from ribbon get cannot be imported.");
-			}
-			catch (Exception ex)
-			{
-				return CommandResult.Fail($"Unable to read RibbonDiffXml: {ex.Message}", ex);
-			}
+				output.WriteLine("Done", ConsoleColor.Green);
 
-			try
-			{
 				output.Write("Connecting to the current dataverse environment...");
 				var crm = await organizationServiceRepository.GetCurrentConnectionAsync();
 				output.WriteLine("Done", ConsoleColor.Green);
-
-				var (componentId, componentType) = await RibbonDiffExport.ResolveComponentAsync(crm, command.TableName, cancellationToken);
-
 				var solutionName = command.SolutionName;
 				if (string.IsNullOrWhiteSpace(solutionName))
 				{
@@ -64,65 +53,58 @@ namespace Greg.Xrm.Command.Commands.Ribbon
 				}
 				if (string.IsNullOrWhiteSpace(solutionName))
 					return CommandResult.Fail("No solution specified and no default solution found. Provide a small ribbon solution with --solution RibbonDiff.");
-				var sourceSolution = await solutionRepository.GetByUniqueNameAsync(crm, solutionName);
-				if (sourceSolution == null)
-					return CommandResult.Fail($"Solution <{solutionName}> was not found.");
-				if (sourceSolution.ismanaged)
-					return CommandResult.Fail($"Solution <{solutionName}> is managed. Specify an unmanaged solution for ribbon editing.");
-				var validationError = await RibbonDiffExport.ValidateSolutionAsync(
-					crm, sourceSolution.Id, solutionName, componentId, componentType, cancellationToken);
-				if (validationError != null)
-					return CommandResult.Fail(validationError);
+
+				output.Write("Retrieving solution '").Write(solutionName, ConsoleColor.Yellow).Write("'...");
+				var solution = await solutionRepository.GetByUniqueNameAsync(crm, solutionName);
+				output.WriteLine("Done", ConsoleColor.Green);
+				if (solution == null) return CommandResult.Fail($"Solution <{solutionName}> was not found.");
+				if (solution.ismanaged) return CommandResult.Fail($"Solution <{solutionName}> is managed. Specify an unmanaged solution for ribbon editing.");
+
+				output.Write("Validating ribbon solution...");
+				var (componentId, componentType) = await ribbonService.ResolveComponentAsync(crm, command.TableName, cancellationToken);
+				var validationError = await ribbonService.ValidateSolutionAsync(crm, solution.Id, solutionName, componentId, componentType, cancellationToken);
+				if (validationError != null) return CommandResult.Fail(validationError);
+				output.WriteLine("Done", ConsoleColor.Green);
 
 				output.WriteLine("Warning: this will replace the current unmanaged RibbonDiffXml in the target environment.", ConsoleColor.Yellow);
-				output.Write($"Exporting solution <{solutionName}>...");
-				var exportResponse = (ExportSolutionResponse)await crm.ExecuteAsync(new ExportSolutionRequest
+				output.Write("Exporting solution '").Write(solutionName, ConsoleColor.Yellow).Write("'...");
+				var response = (ExportSolutionResponse)await crm.ExecuteAsync(new ExportSolutionRequest
 				{
-					SolutionName = sourceSolution.uniquename,
-					Managed = false
+					SolutionName = solution.uniquename, Managed = false
 				}, cancellationToken);
 				output.WriteLine("Done", ConsoleColor.Green);
-				using var archive = new SolutionZipArchive(exportResponse.ExportSolutionFile);
+				var original = ribbonService.Read(response.ExportSolutionFile, command.TableName);
 
-				XElement? original = null;
-				archive.UpdateEntryXml("customizations.xml", document =>
-				{
-					original = RibbonDiffExport.FindRibbonDiff(document, command.TableName);
-					return false;
-				});
-				if (original == null)
-					return CommandResult.Fail($"RibbonDiffXml was not found in the exported solution <{solutionName}>.");
-
+				// A requested backup is part of the contract even when there is nothing to import.
 				if (!string.IsNullOrWhiteSpace(command.BackupFile))
 				{
-					await using var backupStream = new FileStream(command.BackupFile, FileMode.CreateNew, FileAccess.Write, FileShare.None);
-					await using var backupWriter = new StreamWriter(backupStream);
-					await backupWriter.WriteAsync(original.ToString().AsMemory(), cancellationToken);
-					await backupWriter.FlushAsync(cancellationToken);
-					output.WriteLine($"Original RibbonDiffXml saved to {command.BackupFile}", ConsoleColor.DarkGray);
+					output.Write("Backing up original RibbonDiffXml to '").Write(command.BackupFile, ConsoleColor.Yellow).Write("'...");
+					await using (var stream = new FileStream(command.BackupFile, FileMode.CreateNew, FileAccess.Write, FileShare.None))
+					await using (var writer = new StreamWriter(stream))
+					{
+						await writer.WriteAsync(original.ToString().AsMemory(), cancellationToken);
+						await writer.FlushAsync(cancellationToken);
+					}
+					output.WriteLine("Done", ConsoleColor.Green);
 				}
 
 				if (XNode.DeepEquals(original, replacement))
 				{
 					output.WriteLine("RibbonDiffXml is unchanged. No import needed.");
-					return CommandResult.Success();
+					return Success(command, solutionName, changed: false);
 				}
 
 				WriteDiff(original, replacement);
-				if (string.IsNullOrWhiteSpace(command.BackupFile))
-				{
-					output.Write("Replace this ribbon in the target environment? (y/N) ");
-					// Anything but "y", including end of input in non-interactive runs, must not report success.
-					if (!string.Equals(Console.ReadLine()?.Trim(), "y", StringComparison.OrdinalIgnoreCase))
-						return CommandResult.Fail("Aborted. The ribbon was not replaced.");
-				}
+				if (string.IsNullOrWhiteSpace(command.BackupFile) &&
+					(!console.Profile.Capabilities.Interactive ||
+					!await console.ConfirmAsync("Replace this ribbon in the target environment?", defaultValue: false, cancellationToken)))
+					return CommandResult.Fail("Aborted. The ribbon was not replaced.");
 
-				ReplaceRibbonDiff(archive, command.TableName, replacement);
-				output.Write($"Importing solution <{solutionName}>...");
+				var updatedSolution = ribbonService.Replace(response.ExportSolutionFile, command.TableName, replacement);
+				output.Write("Importing solution '").Write(solutionName, ConsoleColor.Yellow).Write("'...");
 				await crm.ExecuteAsync(new ImportSolutionRequest
 				{
-					CustomizationFile = archive.ToArray(),
-					OverwriteUnmanagedCustomizations = true
+					CustomizationFile = updatedSolution, OverwriteUnmanagedCustomizations = true
 				}, cancellationToken);
 				output.WriteLine("Done", ConsoleColor.Green);
 
@@ -132,30 +114,29 @@ namespace Greg.Xrm.Command.Commands.Ribbon
 					publishRequest = new PublishXmlRequest { ParameterXml = ApplicationRibbonPublishXml };
 				else
 				{
-					var builder = new PublishXmlBuilder();
-					builder.AddTable(command.TableName);
-					publishRequest = builder.Build()!;
+					publisher.Clear();
+					publisher.AddTable(command.TableName);
+					publishRequest = publisher.Build() ?? throw new InvalidOperationException("No ribbon publish request was generated.");
 				}
 				await crm.ExecuteAsync(publishRequest, cancellationToken);
 				output.WriteLine("Done", ConsoleColor.Green);
-				return CommandResult.Success();
+				return Success(command, solutionName, changed: true);
 			}
-			catch (Exception ex)
+			catch (Exception ex) when (ex is not OperationCanceledException)
 			{
-				output.WriteLine($"ERROR: {ex.Message}", ConsoleColor.Red);
 				return CommandResult.Fail(ex.Message, ex);
 			}
 		}
 
-		private static void ReplaceRibbonDiff(SolutionZipArchive archive, string tableName, XElement replacement)
+		private static CommandResult Success(SetRibbonDiffCommand command, string solutionName, bool changed)
 		{
-			archive.UpdateEntryXml("customizations.xml", document =>
-			{
-				var element = RibbonDiffExport.FindRibbonDiff(document, tableName)
-					?? throw new InvalidOperationException("RibbonDiffXml was not found in the exported solution.");
-				element.ReplaceWith(new XElement(replacement));
-				return true;
-			});
+			var result = CommandResult.Success();
+			result["SolutionName"] = solutionName;
+			result["TableName"] = command.TableName;
+			result["Changed"] = changed;
+			result["Published"] = changed;
+			result["BackupFile"] = command.BackupFile ?? string.Empty;
+			return result;
 		}
 
 		private void WriteDiff(XElement oldXml, XElement newXml)
