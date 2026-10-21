@@ -32,7 +32,8 @@ namespace Greg.Xrm.Command.Model
 				{
 					SolutionUniqueName = solution.uniquename,
 					ComponentId = componentId,
-					ComponentType = (int)componentType
+					ComponentType = (int)componentType,
+					DoNotIncludeSubcomponents = true
 				};
 
 				await crm.ExecuteAsync(request);
