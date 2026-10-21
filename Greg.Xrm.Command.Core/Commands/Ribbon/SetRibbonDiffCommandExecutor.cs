@@ -30,8 +30,6 @@ namespace Greg.Xrm.Command.Commands.Ribbon
 					var path = Path.GetFullPath(command.BackupFile);
 					if (!Directory.Exists(Path.GetDirectoryName(path)) || Directory.Exists(path))
 						return CommandResult.Fail($"Invalid backup file path <{command.BackupFile}>. Specify a file in an existing directory.");
-					if (File.Exists(path))
-						return CommandResult.Fail($"Backup file <{command.BackupFile}> already exists. Choose a new path to avoid overwriting it.");
 				}
 				output.Write("Reading RibbonDiffXml from '").Write(command.FileName, ConsoleColor.Yellow).Write("'...");
 				using var text = new StringReader(await File.ReadAllTextAsync(command.FileName, cancellationToken));
@@ -79,12 +77,7 @@ namespace Greg.Xrm.Command.Commands.Ribbon
 				if (!string.IsNullOrWhiteSpace(command.BackupFile))
 				{
 					output.Write("Backing up original RibbonDiffXml to '").Write(command.BackupFile, ConsoleColor.Yellow).Write("'...");
-					await using (var stream = new FileStream(command.BackupFile, FileMode.CreateNew, FileAccess.Write, FileShare.None))
-					await using (var writer = new StreamWriter(stream))
-					{
-						await writer.WriteAsync(original.ToString().AsMemory(), cancellationToken);
-						await writer.FlushAsync(cancellationToken);
-					}
+					await File.WriteAllTextAsync(command.BackupFile, original.ToString(), cancellationToken);
 					output.WriteLine("Done", ConsoleColor.Green);
 				}
 

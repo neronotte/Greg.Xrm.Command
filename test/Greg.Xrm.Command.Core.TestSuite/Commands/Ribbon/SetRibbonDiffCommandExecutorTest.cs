@@ -54,22 +54,6 @@ namespace Greg.Xrm.Command.Commands.Ribbon
 			VerifyNoImportOrPublish();
 		}
 
-		[TestMethod]
-		[DataRow(false)]
-		[DataRow(true)]
-		public async Task BackupCannotOverwriteAFileCreatedAfterValidation(bool unchanged)
-		{
-			if (unchanged) await File.WriteAllTextAsync(InputFile, Original.ToString());
-			Ribbons.Setup(r => r.Read(OriginalZip, "account")).Returns(() =>
-			{
-				File.WriteAllText(BackupFile, "existing backup");
-				return new XElement(Original);
-			});
-			var result = await NewSet().ExecuteAsync(SetCommand(), CancellationToken.None);
-			Assert.IsFalse(result.IsSuccess);
-			Assert.AreEqual("existing backup", await File.ReadAllTextAsync(BackupFile));
-			VerifyNoImportOrPublish();
-		}
 
 		[TestMethod]
 		[DataRow(false)]
@@ -136,14 +120,19 @@ namespace Greg.Xrm.Command.Commands.Ribbon
 		}
 
 		[TestMethod]
-		public async Task ExistingBackupFailsBeforeConnecting()
+		[DataRow(false)]
+		[DataRow(true)]
+		public async Task ExistingBackupIsOverwrittenWithTheCurrentRibbon(bool unchanged)
 		{
-			await File.WriteAllTextAsync(BackupFile, "existing backup");
+			if (unchanged) await File.WriteAllTextAsync(InputFile, Original.ToString());
+			await File.WriteAllTextAsync(BackupFile, new string('x', 1000));
 			var result = await NewSet().ExecuteAsync(SetCommand(), CancellationToken.None);
-			Assert.IsFalse(result.IsSuccess);
-			Assert.AreEqual("existing backup", await File.ReadAllTextAsync(BackupFile));
-			OrganizationServiceRepositoryMock.Verify(c => c.GetCurrentConnectionAsync(), Times.Never);
-			VerifyNoImportOrPublish();
+			Assert.IsTrue(result.IsSuccess, result.ErrorMessage);
+			Assert.AreEqual(Original.ToString(), await File.ReadAllTextAsync(BackupFile));
+			Assert.AreEqual(!unchanged, result["Changed"]);
+			ConsoleInput.VerifyNoOtherCalls();
+			if (unchanged) VerifyNoImportOrPublish();
+			else Assert.AreEqual(1, Requests.OfType<ImportSolutionRequest>().Count());
 		}
 
 		[TestMethod]
