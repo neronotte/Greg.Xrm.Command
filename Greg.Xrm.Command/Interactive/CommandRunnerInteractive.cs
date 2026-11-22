@@ -297,8 +297,14 @@ namespace Greg.Xrm.Command.Interactive
 		{
 			var prompt = new SelectionPrompt<string>()
 				.Title(promptText)
-				.HighlightStyle(new Style(Color.Black, Color.Aquamarine1, Decoration.None))
-				.AddChoices("true", "false", HelpRequestToken, QuitRequestToken);
+				.HighlightStyle(new Style(Color.Black, Color.Aquamarine1, Decoration.None));
+
+			if (!option.IsRequired && option.Property.PropertyType == typeof(bool?))
+			{
+				prompt.AddChoice(SkipOptionToken);
+			}
+
+			prompt.AddChoices("true", "false", HelpRequestToken, QuitRequestToken);
 
 			return prompt;
 		}

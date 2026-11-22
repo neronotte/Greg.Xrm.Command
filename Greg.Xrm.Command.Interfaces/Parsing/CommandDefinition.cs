@@ -170,7 +170,7 @@ namespace Greg.Xrm.Command.Parsing
 				return defaultValue;
 			}
 
-			if (propertyType == typeof(bool) && (optionValue == string.Empty)) optionValue = "true";
+			if ((propertyType == typeof(bool) || propertyType == typeof(bool?)) && optionValue == string.Empty) optionValue = "true";
 
 			if (string.IsNullOrWhiteSpace(optionValue))
 			{

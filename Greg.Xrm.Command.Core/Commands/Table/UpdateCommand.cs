@@ -109,7 +109,7 @@ namespace Greg.Xrm.Command.Commands.Table
 
 		public void WriteUsageExamples(MarkdownWriter writer)
 		{
-			writer.WriteParagraph("Update only the specified properties; omitted options are left unchanged. Boolean options require an explicit true or false value.");
+			writer.WriteParagraph("Update only the specified properties; omitted options are left unchanged. A boolean option without a value means true; use false to disable a setting where supported.");
 			writer.WriteCodeBlock("pacx table update --schemaName new_contract --audit true --notes true", "PowerShell");
 			writer.WriteCodeBlock("pacx table update --schemaName new_contract --color \"#336699\" --quickCreate false --primaryImage new_picture", "PowerShell");
 			writer.WriteParagraph("Notes, feedback, activities, email, connections, queues and change tracking cannot be disabled once enabled. Changes are not published automatically. Updating the primary image and table together requires two requests and may partially succeed.");

@@ -15,6 +15,20 @@ namespace Greg.Xrm.Command.Commands.Table
 		}
 
 		[TestMethod]
+		public void ParseNullableBooleanSwitchesWithOrWithoutValues()
+		{
+			var command = Utility.TestParseCommand<UpdateCommand>("table", "update", "--schemaName", "new_table",
+				"--activities", "--audit", "--quickCreate", "false", "--offline", "true", "--connections");
+
+			Assert.AreEqual(true, command.Activities);
+			Assert.AreEqual(true, command.IsAuditEnabled);
+			Assert.AreEqual(false, command.IsQuickCreateEnabled);
+			Assert.AreEqual(true, command.Offline);
+			Assert.AreEqual(true, command.Connections);
+			Assert.IsNull(command.HasNotes);
+		}
+
+		[TestMethod]
 		public void ParseNewOptionsShouldPreserveOmittedValues()
 		{
 			var command = Utility.TestParseCommand<UpdateCommand>("table", "update", "--schemaName", "new_table",
