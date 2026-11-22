@@ -35,6 +35,7 @@ namespace Greg.Xrm.Command.Commands.Views
 
 			writer.WriteLine("This will replicate the view named `My View` from the table `greg_table` to all other saved queries belonging to the same table, except for the lookup views.");
 			writer.WriteLine("This default behavior is driven by the fact that changing the structure of the lookup views may generate unexpected behaviors on the lookup control.");
+			writer.WriteLine("The output lists the successfully updated views with links to their Power Apps editors when the environment ID is available.");
 			writer.WriteLine();
 
 			writer.WriteParagraph("If you want to override this default behavior you can type: ");

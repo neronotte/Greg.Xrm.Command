@@ -67,11 +67,13 @@ namespace Greg.Xrm.Command.Commands.Views
 			try
 			{
 				output.Write("Replicating layout, please wait...");
+				var updatedViews = new List<SavedQuery>();
 
-				var operationResult = await Replicator.PropagateLayoutAsync(crm, (SavedQuery)view, otherViews,
+				var operationResult = await Replicator.PropagateLayoutWithUpdatesAsync(crm, (SavedQuery)view, otherViews,
 					includeLayout: true,
 					includeSorting: !command.KeepSorting,
-					includeComponents: !command.KeepComponents);
+					includeComponents: !command.KeepComponents,
+					onUpdated: updatedViews.Add);
 
 
 				if (operationResult.Count > 0)
@@ -85,6 +87,9 @@ namespace Greg.Xrm.Command.Commands.Views
 				{
 					output.WriteLine("Done", ConsoleColor.Green);
 				}
+
+				foreach (var updated in updatedViews)
+					ComponentEditorUrl.Write(output, crm, updated.returnedtypecode, "view", updated.Id, updated.name);
 
 				if (operationResult.Count == otherViews.Count)
 				{

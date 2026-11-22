@@ -133,6 +133,10 @@ namespace Greg.Xrm.Command.Commands.Views
 				output.Write("Saving the updated view layout...");
 				view.layoutxml = doc.ToString(SaveOptions.DisableFormatting);
 				await view.SaveOrUpdateAsync(crm);
+				if (view is Greg.Xrm.Command.Model.SavedQuery)
+					ComponentEditorUrl.Write(output, crm, view.returnedtypecode, "view", view.Id, view.name);
+				else
+					output.WriteLine($"Editor URL unavailable for personal view '{view.name}'.");
 
 				publishXmlBuilder.AddTable(view.returnedtypecode);
 

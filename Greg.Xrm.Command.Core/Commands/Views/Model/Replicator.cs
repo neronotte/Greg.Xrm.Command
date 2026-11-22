@@ -17,9 +17,21 @@ namespace Greg.Xrm.Command.Commands.Views.Model
 			IOrganizationServiceAsync2 crm,
 			SavedQuery sourceView,
 			IReadOnlyList<SavedQuery> targetViews,
-			  bool includeLayout = true,
-			  bool includeSorting = true,
-			  bool includeComponents = true)
+			bool includeLayout = true,
+			bool includeSorting = true,
+			bool includeComponents = true)
+		{
+			return await PropagateLayoutWithUpdatesAsync(crm, sourceView, targetViews, includeLayout, includeSorting, includeComponents, null);
+		}
+
+		public static async Task<List<Tuple<string, string>>> PropagateLayoutWithUpdatesAsync(
+			IOrganizationServiceAsync2 crm,
+			SavedQuery sourceView,
+			IReadOnlyList<SavedQuery> targetViews,
+			bool includeLayout,
+			bool includeSorting,
+			bool includeComponents,
+			Action<SavedQuery>? onUpdated)
 		{
 			var tupleList = new List<Tuple<string, string>>();
 			string empty = string.Empty;
@@ -227,6 +239,7 @@ namespace Greg.Xrm.Command.Commands.Views.Model
 				try
 				{
 					await targetView.SaveOrUpdateAsync(crm);
+					onUpdated?.Invoke(targetView);
 				}
 				catch (Exception ex)
 				{

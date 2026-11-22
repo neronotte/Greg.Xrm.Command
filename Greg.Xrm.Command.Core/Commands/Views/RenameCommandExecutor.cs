@@ -32,6 +32,10 @@ namespace Greg.Xrm.Command.Commands.Views
 				await view.SaveOrUpdateAsync(crm);
 
 				output.WriteLine("Done", ConsoleColor.Green);
+				if (view is Greg.Xrm.Command.Model.SavedQuery)
+					ComponentEditorUrl.Write(output, crm, view.returnedtypecode, "view", view.Id, view.name);
+				else
+					output.WriteLine($"Editor URL unavailable for personal view '{view.name}'.");
 			}
 			catch (Exception ex)
 			{

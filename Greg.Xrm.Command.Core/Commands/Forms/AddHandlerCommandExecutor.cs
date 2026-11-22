@@ -99,6 +99,7 @@ namespace Greg.Xrm.Command.Commands.Forms
 					{
 						var newZipBytes = solutionContent.ToArray();
 						await solution.UploadAndPublishAsync(newZipBytes, command.TableName);
+						ComponentEditorUrl.Write(output, crm, command.TableName, "form", form.Id, form.name);
 					}
 					else
 					{
@@ -146,6 +147,7 @@ namespace Greg.Xrm.Command.Commands.Forms
 				update["formxml"] = formElement.ToString(SaveOptions.DisableFormatting);
 				await crm.UpdateAsync(update, cancellationToken);
 				output.WriteLine("Done", ConsoleColor.Green);
+				ComponentEditorUrl.Write(output, crm, command.TableName, "form", form.Id, form.name);
 
 				output.Write("Publishing customizations...");
 				var publishRequest = new PublishXmlRequest

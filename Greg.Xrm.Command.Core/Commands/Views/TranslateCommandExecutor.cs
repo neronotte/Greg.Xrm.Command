@@ -48,6 +48,7 @@ namespace Greg.Xrm.Command.Commands.Views
 				if (description.Count > 0)
 					await SetLabelsAsync(crm, view.Id, "description", description, cancellationToken);
 				output.WriteLine("Done", ConsoleColor.Green);
+				ComponentEditorUrl.Write(output, crm, view.returnedtypecode, "view", view.Id, view.name);
 
 				if (!command.NoPublish)
 				{

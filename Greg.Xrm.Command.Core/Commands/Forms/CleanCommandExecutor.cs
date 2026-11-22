@@ -95,6 +95,7 @@ namespace Greg.Xrm.Command.Commands.Forms
 						if (hasChanges)
 						{
 							await solution.UploadAndPublishAsync(newZipBytes, command.TableName);
+							ComponentEditorUrl.Write(output, crm, command.TableName, "form", form.Id, form.name);
 						}
 						else
 						{
