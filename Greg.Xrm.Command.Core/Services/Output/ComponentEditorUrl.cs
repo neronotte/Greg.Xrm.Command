@@ -19,7 +19,7 @@ namespace Greg.Xrm.Command.Services.Output
 		{
 			var environmentId = (crm as ServiceClient)?.EnvironmentId;
 			var url = Create(environmentId, tableName, componentType, componentId);
-			output.WriteLine(url == null
+			output.WriteRawLine(url == null
 				? $"Editor URL unavailable for {componentType} '{name}'."
 				: $"{componentType} '{name}': {url}");
 		}
