@@ -81,6 +81,7 @@ namespace Greg.Xrm.Command.Commands.Forms
 			Assert.IsTrue(result.IsSuccess, result.ErrorMessage);
 			Assert.IsNull(this.updatedEntity, "Nothing must be written when the handler is not registered.");
 			StringAssert.Contains(this.Output.ToString(), "not registered");
+			Assert.IsFalse(this.Output.ToString().Contains("Editor URL"));
 		}
 
 		private const string FormXmlWithHandlerOnTwoEvents =
@@ -124,6 +125,7 @@ namespace Greg.Xrm.Command.Commands.Forms
 			var newFormXml = (string)this.updatedEntity["formxml"];
 			Assert.IsFalse(newFormXml.Contains("My.Account.onLoad"), "The handler must be removed.");
 			Assert.IsFalse(newFormXml.Contains("myprefix_scripts.js"), "The unreferenced library must be removed as well.");
+			StringAssert.Contains(this.Output.ToString(), "Editor URL unavailable for form 'Information'");
 		}
 	}
 }

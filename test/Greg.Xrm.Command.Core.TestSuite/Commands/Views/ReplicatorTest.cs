@@ -97,5 +97,22 @@ namespace Greg.Xrm.Command.Commands.Views
 			Assert.IsFalse(target.fetchxml.Contains("order attribute=\"name\""));
 			Assert.IsTrue(target.layoutxml!.Contains("telephone1"), "The column layout must still be replicated.");
 		}
+
+		[TestMethod]
+		public async Task PropagateLayout_ShouldReportOnlySuccessfullyUpdatedViewsWithDuplicateNames()
+		{
+			var source = CreateView("Source", SourceLayout, SourceFetch);
+			var success = CreateView("Target", TargetLayoutWithCustomControl, TargetFetch);
+			var failed = CreateView("Target", TargetLayoutWithCustomControl, TargetFetch);
+			this.crmMock.Setup(s => s.UpdateAsync(It.Is<Entity>(e => e.Id == failed.Id)))
+				.ThrowsAsync(new InvalidOperationException("Update failed"));
+			var updated = new List<SavedQuery>();
+
+			var errors = await Replicator.PropagateLayoutWithUpdatesAsync(this.crmMock.Object, source, [success, failed], true, true, true, updated.Add);
+
+			Assert.HasCount(1, errors);
+			Assert.HasCount(1, updated);
+			Assert.AreEqual(success.Id, updated[0].Id);
+		}
 	}
 }
