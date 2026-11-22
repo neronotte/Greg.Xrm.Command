@@ -1,5 +1,6 @@
 using Greg.Xrm.Command.Commands.Views.Model;
 using Greg.Xrm.Command.Commands.WebResources.PushLogic;
+using Greg.Xrm.Command.Model;
 using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Output;
 using Greg.Xrm.Command.Services.Translations;
@@ -24,6 +25,7 @@ namespace Greg.Xrm.Command.Commands.Views
 			var crm = await organizationServiceRepository.GetCurrentConnectionAsync();
 			output.WriteLine("Done", ConsoleColor.Green);
 
+			TableView? updatedView = null;
 			try
 			{
 				var labels = ParseOptional(command.Labels);
@@ -44,11 +46,16 @@ namespace Greg.Xrm.Command.Commands.Views
 
 				output.Write($"Updating translations for view '{view.name}'...");
 				if (labels.Count > 0)
+				{
 					await SetLabelsAsync(crm, view.Id, "name", labels, cancellationToken);
+					updatedView = view;
+				}
 				if (description.Count > 0)
+				{
 					await SetLabelsAsync(crm, view.Id, "description", description, cancellationToken);
+					updatedView = view;
+				}
 				output.WriteLine("Done", ConsoleColor.Green);
-				ComponentEditorUrl.Write(output, crm, view.returnedtypecode, "view", view.Id, view.name);
 
 				if (!command.NoPublish)
 				{
@@ -77,6 +84,11 @@ namespace Greg.Xrm.Command.Commands.Views
 			{
 				output.WriteLine("Failed", ConsoleColor.Red);
 				return CommandResult.Fail(ex.Message, ex);
+			}
+			finally
+			{
+				if (updatedView != null)
+					ComponentEditorUrl.Write(output, crm, updatedView.returnedtypecode, "view", updatedView.Id, updatedView.name);
 			}
 		}
 

@@ -73,5 +73,35 @@ namespace Greg.Xrm.Command.Commands.Views
 			Assert.IsTrue(localizationRequests.Any(x => x.AttributeName == "description" && x.Labels.Length == 1));
 			publisher.Verify(x => x.AddTable("account"), Times.Once);
 		}
+
+		[TestMethod]
+		public async Task ExecuteAsync_ShouldReportView_WhenSecondTranslationFails()
+		{
+			var output = new OutputToMemory();
+			var repository = new Mock<IOrganizationServiceRepository>();
+			var crm = new Mock<IOrganizationServiceAsync2>();
+			repository.Setup(x => x.GetCurrentConnectionAsync()).ReturnsAsync(crm.Object);
+			var view = new SavedQuery(new Entity("savedquery", Guid.NewGuid())
+			{
+				["name"] = "Active Accounts",
+				["returnedtypecode"] = "account",
+			});
+			var retriever = new Mock<IViewRetrieverService>();
+			retriever.Setup(x => x.GetByNameAsync(crm.Object, QueryType1.SavedQuery, "Active Accounts", "account"))
+				.ReturnsAsync((CommandResult.Success(), view));
+			var parser = new Mock<ITranslationParser>();
+			parser.Setup(x => x.Parse(It.IsAny<string>()))
+				.Returns(new Dictionary<int, string> { [1033] = "Translation" });
+			crm.Setup(x => x.ExecuteAsync(It.IsAny<OrganizationRequest>(), It.IsAny<CancellationToken>()))
+				.ReturnsAsync(new SetLocLabelsResponse());
+			crm.Setup(x => x.ExecuteAsync(It.Is<SetLocLabelsRequest>(r => r.AttributeName == "description"), It.IsAny<CancellationToken>()))
+				.ThrowsAsync(new InvalidOperationException("Description update failed"));
+			var executor = new TranslateCommandExecutor(output, repository.Object, retriever.Object, parser.Object, Mock.Of<IActiveLanguageService>(), Mock.Of<IPublishXmlBuilder>());
+
+			var result = await executor.ExecuteAsync(new TranslateCommand { Name = "Active Accounts", TableName = "account", Labels = "labels", Description = "description" }, CancellationToken.None);
+
+			Assert.IsFalse(result.IsSuccess);
+			StringAssert.Contains(output.ToString(), "Editor URL unavailable for view 'Active Accounts'");
+		}
 	}
 }

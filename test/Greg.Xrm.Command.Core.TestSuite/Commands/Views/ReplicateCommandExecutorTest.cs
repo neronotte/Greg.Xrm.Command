@@ -53,5 +53,28 @@ namespace Greg.Xrm.Command.Commands.Views
 			};
 			return new SavedQuery(entity);
 		}
+
+		[TestMethod]
+		public async Task ExecuteAsync_ShouldReportEarlierUpdates_WhenLaterLayoutIsInvalid()
+		{
+			var source = CreateView("Source");
+			var updated = CreateView("Updated");
+			var invalid = CreateView("Invalid");
+			invalid.layoutxml = "<invalid";
+			var retriever = new Mock<IViewRetrieverService>();
+			retriever.Setup(x => x.GetByNameAsync(this.OrganizationServiceMock.Object, QueryType1.SavedQuery, "Source", "account"))
+				.ReturnsAsync((CommandResult.Success(), source));
+			var views = new Mock<ISavedQueryRepository>();
+			views.Setup(x => x.GetByTableNameAsync(this.OrganizationServiceMock.Object, "account"))
+				.ReturnsAsync([source, updated, invalid]);
+			this.OrganizationServiceMock.Setup(x => x.UpdateAsync(It.IsAny<Entity>())).Returns(Task.CompletedTask);
+			var executor = new ReplicateCommandExecutor(this.OrganizationServiceRepositoryMock.Object, this.Output, retriever.Object, views.Object, Mock.Of<IPublishXmlBuilder>());
+
+			var result = await executor.ExecuteAsync(new ReplicateCommand { ViewName = "Source", TableName = "account" }, CancellationToken.None);
+
+			Assert.IsFalse(result.IsSuccess);
+			StringAssert.Contains(this.Output.ToString(), "Editor URL unavailable for view 'Updated'");
+			Assert.IsFalse(this.Output.ToString().Contains("Editor URL unavailable for view 'Invalid'"));
+		}
 	}
 }

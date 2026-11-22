@@ -64,10 +64,10 @@ namespace Greg.Xrm.Command.Commands.Views
 			}
 
 
+			var updatedViews = new List<SavedQuery>();
 			try
 			{
 				output.Write("Replicating layout, please wait...");
-				var updatedViews = new List<SavedQuery>();
 
 				var operationResult = await Replicator.PropagateLayoutWithUpdatesAsync(crm, (SavedQuery)view, otherViews,
 					includeLayout: true,
@@ -88,9 +88,6 @@ namespace Greg.Xrm.Command.Commands.Views
 					output.WriteLine("Done", ConsoleColor.Green);
 				}
 
-				foreach (var updated in updatedViews)
-					ComponentEditorUrl.Write(output, crm, updated.returnedtypecode, "view", updated.Id, updated.name);
-
 				if (operationResult.Count == otherViews.Count)
 				{
 					return CommandResult.Fail($"Unable to replicate the selected view layout");
@@ -100,6 +97,11 @@ namespace Greg.Xrm.Command.Commands.Views
 			{
 				output.WriteLine("Error", ConsoleColor.Red);
 				return CommandResult.Fail($"An error occurred while replicating the layout: {ex.Message}", ex);
+			}
+			finally
+			{
+				foreach (var updated in updatedViews)
+					ComponentEditorUrl.Write(output, crm, updated.returnedtypecode, "view", updated.Id, updated.name);
 			}
 
 
