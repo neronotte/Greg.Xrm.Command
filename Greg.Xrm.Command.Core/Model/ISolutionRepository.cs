@@ -8,5 +8,7 @@ namespace Greg.Xrm.Command.Model
 		Task<Solution?> GetByUniqueNameAsync(IOrganizationServiceAsync2 crm, string uniqueName);
 
 		Task<ITemporarySolution> CreateTemporarySolutionAsync(IOrganizationServiceAsync2 crm, EntityReference publisherRef);
+
+		Task<(CommandResult, ITemporarySolution?)> CreateHoldingSolutionAsync(IOrganizationServiceAsync2 crm, string? solutionName = null);
 	}
 }

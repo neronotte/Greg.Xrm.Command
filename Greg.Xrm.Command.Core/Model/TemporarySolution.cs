@@ -75,7 +75,7 @@ namespace Greg.Xrm.Command.Model
 			}
 		}
 
-		public async Task UploadAndPublishAsync(byte[] zipFile, params string[] tableNames)
+		public async Task UploadAsync(byte[] zipFile)
 		{
 			if (solution.IsDeleted)
 				throw new InvalidOperationException("Operation cannot be performed, the solution is deleted!");
@@ -92,13 +92,22 @@ namespace Greg.Xrm.Command.Model
 				await crm.ExecuteAsync(request);
 				sw.Stop();
 				output.WriteLine("DONE in " + sw.Elapsed, ConsoleColor.Green);
+			}
+			catch
+			{
+				sw.Stop();
+				output.WriteLine("ERROR", ConsoleColor.Red);
+				throw;
+			}
+		}
 
-
-
+		public async Task UploadAndPublishAsync(byte[] zipFile, params string[] tableNames)
+		{
+			await UploadAsync(zipFile);
+			var sw = Stopwatch.StartNew();
+			try
+			{
 				output.Write($"Publishing customizations...");
-				sw.Restart();
-
-
 
 				var builder = new PublishXmlBuilder();
 				foreach (var tableName in tableNames)
