@@ -16,6 +16,7 @@ using Greg.Xrm.Command.Services.AttributeDeletion;
 using Greg.Xrm.Command.Services.Forms;
 using Greg.Xrm.Command.Services.OptionSet;
 using Greg.Xrm.Command.Services.Plugin;
+using Greg.Xrm.Command.Services.Ribbon;
 using Greg.Xrm.Command.Services.Security;
 using Greg.Xrm.Command.Services.Translations;
 
@@ -35,6 +36,8 @@ namespace Greg.Xrm.Command
 			builder.RegisterType<WebResource.Repository>().As<IWebResourceRepository>();
 			builder.RegisterType<Solution.Repository>().As<ISolutionRepository>();
 			builder.RegisterType<SolutionComponent.Repository>().As<ISolutionComponentRepository>();
+			builder.RegisterType<RibbonComponent.Repository>().As<IRibbonComponentRepository>();
+			builder.RegisterType<RibbonDiffService>().As<IRibbonDiffService>();
 			builder.RegisterType<JsTemplateManager>().As<IJsTemplateManager>();
 			builder.RegisterType<IconFinder>().As<IIconFinder>();
 			builder.RegisterType<SavedQuery.Repository>().As<ISavedQueryRepository>();
