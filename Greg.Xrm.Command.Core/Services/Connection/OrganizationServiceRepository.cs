@@ -33,7 +33,7 @@ namespace Greg.Xrm.Command.Services.Connection
 		ISettingsRepository settings,
 		IPacxProjectRepository pacxProjectRepository,
 		ISecureTokenStorageProbe? secureTokenStorageProbe = null
-		) : IOrganizationServiceRepository
+		) : IOrganizationServiceRepository, IFlowAccessTokenProvider
 	{
 		private readonly ISettingsRepository settings = settings ?? throw new ArgumentNullException(nameof(settings));
 		private readonly IPacxProjectRepository pacxProjectRepository = pacxProjectRepository ?? throw new ArgumentNullException(nameof(pacxProjectRepository));
@@ -205,43 +205,29 @@ namespace Greg.Xrm.Command.Services.Connection
 
 		public async Task<string> GetCurrentConnectionNameAsync()
 		{
-			if (_environmentOverride != null)
-			{
-				var (name, _) = await TryResolveOverrideConnectionAsync();
-				return name;
-			}
-
-			var connectionStrings = await GetConnectionSettingAsync()
-				?? throw new CommandException(CommandException.ConnectionNotSet, "Dataverse connection has not been set yet.");
-
-			bool found;
-			string? connectionName;
-			var project = await this.pacxProjectRepository.GetCurrentProjectAsync();
-			if (project != null && !project.IsSuspended)
-			{
-				connectionName = project.AuthProfileName;
-				found = connectionStrings.TryGetConnectionString(project.AuthProfileName, GetAesKey(), GetAesIV(), out _);
-				if (!found)
-					throw new CommandException(CommandException.ConnectionNotSet, $"Unable to find an authentication profile called {project.AuthProfileName}.");
-			}
-			else
-			{
-				connectionName = connectionStrings.CurrentConnectionStringKey;
-				found = connectionStrings.TryGetCurrentConnectionString(GetAesKey(), GetAesIV(), out _);
-				if (!found)
-					throw new CommandException(CommandException.ConnectionNotSet, "Dataverse connection has not been set yet.");
-			}
-
-			return connectionName!;
+			var (connectionName, _) = await ResolveActiveProfileAsync();
+			return connectionName;
 		}
 
 		public async Task<IOrganizationServiceAsync2> GetCurrentConnectionAsync()
 		{
+			var (connectionName, connectionString) = await ResolveActiveProfileAsync();
+			return await this.CreateServiceClientAsync(connectionName, connectionString);
+		}
+
+		/// <inheritdoc/>
+		public async Task<string> GetFlowAccessTokenAsync(CancellationToken cancellationToken)
+		{
+			cancellationToken.ThrowIfCancellationRequested();
+			var (_, connectionString) = await ResolveActiveProfileAsync().WaitAsync(cancellationToken);
+			var result = await FlowAuthentication.AcquireAsync(connectionString, this.secureTokenStorageProbe, cancellationToken);
+			return result.AccessToken;
+		}
+
+		private async Task<(string connectionName, string connectionString)> ResolveActiveProfileAsync()
+		{
 			if (_environmentOverride != null)
-			{
-				var (overrideName, overrideConnectionString) = await TryResolveOverrideConnectionAsync();
-				return await this.CreateServiceClientAsync(overrideName, overrideConnectionString);
-			}
+				return await TryResolveOverrideConnectionAsync();
 
 			var connectionStrings = await GetConnectionSettingAsync()
 				?? throw new CommandException(CommandException.ConnectionNotSet, "Dataverse connection has not been set yet.");
@@ -265,7 +251,7 @@ namespace Greg.Xrm.Command.Services.Connection
 					throw new CommandException(CommandException.ConnectionNotSet, "Dataverse connection has not been set yet.");
 			}
 
-			return await this.CreateServiceClientAsync(connectionName!, connectionString!);
+			return (connectionName!, connectionString!);
 		}
 
 

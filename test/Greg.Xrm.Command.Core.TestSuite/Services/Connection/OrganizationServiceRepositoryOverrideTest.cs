@@ -83,6 +83,25 @@ namespace Greg.Xrm.Command.Services.Connection
 		}
 
 		[TestMethod]
+		[DataRow("Dev")]
+		[DataRow("https://dev.crm.dynamics.com/")]
+		public async Task GetFlowAccessToken_WhenOverrideHasNoUsername_ShouldNotSignInAsAnotherUser(string environmentOverride)
+		{
+			IFlowAccessTokenProvider provider = CreateSut("Prod", new Dictionary<string, string>
+			{
+				["Prod"] = "AuthType=AD;Url=https://prod.crm.dynamics.com",
+				["Dev"] = "AuthType=OAuth;Url=https://dev.crm.dynamics.com",
+			});
+			((IOrganizationServiceRepository)provider).SetEnvironmentOverride(environmentOverride);
+
+			var ex = await Assert.ThrowsExactlyAsync<CommandException>(
+				() => provider.GetFlowAccessTokenAsync(CancellationToken.None));
+
+			Assert.AreEqual(CommandException.ConnectionInvalid, ex.ErrorCode);
+			StringAssert.Contains(ex.Message, "could not identify the Dataverse user");
+		}
+
+		[TestMethod]
 		public async Task GetCurrentConnectionName_WhenOverrideByUrl_TrailingSlashNormalized()
 		{
 			var repo = CreateSut("Prod", new Dictionary<string, string>
