@@ -13,6 +13,7 @@ using Greg.Xrm.Command.Commands.WebResources.Templates;
 using Greg.Xrm.Command.Model;
 using Greg.Xrm.Command.Services;
 using Greg.Xrm.Command.Services.AttributeDeletion;
+using Greg.Xrm.Command.Services.Connection;
 using Greg.Xrm.Command.Services.Forms;
 using Greg.Xrm.Command.Services.OptionSet;
 using Greg.Xrm.Command.Services.Plugin;
@@ -31,6 +32,10 @@ namespace Greg.Xrm.Command
 			builder.RegisterType<ExportMetadataStrategyFactory>().As<IExportMetadataStrategyFactory>();
 			builder.RegisterType<Dependency.Repository>().As<IDependencyRepository>();
 			builder.RegisterType<Workflow.Repository>().As<IWorkflowRepository>();
+			builder.Register(_ => new HttpClient(new HttpClientHandler { AllowAutoRedirect = false }))
+				.Keyed<HttpClient>(typeof(PowerAutomateFlowClient)).SingleInstance();
+			builder.Register(c => new PowerAutomateFlowClient(c.Resolve<IFlowAccessTokenProvider>(),
+				c.ResolveKeyed<HttpClient>(typeof(PowerAutomateFlowClient)))).As<IPowerAutomateFlowClient>();
 			builder.RegisterType<ProcessTrigger.Repository>().As<IProcessTriggerRepository>();
 			builder.RegisterType<WebResource.Repository>().As<IWebResourceRepository>();
 			builder.RegisterType<Solution.Repository>().As<ISolutionRepository>();

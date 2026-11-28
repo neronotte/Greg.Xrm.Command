@@ -79,7 +79,7 @@ namespace Greg.Xrm.Command
 					log.LogInformation("Command {CommandType} has been executed. Result is {CommandResult}.", command.GetType(), result.IsSuccess);
 					PrintFailure(command, result);
 
-					return -1;
+					return result.ExitCode;
 				}
 
 				if (result.IsSuccess && result.Count > 0)
